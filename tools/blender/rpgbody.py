@@ -168,7 +168,7 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
   'female': dict(KL=1.0, KN=0.6, HS=0.96, SHX=-0.042, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.14), (1.4, 0.06, -0.11), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.12, 0.06, -0.3), (1.04, 0.05, -0.12), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.33, 0.07, -0.1), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
-                 ARM={'shoulder': 0.84, 'upper_arm': 0.72, 'forearm': 0.72, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True, UCK=0.8),
+                 ARM={'shoulder': 0.82, 'upper_arm': 0.66, 'forearm': 0.67, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True, UCK=0.8),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
                  ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
 }
@@ -246,6 +246,10 @@ if RACE in RACES:
             reg.append(i)
         nb2 = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb2[a_].append(b_); nb2[b_].append(a_)
+        armreg = [i for i in ARMV if 0.97 < ORIG[i].z < 1.44 and nb2[i]]   # smoother arms: soften the muscle forms (not the hands)
+        for _ in range(4):
+            new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in armreg}
+            for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.55 + c_ * 0.45
         for _ in range(3):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in reg if nb2[i]}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.6 + c_ * 0.4
