@@ -157,6 +157,49 @@ for sx in (1, -1):
 bmesh_fix = bmesh.new(); bmesh_fix.from_mesh(body.data); bmesh.ops.recalc_face_normals(bmesh_fix, faces=bmesh_fix.faces); bmesh_fix.to_mesh(body.data); bmesh_fix.free()
 for p in body.data.polygons: p.use_smooth = True
 print('BODY tris', sum(len(p.vertices) - 2 for p in body.data.polygons))
+# ---------- body types as blend shapes on the one body: Lean and Heavy (the base is Heroic). The head never changes.
+SEGS = []
+for nm, h, t, par in g['BONES']:
+    if nm in ('head',): continue
+    SEGS.append((nm, Vector(h), Vector(t)))
+def nearest_seg(co):
+    best = None
+    for nm, h, t in SEGS:
+        d = t - h; u = max(0.0, min(1.0, (co - h).dot(d) / d.length_squared)); q = h + d * u; dist = (co - q).length
+        if best is None or dist < best[0]: best = (dist, nm, q, u)
+    return best
+TORSO = ('hips', 'spine', 'chest', 'neck')
+def region_scale(nm, u, z, co, lean):
+    if nm in TORSO:  return (0.8, 0.82) if lean else (1.14, 1.2)
+    if nm.startswith('shoulder'): return (0.78, 0.78) if lean else (1.25, 1.25)
+    if nm.startswith('upper_arm'): return (0.7, 0.7) if lean else (1.32, 1.3)
+    if nm.startswith('forearm'): return (0.74, 0.74) if lean else (1.35, 1.32)
+    if nm.startswith('hand'): return (0.86, 0.86) if lean else (1.38, 1.38)
+    if nm.startswith('thigh'): return (0.78, 0.78) if lean else (1.2, 1.2)
+    if nm.startswith('shin'): return (0.8, 0.8) if lean else (1.18, 1.18)
+    return (0.9, 0.9) if lean else (1.12, 1.12)
+body.shape_key_add(name='Basis')
+KEYS = {}
+for kname, lean in (('Lean', True), ('Heavy', False)):
+    kb = body.shape_key_add(name=kname, from_mix=False); KEYS[kname] = kb
+    for v in body.data.vertices:
+        co = v.co.copy()
+        if co.z > 1.535 and abs(co.x) < 0.12: kb.data[v.index].co = co; continue      # the head stays as it is
+        dist, nm, q, u = nearest_seg(co)
+        sx_, sy_ = region_scale(nm, u, co.z, co, lean)
+        off = co - q
+        if nm in TORSO: off = Vector((co.x - 0.0, co.y - 0.004, 0)); q = Vector((0, 0.004, co.z))
+        w = 1.0 if nm not in ('neck',) else sm(1.535, 1.46, co.z)                      # fade out under the jaw
+        new_ = q + Vector((off.x * (1 + (sx_ - 1) * w), off.y * (1 + (sy_ - 1) * w), off.z * (1 + (sx_ - 1) * w * 0.6)))
+        if not lean:
+            ax_ = abs(co.x)
+            new_.y -= 0.06 * math.exp(-(ax_ / 0.11) ** 2 - ((co.z - 1.13) / 0.11) ** 2) * (co.y < 0.02)   # a belly
+            new_.x += math.copysign(0.018, co.x) * math.exp(-((co.z - 1.1) / 0.09) ** 2) * (nm in TORSO)  # love handles
+            new_.z += 0.012 * math.exp(-((ax_ - 0.11) / 0.06) ** 2 - ((co.z - 1.47) / 0.04) ** 2)        # bigger traps
+        else:
+            new_.z -= 0.008 * math.exp(-((abs(co.x) - 0.11) / 0.06) ** 2 - ((co.z - 1.47) / 0.04) ** 2)   # flatter traps
+        kb.data[v.index].co = new_
+print('SHAPE KEYS', [k.name for k in body.data.shape_keys.key_blocks])
 # ---------- hair and beards: real volumes grown from the head surface, shaped into locks
 HL = [(0.0, 1.745), (0.6, 1.748), (1.15, 1.706), (1.5, 1.655), (2.45, 1.618), (math.pi, 1.604)]
 def hairline(th):
