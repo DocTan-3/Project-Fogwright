@@ -264,10 +264,16 @@ if RACE in RACES:
                 t = math.exp(-((ax - 0.11) / 0.06) ** 2) * math.exp(-((z - 1.465) / 0.045) ** 2)
                 v.co.z -= 0.038 * t; v.co.x -= math.copysign(0.008, x) * t
             if y > 0.03 or abs(x) > 0.2: continue
-            k = math.exp(-((abs(x) - 0.075) / 0.05) ** 2 - ((z - 1.285) / 0.052) ** 2)
-            v.co.y -= 0.085 * k ** 0.8
-            v.co.z -= 0.012 * math.exp(-((abs(x) - 0.075) / 0.05) ** 2 - ((z - 1.255) / 0.035) ** 2)
-            v.co.x += math.copysign(0.013, x) * k
+            # a rounded dome, fuller in its lower half, easing into the chest at its rim
+            dz = z - 1.278; ry = 0.062 if dz > 0 else 0.052
+            d = math.sqrt(((ax - 0.077) / 0.06) ** 2 + (dz / ry) ** 2)
+            if d < 1.35:
+                dome = (1 - min(d, 1.0) ** 2) ** 0.55 if d < 1 else 0.0
+                rim = math.exp(-((d - 0.95) / 0.18) ** 2) * 0.18
+                k = max(dome, rim) * (1 - sm(1.15, 1.35, d))
+                v.co.y -= 0.072 * k
+                v.co.z -= 0.01 * k * (1 if dz < 0 else 0.4)
+                v.co.x += math.copysign(0.01, x) * k * (ax - 0.04) / 0.06
         # a real neck: the shoulder line slopes gently down from beside the neck, well below the chin
         reg = []
         for i, v in enumerate(body.data.vertices):
@@ -283,6 +289,14 @@ if RACE in RACES:
         for _ in range(3):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in soft}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.7 + c_ * 0.3
+        bust = [i for i, c in enumerate(ORIG) if 1.2 < c.z < 1.37 and abs(c.x) < 0.16 and c.y < 0.0 and i not in ARMV and nb2[i]]
+        for _ in range(3):
+            new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in bust}
+            for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.6 + c_ * 0.4
+        for i, c in enumerate(ORIG):   # a slender neck: the column drawn in toward its centre
+            if not (1.43 < c.z < 1.575) or math.hypot(c.x, c.y - 0.01) > 0.09 or i in ARMV: continue
+            w = sm(1.43, 1.47, c.z) * (1 - sm(1.545, 1.575, c.z)) * 0.2
+            v = body.data.vertices[i]; v.co.x *= 1 - w; v.co.y = 0.01 + (v.co.y - 0.01) * (1 - w)
         armreg = [i for i in ARMV if 0.97 < ORIG[i].z < 1.44 and nb2[i]]   # smoother arms: soften the muscle forms (not the hands)
         pit = [i for i, c in enumerate(ORIG) if 1.12 < c.z < 1.43 and 0.11 < abs(c.x) < 0.24 and nb2[i]]   # armpit and lats: blend the side of the chest into the arm
         for _ in range(6):

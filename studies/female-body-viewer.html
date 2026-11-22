@@ -145,6 +145,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
       c=mix(c,uInk*0.85,t*0.85);}
     return c;}
   if(p.z>1.468&&ax<0.075){                                                          // neck
+    if(uFem>0.5){c*=1.-0.08*fr*smoothstep(1.5,1.556,p.z); return c;}               // her neck: smooth, only a soft shadow under the jaw
     c*=1.-0.16*fr*smoothstep(1.5,1.556,p.z);                                       // shadow under the jaw
     c*=1.-0.08*fr*gss(vec2(ax,p.z),vec2(0.,1.475),vec2(0.012,0.012));               // the pit of the throat
     return c;}
