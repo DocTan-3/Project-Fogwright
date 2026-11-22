@@ -149,6 +149,20 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     c*=1.-0.08*fr*gss(vec2(ax,p.z),vec2(0.,1.475),vec2(0.012,0.012));               // the pit of the throat
     return c;}
   if(p.z>1.04){                                                                      // torso
+    if(uFem>0.5){                                                                    // her torso: soft forms, no muscle lines
+      c*=1.-0.1*smoothstep(0.07,0.165,ax);                                          // rounding toward the sides
+      c*=1.-0.08*gss(vec2(ax,p.z),vec2(0.165,1.37),vec2(0.025,0.05));               // a soft armpit
+      c*=1.+0.05*fr*gss(vec2(ax,p.z),vec2(0.,1.15),vec2(0.06,0.08));               // light on the stomach
+      float ub=1.252+0.012*(1.-pow(clamp((ax-0.075)/0.062,-1.,1.),2.));
+      c*=1.-0.11*fr*exp(-pow((p.z-ub)/0.013,2.))*(1.-smoothstep(0.12,0.16,ax));    // the soft shadow beneath the bust
+      c*=1.-0.04*fr*gss(vec2(ax,p.z),vec2(0.095,1.18),vec2(0.022,0.05));           // the ribcage curving in to the waist
+      c*=1.-0.025*fr*exp(-pow(ax/0.006,2.))*smoothstep(1.1,1.13,p.z)*(1.-smoothstep(1.2,1.23,p.z));  // the faintest line above the navel
+      c*=1.-0.3*fr*inside(length(vec2(ax/0.0035,(p.z-1.09)/0.007))-1.);           // navel
+      c*=1.+0.04*fr*gss(vec2(ax,p.z),vec2(0.,1.06),vec2(0.05,0.03));               // the lower belly, softly lit
+      c*=1.+0.03*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // collarbones, gently
+      c*=1.-0.06*bk*exp(-pow(ax/0.014,2.));                                             // spine
+      c*=1.+0.03*bk*gss(vec2(ax,p.z),vec2(0.07,1.35),vec2(0.04,0.05));               // shoulder blades
+      return c*mix(0.88,1.,smoothstep(1.035,1.07,p.z));}
     c*=1.-0.13*smoothstep(0.08,0.17,ax);                                            // rounding toward the sides
     c*=1.-0.2*gss(vec2(ax,p.z),vec2(0.165,1.37),vec2(0.025,0.05));                  // armpits
     vec3 soft=c;

@@ -235,6 +235,27 @@ if RACE in RACES:
         for _ in range(12):
             D = [D[i] if fix[i] or not nb[i] else D[i] * 0.4 + sum((D[j] for j in nb[i]), Vector()) * (0.6 / len(nb[i])) for i in range(len(D))]
         for i, v in enumerate(body.data.vertices): v.co = ORIG[i] + D[i]
+    if P_.get('FEM'):   # a feminine midsection: rounded cross-sections, the ribcage tapering into a slim waist, then the hips
+        PROF = [(0.95, 0.152, 0.086, 0.104), (1.0, 0.13, 0.079, 0.093), (1.05, 0.112, 0.074, 0.084), (1.1, 0.104, 0.072, 0.081),
+                (1.15, 0.11, 0.076, 0.086), (1.2, 0.123, 0.086, 0.094), (1.26, 0.136, 0.1, 0.104)]
+        def prof(z):
+            z = min(max(z, PROF[0][0]), PROF[-1][0])
+            for r0, r1 in zip(PROF, PROF[1:]):
+                if z <= r1[0]:
+                    t = (z - r0[0]) / (r1[0] - r0[0]); t = t * t * (3 - 2 * t)
+                    return [a_ + (b_ - a_) * t for a_, b_ in zip(r0[1:], r1[1:])]
+        CY = 0.008
+        for i, v in enumerate(body.data.vertices):
+            if i in ARMV: continue
+            x, y, z = v.co
+            if not (0.93 < z < 1.28) or abs(x) > 0.23: continue
+            if z > 1.2 and y < -0.02 and abs(x) < 0.15: continue          # leave the bust to its own step
+            a_, f_, b_ = prof(z); dep = f_ if y < CY else b_
+            th = math.atan2(x, -(y - CY)); sx_, cy_ = math.sin(th), -math.cos(th)
+            n = 2.3; r = 1 / ((abs(sx_) / a_) ** n + (abs(cy_) / dep) ** n) ** (1 / n)
+            w = sm(0.93, 0.98, z) * (1 - sm(1.24, 1.28, z)) * 0.8
+            tx, ty = sx_ * r, CY + cy_ * r
+            v.co.x = x + (tx - x) * w; v.co.y = y + (ty - y) * w
     if P_.get('FEM'):   # the bust, after the blending so it keeps its shape: full and rounded on a flattened chest
         for i, v in enumerate(body.data.vertices):
             x, y, z = ORIG[i]
