@@ -131,7 +131,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     c*=1.+0.07*(1.-0.6*uFem)*gss(vec2(ax,p.z),vec2(0.215,1.43),vec2(0.035,0.05));                 // shoulder cap catches the light
     c*=1.+0.05*(1.-0.7*uFem)*fr*gss(vec2(ax,p.z),vec2(0.235,1.29),vec2(0.03,0.06));               // biceps
     c*=1.-0.06*(1.-0.6*uFem)*gss(vec2(ax,p.z),vec2(0.25,1.35),vec2(0.02,0.04))*bk;                  // back of the arm
-    c=mix(c,c*vec3(1.05,0.9,0.86),0.55*gss(vec2(ax,p.z),vec2(0.262,1.17),vec2(0.03,0.025)));   // ruddy elbow
+    c=mix(c,c*vec3(1.05,0.9,0.86),0.55*(1.-0.5*uFem)*gss(vec2(ax,p.z),vec2(0.262,1.17),vec2(0.03,0.025)));   // ruddy elbow
     c*=1.+0.04*(1.-0.6*uFem)*gss(vec2(ax,p.z),vec2(0.28,1.07),vec2(0.03,0.06));                   // forearm
     if(p.z<wrist){c=mix(c,c*vec3(1.05,0.9,0.86),0.35);c*=mix(0.84,1.,smoothstep(0.72,0.86,p.z));} // warmer hands, shaded fingers
     c*=1.-0.18*gss(vec2(ax,p.z),vec2(0.19,1.37),vec2(0.02,0.05));                    // armpit
@@ -192,8 +192,8 @@ vec3 paintBase(vec3 p,float ax,bool armR){
   if(p.z>0.1){                                                                       // bare legs and ankles
     c*=0.94+0.07*(1.-smoothstep(0.,0.05,abs(lx)));
     c=mix(c,c*vec3(1.04,0.9,0.86),0.5*fr*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.04,0.03)));  // ruddy knees
-    c*=1.+0.05*fr*gss(vec2(lx,p.z),vec2(0.,0.43),vec2(0.02,0.06));                   // shin
-    c*=1.-0.06*bk*gss(vec2(lx,p.z),vec2(0.,0.4),vec2(0.05,0.08));                    // calf shadow
+    c*=1.+0.05*(1.-0.7*uFem)*fr*gss(vec2(lx,p.z),vec2(0.,0.43),vec2(0.02,0.06));                   // shin
+    c*=1.-0.06*(1.-0.7*uFem)*bk*gss(vec2(lx,p.z),vec2(0.,0.4),vec2(0.05,0.08));                    // calf shadow
     c*=1.-0.08*gss(vec2(ax-0.125,p.z),vec2(0.03,0.12),vec2(0.01,0.012));            // ankle bones
     c*=1.-0.08*gss(vec2(ax-0.125,p.z),vec2(-0.03,0.12),vec2(0.01,0.012));
     return c;}

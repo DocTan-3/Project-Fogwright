@@ -173,9 +173,9 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
   'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
-  'female': dict(KL=1.035, KN=0.6, HS=0.96, SHX=-0.052, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.16), (1.4, 0.06, -0.15), (1.3, 0.07, -0.17), (1.2, 0.07, -0.22), (1.12, 0.06, -0.33), (1.04, 0.05, -0.14), (0.93, 0.06, 0.12)],
+  'female': dict(KL=1.035, KN=0.6, HS=0.93, SHX=-0.052, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.16), (1.4, 0.06, -0.15), (1.3, 0.07, -0.17), (1.2, 0.07, -0.22), (1.12, 0.06, -0.33), (1.04, 0.05, -0.14), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.25, 0.09, -0.07), (1.33, 0.07, -0.13), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
-                 ARM={'shoulder': 0.78, 'upper_arm': 0.6, 'forearm': 0.6, 'hand': 0.74}, LEG=0.86, LEGX=1.04, FEM=True, UCK=0.8),
+                 ARM={'shoulder': 0.76, 'upper_arm': 0.58, 'forearm': 0.54, 'hand': 0.58}, LEG=0.8, LEGX=1.02, FEM=True, UCK=0.8),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
                  ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
 }
@@ -553,6 +553,12 @@ r = bmesh.ops.create_icosphere(bm, subdivisions=2, radius=0.03); bmesh.ops.trans
 tube(bm, [knot + Vector((0, 0.01, 0.03)), knot + Vector((0, 0.035, 0.03)), knot + Vector((0, 0.055, 0.005)), knot + Vector((0, 0.065, -0.03))], 0.014, 0.006, 7, 0.7)
 HAIRS.append(join(tk, as_object('_knot', bm)))
 
+for ob in HAIRS:   # hair never hangs in front of the face below the eyes: drop any stray points the fitting threw there
+    if not ob.name.startswith('Hair_'): continue
+    _b = bmesh.new(); _b.from_mesh(ob.data)
+    _k = [v for v in _b.verts if (v.co.y < C.y - 0.06 and v.co.z < C.z - 0.06) or (v.co - C).length > 0.36]
+    if _k: bmesh.ops.delete(_b, geom=_k, context='VERTS'); print(ob.name, 'removed stray', len(_k))
+    _b.to_mesh(ob.data); _b.free()
 for ob in HAIRS:
     ob.data.materials.append(bpy.data.materials.new(ob.name))
     ca = ob.data.color_attributes.new('rest', 'FLOAT_COLOR', 'POINT')
