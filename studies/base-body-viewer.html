@@ -20,10 +20,8 @@ button[aria-pressed="true"]{background:rgba(214,165,78,.22);border-color:var(--b
 <aside class="panel"><h1>Base body study</h1><p class="sub">Sketchfab base model · rigged, repainted by code</p>
 <div class="label">View</div><div class="chips" id="views"><button data-v="full" aria-pressed="true">Full</button><button data-v="face">Faces</button></div>
 <div class="label">Base layer</div><div class="chips" id="lower"><button data-l="mix" aria-pressed="true">Mixed</button><button data-l="0">Trousers</button><button data-l="1">Boxers</button></div>
-<div class="label">Height · within each people's range</div><input id="hgt" type="range" min="0" max="1" step="0.02" value="0.5" aria-label="Height, within each people's range" style="width:100%">
-<div class="label">Weight · skinny to heavy, within range</div><input id="wgt" type="range" min="0" max="1" step="0.02" value="0.35" aria-label="Weight from skinny to heavy, within each people's range" style="width:100%">
 <div class="label">Turn</div><div class="chips" id="turn"><button data-y="0" aria-pressed="true">Front</button><button data-y="0.7">Three-quarter</button><button data-y="1.5708">Side</button><button data-y="3.1416">Back</button></div>
-<p class="note">The base layer every player starts from: skin and plain undyed trousers or boxers, painted by code. Each people keeps its look through its own height and weight range: slender Ilvari, short broad Ferrin, big Hrimfolk.</p></aside>
+<p class="note">One seamless body, shaped once per people: slender Ilvari, lean Zarhim, short and broad Ferrin, big Hrimfolk. Skin, faces and the base layer are painted by code; hair and beards are their own meshes.</p></aside>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
@@ -59,22 +57,22 @@ vec3 paintHead(vec3 p){
     // nostrils
     c=mix(c,c*0.45,front*inside(length(vec2(ax-0.0078,p.z-1.6495))-0.0024));
     // eyes: almond whites, iris, pupil, lid line
-    c*=1.-0.38*front*(gss(vec2(ax,p.z),vec2(0.034,1.692),vec2(0.02,0.011)));             // shadow under the brow
+    c*=1.-0.42*front*(gss(vec2(ax,p.z),vec2(0.034,1.692),vec2(0.022,0.012)));             // shadow under the brow
     c*=1.-0.18*front*gss(vec2(ax,p.z),vec2(0.017,1.64),vec2(0.006,0.03));                 // beside the nose
     c*=1.-0.22*front*gss(vec2(ax,p.z),vec2(0.,1.637),vec2(0.012,0.004));                  // under the nose
     c*=1.-0.15*front*gss(vec2(ax,p.z),vec2(0.05,1.626),vec2(0.012,0.02));                 // hollow of the cheek
     c*=1.+0.12*front*gss(vec2(ax,p.z),vec2(0.,1.69),vec2(0.006,0.03));                    // light down the bridge
-    vec2 e=vec2(ax-0.0338,p.z-1.6872); float alm=length(e/vec2(0.0098,0.0038))-1.;
+    vec2 e=vec2(ax-0.0338,p.z-1.6872); float alm=length(e/vec2(0.0122,0.0051))-1.;
     float w=inside(alm)*front; c=mix(c,mix(uSkin*0.55,vec3(0.72,0.7,0.66),0.6),w);
-    float ir=inside(length(e-vec2(-0.0004*sign(p.x),0.0004))-0.0037)*w; c=mix(c,uEye,ir);
-    c=mix(c,vec3(0.04),inside(length(e)-0.0018)*w);
+    float ir=inside(length(e-vec2(-0.0004*sign(p.x),0.0004))-0.0046)*w; c=mix(c,uEye,ir);
+    c=mix(c,vec3(0.04),inside(length(e-vec2(-0.0004*sign(p.x),0.0004))-0.0021)*w);
     c=mix(c,vec3(0.95),inside(length(e-vec2(0.0012,0.0012))-0.0006)*w);
-    float lid=inside(abs(alm-0.15)-0.2)*step(-0.001,e.y)*front; c=mix(c,uSkin*0.32,lid);
+    float lid=inside(abs(alm-0.12)-0.26)*step(-0.0012,e.y)*front; c=mix(c,vec3(0.09,0.07,0.06),lid*0.9);
     c=mix(c,c*0.82,inside(abs(alm-0.55)-0.25)*step(0.0015,e.y)*front); // lid crease
     // brows
     float bx=ax-0.036, bz=1.6995+0.003*(1.-(bx*bx/0.000361))+0.004*clamp(bx/0.02,-1.,1.);
-    float brow=inside(abs(p.z-bz)-(0.0042-0.0022*smoothstep(0.,0.02,bx)))*step(0.012,ax)*step(ax,0.058)*front;
-    c=mix(c,uHair*0.75,brow);
+    float brow=inside(abs(p.z-bz)-(0.0052-0.0024*smoothstep(0.,0.02,bx)))*step(0.011,ax)*step(ax,0.059)*front;
+    c=mix(c,uHair*0.55+vec3(0.02),brow);
   }
   // ink: a line down the brow, bars across the cheekbones, two lines on the chin
   if(uF1.z>0.5){float ink=0.;
@@ -106,8 +104,9 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     c*=1.+0.04*gss(vec2(ax,p.z),vec2(0.28,1.07),vec2(0.03,0.06));                   // forearm
     if(p.z<wrist){c=mix(c,c*vec3(1.05,0.9,0.86),0.35);c*=mix(0.84,1.,smoothstep(0.72,0.86,p.z));} // warmer hands, shaded fingers
     c*=1.-0.18*gss(vec2(ax,p.z),vec2(0.19,1.37),vec2(0.02,0.05));                    // armpit
+    c*=1.-0.13*smoothstep(1.3,1.45,p.z);                                            // match the torso where the shoulder meets it
     return c;}
-  if(p.z>1.468){                                                                     // neck
+  if(p.z>1.468&&ax<0.075){                                                          // neck
     c*=1.-0.16*fr*smoothstep(1.5,1.556,p.z);                                       // shadow under the jaw
     c*=1.-0.08*fr*gss(vec2(ax,p.z),vec2(0.,1.475),vec2(0.012,0.012));               // the pit of the throat
     return c;}
@@ -295,15 +294,15 @@ function setDefinition(root,d){root.traverse(o=>{if(o.material&&o.material.userD
 const LOOKS=[
  {name:'Aurelan',base:[1,0,0.4,0],build:[0,0],hair:'Ponytail',beard:'Full',moustache:'Chevron',uSkin:'#e2b896',uHair:'#4a3020',uEye:'#4a6a8a',uShirt:'#ddd4c2',uVest:'#6c2e2a',uPants:'#cbbd9f',uBelt:'#5a3a26',uBoots:'#5a4030',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#b8705e',f1:[1,0,0,0],f2:[1,0,0,0]},
  {name:'Hrimfolk',base:[1,1,0.8,0],build:[0,0.75],hair:'Long',beard:'Braided',moustache:null,uSkin:'#f0cfb4',uHair:'#d8bc84',uEye:'#5a8aa8',uShirt:'#a39a8a',uVest:'#6e5a44',uPants:'#a89c86',uBelt:'#4e3826',uBoots:'#4a3a2c',uTrim:'#b8b8b8',uInk:'#2f5fd0',uLip:'#c47a6a',f1:[0,1,0,0],f2:[1,0,0,0]},
- {name:'Ilvari',base:[1,0,0,0],build:[0.8,0],hair:'Topknot',beard:null,moustache:'Pencil',uSkin:'#ecdacb',uHair:'#1c1c26',uEye:'#7a8aa0',uShirt:'#c8ccd8',uVest:'#1e2a4a',uPants:'#b9bbc0',uBelt:'#3a3a46',uBoots:'#3a3436',uTrim:'#7ab0d8',uInk:'#2f5fd0',uLip:'#b88a84',f1:[1,0,1,0],f2:[1,0,0,0]},
+ {name:'Ilvari',base:[1,0,0,0],build:[0.8,0],hair:'Topknot',beard:null,moustache:null,uSkin:'#e2cbb8',uHair:'#1c1c26',uEye:'#7a8aa0',uShirt:'#c8ccd8',uVest:'#1e2a4a',uPants:'#b9bbc0',uBelt:'#3a3a46',uBoots:'#3a3436',uTrim:'#7ab0d8',uInk:'#2f5fd0',uLip:'#b88a84',f1:[1,0,1,0],f2:[1,0,0,0]},
  {name:'Zarhim',base:[1,1,0,0],build:[0.4,0],hair:'Short',beard:'Pointed',moustache:'Walrus',uSkin:'#7a4e34',uHair:'#16110e',uEye:'#3a2a1a',uShirt:'#e2d8c2',uVest:'#2e3a6a',uPants:'#d8c9a8',uBelt:'#8a5a32',uBoots:'#6a4a30',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#6a3a2c',f1:[0,0,0,0],f2:[1,0,1,0]},
  {name:'Ferrin',base:[1,0,0.7,0],build:[0,0],hair:'Short',beard:'Full',moustache:'Walrus',uSkin:'#c88a6c',uHair:'#5a3a28',uEye:'#4a3a2a',uShirt:'#8a7e6e',uVest:'#4a4440',uPants:'#8e8676',uBelt:'#4a3020',uBoots:'#3a2a20',uTrim:'#b8893e',uInk:'#2f5fd0',uLip:'#a8665a',f1:[0,0,0,0],f2:[1,0,0,0]},
- {name:'Ruadhan',base:[1,0,0.9,0],build:[0,0.25],hair:'Swept',beard:'Forked',moustache:'Handlebar',uSkin:'#f2cdb0',uHair:'#c0501e',uEye:'#5a7a4a',uShirt:'#c8b898',uVest:'#3e5a2e',uPants:'#b8ab8c',uBelt:'#7a5230',uBoots:'#4e3a28',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#c47a6a',f1:[1,0,0,1],f2:[1,0,0,0]},
+ {name:'Ruadhan',base:[1,0,0.9,0],build:[0,0.25],hair:'Swept',beard:'Forked',moustache:'Chevron',uSkin:'#f2cdb0',uHair:'#c0501e',uEye:'#5a7a4a',uShirt:'#c8b898',uVest:'#3e5a2e',uPants:'#b8ab8c',uBelt:'#7a5230',uBoots:'#4e3a28',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#c47a6a',f1:[1,0,0,1],f2:[1,0,0,0]},
  {name:'City watch',base:[1,1,0.5,0],build:[0,0.5],hair:'Short',beard:null,moustache:'Horseshoe',uSkin:'#c9966e',uHair:'#2e2420',uEye:'#4a3a2a',uShirt:'#5a6270',uVest:'#3a4250',uPants:'#9c9488',uBelt:'#4a3020',uBoots:'#3a2c22',uTrim:'#3f3a6c',uInk:'#2f5fd0',uLip:'#a8665a',f1:[0,0.3,0,0],f2:[1,1,0,1]}];
 const RANGES={ // weight: -1 skinny, -0.5 ordinary, 0 muscular, 1 heavy
   Aurelan:{h:[0.96,1.03],w:[-1,-0.25]},Hrimfolk:{h:[1.06,1.13],w:[-0.6,0.95]},Ilvari:{h:[1.03,1.09],w:[-1,-0.75],broad:0.92},
   Zarhim:{h:[0.97,1.03],w:[-1,-0.35],broad:0.95},Ferrin:{h:[0.8,0.87],w:[-0.5,0.8],broad:1.06},Ruadhan:{h:[1.04,1.1],w:[-0.85,0.2]},'City watch':{h:[0.95,1.05],w:[-0.7,0.6]}};
-let HS=0.5, WS=0.35;   // where in each people's range everyone sits (0..1)
+let HS=0.5, WS=0.35;   // one fixed body per people for now: the middle of its height range, toward the lean end of its weight range
 function applyBody(f,i){const r=RANGES[LOOKS[i].name]; const hgt=r.h[0]+(r.h[1]-r.h[0])*HS, w=r.w[0]+(r.w[1]-r.w[0])*WS, br=r.broad||1;
   f.m.scale.set(hgt*br,hgt,hgt*br); setBuild(f.m,Math.max(0,-w),Math.max(0,w)); setDefinition(f.m,Math.max(0,Math.min(1,1+w)));}
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
@@ -323,8 +322,7 @@ let drag=null;cv.addEventListener('pointerdown',e=>{drag=e.clientX;cv.setPointer
 const clock=new THREE.Clock();
 document.getElementById('lower').onclick=e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#lower button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
   figs.forEach((f,i)=>f.m.traverse(o=>{if(o.material&&o.material.userData.U&&o.material.userData.U.uB){o.material.userData.U.uB.value.y=b.dataset.l==='mix'?LOOKS[i].base[1]:+b.dataset.l;}}));};
-document.getElementById('hgt').addEventListener('input',e=>{HS=+e.target.value;figs.forEach(applyBody);});
-document.getElementById('wgt').addEventListener('input',e=>{WS=+e.target.value;figs.forEach(applyBody);});
+
 new THREE.GLTFLoader().load('rpgbody.gltf.json',g=>{preparePainted(g);
   LOOKS.forEach((L,i)=>{const m=THREE.SkeletonUtils.clone(g.scene);dressFigure(m,L);
     m.position.x=(i-(LOOKS.length-1)/2)*GAP;scene.add(m);const mix=new THREE.AnimationMixer(m),c=g.animations.find(a=>a.name==='Idle');if(c){const a=mix.clipAction(c);a.play();a.time=i*0.4;}figs.push({m,mix});applyBody(figs[figs.length-1],i);});

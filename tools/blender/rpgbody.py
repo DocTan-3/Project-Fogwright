@@ -86,10 +86,28 @@ def pl(z, A, B):
 Zm2c = lambda z: pl(z, ZM, ZCAN); Zc2m = lambda z: pl(z, ZCAN, ZM)
 KX = 0.0338 / eye_x
 C = Vector((0, (hb_[2] + hb_[3]) / 2 + 0.01, (eye_z + 0.005)))
+# ---------- weld: the source model's arms, head and eyes are separate shells that overlap the torso, so seams
+# opened whenever the body changed shape. Rebuild it as one closed surface, then bring it back to a low count.
+tris0 = sum(len(p.vertices) - 2 for p in body.data.polygons)
+rm = body.modifiers.new('Weld', 'REMESH'); rm.mode = 'VOXEL'; rm.voxel_size = 0.006; rm.adaptivity = 0.0; rm.use_smooth_shade = True
+with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Weld')
+tris1 = sum(len(p.vertices) - 2 for p in body.data.polygons)
+sm_ = body.modifiers.new('Calm', 'LAPLACIANSMOOTH'); sm_.iterations = 6; sm_.lambda_factor = 0.6; sm_.use_volume_preserve = True; sm_.use_normalized = True
+with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Calm')
+dm = body.modifiers.new('Dec', 'DECIMATE'); dm.ratio = 9000 / tris1
+with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Dec')
+sm2 = body.modifiers.new('Even', 'SMOOTH'); sm2.factor = 0.35; sm2.iterations = 2
+with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Even')
+for p in body.data.polygons: p.use_smooth = True
+V = body.data.vertices
+_b = bmesh.new(); _b.from_mesh(body.data)
+print('WELD tris', tris0, '->', tris1, '->', sum(len(p.vertices) - 2 for p in body.data.polygons), 'open edges', sum(1 for e in _b.edges if e.is_boundary)); _b.free()
+islands = find_islands(); print('pieces after weld', len(islands), sorted(len(k) for k in islands)[-4:])
+isarm = lambda c: abs(c.x) > 0.185 and 0.6 < c.z < 1.47
 # ---------- 3. the head surface, found by raycasting the model's head (for hair and beards)
 from mathutils.bvhtree import BVHTree
 hbm = bmesh.new(); hbm.from_mesh(body.data); hbm.verts.ensure_lookup_table()
-keep = set(islands[HEADI]) | set(i for i in islands[BODYI] if V[i].co.z > 1.45)
+keep = set(i for i in range(len(V)) if V[i].co.z > 1.45 and math.hypot(V[i].co.x, V[i].co.y - C.y) < 0.135)
 bmesh.ops.delete(hbm, geom=[v for v in hbm.verts if v.index not in keep], context='VERTS')
 HBVH = BVHTree.FromBMesh(hbm)
 ZB, ZT = 1.47, top_z
@@ -125,7 +143,7 @@ def region_scale(nm, u, z, co, lean):
     if nm.startswith('thigh'): return (0.76, 0.78) if lean else (1.18, 1.18)
     if nm.startswith('shin'): return (0.8, 0.8) if lean else (1.12, 1.12)
     return (0.9, 0.9) if lean else (1.06, 1.06)
-ARMV = set(i for k in ARMI for i in islands[k])
+ARMV = set(i for i in range(len(V)) if isarm(V[i].co))
 # ---------- bare feet: the source model wears boots; pull them in to feet and ankles
 for v in body.data.vertices:
     x, y, z = v.co; s_ = 1 if x > 0 else -1
@@ -170,7 +188,7 @@ for kname in ('Lean', 'Heavy'):
     for i in range(len(D)): kb.data[i].co = basis[i] + D[i]
 print('SHAPE KEYS', [k.name for k in body.data.shape_keys.key_blocks])
 # ---------- hair and beards: real volumes grown from the head surface, shaped into locks
-HL = [(0.0, 1.745), (0.6, 1.748), (1.15, 1.706), (1.5, 1.655), (2.45, 1.618), (math.pi, 1.604)]
+HL = [(0.0, 1.768), (0.5, 1.77), (1.0, 1.742), (1.35, 1.698), (1.6, 1.658), (2.45, 1.618), (math.pi, 1.604)]   # forehead and temples clear
 def hairline(th):
     th = abs(th)
     for (a, za), (b, zb) in zip(HL, HL[1:]):
@@ -339,11 +357,11 @@ def join(target, *others):
     print(target.name, 'tris', sum(len(p_.vertices) - 2 for p_ in target.data.polygons)); return target
 fw = lambda th, w=0.6: math.exp(-(th / w) ** 2)
 chunks = lambda th, k, a: 1 + a * (tri(th * k / math.pi) - 0.5)
-beard_top = lambda th: 1.664 - 0.03 * sm(1.0, 0.3, abs(th)) - 0.032 * fw(th, 0.32)   # sideburns, cheeks, under the lip
+beard_top = lambda th: 1.648 - 0.02 * sm(1.0, 0.3, abs(th)) - 0.026 * fw(th, 0.32)   # below the cheekbones   # sideburns, cheeks, under the lip
 beard_jaw = lambda th: 1.576 - 0.004 * fw(th)
-bthick = lambda th, z: 0.006 + 0.012 * fw(th, 0.9) * sm(1.63, 1.59, z)
+bthick = lambda th, z: 0.0035 + 0.009 * fw(th, 0.9) * sm(1.63, 1.59, z)   # hugs the jaw
 def beard(name, Lmax, shape, conv, depth=0.03):
-    return solid(name, -1.55, 1.55, beard_top, beard_jaw, bthick, lambda th: Lmax * shape(th), conv, lambda th: depth * fw(th, 0.8) + 0.006)
+    return solid(name, -1.38, 1.38, beard_top, beard_jaw, bthick, lambda th: Lmax * shape(th), conv, lambda th: depth * fw(th, 0.8) + 0.006)
 HAIRS.append(beard('Beard_Short', 0.022, lambda th: fw(th, 0.9) * chunks(th, 5, 0.3), 0.2, 0.012))
 HAIRS.append(beard('Beard_Full', 0.085, lambda th: (0.08 + 0.92 * fw(th, 0.55) ** 1.3) * chunks(th, 4, 0.4), 0.6))
 HAIRS.append(beard('Beard_Pointed', 0.12, lambda th: (0.05 + 0.95 * fw(th, 0.32) ** 1.5) * chunks(th, 3, 0.25), 0.9))
@@ -365,16 +383,16 @@ def stache(name, ends_down, width, thick, curl=0.0, top=1.638):
             tube(bm, pts, 0.006, 0.0025, 6, 0.8)
         ob = join(ob, as_object('_curl', bm))
     return ob
-HAIRS.append(stache('Moustache_Chevron', 0.016, 0.48, 0.007))
-HAIRS.append(stache('Moustache_Horseshoe', 0.055, 0.5, 0.006))
-HAIRS.append(stache('Moustache_Walrus', 0.024, 0.55, 0.012, top=1.642))
-HAIRS.append(stache('Moustache_Handlebar', 0.004, 0.42, 0.006, curl=0.016))
-HAIRS.append(stache('Moustache_Pencil', 0.0, 0.36, 0.003, top=1.632))
+HAIRS.append(stache('Moustache_Chevron', 0.01, 0.42, 0.0045))
+HAIRS.append(stache('Moustache_Horseshoe', 0.04, 0.44, 0.004))
+HAIRS.append(stache('Moustache_Walrus', 0.018, 0.5, 0.008, top=1.641))
+HAIRS.append(stache('Moustache_Handlebar', 0.002, 0.38, 0.0045, curl=0.01))
+HAIRS.append(stache('Moustache_Pencil', 0.0, 0.3, 0.002, top=1.634))
 # hair: a solid cap with volume, a few chunky points at the hairline, strands painted on
 def cap(name, lower, thick, notch_k=6, notch=0.01, droop=lambda th, f: 0.0, NR=12):
     return shell(name, -math.pi, math.pi, lambda th: hairline(th) - lower(th) - notch * tri(th * notch_k / math.pi), TOP, thick, droop, NT=40, NR=NR, wrap=True)
-HAIRS.append(cap('Hair_Short', lambda th: 0.003, lambda th, f, p: 0.007 + 0.012 * f, 7, 0.007))
-HAIRS.append(cap('Hair_Swept', lambda th: 0.004, lambda th, f, p: 0.005 + 0.03 * f ** 0.8 * (1 + 0.35 * fw(th, 0.8) * f), 5, 0.012))
+HAIRS.append(cap('Hair_Short', lambda th: 0.002, lambda th, f, p: 0.0035 + 0.011 * f ** 1.3, 7, 0.006))
+HAIRS.append(cap('Hair_Swept', lambda th: 0.003, lambda th, f, p: 0.003 + 0.028 * f ** 1.4 * (1 + 0.3 * fw(th, 0.8) * f), 5, 0.009))
 backw = lambda th: sm(1.15, 2.0, abs(th))
 HAIRS.append(cap('Hair_Long', lambda th: 0.004 + 0.03 * backw(th), lambda th, f, p: 0.008 + 0.018 * f + 0.014 * backw(th) * (1 - f), 4, 0.016,
                  lambda th, f: backw(th) * (1 - f) ** 2.2 * (0.19 + 0.04 * tri(th * 2.0)), NR=16))
@@ -397,12 +415,12 @@ for ob in HAIRS:
 # ---------- rest position: where each point sits on OUR painted body, so the same paint fits this model
 me = body.data
 ca = me.color_attributes.new('rest', 'FLOAT_COLOR', 'POINT')
-armset = set(i for k in ARMI for i in islands[k])
+armset = set(i for i in range(len(me.vertices)) if isarm(me.vertices[i].co))
 for v in me.vertices:
     x, y, z = v.co
-    if z > 1.45 and v.index not in armset:
-        zc = Zm2c(z); x = x * KX; y = (y - C.y) * KX + 0.004; z = zc
-    if v.index in armset: x = math.copysign(max(abs(x), 0.26), x)
+    if z > 1.47 and v.index not in armset:      # blend from body space into the face layout up the neck
+        t = sm(1.47, 1.555, z)
+        x = x + (x * KX - x) * t; y = y + ((y - C.y) * KX + 0.004 - y) * t; z = z + (Zm2c(z) - z) * t
     ca.data[v.index].color = (x + 0.5, y + 0.5, z / 2, 1)
 me.color_attributes.active_color = ca
 mat = bpy.data.materials.new('Body'); me.materials.append(mat)
