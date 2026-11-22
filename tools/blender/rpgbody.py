@@ -205,6 +205,14 @@ if RACE in RACES:
         return Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
     for v in body.data.vertices:
         d, nm, q = seg_of(v.co); v.co = F(v.co.copy(), nm, q)
+    if RACE == 'ferrin':   # each part is reshaped differently; blend the change across the joins so they don't form spikes
+        nb = [[] for _ in body.data.vertices]
+        for e in body.data.edges: a_, b_ = e.vertices; nb[a_].append(b_); nb[b_].append(a_)
+        D = [body.data.vertices[i].co - ORIG[i] for i in range(len(ORIG))]
+        fix = [ORIG[i].z > NECK1 + 0.02 and abs(ORIG[i].x) < 0.13 for i in range(len(ORIG))]
+        for _ in range(12):
+            D = [D[i] if fix[i] or not nb[i] else D[i] * 0.4 + sum((D[j] for j in nb[i]), Vector()) * (0.6 / len(nb[i])) for i in range(len(D))]
+        for i, v in enumerate(body.data.vertices): v.co = ORIG[i] + D[i]
     sm3 = body.modifiers.new('Settle', 'SMOOTH'); sm3.factor = 0.4; sm3.iterations = 3
     with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Settle')
     # refit the rig to the new shape
