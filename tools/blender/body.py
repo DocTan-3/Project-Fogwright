@@ -14,25 +14,29 @@ col = bpy.context.scene.collection
 sm = lambda a, b, x: (lambda t: t * t * (3 - 2 * t))(min(1.0, max(0.0, (x - a) / (b - a))))
 
 # ---------- stick figure for the skin modifier: (position, radius x, radius y, parent)
-N = [((0, 0.005, 0.95), 0.150, 0.105, None),    # 0 pelvis (root)
-     ((0, 0.0, 1.08), 0.128, 0.088, 0),         # 1 waist
-     ((0, -0.004, 1.24), 0.150, 0.100, 1),      # 2 ribs
-     ((0, -0.006, 1.36), 0.160, 0.104, 2),      # 3 chest
-     ((0, 0.0, 1.44), 0.140, 0.090, 3),         # 4 shoulder line
-     ((0, 0.006, 1.52), 0.062, 0.062, 4),       # 5 neck
-     ((0, 0.004, 1.585), 0.064, 0.066, 5)]      # 6 neck top (head is built separately)
+N = [((0, 0.006, 0.95), 0.158, 0.112, None),    # 0 pelvis (root)
+     ((0, 0.002, 1.07), 0.136, 0.096, 0),       # 1 waist
+     ((0, -0.006, 1.2), 0.165, 0.112, 1),       # 2 ribs
+     ((0, -0.012, 1.32), 0.192, 0.124, 2),      # 3 chest (big)
+     ((0, 0.004, 1.43), 0.17, 0.104, 3),        # 4 shoulder line
+     ((0, 0.01, 1.5), 0.074, 0.07, 4),          # 5 neck (thick)
+     ((0, 0.01, 1.55), 0.066, 0.066, 5)]        # 6 neck top (head is built separately)
 for sx in (1, -1):
     b = len(N)
-    N += [((0.175 * sx, 0.0, 1.425), 0.056, 0.056, 4),        # shoulder
-          ((0.27 * sx, 0.01, 1.18), 0.043, 0.043, b),         # elbow
-          ((0.352 * sx, 0.0, 0.955), 0.031, 0.027, b + 1),    # wrist
-          ((0.372 * sx, -0.008, 0.875), 0.042, 0.019, b + 2), # palm
-          ((0.388 * sx, -0.014, 0.785), 0.036, 0.015, b + 3), # fingertips (mitten)
-          ((0.352 * sx, -0.038, 0.895), 0.013, 0.013, b + 2), # thumb
-          ((0.095 * sx, 0.0, 0.89), 0.078, 0.078, 0),         # hip
-          ((0.11 * sx, -0.006, 0.52), 0.052, 0.054, b + 6),   # knee
-          ((0.117 * sx, 0.012, 0.095), 0.038, 0.042, b + 7),  # ankle
-          ((0.13 * sx, -0.115, 0.035), 0.044, 0.028, b + 8)]  # toes
+    N += [((0.2 * sx, 0.004, 1.415), 0.07, 0.068, 4),        # shoulder (deltoid cap)
+          ((0.222 * sx, 0.008, 1.32), 0.064, 0.06, b),        # upper arm (biceps)
+          ((0.27 * sx, 0.012, 1.18), 0.047, 0.047, b + 1),    # elbow
+          ((0.296 * sx, 0.006, 1.105), 0.054, 0.05, b + 2),   # forearm swell
+          ((0.352 * sx, 0.0, 0.955), 0.035, 0.03, b + 3),     # wrist
+          ((0.366 * sx, -0.008, 0.895), 0.046, 0.034, b + 4), # back of the hand
+          ((0.376 * sx, -0.016, 0.835), 0.05, 0.04, b + 5),   # fist
+          ((0.352 * sx, -0.046, 0.872), 0.017, 0.016, b + 4), # thumb across the fist
+          ((0.098 * sx, 0.0, 0.89), 0.094, 0.094, 0),         # hip
+          ((0.104 * sx, -0.012, 0.72), 0.088, 0.09, b + 8),   # thigh
+          ((0.11 * sx, -0.008, 0.52), 0.058, 0.06, b + 9),    # knee
+          ((0.113 * sx, 0.018, 0.36), 0.062, 0.066, b + 10),  # calf
+          ((0.117 * sx, 0.012, 0.1), 0.041, 0.045, b + 11),   # ankle
+          ((0.13 * sx, -0.12, 0.035), 0.05, 0.03, b + 12)]    # foot
 me = bpy.data.meshes.new('skel')
 me.from_pydata([p for p, *_ in N], [(i, n[3]) for i, n in enumerate(N) if n[3] is not None], [])
 body = bpy.data.objects.new('Body', me); col.objects.link(body)
@@ -44,6 +48,16 @@ bpy.context.view_layer.objects.active = body
 for m in ('Skin', 'Sub'):
     with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier=m)
 print('SKIN verts', len(body.data.vertices), 'top', round(max(v.co.z for v in body.data.vertices), 3))
+def g2(a, b, wa, wb): return math.exp(-(a / wa) ** 2 - (b / wb) ** 2)
+for v in body.data.vertices:
+    x, y, z = v.co; ax = abs(x)
+    if ax < 0.24 and z > 1.0:
+        v.co.z += 0.03 * g2(ax - 0.1, z - 1.47, 0.055, 0.04) * (1 if y > -0.04 else 0.6)     # trapezius: neck slopes into the shoulders
+        v.co.y -= 0.014 * g2(ax - 0.078, z - 1.335, 0.05, 0.05) * (y < 0)                    # pecs
+        v.co.y += 0.008 * g2(ax - 0.07, z - 1.33, 0.05, 0.07) * (y > 0)                      # shoulder blades
+        v.co.x += math.copysign(0.012, x) * g2(ax - 0.17, z - 1.25, 0.03, 0.07)              # lats flare under the arms
+    if z < 1.0 and z > 0.78 and y > 0:
+        v.co.y += 0.014 * g2(ax - 0.07, z - 0.88, 0.05, 0.05)                                # glutes
 
 # ---------- head: rings of vertices on a sculpted surface
 C = Vector((0, 0.004, 1.68))
@@ -327,8 +341,22 @@ pts = [top + Vector((0.003 * math.sin(k * 1.9), -0.004 * math.sin(k * 0.5), -k *
 tube(bm, pts, 0.016, 0.008, 8, 0.8)
 for k in range(1, 6): r = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=0.013 - k * 0.0012); bmesh.ops.transform(bm, verts=r['verts'], matrix=Matrix.Translation(pts[k] + Vector((0.004 * (-1) ** k, 0, 0))) @ Matrix.Diagonal((1, 0.75, 1.1, 1)))
 HAIRS.append(join(bb, as_object('_braid', bm)))
-HAIRS.append(solid('Moustache', -0.48, 0.48, lambda th: 1.638 - 0.004 * sm(0.1, 0.45, abs(th)), lambda th: 1.624 - 0.012 * sm(0.18, 0.45, abs(th)),
-                   lambda th, z: 0.006 + 0.004 * fw(th, 0.3), lambda th: 0.016 * sm(0.25, 0.48, abs(th)), 0.0, lambda th: 0.008, NT=14, NF=4, NS=4, fwd=0.004))
+def stache(name, ends_down, width, thick, curl=0.0, top=1.638):
+    ob = solid(name, -width, width, lambda th: top - 0.004 * sm(0.1, width, abs(th)), lambda th: 1.624 - 0.012 * sm(0.18, width, abs(th)),
+               lambda th, z: thick + 0.004 * fw(th, 0.3), lambda th: ends_down * sm(width * 0.5, width, abs(th)), 0.0, lambda th: thick + 0.002, NT=14, NF=4, NS=5, fwd=0.004)
+    if curl:  # handlebar: the ends sweep out and up
+        bm = bmesh.new()
+        for sx in (1, -1):
+            a0 = head_point(width * sx, ph_at(width * sx, 1.62)); n = (a0 - C); n.z = 0; n = n.normalized()
+            pts = [a0 + n * 0.008 + Vector((0.012 * sx * k, -0.004 * k, curl * (k / 4) ** 1.6)) for k in range(5)]
+            tube(bm, pts, 0.006, 0.0025, 6, 0.8)
+        ob = join(ob, as_object('_curl', bm))
+    return ob
+HAIRS.append(stache('Moustache_Chevron', 0.016, 0.48, 0.007))
+HAIRS.append(stache('Moustache_Horseshoe', 0.055, 0.5, 0.006))
+HAIRS.append(stache('Moustache_Walrus', 0.024, 0.55, 0.012, top=1.642))
+HAIRS.append(stache('Moustache_Handlebar', 0.004, 0.42, 0.006, curl=0.016))
+HAIRS.append(stache('Moustache_Pencil', 0.0, 0.36, 0.003, top=1.632))
 # hair: a solid cap with volume, a few chunky points at the hairline, strands painted on
 def cap(name, lower, thick, notch_k=6, notch=0.01, droop=lambda th, f: 0.0, NR=12):
     return shell(name, -math.pi, math.pi, lambda th: hairline(th) - lower(th) - notch * tri(th * notch_k / math.pi), TOP, thick, droop, NT=40, NR=NR, wrap=True)
@@ -373,14 +401,42 @@ for ob in HAIRS:
     keep = {ob.vertex_groups[n].index for n in ('head', 'neck') if n in ob.vertex_groups}
     hi = ob.vertex_groups['head'].index if 'head' in ob.vertex_groups else ob.vertex_groups.new(name='head').index
     for v in ob.data.vertices:
-        ws = {g.group: g.weight for g in v.groups if g.group in keep}; tot = sum(ws.values())
-        for g in list(v.groups):
-            if g.group not in keep: ob.vertex_groups[g.group].remove([v.index])
+        ws = {gv.group: gv.weight for gv in v.groups if gv.group in keep}; tot = sum(ws.values())
+        for gv in list(v.groups):
+            if gv.group not in keep: ob.vertex_groups[gv.group].remove([v.index])
         if tot < 1e-4: ob.vertex_groups[hi].add([v.index], 1.0, 'REPLACE')
         else:
             for gi, w in ws.items(): ob.vertex_groups[gi].add([v.index], w / tot, 'REPLACE')
     ob.modifiers.new('Armature', 'ARMATURE').object = arm; ob.parent = arm
     print(ob.name, 'groups', len(ob.vertex_groups))
+# ---------- Valheim-style idle and walk: chest up, arms hanging out and down, fists by the thighs
+for a_ in list(bpy.data.actions):
+    if a_.name in ('Idle', 'Walk'): bpy.data.actions.remove(a_)
+pose, bake = g['pose'], g['bake']
+def arms(sw=0.0, br=0.0):
+    out = []
+    for sx, side in ((1, 'L'), (-1, 'R')):
+        k = sw * (1 if side == 'L' else -1)          # left arm swings back while the left leg goes forward
+        out += [(f'upper_arm.{side}', (0.29 * sx, 0.03 + 0.08 * k, 1.19 + br)),
+                (f'forearm.{side}', (0.33 * sx, -0.005 + 0.15 * k - 0.04 * abs(sw), 0.97 + br)),
+                (f'hand.{side}', (0.337 * sx, -0.018 + 0.18 * k - 0.05 * abs(sw), 0.855 + br))]
+    return out
+def idle2(f):
+    ph = 2 * math.pi * f / 48; b = math.sin(ph)
+    d = {'spine': (-0.02, 0, 0), 'chest': (-0.07 + 0.015 * b, 0, 0), 'neck': (0.07 - 0.012 * b, 0, 0), 'head': (0.01, 0, 0.04 * math.sin(ph * 0.5)),
+         'thigh.L': (0.07, -0.07, 0), 'thigh.R': (0.07, -0.07, 0), 'shin.L': (-0.13, 0, 0), 'shin.R': (-0.13, 0, 0), 'foot.L': (0.06, 0.05, 0), 'foot.R': (0.06, 0.05, 0)}
+    return d, -0.012 - 0.004 * (1 - math.cos(ph)) / 2, arms(0.0, 0.004 * b)
+def walk2(f):
+    ph = 2 * math.pi * f / 24; s, c = math.sin(ph), math.cos(ph)
+    d = {'thigh.L': (0.5 * s, -0.03, 0), 'thigh.R': (-0.5 * s, -0.03, 0),
+         'shin.L': (-(0.1 + 0.75 * max(0, c)), 0, 0), 'shin.R': (-(0.1 + 0.75 * max(0, -c)), 0, 0),
+         'foot.L': (0.25 * max(0, -s) - 0.15 * max(0, s), 0, 0), 'foot.R': (0.25 * max(0, s) - 0.15 * max(0, -s), 0, 0),
+         'hips': (0, 0, -0.08 * s), 'spine': (0.03, 0, 0.08 * s), 'chest': (-0.04, 0, 0.07 * s), 'neck': (0.03, 0, -0.1 * s)}
+    return d, -0.03 * (1 - abs(c)), arms(s, 0.008 * abs(c))
+arm.data.pose_position = 'POSE'
+bake('Idle', range(0, 49, 4), idle2)
+bake('Walk', range(0, 25, 2), walk2)
+arm.animation_data.action = None; pose({})
 arm.data.pose_position = 'POSE'
 bpy.ops.object.select_all(action='DESELECT'); body.select_set(True); arm.select_set(True)
 for ob in HAIRS: ob.select_set(True)
