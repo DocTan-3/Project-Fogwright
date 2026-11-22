@@ -1,5 +1,5 @@
 # Fogwright base body from the Simple RPG Human Male (Sketchfab), rigged and repainted by code.
-# RACE=human (default), ferrin, ilvari or zarhim, e.g.  RACE=ilvari python rpgbody.py -- ilvari.glb
+# RACE=human (default), ferrin, ilvari, zarhim or female, e.g.  RACE=female python rpgbody.py -- female.glb
 # (adapted from body.py): one continuous mesh, built for painting. Exports body.glb
 # Torso, limbs, hands and feet come from a skin-modifier stick figure; the head is built ring by ring and
 # shaped by one smooth function (skull, jaw, brow, nose, lips, chin), then bridged to the neck with no seam.
@@ -165,6 +165,9 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
   'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
+  'female': dict(KL=1.0, KN=0.95, HS=0.96, SHX=-0.032, W=[(1.5, 0.05, -0.16), (1.4, 0.06, -0.08), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.09, 0.06, -0.27), (0.96, 0.07, 0.08)],
+                 D=[(1.1, 0.1, -0.12), (1.33, 0.07, -0.1), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
+                 ARM={'shoulder': 0.84, 'upper_arm': 0.72, 'forearm': 0.72, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
                  ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
 }
@@ -200,12 +203,14 @@ if RACE in RACES:
             off = co - q; qn = Vector((q.x + s_ * SHX, q.y, zmap(q.z)))
             return qn + off * k
         if z > NECK1:  # the head keeps its size
+            if P_.get('FEM'): x *= 1 - 0.085 * sm(1.665, 1.575, z)   # softer, narrower jaw
             return Vector((x * HS, C.y + (y - C.y) * HS, zmap(z)))
         wx, wy = torso_w(z)
-        return Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
+        out = Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
+        return out
     for v in body.data.vertices:
         d, nm, q = seg_of(v.co); v.co = F(v.co.copy(), nm, q)
-    if RACE == 'ferrin':   # each part is reshaped differently; blend the change across the joins so they don't form spikes
+    if RACE in ('ferrin', 'female'):   # each part is reshaped differently; blend the change across the joins so they don't form spikes
         nb = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb[a_].append(b_); nb[b_].append(a_)
         D = [body.data.vertices[i].co - ORIG[i] for i in range(len(ORIG))]
@@ -213,6 +218,14 @@ if RACE in RACES:
         for _ in range(12):
             D = [D[i] if fix[i] or not nb[i] else D[i] * 0.4 + sum((D[j] for j in nb[i]), Vector()) * (0.6 / len(nb[i])) for i in range(len(D))]
         for i, v in enumerate(body.data.vertices): v.co = ORIG[i] + D[i]
+    if P_.get('FEM'):   # the bust, after the blending so it keeps its shape: full and rounded on a flattened chest
+        for i, v in enumerate(body.data.vertices):
+            x, y, z = ORIG[i]
+            if y > 0.03 or abs(x) > 0.2: continue
+            k = math.exp(-((abs(x) - 0.068) / 0.05) ** 2 - ((z - 1.285) / 0.052) ** 2)
+            v.co.y -= 0.085 * k ** 0.8
+            v.co.z -= 0.012 * math.exp(-((abs(x) - 0.068) / 0.05) ** 2 - ((z - 1.255) / 0.035) ** 2)
+            v.co.x += math.copysign(0.01, x) * k
     sm3 = body.modifiers.new('Settle', 'SMOOTH'); sm3.factor = 0.4; sm3.iterations = 3
     with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Settle')
     # refit the rig to the new shape
