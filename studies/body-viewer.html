@@ -87,7 +87,7 @@ vec3 paintHead(vec3 p){
   return c;
 }
 vec3 paintBody(vec3 p){
-  float ax=abs(p.x); bool armR=(ax>0.168-0.25*max(0.,p.z-1.40)&&p.z>1.05)||ax>0.25;
+  float ax=abs(p.x); bool armR=(ax>0.168-0.25*max(0.,p.z-1.40)&&p.z>1.05)||(ax>0.25&&p.z>0.6);
   if(p.z>1.556&&!armR)return paintHead(p);
   vec3 c;
   if(armR){ // sleeves to the wrist, then hands (bare or gloved)
@@ -99,7 +99,7 @@ vec3 paintBody(vec3 p){
     return c;}
   if(p.z>1.468){ // neck, with the collar
     c=uSkin*mix(0.86,0.97,smoothstep(1.47,1.53,p.z));
-    float collar=step(p.z,1.505)*(1.-step(p.y,-0.02)*inside(ax-(p.z-1.468)*0.9)); c=mix(c,cloth(uShirt,p,1.)*0.95,collar);
+    float collar=(1.-step(0.5,uF1.y))*step(p.z,1.505)*(1.-step(p.y,-0.02)*inside(ax-(p.z-1.468)*0.9)); c=mix(c,cloth(uShirt,p,1.)*0.95,collar);
     return c;}
   if(p.z>1.04&&uF1.y>0.5){ // bare torso: muscle painted in, as Valheim does
     float fr=1.-smoothstep(-0.05,0.01,p.y);

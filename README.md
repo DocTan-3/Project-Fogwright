@@ -26,6 +26,7 @@ python3 -m http.server 8000
 | `game/*.gltf.json` | The hero (Tinker) and the townsfolk (eight peoples). They're glTF with embedded buffers, saved as `.gltf.json` so any static host serves them. |
 | `studies/peoples-viewer.html` | Lineup of the eight peoples and the city watch (first pass, kitbashed). |
 | `studies/body-viewer.html` | The new direction: one seamless body with face and clothes painted by code, a head built from cross-sections (square jaw, real chin, heavy brow), and hair and beards as solid sculpted masses with painted strands, the way Valheim does them: short, swept, long, ponytail and topknot hair; short, full (spade), pointed, forked and braided beards; a moustache. A work in progress. |
+| `studies/base-body-viewer.html` | **The current base body:** a Sketchfab model (see CREDITS.md) rigged to our skeleton and repainted by code, with our hair, beards, moustaches, Lean and Heavy builds, idle and walk. |
 | `studies/tinker-viewer.html` | Review viewer for the Tinker hero model. |
 | `tools/blender/` | Blender (bpy) scripts that build the characters. `tinker.py` makes the hero and the rig with its Idle, Walk and Aim animations; `races.py` makes the kitbashed peoples model; `body.py` makes the clean seamless base body; `kit.py` is the original building kit, now generated in code inside the game; `glb2json.py` turns a `.glb` into a `.gltf.json`. |
 | `tools/test/smoke.js` | Headless smoke test: boots the game, visits a few places and reports page errors. |

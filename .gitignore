@@ -5,3 +5,6 @@ shots/
 node_modules/
 *.png
 !docs/**/*.png
+
+# third-party source models (check their licenses before committing)
+tools/blender/source/
