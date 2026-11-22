@@ -1,4 +1,5 @@
 # Fogwright base body from the Simple RPG Human Male (Sketchfab), rigged and repainted by code.
+# RACE=human (default) or RACE=ferrin, e.g.  RACE=ferrin python rpgbody.py -- ferrin.glb
 # (adapted from body.py): one continuous mesh, built for painting. Exports body.glb
 # Torso, limbs, hands and feet come from a skin-modifier stick figure; the head is built ring by ring and
 # shaped by one smooth function (skull, jaw, brow, nose, lips, chin), then bridged to the neck with no seam.
@@ -16,6 +17,7 @@ sm = lambda a, b, x: (lambda t: t * t * (3 - 2 * t))(min(1.0, max(0.0, (x - a) /
 
 
 import os
+RACE = os.environ.get('RACE', 'human')
 MODEL_DIR = os.path.abspath('source')   # put model_0.obj from the Sketchfab download here (not committed)
 # ---------- 1. fit our rig's arms to the model (its arms are longer, with bigger hands)
 ARMFIT = {'L': [(0.2, 0.03, 1.43), (0.255, 0.05, 1.17), (0.296, 0.03, 0.95), (0.315, 0.01, 0.70)]}
@@ -154,6 +156,73 @@ for v in body.data.vertices:
     elif z < 0.36:
         k = 0.74 + 0.26 * sm(0.12, 0.36, z); cx, cy = 0.125 * s_, 0.045
         v.co.x = cx + (x - cx) * k; v.co.y = cy + (y - cy) * k
+# ---------- per-people proportions. The mesh is reshaped and the rig refitted to it; paint still uses the original layout.
+ORIG = [v.co.copy() for v in body.data.vertices]
+ZM0, KX0, C0 = list(ZM), KX, C.copy()
+Zm2c0 = lambda z: pl(z, ZM0, ZCAN)
+if RACE == 'ferrin':
+    HIP, KL, NECK0, NECK1, KN, HS = 0.92, 0.7, 1.45, 1.556, 0.55, 1.04
+    DZ = HIP * (1 - KL)
+    LEGB = ('thigh', 'shin', 'foot')
+    SEGS0 = [(bn, Vector(bh), Vector(bt)) for bn, bh, bt, bp in g['BONES']]
+    def seg_of(co):
+        best = None
+        for nm, h, t in SEGS0:
+            d = t - h; u = max(0.0, min(1.0, (co - h).dot(d) / d.length_squared)); q = h + d * u; dist = (co - q).length
+            if best is None or dist < best[0]: best = (dist, nm, q)
+        return best
+    def torso_w(z):  # barrel chest and belly
+        return (1 + 0.2 * math.exp(-((z - 1.25) / 0.17) ** 2) + 0.08 * math.exp(-((z - 1.05) / 0.1) ** 2),
+                1 + 0.28 * math.exp(-((z - 1.18) / 0.2) ** 2))
+    SHX = 0.17 * 0.18
+    def zmap(z):  # above the hips: lowered; the neck shortened
+        z = z - DZ
+        n0, n1 = NECK0 - DZ, NECK1 - DZ
+        if z <= n0: return z
+        if z <= n1: return n0 + (z - n0) * KN
+        return n0 + (n1 - n0) * KN + (z - n1) * HS
+    def F(co, nm, q):
+        x, y, z = co; s_ = 1 if x >= 0 else -1
+        if nm.startswith(LEGB) and not (nm.startswith('thigh') and z > HIP + 0.02):
+            cx, cy = 0.115 * s_, 0.03
+            return Vector((cx * 1.05 + (x - cx) * 1.22, cy + (y - cy) * 1.22, z * KL))
+        if nm.startswith(('shoulder', 'upper_arm', 'forearm', 'hand')):
+            k = {'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}[nm.split('.')[0]]
+            off = co - q; qn = Vector((q.x + s_ * SHX, q.y, zmap(q.z)))
+            return qn + off * k
+        if z > NECK1:  # the head keeps its size
+            return Vector((x * HS, C.y + (y - C.y) * HS, zmap(z)))
+        wx, wy = torso_w(z)
+        return Vector((x * wx, 0.004 + (y - 0.004) * wy - 0.035 * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
+    for v in body.data.vertices:
+        d, nm, q = seg_of(v.co); v.co = F(v.co.copy(), nm, q)
+    sm3 = body.modifiers.new('Settle', 'SMOOTH'); sm3.factor = 0.4; sm3.iterations = 3
+    with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Settle')
+    # refit the rig to the new shape
+    bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='EDIT')
+    eb = arm.data.edit_bones
+    def Fj(p, nm):
+        p = Vector(p); s_ = 1 if p.x >= 0 else -1
+        if nm.startswith(LEGB): return Vector((0.115 * s_ * 1.05 + (p.x - 0.115 * s_) * 1.22, p.y, p.z * KL)) if p.z < HIP + 0.02 else Vector((p.x, p.y, p.z - DZ))
+        if nm.startswith(('shoulder', 'upper_arm', 'forearm', 'hand')): return Vector((p.x + s_ * SHX * (abs(p.x) > 0.05), p.y, zmap(p.z)))
+        return Vector((p.x, p.y, zmap(p.z)))
+    newB = []
+    for nm, h, t, par in g['BONES']:
+        hh, tt = Fj(h, nm), Fj(t, nm)
+        eb[nm].head = hh; eb[nm].tail = tt; newB.append((nm, tuple(hh), tuple(tt), par))
+    for nm, h, t, par in newB:   # keep children attached to their parents
+        if par and nm in eb and par in eb and (eb[nm].head - eb[par].tail).length < 0.03: eb[nm].head = eb[par].tail
+    g['BONES'][:] = [(nm, tuple(eb[nm].head), tuple(eb[nm].tail), par) for nm, h, t, par in g['BONES']]
+    REST_ARM = {sd: [eb[f'upper_arm.{sd}'].tail.copy(), eb[f'forearm.{sd}'].tail.copy(), eb[f'hand.{sd}'].tail.copy()] for sd in ('L', 'R')}
+    bpy.ops.object.mode_set(mode='OBJECT'); upd()
+    SEGS[:] = [(nm, Vector(h), Vector(t)) for nm, h, t, par in g['BONES'] if nm != 'head']
+    # the head moved: landmarks, mapping and the raycast surface follow
+    ZM = [zmap(z) if z > NECK1 else zmap(z) for z in ZM0]; ZM[0] = zmap(1.45)
+    eye_x = eye_x * HS; KX = 0.0338 / eye_x; C = Vector((0, C0.y, zmap(C0.z))); top_z = zmap(top_z)
+    hbm = bmesh.new(); hbm.from_mesh(body.data); hbm.verts.ensure_lookup_table()
+    bmesh.ops.delete(hbm, geom=[v for v in hbm.verts if not (v.co.z > ZM[0] and math.hypot(v.co.x, v.co.y - C.y) < 0.14)], context='VERTS')
+    HBVH = BVHTree.FromBMesh(hbm); ZB, ZT = ZM[0] + 0.02, top_z
+    print('FERRIN height', round(max(v.co.z for v in body.data.vertices), 3), 'eye', round(ZM[3], 3))
 body.shape_key_add(name='Basis')
 KEYS = {}
 for kname, lean in (('Lean', True), ('Heavy', False)):
@@ -415,12 +484,12 @@ for ob in HAIRS:
 # ---------- rest position: where each point sits on OUR painted body, so the same paint fits this model
 me = body.data
 ca = me.color_attributes.new('rest', 'FLOAT_COLOR', 'POINT')
-armset = set(i for i in range(len(me.vertices)) if isarm(me.vertices[i].co))
+armset = set(i for i in range(len(me.vertices)) if isarm(ORIG[i]))
 for v in me.vertices:
-    x, y, z = v.co
+    x, y, z = ORIG[v.index]                       # paint follows the original body, whatever shape it took
     if z > 1.47 and v.index not in armset:      # blend from body space into the face layout up the neck
         t = sm(1.47, 1.555, z)
-        x = x + (x * KX - x) * t; y = y + ((y - C.y) * KX + 0.004 - y) * t; z = z + (Zm2c(z) - z) * t
+        x = x + (x * KX0 - x) * t; y = y + ((y - C0.y) * KX0 + 0.004 - y) * t; z = z + (Zm2c0(z) - z) * t
     ca.data[v.index].color = (x + 0.5, y + 0.5, z / 2, 1)
 me.color_attributes.active_color = ca
 mat = bpy.data.materials.new('Body'); me.materials.append(mat)
