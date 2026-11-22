@@ -117,14 +117,25 @@ def nearest_seg(co):
     return best
 TORSO = ('hips', 'spine', 'chest', 'neck')
 def region_scale(nm, u, z, co, lean):
-    if nm in TORSO:  return (0.8, 0.82) if lean else (1.14, 1.2)
-    if nm.startswith('shoulder'): return (0.78, 0.78) if lean else (1.25, 1.25)
-    if nm.startswith('upper_arm'): return (0.7, 0.7) if lean else (1.32, 1.3)
-    if nm.startswith('forearm'): return (0.74, 0.74) if lean else (1.35, 1.32)
-    if nm.startswith('hand'): return (0.86, 0.86) if lean else (1.38, 1.38)
-    if nm.startswith('thigh'): return (0.78, 0.78) if lean else (1.2, 1.2)
-    if nm.startswith('shin'): return (0.8, 0.8) if lean else (1.18, 1.18)
-    return (0.9, 0.9) if lean else (1.12, 1.12)
+    if nm in TORSO:  return (0.74, 0.76) if lean else (1.14, 1.2)          # heavy: bulk in the body,
+    if nm.startswith('shoulder'): return (0.72, 0.74) if lean else (1.06, 1.06)   # not in the arms
+    if nm.startswith('upper_arm'): return (0.66, 0.66) if lean else (1.1, 1.1)
+    if nm.startswith('forearm'): return (0.7, 0.7) if lean else (1.08, 1.08)
+    if nm.startswith('hand'): return (0.85, 0.85) if lean else (1.04, 1.04)
+    if nm.startswith('thigh'): return (0.76, 0.78) if lean else (1.18, 1.18)
+    if nm.startswith('shin'): return (0.8, 0.8) if lean else (1.12, 1.12)
+    return (0.9, 0.9) if lean else (1.06, 1.06)
+ARMV = set(i for k in ARMI for i in islands[k])
+# ---------- bare feet: the source model wears boots; pull them in to feet and ankles
+for v in body.data.vertices:
+    x, y, z = v.co; s_ = 1 if x > 0 else -1
+    if z < 0.12:
+        cx, cy = 0.15 * s_, -0.02
+        v.co.x = cx + (x - cx) * 0.52; v.co.y = cy + (y - cy) * 0.8
+        if z > 0.02: v.co.z = 0.02 + (z - 0.02) * 0.8
+    elif z < 0.36:
+        k = 0.74 + 0.26 * sm(0.12, 0.36, z); cx, cy = 0.125 * s_, 0.045
+        v.co.x = cx + (x - cx) * k; v.co.y = cy + (y - cy) * k
 body.shape_key_add(name='Basis')
 KEYS = {}
 for kname, lean in (('Lean', True), ('Heavy', False)):
@@ -144,8 +155,19 @@ for kname, lean in (('Lean', True), ('Heavy', False)):
             new_.x += math.copysign(0.018, co.x) * math.exp(-((co.z - 1.1) / 0.09) ** 2) * (nm in TORSO)  # love handles
             new_.z += 0.012 * math.exp(-((ax_ - 0.11) / 0.06) ** 2 - ((co.z - 1.47) / 0.04) ** 2)        # bigger traps
         else:
+            if v.index in ARMV: new_.x -= math.copysign(0.018, co.x) * sm(0.6, 1.2, co.z)   # arms come in with the narrower chest
             new_.z -= 0.008 * math.exp(-((abs(co.x) - 0.11) / 0.06) ** 2 - ((co.z - 1.47) / 0.04) ** 2)   # flatter traps
         kb.data[v.index].co = new_
+# smooth each shape over the surface, so neighbouring parts blend instead of creasing where they meet
+NB = [[] for _ in body.data.vertices]
+for e in body.data.edges: a_, b_ = e.vertices; NB[a_].append(b_); NB[b_].append(a_)
+basis = [v.co.copy() for v in body.data.vertices]
+fixed = [c.z > 1.535 and abs(c.x) < 0.12 for c in basis]
+for kname in ('Lean', 'Heavy'):
+    kb = KEYS[kname]; D = [kb.data[i].co - basis[i] for i in range(len(basis))]
+    for _ in range(8):
+        D = [Vector((0, 0, 0)) if fixed[i] else (D[i] * 0.4 + sum((D[j] for j in NB[i]), Vector((0, 0, 0))) * (0.6 / len(NB[i])) if NB[i] else D[i]) for i in range(len(D))]
+    for i in range(len(D)): kb.data[i].co = basis[i] + D[i]
 print('SHAPE KEYS', [k.name for k in body.data.shape_keys.key_blocks])
 # ---------- hair and beards: real volumes grown from the head surface, shaped into locks
 HL = [(0.0, 1.745), (0.6, 1.748), (1.15, 1.706), (1.5, 1.655), (2.45, 1.618), (math.pi, 1.604)]

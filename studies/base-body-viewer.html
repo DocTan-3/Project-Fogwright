@@ -20,9 +20,10 @@ button[aria-pressed="true"]{background:rgba(214,165,78,.22);border-color:var(--b
 <aside class="panel"><h1>Base body study</h1><p class="sub">Sketchfab base model · rigged, repainted by code</p>
 <div class="label">View</div><div class="chips" id="views"><button data-v="full" aria-pressed="true">Full</button><button data-v="face">Faces</button></div>
 <div class="label">Base layer</div><div class="chips" id="lower"><button data-l="mix" aria-pressed="true">Mixed</button><button data-l="0">Trousers</button><button data-l="1">Boxers</button></div>
-<div class="label">Build · everyone</div><input id="build" type="range" min="-1" max="1" step="0.05" value="0" aria-label="Shift every build from lean to heavy" style="width:100%">
+<div class="label">Height · within each people's range</div><input id="hgt" type="range" min="0" max="1" step="0.02" value="0.5" aria-label="Height, within each people's range" style="width:100%">
+<div class="label">Weight · skinny to heavy, within range</div><input id="wgt" type="range" min="0" max="1" step="0.02" value="0.35" aria-label="Weight from skinny to heavy, within each people's range" style="width:100%">
 <div class="label">Turn</div><div class="chips" id="turn"><button data-y="0" aria-pressed="true">Front</button><button data-y="0.7">Three-quarter</button><button data-y="1.5708">Side</button><button data-y="3.1416">Back</button></div>
-<p class="note">The base layer every player starts from: skin, plain undyed trousers or boxers, and foot wraps, all painted by code. Clothes and armour are layered on top later.</p></aside>
+<p class="note">The base layer every player starts from: skin and plain undyed trousers or boxers, painted by code. Each people keeps its look through its own height and weight range: slender Ilvari, short broad Ferrin, big Hrimfolk.</p></aside>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
@@ -33,7 +34,7 @@ const PAINT_GLSL=`
 uniform vec3 uSkin,uHair,uEye,uShirt,uVest,uPants,uBelt,uBoots,uTrim,uInk,uLip;
 uniform vec4 uF1; // vest, bare chest, ink, freckles
 uniform vec4 uF2; // hair (0 bald 1 short 2 long), gloves, stripes, tabard
-uniform vec4 uB;  // base layer: on, lower (0 trousers 1 boxers), chest hair, -
+uniform vec4 uB;  // base layer: on, lower (0 trousers 1 boxers), chest hair, muscle definition (0 soft .. 1 defined)
 varying vec3 vRest;
 float hsh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hsh(i),hsh(i+vec2(1.,0.)),f.x),mix(hsh(i+vec2(0.,1.)),hsh(i+vec2(1.,1.)),f.x),f.y);}
@@ -113,6 +114,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
   if(p.z>1.04){                                                                      // torso
     c*=1.-0.13*smoothstep(0.08,0.17,ax);                                            // rounding toward the sides
     c*=1.-0.2*gss(vec2(ax,p.z),vec2(0.165,1.37),vec2(0.025,0.05));                  // armpits
+    vec3 soft=c;
     float pz=1.296+0.02*(1.-clamp(abs(ax-0.075)/0.075,0.,1.));
     c*=1.+0.07*fr*gss(vec2(ax,p.z),vec2(0.075,1.355),vec2(0.05,0.035));             // chest catches the light
     c*=1.-0.12*fr*exp(-pow((p.z-pz)/0.017,2.))*(1.-smoothstep(0.12,0.17,ax))*smoothstep(0.,0.025,ax);  // soft shadow under the chest
@@ -127,6 +129,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     c*=1.-0.22*fr*gss(vec2(ax,p.z),vec2(0.,1.088),vec2(0.0045,0.006));              // navel
     c*=1.-0.1*bk*exp(-pow(ax/0.012,2.));                                              // spine
     c*=1.+0.05*bk*gss(vec2(ax,p.z),vec2(0.07,1.35),vec2(0.04,0.05));                // shoulder blades
+    c=mix(soft,c,0.25+0.75*uB.w);                                                   // leaner people show less muscle
     if(uB.z>0.){float m=fr*(gss(vec2(ax,p.z),vec2(0.045,1.33),vec2(0.06,0.05))+exp(-pow(ax/0.014,2.))*step(p.z,1.4)*(1.-smoothstep(1.0,1.04,p.z)*0.)*step(1.04,p.z)*0.8);
       float sp=smoothstep(0.5,0.75,vnoise(p.xz*vec2(320.,140.))); c=mix(c,uHair*0.85,clamp(m,0.,1.)*sp*0.6*uB.z);}   // chest hair
     c*=mix(0.84,1.,smoothstep(1.035,1.07,p.z));                                     // shade above the waistband
@@ -137,28 +140,31 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     float kn=fr*inside(length(vec2(ax,p.z-1.012))-0.007); c=mix(c,uPants*0.62,kn);
     float str=fr*inside(abs(ax-0.003*sin(p.z*300.))-0.0028)*step(0.95,p.z)*(1.-step(1.008,p.z)); c=mix(c,uPants*0.6,str);
     return c;}
-  float lx=ax-0.11, hem=uB.y>0.5?0.70:0.335;
-  if(p.z>hem){                                                                       // boxers or trousers
+  float lx=ax-0.11, hem=uB.y>0.5?0.70:0.13;
+  if(p.z>hem){                                                                       // boxers or trousers (to the ankle)
     c=linen(p,1.5);
     c*=0.92+0.08*(1.-smoothstep(0.,0.05,abs(lx)));
     c*=1.-0.1*fr*exp(-pow(ax/0.02,2.))*smoothstep(0.9,0.82,p.z);                       // the fork
     c*=1.-0.07*vnoise(vec2(p.x*40.,p.z*25.))*smoothstep(0.9,0.75,p.z);              // soft folds
     c*=mix(0.78,1.,smoothstep(hem,hem+0.03,p.z));                                     // turned-up hem
     c*=1.-0.15*inside(abs(p.z-hem-0.02)-0.0015);
-    if(uB.y<0.5)c*=1.-0.08*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.05,0.03));         // trouser knee
+    if(uB.y<0.5){c*=1.-0.08*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.05,0.03)); c*=1.-0.06*vnoise(vec2(p.x*30.,p.z*12.))*smoothstep(0.35,0.15,p.z);}  // knee, gathered ankles
     return c;}
-  if(p.z>0.335){                                                                     // bare legs below the boxers
+  if(p.z>0.1){                                                                       // bare legs and ankles
     c*=0.94+0.07*(1.-smoothstep(0.,0.05,abs(lx)));
     c=mix(c,c*vec3(1.04,0.9,0.86),0.5*fr*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.04,0.03)));  // ruddy knees
     c*=1.+0.05*fr*gss(vec2(lx,p.z),vec2(0.,0.43),vec2(0.02,0.06));                   // shin
     c*=1.-0.06*bk*gss(vec2(lx,p.z),vec2(0.,0.4),vec2(0.05,0.08));                    // calf shadow
-    c*=mix(0.82,1.,smoothstep(0.335,0.37,p.z));
+    c*=1.-0.08*gss(vec2(ax-0.125,p.z),vec2(0.03,0.12),vec2(0.01,0.012));            // ankle bones
+    c*=1.-0.08*gss(vec2(ax-0.125,p.z),vec2(-0.03,0.12),vec2(0.01,0.012));
     return c;}
-  // simple leather foot wraps
-  c=uBoots*(0.92+0.08*vnoise(p.xz*90.)); c*=mix(1.06,0.88,1.-smoothstep(0.05,0.33,p.z));
-  c*=1.-0.16*smoothstep(0.8,0.95,fract((p.z+ax*0.35)*32.))*step(0.06,p.z);            // the wrapping
-  c=mix(c,uBoots*0.45,inside(p.z-0.028));
-  c=mix(c,c*1.12,inside(abs(p.z-0.318)-0.014));
+  // bare feet: warmer, darker underneath, toes painted at the front
+  c=mix(c,c*vec3(1.05,0.9,0.86),0.3); c*=mix(0.8,1.,smoothstep(0.0,0.05,p.z));
+  float dx=ax-0.15, toes=1.-smoothstep(-0.11,-0.13,-p.y);
+  float gap=0.; for(int i=0;i<4;i++){gap=max(gap,inside(abs(dx-(-0.016+float(i)*0.011))-0.0012));}
+  c*=1.-0.35*gap*toes*step(p.z,0.05);
+  c=mix(c,c*vec3(1.1,1.0,0.95)*1.08,0.5*toes*step(0.025,p.z)*step(p.z,0.045)*(1.-gap));  // nails catch the light
+  c*=1.-0.1*gss(vec2(dx,p.y),vec2(0.,0.03),vec2(0.02,0.03))*step(p.z,0.06);         // heel
   return c;
 }
 vec3 paintBody(vec3 p){
@@ -233,7 +239,7 @@ function preparePainted(gltf){
 }
 const PAINT_KEYS=['uSkin','uHair','uEye','uShirt','uVest','uPants','uBelt','uBoots','uTrim','uInk','uLip'];
 function paintedMaterial(look){
-  const U={}; PAINT_KEYS.forEach(k=>U[k]={value:new THREE.Color(look[k]||'#888888')}); U.uF1={value:new THREE.Vector4(...look.f1)}; U.uF2={value:new THREE.Vector4(...look.f2)}; U.uB={value:new THREE.Vector4(...(look.base||[0,0,0,0]))};
+  const U={}; PAINT_KEYS.forEach(k=>U[k]={value:new THREE.Color(look[k]||'#888888')}); U.uF1={value:new THREE.Vector4(...look.f1)}; U.uF2={value:new THREE.Vector4(...look.f2)}; U.uB={value:new THREE.Vector4(...(look.base||[0,0,0,1]))};
   const m=new THREE.MeshLambertMaterial({skinning:true,morphTargets:true,morphNormals:true}); m.extensions={derivatives:true};
   m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
     sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 rest;\nvarying vec3 vRest;').replace('#include <begin_vertex>','#include <begin_vertex>\nvRest=rest;');
@@ -284,18 +290,27 @@ function buildPosture(root){ // call after the animation mixer each frame; offse
   }
 }
 
+function setDefinition(root,d){root.traverse(o=>{if(o.material&&o.material.userData&&o.material.userData.U&&o.material.userData.U.uB)o.material.userData.U.uB.value.w=d;});}
+
 const LOOKS=[
  {name:'Aurelan',base:[1,0,0.4,0],build:[0,0],hair:'Ponytail',beard:'Full',moustache:'Chevron',uSkin:'#e2b896',uHair:'#4a3020',uEye:'#4a6a8a',uShirt:'#ddd4c2',uVest:'#6c2e2a',uPants:'#cbbd9f',uBelt:'#5a3a26',uBoots:'#5a4030',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#b8705e',f1:[1,0,0,0],f2:[1,0,0,0]},
  {name:'Hrimfolk',base:[1,1,0.8,0],build:[0,0.75],hair:'Long',beard:'Braided',moustache:null,uSkin:'#f0cfb4',uHair:'#d8bc84',uEye:'#5a8aa8',uShirt:'#a39a8a',uVest:'#6e5a44',uPants:'#a89c86',uBelt:'#4e3826',uBoots:'#4a3a2c',uTrim:'#b8b8b8',uInk:'#2f5fd0',uLip:'#c47a6a',f1:[0,1,0,0],f2:[1,0,0,0]},
  {name:'Ilvari',base:[1,0,0,0],build:[0.8,0],hair:'Topknot',beard:null,moustache:'Pencil',uSkin:'#ecdacb',uHair:'#1c1c26',uEye:'#7a8aa0',uShirt:'#c8ccd8',uVest:'#1e2a4a',uPants:'#b9bbc0',uBelt:'#3a3a46',uBoots:'#3a3436',uTrim:'#7ab0d8',uInk:'#2f5fd0',uLip:'#b88a84',f1:[1,0,1,0],f2:[1,0,0,0]},
  {name:'Zarhim',base:[1,1,0,0],build:[0.4,0],hair:'Short',beard:'Pointed',moustache:'Walrus',uSkin:'#7a4e34',uHair:'#16110e',uEye:'#3a2a1a',uShirt:'#e2d8c2',uVest:'#2e3a6a',uPants:'#d8c9a8',uBelt:'#8a5a32',uBoots:'#6a4a30',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#6a3a2c',f1:[0,0,0,0],f2:[1,0,1,0]},
+ {name:'Ferrin',base:[1,0,0.7,0],build:[0,0],hair:'Short',beard:'Full',moustache:'Walrus',uSkin:'#c88a6c',uHair:'#5a3a28',uEye:'#4a3a2a',uShirt:'#8a7e6e',uVest:'#4a4440',uPants:'#8e8676',uBelt:'#4a3020',uBoots:'#3a2a20',uTrim:'#b8893e',uInk:'#2f5fd0',uLip:'#a8665a',f1:[0,0,0,0],f2:[1,0,0,0]},
  {name:'Ruadhan',base:[1,0,0.9,0],build:[0,0.25],hair:'Swept',beard:'Forked',moustache:'Handlebar',uSkin:'#f2cdb0',uHair:'#c0501e',uEye:'#5a7a4a',uShirt:'#c8b898',uVest:'#3e5a2e',uPants:'#b8ab8c',uBelt:'#7a5230',uBoots:'#4e3a28',uTrim:'#c9a046',uInk:'#2f5fd0',uLip:'#c47a6a',f1:[1,0,0,1],f2:[1,0,0,0]},
  {name:'City watch',base:[1,1,0.5,0],build:[0,0.5],hair:'Short',beard:null,moustache:'Horseshoe',uSkin:'#c9966e',uHair:'#2e2420',uEye:'#4a3a2a',uShirt:'#5a6270',uVest:'#3a4250',uPants:'#9c9488',uBelt:'#4a3020',uBoots:'#3a2c22',uTrim:'#3f3a6c',uInk:'#2f5fd0',uLip:'#a8665a',f1:[0,0.3,0,0],f2:[1,1,0,1]}];
+const RANGES={ // weight: -1 skinny, -0.5 ordinary, 0 muscular, 1 heavy
+  Aurelan:{h:[0.96,1.03],w:[-1,-0.25]},Hrimfolk:{h:[1.06,1.13],w:[-0.6,0.95]},Ilvari:{h:[1.03,1.09],w:[-1,-0.75],broad:0.92},
+  Zarhim:{h:[0.97,1.03],w:[-1,-0.35],broad:0.95},Ferrin:{h:[0.8,0.87],w:[-0.5,0.8],broad:1.06},Ruadhan:{h:[1.04,1.1],w:[-0.85,0.2]},'City watch':{h:[0.95,1.05],w:[-0.7,0.6]}};
+let HS=0.5, WS=0.35;   // where in each people's range everyone sits (0..1)
+function applyBody(f,i){const r=RANGES[LOOKS[i].name]; const hgt=r.h[0]+(r.h[1]-r.h[0])*HS, w=r.w[0]+(r.w[1]-r.w[0])*WS, br=r.broad||1;
+  f.m.scale.set(hgt*br,hgt,hgt*br); setBuild(f.m,Math.max(0,-w),Math.max(0,w)); setDefinition(f.m,Math.max(0,Math.min(1,1+w)));}
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(30,1,0.05,100);
 scene.add(new THREE.HemisphereLight(0xe6ecff,0x3a3028,0.72));const sun=new THREE.DirectionalLight(0xfff2dc,0.8);sun.position.set(2,5,6);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-5,right:5,top:4,bottom:-1});scene.add(sun);
 const ground=new THREE.Mesh(new THREE.CircleGeometry(20,40),new THREE.MeshLambertMaterial({color:'#2a2830'}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-let figs=[],yaw=0,view='full';const GAP=0.85;
+let figs=[],yaw=0,view='full';const GAP=0.8;
 function place(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;
   if(view==='full'){const span=LOOKS.length*GAP+0.4;const d=Math.max(span/2/Math.tan(15*Math.PI/180)/cam.aspect,4);cam.fov=30;cam.position.set(0,1.1,d);cam.lookAt(0,0.92,0);}
   else{cam.fov=14;const d=Math.max(0.75/Math.tan(7*Math.PI/180)/cam.aspect,0.42/Math.tan(7*Math.PI/180));cam.position.set(0,1.52,d+0.3);cam.lookAt(0,1.5,0);}
@@ -308,9 +323,10 @@ let drag=null;cv.addEventListener('pointerdown',e=>{drag=e.clientX;cv.setPointer
 const clock=new THREE.Clock();
 document.getElementById('lower').onclick=e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#lower button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
   figs.forEach((f,i)=>f.m.traverse(o=>{if(o.material&&o.material.userData.U&&o.material.userData.U.uB){o.material.userData.U.uB.value.y=b.dataset.l==='mix'?LOOKS[i].base[1]:+b.dataset.l;}}));};
-document.getElementById('build').addEventListener('input',e=>{const v=+e.target.value;figs.forEach((f,i)=>{const b=LOOKS[i].build;let l=b[0],hv=b[1];if(v<0){l=Math.min(1,l-v);hv=Math.max(0,hv+v);}else{hv=Math.min(1,hv+v);l=Math.max(0,l-v);}setBuild(f.m,l,hv);});});
+document.getElementById('hgt').addEventListener('input',e=>{HS=+e.target.value;figs.forEach(applyBody);});
+document.getElementById('wgt').addEventListener('input',e=>{WS=+e.target.value;figs.forEach(applyBody);});
 new THREE.GLTFLoader().load('rpgbody.gltf.json',g=>{preparePainted(g);
-  LOOKS.forEach((L,i)=>{const m=THREE.SkeletonUtils.clone(g.scene);dressFigure(m,L);setBuild(m,L.build[0],L.build[1]);
-    m.position.x=(i-(LOOKS.length-1)/2)*GAP;scene.add(m);const mix=new THREE.AnimationMixer(m),c=g.animations.find(a=>a.name==='Idle');if(c){const a=mix.clipAction(c);a.play();a.time=i*0.4;}figs.push({m,mix});});
+  LOOKS.forEach((L,i)=>{const m=THREE.SkeletonUtils.clone(g.scene);dressFigure(m,L);
+    m.position.x=(i-(LOOKS.length-1)/2)*GAP;scene.add(m);const mix=new THREE.AnimationMixer(m),c=g.animations.find(a=>a.name==='Idle');if(c){const a=mix.clipAction(c);a.play();a.time=i*0.4;}figs.push({m,mix});applyBody(figs[figs.length-1],i);});
   place();(function loop(){requestAnimationFrame(loop);const dt=Math.min(0.05,clock.getDelta());for(const f of figs){f.m.rotation.y=yaw;f.mix.update(dt);buildPosture(f.m);}R.render(scene,cam);})();});
 </script>
