@@ -129,9 +129,10 @@ SEGS = []
 for nm, h, t, par in g['BONES']:
     if nm in ('head',): continue
     SEGS.append((nm, Vector(h), Vector(t)))
-def nearest_seg(co):
+def nearest_seg(co, arm_ok=True):   # arm_ok False: a torso point never belongs to a nearby arm
     best = None
     for nm, h, t in SEGS:
+        if not arm_ok and nm.startswith(('shoulder', 'upper_arm', 'forearm', 'hand')): continue
         d = t - h; u = max(0.0, min(1.0, (co - h).dot(d) / d.length_squared)); q = h + d * u; dist = (co - q).length
         if best is None or dist < best[0]: best = (dist, nm, q, u)
     return best
@@ -165,7 +166,7 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
   'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
-  'female': dict(KL=1.0, KN=0.95, HS=0.96, SHX=-0.032, W=[(1.5, 0.05, -0.16), (1.4, 0.06, -0.08), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.09, 0.06, -0.27), (0.96, 0.07, 0.08)],
+  'female': dict(KL=1.0, KN=0.95, HS=0.96, SHX=-0.032, W=[(1.5, 0.05, -0.16), (1.4, 0.06, -0.08), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.12, 0.06, -0.3), (1.04, 0.05, -0.12), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.33, 0.07, -0.1), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
                  ARM={'shoulder': 0.84, 'upper_arm': 0.72, 'forearm': 0.72, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
@@ -177,9 +178,10 @@ if RACE in RACES:
     DZ = HIP * (1 - KL)
     LEGB = ('thigh', 'shin', 'foot')
     SEGS0 = [(bn, Vector(bh), Vector(bt)) for bn, bh, bt, bp in g['BONES']]
-    def seg_of(co):
+    def seg_of(co, arm_ok=True):
         best = None
         for nm, h, t in SEGS0:
+            if not arm_ok and nm.startswith(('shoulder', 'upper_arm', 'forearm', 'hand')): continue
             d = t - h; u = max(0.0, min(1.0, (co - h).dot(d) / d.length_squared)); q = h + d * u; dist = (co - q).length
             if best is None or dist < best[0]: best = (dist, nm, q)
         return best
@@ -209,7 +211,7 @@ if RACE in RACES:
         out = Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
         return out
     for v in body.data.vertices:
-        d, nm, q = seg_of(v.co); v.co = F(v.co.copy(), nm, q)
+        d, nm, q = seg_of(v.co, RACE != 'female' or v.index in ARMV); v.co = F(v.co.copy(), nm, q)
     if RACE in ('ferrin', 'female'):   # each part is reshaped differently; blend the change across the joins so they don't form spikes
         nb = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb[a_].append(b_); nb[b_].append(a_)
@@ -260,7 +262,7 @@ for kname, lean in (('Lean', True), ('Heavy', False)):
     for v in body.data.vertices:
         co = v.co.copy()
         if co.z > 1.535 and abs(co.x) < 0.12: kb.data[v.index].co = co; continue      # the head stays as it is
-        dist, nm, q, u = nearest_seg(co)
+        dist, nm, q, u = nearest_seg(co, RACE != 'female' or v.index in ARMV)
         sx_, sy_ = region_scale(nm, u, co.z, co, lean)
         off = co - q
         if nm in TORSO: off = Vector((co.x - 0.0, co.y - 0.004, 0)); q = Vector((0, 0.004, co.z))

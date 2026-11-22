@@ -52,31 +52,32 @@ vec3 paintHead(vec3 p){
   // under the jaw and the neck sit in shadow
   c*=mix(0.86,1.,smoothstep(1.56,1.6,p.z));
   // healthy colour: warm cheeks and nose, more for ruddy peoples
-  float warm=0.35+0.65*uFace2.z;
+  float warm=0.35+0.65*uFace2.z+0.45*uFem;
   c=mix(c,c*vec3(1.07,0.91,0.89),warm*front*(0.55*gss(vec2(ax,p.z),vec2(0.05,1.65),vec2(0.02,0.016))+0.35*gss(vec2(ax,p.z),vec2(0.,1.656),vec2(0.009,0.012))));
   if(uF1.w>0.5){float fr=step(0.9,hsh(floor(p.xz*520.)))*front*gss(vec2(ax,p.z),vec2(0.03,1.656),vec2(0.04,0.02));c=mix(c,c*vec3(0.8,0.62,0.52),fr);}
   if(front>0.){
     // sculpting light and shade, kept soft so faces stay pleasing
     float deep=uFace.z;
-    c*=1.-(0.16+0.2*deep)*front*gss(vec2(ax,p.z),vec2(0.034,1.693),vec2(0.021,0.011));    // under the brow
-    c*=1.-0.1*front*gss(vec2(ax,p.z),vec2(0.017,1.642),vec2(0.006,0.028));                // beside the nose
-    c*=1.-0.16*front*gss(vec2(ax,p.z),vec2(0.,1.638),vec2(0.011,0.004));                  // under the nose
-    c*=1.-(0.05+0.14*uFace2.x)*front*gss(vec2(ax,p.z),vec2(0.053,1.63),vec2(0.011,0.016)); // hollow under the cheekbone
+    c*=1.-(0.16+0.2*deep)*(1.-0.55*uFem)*front*gss(vec2(ax,p.z),vec2(0.034,1.693),vec2(0.021,0.011));    // under the brow
+    c*=1.-0.1*(1.-0.7*uFem)*front*gss(vec2(ax,p.z),vec2(0.017,1.642),vec2(0.006,0.028));                // beside the nose
+    c*=1.-0.16*(1.-0.6*uFem)*front*gss(vec2(ax,p.z),vec2(0.,1.638),vec2(0.011,0.004));                  // under the nose
+    c*=1.-(0.05+0.14*uFace2.x)*(1.-0.65*uFem)*front*gss(vec2(ax,p.z),vec2(0.053,1.63),vec2(0.011,0.016)); // hollow under the cheekbone
     c*=1.+(0.04+0.1*uFace2.x)*front*gss(vec2(ax,p.z),vec2(0.052,1.664),vec2(0.016,0.008)); // cheekbones catch the light
-    c*=1.-0.12*uFace2.y*gss(vec2(ax,p.z),vec2(0.066,1.585),vec2(0.012,0.02));             // a strong jaw's edge
+    c*=1.-0.12*uFace2.y*(1.-0.7*uFem)*gss(vec2(ax,p.z),vec2(0.066,1.585),vec2(0.012,0.02));             // a strong jaw's edge
     c*=1.+0.1*front*gss(vec2(ax,p.z),vec2(0.,1.69),vec2(0.006,0.03));                     // light down the bridge
     c*=1.+0.05*front*gss(vec2(ax,p.z),vec2(0.,1.735),vec2(0.03,0.02));                    // forehead
     // lips: shaped, with the faintest upturn at the corners
     float full=0.85+0.4*uFace2.w+0.25*uFem, cz=0.0014*smoothstep(0.012,0.02,ax);
     float up=inside(length((vec2(ax,p.z-cz)-vec2(0.,1.6206))/vec2(0.0195,0.0040*full))-1.)*(1.-0.6*inside(length(vec2(ax,p.z-1.6232))-0.0022));  // a cupid's bow
     float lo=inside(length((vec2(ax,p.z-cz)-vec2(0.,1.6132))/vec2(0.0175,0.005*full))-1.);
-    vec3 lipc=mix(c,uLip,0.55+0.35*uFem);
+    vec3 lipc=mix(c,uLip*(1.+0.08*uFem),0.55+0.42*uFem);
     c=mix(c,lipc*0.92,up*front); c=mix(c,lipc,lo*front);
-    c=mix(c,c*1.08,front*inside(length((vec2(ax,p.z)-vec2(0.,1.6118))/vec2(0.007,0.0018))-1.)*lo);   // highlight on the lower lip
+    c=mix(c,c*(1.08+0.1*uFem),front*inside(length((vec2(ax,p.z)-vec2(0.,1.6118))/vec2(0.007+0.002*uFem,0.0018))-1.)*lo);
+    c=mix(c,c*1.06,uFem*front*inside(length((vec2(ax,p.z)-vec2(0.006,1.6216))/vec2(0.004,0.0011))-1.)*up);   // a touch of shine on the upper lip   // highlight on the lower lip
     float line=inside(abs(p.z-(1.6172+cz*1.2))-0.0009)*step(ax,0.0195)*front; c=mix(c,uLip*0.4,line);
-    c=mix(c,c*0.5,front*inside(length(vec2(ax-0.0076,p.z-1.6497))-0.0021));            // nostrils
+    c=mix(c,c*(0.5+0.25*uFem),front*inside(length(vec2(ax-0.0072,p.z-1.6497))-0.0021*(1.-0.3*uFem)));            // nostrils
     // eyes: tilt and size by heritage; bright whites, coloured iris with a dark rim, pupil, catchlight
-    float sz=uFace.w*(1.+0.08*uFem), tilt=uFace.x;
+    float sz=uFace.w*(1.+0.22*uFem), tilt=uFace.x+0.08*uFem;
     vec2 e=vec2(ax-0.0338,p.z-1.6872); e.y-=tilt*e.x;                    // outer corners up
     float alm=length(e/vec2(0.0122*sz,0.0051*sz))-1.;
     float w=inside(alm)*front; c=mix(c,vec3(0.9,0.88,0.84),w);
@@ -84,15 +85,17 @@ vec3 paintHead(vec3 p){
     float ir=inside(ri-0.0047*sz)*w; vec3 icol=mix(uEye*1.25,uEye*0.7,smoothstep(0.0025,0.0047*sz,ri)); c=mix(c,icol,ir);
     c=mix(c,vec3(0.03),inside(ri-0.0019*sz)*w);
     c=mix(c,vec3(1.),inside(length(e-vec2(0.0013,0.0014))-0.0008*sz)*w);
-    c*=1.-0.18*w*smoothstep(0.,0.004,e.y);                                                // the upper lid's shadow on the eye
-    float lid=inside(abs(alm-0.1)-0.16-0.1*uFem)*step(-0.0008,e.y)*front; c=mix(c,vec3(0.08,0.06,0.05),lid*0.9);
-    c=mix(c,vec3(0.07,0.05,0.05),uFem*front*inside(length(vec2(e.x-0.0125*sz,e.y-0.0042))-0.0021)*step(0.0105*sz,e.x));   // lash flick
-    c=mix(c,c*vec3(0.92,0.84,0.86),uFem*0.45*front*gss(e,vec2(0.,0.006),vec2(0.015,0.005)));  // soft colour on the lids
+    c*=1.-0.18*w*smoothstep(0.,0.004,e.y);
+    c=mix(c,vec3(0.06,0.045,0.045),uFem*front*inside(abs(alm-0.06)-0.1)*step(-0.0035,-e.y)*step(e.x,0.009*sz)*0.5);   // a soft lower lash line                                                // the upper lid's shadow on the eye
+    float lid=inside(abs(alm-0.1)-0.16-0.24*uFem)*step(-0.0008,e.y)*front; c=mix(c,vec3(0.08,0.06,0.05),lid*0.9);
+    float wing=inside(abs(e.y-0.0008-(e.x-0.0115*sz)*0.55)-0.0011*(1.-smoothstep(0.0115*sz,0.0165*sz,e.x)))*step(0.0105*sz,e.x)*step(e.x,0.0165*sz);
+    c=mix(c,vec3(0.06,0.045,0.045),uFem*front*wing);   // the winged lash line
+    c=mix(c,c*vec3(0.9,0.8,0.84),uFem*0.6*front*gss(e,vec2(0.002,0.0065),vec2(0.017,0.0055)));  // soft colour on the lids
     c=mix(c,c*0.86,inside(abs(alm-0.6)-0.22)*step(0.0018,e.y)*front);                    // lid crease
     // brows: thin and arched to heavy and straight
     float bw=uFace.y, bx=ax-0.036;
-    float bz=1.7005+(0.0035*(1.-bw)+0.0012)*(1.-(bx*bx/0.000361))+0.0025*tilt*bx/0.02+0.001*uFem;
-    float thick=(0.0028+0.0034*bw)*(1.-0.4*smoothstep(0.,0.021,bx))*(1.-0.3*uFem);
+    float bz=1.7005+(0.0035*(1.-bw)+0.0012+0.0025*uFem)*(1.-(bx*bx/0.000361))+0.0025*tilt*bx/0.02+0.0032*uFem;
+    float thick=(0.0028+0.0034*bw)*(1.-0.4*smoothstep(0.,0.021,bx))*(1.-0.45*uFem);
     float brow=inside(abs(p.z-bz)-thick)*step(0.0115-0.002*bw,ax)*step(ax,0.058+0.003*bw)*front;
     c=mix(c,uHair*(0.6-0.15*bw)+vec3(0.02),brow*(0.85+0.15*bw));
   }
