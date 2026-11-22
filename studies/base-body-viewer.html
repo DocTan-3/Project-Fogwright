@@ -204,7 +204,10 @@ vec3 paintBase(vec3 p,float ax,bool armR){
 vec3 paintBody(vec3 p){
   float ax=abs(p.x); bool armR=(ax>0.168-0.25*max(0.,p.z-1.40)&&p.z>1.05)||(ax>0.25&&p.z>0.6);
   if(p.z>1.556&&!armR)return paintHead(p);
-  if(uB.x>0.5)return paintBase(p,ax,armR);
+  if(uB.x>0.5){                                                                     // blend torso and arm paint across the armpit, no seam
+    float bd=ax-(0.168-0.25*max(0.,p.z-1.40));
+    if(p.z>1.06&&p.z<1.47&&abs(bd)<0.035)return mix(paintBase(p,ax,false),paintBase(p,ax,true),smoothstep(-0.035,0.035,bd));
+    return paintBase(p,ax,armR);}
   return paintClothes(p,ax,armR);
 }
 vec3 paintClothes(vec3 p,float ax,bool armR){

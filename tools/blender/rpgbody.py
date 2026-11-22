@@ -105,6 +105,13 @@ V = body.data.vertices
 _b = bmesh.new(); _b.from_mesh(body.data)
 print('WELD tris', tris0, '->', tris1, '->', sum(len(p.vertices) - 2 for p in body.data.polygons), 'open edges', sum(1 for e in _b.edges if e.is_boundary)); _b.free()
 islands = find_islands(); print('pieces after weld', len(islands), sorted(len(k) for k in islands)[-4:])
+if RACE == 'female':   # more triangles over the bust, so it rounds smoothly
+    _b = bmesh.new(); _b.from_mesh(body.data)
+    _e = [e for e in _b.edges if all(1.2 < v.co.z < 1.37 and 0.0 < abs(v.co.x) < 0.15 and v.co.y < 0.0 for v in e.verts)]
+    bmesh.ops.subdivide_edges(_b, edges=_e, cuts=1, use_grid_fill=True, smooth=0.5)
+    bmesh.ops.triangulate(_b, faces=[f for f in _b.faces if len(f.verts) > 4])
+    _b.to_mesh(body.data); _b.free(); V = body.data.vertices
+    print('BUST subdivided edges', len(_e), 'tris', sum(len(p.vertices) - 2 for p in body.data.polygons))
 isarm = lambda c: abs(c.x) > 0.185 and 0.6 < c.z < 1.47
 # ---------- 3. the head surface, found by raycasting the model's head (for hair and beards)
 from mathutils.bvhtree import BVHTree
@@ -167,7 +174,7 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
   'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
   'female': dict(KL=1.0, KN=0.6, HS=0.96, SHX=-0.042, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.14), (1.4, 0.06, -0.11), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.12, 0.06, -0.3), (1.04, 0.05, -0.12), (0.93, 0.06, 0.12)],
-                 D=[(1.1, 0.1, -0.12), (1.33, 0.07, -0.1), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
+                 D=[(1.1, 0.1, -0.12), (1.25, 0.09, -0.07), (1.33, 0.07, -0.13), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
                  ARM={'shoulder': 0.82, 'upper_arm': 0.66, 'forearm': 0.67, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True, UCK=0.8),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
                  ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
@@ -236,10 +243,10 @@ if RACE in RACES:
                 t = math.exp(-((ax - 0.11) / 0.06) ** 2) * math.exp(-((z - 1.465) / 0.045) ** 2)
                 v.co.z -= 0.038 * t; v.co.x -= math.copysign(0.008, x) * t
             if y > 0.03 or abs(x) > 0.2: continue
-            k = math.exp(-((abs(x) - 0.068) / 0.05) ** 2 - ((z - 1.285) / 0.052) ** 2)
+            k = math.exp(-((abs(x) - 0.075) / 0.05) ** 2 - ((z - 1.285) / 0.052) ** 2)
             v.co.y -= 0.085 * k ** 0.8
-            v.co.z -= 0.012 * math.exp(-((abs(x) - 0.068) / 0.05) ** 2 - ((z - 1.255) / 0.035) ** 2)
-            v.co.x += math.copysign(0.01, x) * k
+            v.co.z -= 0.012 * math.exp(-((abs(x) - 0.075) / 0.05) ** 2 - ((z - 1.255) / 0.035) ** 2)
+            v.co.x += math.copysign(0.013, x) * k
         # a real neck: the shoulder line slopes gently down from beside the neck, well below the chin
         reg = []
         for i, v in enumerate(body.data.vertices):
