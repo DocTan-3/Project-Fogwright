@@ -166,7 +166,7 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
   'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
-  'female': dict(KL=1.0, KN=0.95, HS=0.96, SHX=-0.032, W=[(1.5, 0.05, -0.16), (1.4, 0.06, -0.08), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.12, 0.06, -0.3), (1.04, 0.05, -0.12), (0.93, 0.06, 0.12)],
+  'female': dict(KL=1.0, KN=0.95, HS=0.96, SHX=-0.042, W=[(1.5, 0.05, -0.16), (1.4, 0.06, -0.11), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.12, 0.06, -0.3), (1.04, 0.05, -0.12), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.33, 0.07, -0.1), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
                  ARM={'shoulder': 0.84, 'upper_arm': 0.72, 'forearm': 0.72, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
@@ -204,6 +204,8 @@ if RACE in RACES:
             k = P_['ARM'][nm.split('.')[0]]
             off = co - q; qn = Vector((q.x + s_ * SHX, q.y, zmap(q.z)))
             return qn + off * k
+        if P_.get('FEM') and 1.36 < z < 1.53:   # a slightly lower slope from the shoulders up to the neck
+            co = co.copy(); co.z -= 0.011 * math.exp(-((abs(x) - 0.1) / 0.06) ** 2) * math.exp(-((z - 1.45) / 0.045) ** 2); z = co.z
         if z > NECK1:  # the head keeps its size
             if P_.get('FEM'): x *= 1 - 0.085 * sm(1.665, 1.575, z)   # softer, narrower jaw
             return Vector((x * HS, C.y + (y - C.y) * HS, zmap(z)))
