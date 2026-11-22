@@ -173,9 +173,9 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
   'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
-  'female': dict(KL=1.0, KN=0.6, HS=0.96, SHX=-0.042, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.14), (1.4, 0.06, -0.11), (1.3, 0.07, -0.13), (1.2, 0.07, -0.18), (1.12, 0.06, -0.3), (1.04, 0.05, -0.12), (0.93, 0.06, 0.12)],
+  'female': dict(KL=1.035, KN=0.6, HS=0.96, SHX=-0.052, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.16), (1.4, 0.06, -0.15), (1.3, 0.07, -0.17), (1.2, 0.07, -0.22), (1.12, 0.06, -0.33), (1.04, 0.05, -0.14), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.25, 0.09, -0.07), (1.33, 0.07, -0.13), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
-                 ARM={'shoulder': 0.82, 'upper_arm': 0.66, 'forearm': 0.67, 'hand': 0.8}, LEG=0.95, LEGX=1.06, FEM=True, UCK=0.8),
+                 ARM={'shoulder': 0.78, 'upper_arm': 0.6, 'forearm': 0.6, 'hand': 0.74}, LEG=0.86, LEGX=1.04, FEM=True, UCK=0.8),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
                  ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
 }
@@ -258,6 +258,10 @@ if RACE in RACES:
             reg.append(i)
         nb2 = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb2[a_].append(b_); nb2[b_].append(a_)
+        soft = [i for i, c in enumerate(ORIG) if 0.13 < c.z < 1.47 and not (c.z < 0.97 and i in ARMV) and nb2[i]]   # softer forms all over
+        for _ in range(3):
+            new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in soft}
+            for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.7 + c_ * 0.3
         armreg = [i for i in ARMV if 0.97 < ORIG[i].z < 1.44 and nb2[i]]   # smoother arms: soften the muscle forms (not the hands)
         pit = [i for i, c in enumerate(ORIG) if 1.12 < c.z < 1.43 and 0.11 < abs(c.x) < 0.24 and nb2[i]]   # armpit and lats: blend the side of the chest into the arm
         for _ in range(6):
@@ -563,7 +567,7 @@ for v in me.vertices:
     if z > 1.47 and v.index not in armset:      # blend from body space into the face layout up the neck
         t = sm(1.47, 1.555, z)
         x = x + (x * KX0 - x) * t; y = y + ((y - C0.y) * KX0 + 0.004 - y) * t; z = z + (Zm2c0(z) - z) * t
-    ca.data[v.index].color = (x + 0.5, y + 0.5, z / 2, 1)
+    ca.data[v.index].color = (x + 0.5, y + 0.5, z / 2, 0.0 if v.index in armset else 1.0)   # alpha: 0 on the arms
 me.color_attributes.active_color = ca
 mat = bpy.data.materials.new('Body'); me.materials.append(mat)
 
@@ -571,6 +575,12 @@ mat = bpy.data.materials.new('Body'); me.materials.append(mat)
 bpy.ops.object.select_all(action='DESELECT'); body.select_set(True); arm.select_set(True); bpy.context.view_layer.objects.active = arm
 bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 print('GROUPS', len(body.vertex_groups))
+# alpha of the rest colour: how much each point belongs to the torso (not the upper arm, forearm or hand), from the skin weights
+_arm = {body.vertex_groups[n].index for n in ('upper_arm.L', 'upper_arm.R', 'forearm.L', 'forearm.R', 'hand.L', 'hand.R') if n in body.vertex_groups}
+_ca = body.data.color_attributes['rest']
+for v in body.data.vertices:
+    tot = sum(gv.weight for gv in v.groups) or 1.0; aw = sum(gv.weight for gv in v.groups if gv.group in _arm) / tot
+    c_ = _ca.data[v.index].color; _ca.data[v.index].color = (c_[0], c_[1], c_[2], max(0.0, min(1.0, 1.0 - aw)))
 # hair and beards take the skin weights of the face beneath them, so they move exactly with it
 for ob in HAIRS:
     dt = ob.modifiers.new('DT', 'DATA_TRANSFER'); dt.object = body; dt.use_vert_data = True

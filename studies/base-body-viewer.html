@@ -114,6 +114,12 @@ vec3 paintHead(vec3 p){
 }
 
 vec3 paintClothes(vec3 p,float ax,bool armR);
+vec3 linen(vec3 p,float k);
+vec4 femWrap(vec3 p){ // a linen chest wrap: colour and coverage
+  float band=inside(abs(p.z-1.3)-0.062); vec3 w=linen(p,1.)*1.04;
+  w*=1.-0.12*inside(abs(fract((p.z-1.238)*48.)-0.5)-0.06); w*=mix(0.85,1.,smoothstep(1.238,1.25,p.z))*mix(1.,0.85,smoothstep(1.35,1.362,p.z));
+  w*=1.-0.08*smoothstep(0.03,0.07,p.y);                                               // the back, in its own shade
+  return vec4(w,band);}
 // ---- the base layer: bare skin, shaded softly like a painted texture, and plain undyed underclothes
 vec3 skinTone(vec3 p){return uSkin*(0.965+0.045*vnoise(p.xz*170.)+0.02*vnoise(p.yz*55.));}
 vec3 linen(vec3 p,float k){vec3 c=uPants*(0.93+0.07*vnoise(p.xz*vec2(240.,80.))); return c*(1.-0.05*k*(vnoise(p.xy*35.)-0.5));}
@@ -157,8 +163,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     c*=1.-0.045*fr*exp(-pow(ax/0.008,2.))*smoothstep(1.07,1.1,p.z)*(1.-smoothstep(1.24,1.27,p.z));
     c*=1.-0.06*fr*gss(vec2(ax,p.z),vec2(0.125,1.12),vec2(0.02,0.06));               // obliques
     if(uFem>0.5){                                                                    // a linen chest wrap
-      float band=inside(abs(p.z-1.3)-0.062); vec3 w=linen(p,1.)*1.04; w*=1.-0.12*inside(abs(fract((p.z-1.238)*48.)-0.5)-0.06); w*=mix(0.85,1.,smoothstep(1.238,1.25,p.z))*mix(1.,0.85,smoothstep(1.35,1.362,p.z));
-      c=mix(c,w,band); return c*mix(0.84,1.,smoothstep(1.035,1.07,p.z));}
+      return c*mix(0.84,1.,smoothstep(1.035,1.07,p.z));}   // the chest wrap is laid over in paintBody, all the way round
     c=mix(c,c*vec3(0.88,0.74,0.7),fr*(1.-smoothstep(0.004,0.0085,length(vec2(ax-0.084,p.z-1.317)))));  // nipples
     c*=1.-0.22*fr*gss(vec2(ax,p.z),vec2(0.,1.088),vec2(0.0045,0.006));              // navel
     c*=1.-0.1*bk*exp(-pow(ax/0.012,2.));                                              // spine
@@ -206,8 +211,9 @@ vec3 paintBody(vec3 p){
   if(p.z>1.556&&!armR)return paintHead(p);
   if(uB.x>0.5){                                                                     // blend torso and arm paint across the armpit, no seam
     float bd=ax-(0.168-0.25*max(0.,p.z-1.40));
-    if(p.z>1.06&&p.z<1.47&&abs(bd)<0.035)return mix(paintBase(p,ax,false),paintBase(p,ax,true),smoothstep(-0.035,0.035,bd));
-    return paintBase(p,ax,armR);}
+    vec3 r=(p.z>1.06&&p.z<1.47&&abs(bd)<0.035)?mix(paintBase(p,ax,false),paintBase(p,ax,true),smoothstep(-0.035,0.035,bd)):paintBase(p,ax,armR);
+    if(uFem>0.5&&abs(p.z-1.3)<0.07){vec4 w=femWrap(p); r=mix(r,w.rgb,w.a*max(smoothstep(0.08,0.3,vTorso),1.-smoothstep(0.185,0.2,ax)));}   // the wrap goes all the way round the torso, never onto the arm
+    return r;}
   return paintClothes(p,ax,armR);
 }
 vec3 paintClothes(vec3 p,float ax,bool armR){
@@ -271,8 +277,9 @@ vec3 paintClothes(vec3 p,float ax,bool armR){
 function preparePainted(gltf){
   gltf.scene.traverse(o=>{if(!o.isMesh||o.geometry.userData.rest)return;const ca=o.geometry.attributes.color;o.geometry.userData.rest=true;
     const sz=ca.itemSize,src=ca.array,div=!ca.normalized?1:src instanceof Uint8Array?255:src instanceof Uint16Array?65535:1,out=new Float32Array(ca.count*3);
-    for(let i=0;i<ca.count;i++){out[i*3]=src[i*sz]/div-0.5;out[i*3+1]=src[i*sz+1]/div-0.5;out[i*3+2]=src[i*sz+2]/div*2;}
-    o.geometry.setAttribute('rest',new THREE.BufferAttribute(out,3)); o.geometry.deleteAttribute('color');});
+    const tm=new Float32Array(ca.count);
+    for(let i=0;i<ca.count;i++){out[i*3]=src[i*sz]/div-0.5;out[i*3+1]=src[i*sz+1]/div-0.5;out[i*3+2]=src[i*sz+2]/div*2;tm[i]=sz>3?src[i*sz+3]/div:1.;}
+    o.geometry.setAttribute('rest',new THREE.BufferAttribute(out,3)); o.geometry.setAttribute('torso',new THREE.BufferAttribute(tm,1)); o.geometry.deleteAttribute('color');});
 }
 // heritage in the face: eye tilt, brow weight, socket depth, eye size | cheekbones, jaw, warmth, lip fullness
 const FACES={
@@ -290,8 +297,8 @@ function paintedMaterial(look){
   const U={}; PAINT_KEYS.forEach(k=>U[k]={value:new THREE.Color(look[k]||'#888888')}); U.uF1={value:new THREE.Vector4(...look.f1)}; U.uF2={value:new THREE.Vector4(...look.f2)}; U.uFem={value:look.fem?1:0}; const F=look.face||FACES[look.people||look.name]||FACES.Aurelan; U.uFace={value:new THREE.Vector4(F[0],F[1],F[2],F[3])}; U.uFace2={value:new THREE.Vector4(F[4],F[5],F[6],F[7])}; U.uB={value:new THREE.Vector4(...(look.base||[0,0,0,1]))};
   const m=new THREE.MeshLambertMaterial({skinning:true,morphTargets:true,morphNormals:true}); m.extensions={derivatives:true};
   m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
-    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 rest;\nvarying vec3 vRest;').replace('#include <begin_vertex>','#include <begin_vertex>\nvRest=rest;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PAINT_GLSL).replace('vec4 diffuseColor = vec4( diffuse, opacity );','vec4 diffuseColor = vec4( paintBody(vRest), opacity );');};
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 rest;\nattribute float torso;\nvarying vec3 vRest;\nvarying float vTorso;').replace('#include <begin_vertex>','#include <begin_vertex>\nvRest=rest;vTorso=torso;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vTorso;\n'+PAINT_GLSL).replace('vec4 diffuseColor = vec4( diffuse, opacity );','vec4 diffuseColor = vec4( paintBody(vRest), opacity );');};
   m.customProgramCacheKey=()=>'painted-body'; m.userData.U=U; return m;
 }
 // hair and beards: their own meshes, shaded with strands that run with the locks
