@@ -2,7 +2,7 @@
 # Torso, limbs, hands and feet come from a skin-modifier stick figure; the head is built ring by ring and
 # shaped by one smooth function (skull, jaw, brow, nose, lips, chin), then bridged to the neck with no seam.
 import bpy, bmesh, math, sys
-from mathutils import Vector
+from mathutils import Vector, Matrix
 OUT = sys.argv[-1]
 src = open('tinker.py').read(); src = src[:src.index('bpy.ops.export_scene')]
 sys.argv = ['x', '--', '/tmp/_unused.glb']; g = {'__name__': 'x'}; exec(compile(src, 'tinker.py', 'exec'), g)
@@ -46,51 +46,81 @@ for m in ('Skin', 'Sub'):
 print('SKIN verts', len(body.data.vertices), 'top', round(max(v.co.z for v in body.data.vertices), 3))
 
 # ---------- head: rings of vertices on a sculpted surface
-C = Vector((0, 0.002, 1.69))
-def head_r(d):
-    ax, ay, az = 0.093, (0.1 if d.y < 0 else 0.106), (0.116 if d.z > 0 else 0.118)
-    ax *= 1 - 0.15 * sm(0.0, -0.85, d.z)          # the jaw narrows toward the chin
-    ay *= 1 - 0.12 * sm(0.1, -0.9, d.z) * (d.y > 0)  # the back of the jaw tucks in
-    return 1 / math.sqrt((d.x / ax) ** 2 + (d.y / ay) ** 2 + (d.z / az) ** 2)
+C = Vector((0, 0.004, 1.68))
+# The head, built as a low-poly head is modelled: horizontal cross-sections from the neck to the crown.
+# Each row: height, centre y, half-width, front depth, back depth, squareness (2 = round, higher = boxier).
+# The sharp step from the neck (1.556) to the jaw (1.568) makes the under-jaw plane and a real jawline.
+ROWS = [(1.540, 0.012, 0.057, 0.053, 0.060, 2.2),   # neck
+        (1.556, 0.012, 0.059, 0.056, 0.062, 2.2),   # top of the neck
+        (1.562, 0.008, 0.064, 0.078, 0.066, 2.6),   # under the jaw
+        (1.570, 0.004, 0.071, 0.104, 0.070, 3.4),   # chin and jaw line
+        (1.585, 0.002, 0.075, 0.108, 0.078, 3.2),   # lower jaw
+        (1.602, 0.000, 0.077, 0.111, 0.088, 2.9),   # mouth
+        (1.622, 0.000, 0.079, 0.112, 0.095, 2.7),   # upper lip
+        (1.642, 0.000, 0.083, 0.109, 0.100, 2.6),   # under the nose
+        (1.664, 0.000, 0.089, 0.104, 0.104, 2.6),   # cheekbones
+        (1.688, 0.000, 0.090, 0.097, 0.107, 2.5),   # eyes
+        (1.708, 0.000, 0.090, 0.108, 0.108, 2.7),   # brow
+        (1.732, 0.002, 0.088, 0.100, 0.108, 2.5),   # forehead
+        (1.758, 0.005, 0.084, 0.088, 0.104, 2.4),   # upper forehead
+        (1.782, 0.008, 0.075, 0.070, 0.092, 2.3),   # cranium
+        (1.801, 0.010, 0.058, 0.048, 0.068, 2.2),   # flat top
+        (1.812, 0.010, 0.034, 0.024, 0.040, 2.0)]
+ZB, ZT = ROWS[0][0], 1.815
+def row_at(z):
+    z = min(max(z, ROWS[0][0]), ROWS[-1][0])
+    for r0, r1 in zip(ROWS, ROWS[1:]):
+        if z <= r1[0]:
+            t = (z - r0[0]) / (r1[0] - r0[0]); t = t * t * (3 - 2 * t) if r1[0] - r0[0] > 0.012 else t
+            return tuple(a + (b - a) * t for a, b in zip(r0[1:], r1[1:]))
+    return ROWS[-1][1:]
 def gauss(x, z, cx, cz, wx, wz): return math.exp(-((x - cx) / wx) ** 2 - ((z - cz) / wz) ** 2)
-def head_point(th, ph):
-    # th: angle around (0 = face), ph: latitude from -1 (neck) to 1 (crown)
-    d = Vector((math.sin(th) * math.cos(ph * math.pi / 2), -math.cos(th) * math.cos(ph * math.pi / 2), math.sin(ph * math.pi / 2)))
-    p = C + d * head_r(d)
-    front = max(0.0, -d.y) ** 1.5; x, z = p.x, p.z
-    nose = 0.025 * sm(1.715, 1.66, z) * (1 - sm(1.656, 1.636, z)) * math.exp(-(x / 0.0125) ** 2)
-    nose += 0.006 * gauss(x, z, 0, 1.648, 0.016, 0.008)                       # nostril wings
-    bump = (nose + 0.007 * gauss(x, z, 0, 1.712, 0.05, 0.009)                   # brow ridge
-            - 0.008 * (gauss(x, z, 0.034, 1.686, 0.014, 0.011) + gauss(x, z, -0.034, 1.686, 0.014, 0.011))  # eye sockets
-            + 0.005 * (gauss(x, z, 0.054, 1.656, 0.016, 0.014) + gauss(x, z, -0.054, 1.656, 0.016, 0.014))  # cheekbones
-            + 0.004 * gauss(x, z, 0, 1.617, 0.02, 0.007)                        # lips
-            - 0.003 * gauss(x, z, 0, 1.603, 0.02, 0.004)                        # under the lip
-            + 0.017 * gauss(x, z, 0, 1.566, 0.03, 0.016)                        # a strong chin
-            + 0.006 * gauss(x, z, 0, 1.548, 0.034, 0.012))                      # and its underside
-    p.x += math.copysign(0.007, x) * gauss(abs(x), z, 0.066, 1.582, 0.02, 0.022) * (1 - max(0.0, d.y))  # jaw corners
-    p.y -= bump * front
+def outline(th, z):
+    cy, a, f, b, n = row_at(z); s, c = math.sin(th), -math.cos(th)
+    dep = f if c < 0 else b
+    r = 1 / ((abs(s) / a) ** n + (abs(c) / dep) ** n) ** (1 / n)
+    return Vector((s * r, cy + c * r, z))
+def features(p, th):
+    x, z = p.x, p.z; front = max(0.0, math.cos(th)) ** 2
+    nose = (0.012 + 0.018 * sm(1.71, 1.655, z)) * sm(1.722, 1.708, z) * (1 - sm(1.652, 1.638, z)) * math.exp(-(x / 0.0125) ** 4)
+    d = (nose + 0.007 * (gauss(x, z, 0.012, 1.646, 0.006, 0.006) + gauss(x, z, -0.012, 1.646, 0.006, 0.006))      # nostril wings
+         - 0.012 * (gauss(x, z, 0.034, 1.689, 0.016, 0.011) + gauss(x, z, -0.034, 1.689, 0.016, 0.011))          # deep eye sockets
+         + 0.006 * (gauss(x, z, 0.056, 1.664, 0.016, 0.012) + gauss(x, z, -0.056, 1.664, 0.016, 0.012))          # cheekbones
+         + 0.004 * gauss(x, z, 0, 1.617, 0.02, 0.007) - 0.004 * (gauss(x, z, 0.025, 1.616, 0.006, 0.006) + gauss(x, z, -0.025, 1.616, 0.006, 0.006))
+         - 0.003 * gauss(x, z, 0, 1.602, 0.02, 0.004)                                                          # under the lip
+         - 0.003 * gauss(x, z, 0, 1.709, 0.007, 0.008))                                                        # between the brows
+    p.y -= d * front
     return p
-# denser around the face: warp the angles so more columns sit at the front and more rows at eye level
-LON, LAT = 36, 26
-def warp_th(u): return math.pi * (2 * u - 1) * (0.55 + 0.45 * abs(2 * u - 1))   # u 0..1 -> -pi..pi, dense at 0
-def warp_ph(v): return -1 + 2 * v + 0.12 * math.sin(2 * math.pi * v)
+def head_point(th, ph):  # ph -1 at the neck .. 1 at the crown
+    z = ZB + (ZT - ZB) * (ph + 1) / 2
+    if z >= ZT - 1e-6: return Vector((0, 0.01, ZT + 0.004))
+    return features(outline(th, z), th)
+def inside_head(q):
+    if q.z < ZB or q.z > ZT: return False
+    th = math.atan2(q.x, -(q.y - 0.0))
+    o = head_point(th, 2 * (q.z - ZB) / (ZT - ZB) - 1)
+    return math.hypot(q.x, q.y) <= math.hypot(o.x, o.y)
+def head_r(d):  # distance from C to the skull along direction d
+    d = d.normalized(); lo, hi = 0.0, 0.25
+    for _ in range(26):
+        m = (lo + hi) / 2
+        if inside_head(C + d * m): lo = m
+        else: hi = m
+    return lo
+# columns denser at the face, rows from the neck to the crown
+LON = 32
+def warp_th(u): return math.pi * (2 * u - 1) * (0.55 + 0.45 * abs(2 * u - 1))
+ZS = [1.540, 1.556, 1.562, 1.570, 1.578, 1.586, 1.596, 1.606, 1.614, 1.622, 1.632, 1.642, 1.652, 1.664, 1.676, 1.684, 1.692, 1.700, 1.708, 1.718, 1.732, 1.746, 1.760, 1.772, 1.784, 1.795, 1.804, 1.811]
 hb = bmesh.new()
-rings = [[hb.verts.new(C + Vector((0, 0, -head_r(Vector((0, 0, -1))))))]]
-for j in range(1, LAT - 1):
-    ph = warp_ph(j / (LAT - 1))
-    rings.append([hb.verts.new(head_point(warp_th(i / LON), ph)) for i in range(LON)])
-rings.append([hb.verts.new(C + Vector((0, 0, head_r(Vector((0, 0, 1))))))])
+rings = [[hb.verts.new(features(outline(warp_th(i / LON), z), warp_th(i / LON))) for i in range(LON)] for z in ZS]
+top = hb.verts.new(Vector((0, 0.01, ZT + 0.004)))
 for j in range(len(rings) - 1):
-    a, b = rings[j], rings[j + 1]
-    for i in range(LON):
-        if len(a) == 1: hb.faces.new((a[0], b[(i + 1) % LON], b[i]))
-        elif len(b) == 1: hb.faces.new((a[i], a[(i + 1) % LON], b[0]))
-        else: hb.faces.new((a[i], a[(i + 1) % LON], b[(i + 1) % LON], b[i]))
-# the neck meets the head along a slanted line: under the chin in front, at the nape behind
-plane = lambda co: co.z < 1.612 + 0.36 * co.y and math.hypot(co.x, co.y - 0.004) < 0.085
-bmesh.ops.delete(hb, geom=[f for f in hb.faces if plane(f.calc_center_median())], context='FACES')
+    a_, b_ = rings[j], rings[j + 1]
+    for i in range(LON): hb.faces.new((a_[i], a_[(i + 1) % LON], b_[(i + 1) % LON], b_[i]))
+for i in range(LON): hb.faces.new((rings[-1][i], rings[-1][(i + 1) % LON], top))
+
 bm = bmesh.new(); bm.from_mesh(body.data)
-bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z > 1.556], context='VERTS')
+bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.z > 1.52], context='VERTS')
 print('NECK ring', sum(1 for v in bm.verts if v.is_boundary))
 tmp = bpy.data.meshes.new('_h'); hb.to_mesh(tmp); hb.free(); bm.from_mesh(tmp); bpy.data.meshes.remove(tmp)
 bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
@@ -107,7 +137,7 @@ for sx in (1, -1):
         v.co = Vector((v.co.x * 0.008, v.co.y * 0.019, v.co.z * 0.03))
         if v.co.x * sx < 0: v.co.x *= 0.3
     bmesh.ops.rotate(eb, verts=eb.verts, cent=(0, 0, 0), matrix=g['R']('Z', 0.35 * sx))
-    bmesh.ops.translate(eb, verts=eb.verts, vec=(0.083 * sx, 0.012, 1.676))
+    bmesh.ops.translate(eb, verts=eb.verts, vec=(0.089 * sx, 0.014, 1.672))
     em = bpy.data.meshes.new('ear'); eb.to_mesh(em); eb.free()
     bm = bmesh.new(); bm.from_mesh(body.data); bm.from_mesh(em); bm.to_mesh(body.data); bm.free(); bpy.data.meshes.remove(em)
 bmesh_fix = bmesh.new(); bmesh_fix.from_mesh(body.data); bmesh.ops.recalc_face_normals(bmesh_fix, faces=bmesh_fix.faces); bmesh_fix.to_mesh(body.data); bmesh_fix.free()
@@ -181,25 +211,133 @@ def shell(name, th0, th1, z_lo, z_hi, thick, droop=lambda th, f: 0.0, NT=40, NR=
     return ob
 TOP = lambda th: 99
 tips = lambda k, d: (lambda th: d * tri(th * k / math.pi))
+def surf(d, lift):  # a point on the skull in direction d, lifted off it
+    d = d.normalized(); p = C + d * head_r(d); return p + d * lift
+def slerp(a, b, t):
+    a, b = a.normalized(), b.normalized(); om = math.acos(max(-1, min(1, a.dot(b))))
+    if om < 1e-4: return a
+    return (a * math.sin((1 - t) * om) + b * math.sin(t * om)) / math.sin(om)
+def dir_th(th, z):  # direction from the head centre to the skull at angle th and height z
+    return (head_point(th, ph_at(th, z)) - C).normalized()
+def lock(bm, pts, w0, t0, tipw=0.1, flat=True):
+    """A clump of hair: a flattened diamond tube along pts, tapering to a point."""
+    n = len(pts); rings = []
+    for i, p in enumerate(pts):
+        T = (pts[min(i + 1, n - 1)] - pts[max(i - 1, 0)]).normalized()
+        out = Vector((p.x, p.y - 0.004, max(p.z - 1.58, 0) * 0.3)); out = out - T * out.dot(T)
+        N_ = out.normalized() if out.length > 1e-5 else T.orthogonal().normalized(); B = T.cross(N_).normalized()
+        f = i / (n - 1); w = w0 * (1 - (1 - tipw) * f ** 1.3); t = t0 * (1 - 0.7 * f)
+        if i == n - 1: rings.append([bm.verts.new(p)]); continue
+        rings.append([bm.verts.new(p + B * w / 2), bm.verts.new(p + N_ * t / 2), bm.verts.new(p - B * w / 2), bm.verts.new(p - N_ * t / 2)])
+    bm.faces.new(rings[0][::-1])
+    for i in range(n - 1):
+        A, Bq = rings[i], rings[i + 1]
+        for k in range(4):
+            if len(Bq) == 1: bm.faces.new((A[k], A[(k + 1) % 4], Bq[0]))
+            else: bm.faces.new((A[k], A[(k + 1) % 4], Bq[(k + 1) % 4], Bq[k]))
+def hang(p, d, n, seg, out=0.25, curl=0.0):
+    """Continue a lock from p in direction d, bending down under its own weight and away from the body."""
+    pts = []; d = d.normalized()
+    for i in range(n):
+        away = Vector((p.x, p.y - 0.01, 0)); away = away.normalized() if away.length > 1e-4 else Vector((0, 0, 0))
+        d = (d * 0.62 + Vector((0, 0, -1)) * 0.38 + away * out * 0.3).normalized()
+        p = p + d * seg; pts.append(p)
+    return pts
+def arc(d0, d1, lift0, lift1, n=7, puff=0.0):
+    return [surf(slerp(d0, d1, i / (n - 1)), lift0 + (lift1 - lift0) * i / (n - 1) + puff * math.sin(math.pi * i / (n - 1))) for i in range(n)]
+def finish_hair(name, bm, cap=None):
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new(name, me); col.objects.link(ob)
+    if cap is not None:
+        with bpy.context.temp_override(active_object=ob, selected_editable_objects=[ob, cap], object=ob): bpy.ops.object.join()
+    bm2 = bmesh.new(); bm2.from_mesh(ob.data); bmesh.ops.recalc_face_normals(bm2, faces=bm2.faces); bm2.to_mesh(ob.data); bm2.free()
+    for p_ in ob.data.polygons: p_.use_smooth = False   # chunky, faceted locks
+    print(name, 'tris', sum(len(p_.vertices) - 2 for p_ in ob.data.polygons)); return ob
+def scalp(name, lower=0.004):  # a thin cap under the locks, so no skin shows between them
+    return shell(name + '_cap', -math.pi, math.pi, lambda th: hairline(th) - lower, TOP, lambda th, f, p: 0.003 + 0.004 * f, NT=28, NR=8, wrap=True)
 HAIRS = []
+BACK = Vector((0, 1, -0.05)); CROWN = Vector((0, 0.25, 1))
+# swept back: locks from the hairline over the top, ending at the back of the head
+bm = bmesh.new()
+for i in range(26):
+    th = -math.pi + 2 * math.pi * (i + 0.5) / 26
+    d0 = dir_th(th, hairline(th) + 0.002); side = math.sin(th)
+    if abs(th) < 2.2:
+        d1 = Vector((side * 0.55, 1, -0.35 - 0.25 * abs(side))); pts = arc(d0, d1, 0.006, 0.012, 7, 0.016 * (1 - abs(th) / 2.4))
+        pts += hang(pts[-1], pts[-1] - pts[-2], 2, 0.022, 0.4)
+    else:
+        pts = arc(d0, d0 + Vector((0, 0, -0.25)), 0.008, 0.012, 3) + hang(surf(d0, 0.012), Vector((0, 0.3, -1)), 2, 0.02, 0.5)
+    lock(bm, pts, 0.05, 0.013, 0.3)
+HAIRS.append(finish_hair('Hair_Swept', bm, scalp('Hair_Swept')))
+# ponytail: swept back and gathered at the back, tied, then falling
+bm = bmesh.new(); tie = surf(Vector((0, 1, 0.25)), 0.012)
+for i in range(24):
+    th = -math.pi + 2 * math.pi * (i + 0.5) / 24
+    d0 = dir_th(th, hairline(th) + 0.002); pts = arc(d0, Vector((0, 1, 0.25)), 0.006, 0.012, 7, 0.012)
+    lock(bm, pts, 0.045, 0.012, 0.6)
+for k in range(5):
+    sp = Vector(((k - 2) * 0.008, 0.02, 0.01 * (k % 2)))
+    lock(bm, [tie + sp] + hang(tie + sp, Vector((sp.x * 4, 1.0, 0.5)), 6, 0.032, 0.6), 0.03, 0.016)
+ring = bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.016, radius2=0.016, depth=0.014)
+bmesh.ops.transform(bm, verts=ring['verts'], matrix=Matrix.Translation(tie + Vector((0, 0.006, 0))) @ Matrix.Rotation(1.25, 4, 'X'))
+HAIRS.append(finish_hair('Hair_Ponytail', bm, scalp('Hair_Ponytail')))
+# long and loose: parted in the middle, falling past the shoulders, locks framing the face
+bm = bmesh.new()
+for i in range(30):
+    th = -math.pi + 2 * math.pi * (i + 0.5) / 30; side = 1 if th >= 0 else -1
+    part = surf(Vector((side * 0.06, 0.15, 1)), 0.008); d_part = (part - C).normalized()
+    th_e = th if abs(th) > 1.25 else side * (1.25 + 0.2 * abs(th))   # front locks swing out beside the face
+    d_end = dir_th(th_e, hairline(th_e) - 0.012)
+    pts = arc(d_part, d_end, 0.008, 0.014 + 0.006 * (abs(th) > 1.2), 7, 0.014)
+    fall = 6 if abs(th) > 0.9 else 5
+    pts += hang(pts[-1], (pts[-1] - pts[-2]) + Vector((0, 0.02, 0)), fall, 0.03, 0.6)
+    lock(bm, pts, 0.05, 0.013, 0.25)
+HAIRS.append(finish_hair('Hair_Long', bm, scalp('Hair_Long')))
+# topknot: everything gathered up to a knot on the crown
+bm = bmesh.new(); knot = surf(Vector((0, 0.35, 1)), 0.02)
+for i in range(24):
+    th = -math.pi + 2 * math.pi * (i + 0.5) / 24
+    d0 = dir_th(th, hairline(th) + 0.002); pts = arc(d0, Vector((0, 0.35, 1)), 0.005, 0.012, 7, 0.006)
+    lock(bm, pts, 0.045, 0.011, 0.5)
+bk = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=0.026)
+bmesh.ops.transform(bm, verts=bk['verts'], matrix=Matrix.Translation(knot + Vector((0, 0, 0.012))) @ Matrix.Diagonal((1, 1, 0.8, 1)))
+for k in range(3): lock(bm, [knot + Vector((0, 0.01, 0.03))] + hang(knot + Vector((0, 0.01, 0.03)), Vector(((k - 1) * 0.5, 1, 0.4)), 4, 0.026, 0.4), 0.022, 0.01)
+HAIRS.append(finish_hair('Hair_Topknot', bm, scalp('Hair_Topknot')))
+# short crop: close to the skull, a little fuller on top (kept as a smooth shell, it is that short)
 HAIRS.append(shell('Hair_Short', -math.pi, math.pi, lambda th: hairline(th) - 0.003 - tips(9, 0.008)(th), TOP,
                    lambda th, f, p: (0.006 + 0.012 * f) * locks(th, f, 18, 0.3), wrap=True))
-HAIRS.append(shell('Hair_Swept', -math.pi, math.pi, lambda th: hairline(th) - 0.004 - tips(7, 0.012)(th), TOP,
-                   lambda th, f, p: (0.003 + 0.034 * f ** 0.8 * (1 + 0.45 * math.exp(-(th / 0.7) ** 2) * f)) * locks(th, f, 12, 0.4), wrap=True))
-back = lambda th: sm(1.1, 1.9, abs(th))
-HAIRS.append(shell('Hair_Long', -math.pi, math.pi, lambda th: hairline(th) - 0.004 - tips(6, 0.012)(th) - 0.03 * back(th), TOP,
-                   lambda th, f, p: (0.009 + 0.018 * f) * locks(th, f, 10, 0.45) + 0.012 * back(th) * (1 - f),
-                   lambda th, f: back(th) * (1 - f) ** 2.2 * (0.2 + 0.03 * tri(th * 2.5)), NR=18, wrap=True))
-# beards: from under the jaw up to the cheeks, dipping under the lower lip in front
-chinw = lambda th: math.exp(-(th / 0.5) ** 2)
-beard_top = lambda th: 1.636 - 0.032 * chinw(th / 0.9)
-HAIRS.append(shell('Beard_Full', -1.65, 1.65, lambda th: 1.548 - 0.01 * chinw(th), beard_top,
-                   lambda th, f, p: (0.006 + 0.02 * chinw(th) * (1 - f)) * locks(th, f, 20, 0.3),
-                   lambda th, f: 0.05 * chinw(th) * (1 - f) ** 2 * (1 + 0.3 * tri(th * 4)), NT=30, NR=10))
-HAIRS.append(shell('Beard_Short', -1.65, 1.65, lambda th: 1.556, beard_top,
-                   lambda th, f, p: (0.004 + 0.007 * chinw(th) * (1 - f)) * locks(th, f, 24, 0.25), NT=30, NR=8))
-HAIRS.append(shell('Moustache', -0.42, 0.42, lambda th: 1.627, lambda th: 1.639,
-                   lambda th, f, p: 0.005 + 0.004 * chinw(th / 0.4), lambda th, f: 0.014 * sm(0.18, 0.42, abs(th)) * (1 - f), NT=16, NR=4))
+# beards: clumps rooted along the jaw and under the lip, hanging past the chin to points
+def beard(name, length, braid=False, fork=False, n=17):
+    bm = bmesh.new()
+    for i in range(n):
+        th = -1.55 + 3.1 * i / (n - 1); front = math.exp(-(th / 0.55) ** 2)
+        z0 = 1.637 - 0.036 * front                       # sideburn height at the sides, under the lip in front
+        d0 = dir_th(th, z0); d1 = dir_th(th * 0.75, 1.575)
+        pts = arc(d0, d1, 0.004, 0.012 + 0.01 * front, 4)
+        L = length * (0.45 + 0.55 * front)
+        aim = Vector((-pts[-1].x * (0.9 if not fork else (0.2 if abs(th) > 0.15 else -1.5)), -0.35, -1))
+        pts += hang(pts[-1], aim, max(2, int(L / 0.03)), L / max(2, int(L / 0.03)), 0.0)
+        lock(bm, pts, 0.04, 0.015, 0.18)
+    if braid:  # the long braid in the middle, as in the reference
+        p = surf(dir_th(0.0, 1.565), 0.03) + Vector((0, -0.012, -length * 0.45))
+        for k in range(5):
+            b2 = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=0.016 - k * 0.0015)
+            bmesh.ops.transform(bm, verts=b2['verts'], matrix=Matrix.Translation(p + Vector((0.004 * (-1) ** k, 0, -k * 0.026))) @ Matrix.Diagonal((1, 0.8, 1.25, 1)))
+        lock(bm, [p + Vector((0, 0, -0.13)), p + Vector((0, -0.005, -0.16)), p + Vector((0, -0.006, -0.19))], 0.02, 0.012)
+    # moustache that runs into the beard
+    for sx in (1, -1):
+        a_ = surf(dir_th(0.08 * sx, 1.636), 0.006); b_ = surf(dir_th(0.36 * sx, 1.612), 0.009); c_ = surf(dir_th(0.42 * sx, 1.585), 0.012)
+        lock(bm, [a_, (a_ + b_) / 2 + Vector((0, -0.004, 0)), b_, c_, c_ + Vector((0, -0.004, -0.015))], 0.022, 0.012, 0.3)
+    return finish_hair(name, bm)
+HAIRS.append(beard('Beard_Short', 0.03))
+HAIRS.append(beard('Beard_Full', 0.09))
+HAIRS.append(beard('Beard_Braided', 0.1, braid=True))
+HAIRS.append(beard('Beard_Forked', 0.11, fork=True))
+bm = bmesh.new()
+for sx in (1, -1):
+    a_ = surf(dir_th(0.06 * sx, 1.636), 0.006); b_ = surf(dir_th(0.34 * sx, 1.614), 0.009); c_ = surf(dir_th(0.4 * sx, 1.58), 0.011)
+    lock(bm, [a_, (a_ + b_) / 2 + Vector((0, -0.004, 0)), b_, c_, c_ + Vector((0, -0.003, -0.02))], 0.022, 0.011, 0.25)
+HAIRS.append(finish_hair('Moustache', bm))
 for ob in HAIRS:
     ob.data.materials.append(bpy.data.materials.new(ob.name))
     ca = ob.data.color_attributes.new('rest', 'FLOAT_COLOR', 'POINT')

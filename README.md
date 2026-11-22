@@ -25,7 +25,7 @@ python3 -m http.server 8000
 | `game/index.html` | The playable prototype (v0.14), a single file. |
 | `game/*.gltf.json` | The hero (Tinker) and the townsfolk (eight peoples). They're glTF with embedded buffers, saved as `.gltf.json` so any static host serves them. |
 | `studies/peoples-viewer.html` | Lineup of the eight peoples and the city watch (first pass, kitbashed). |
-| `studies/body-viewer.html` | The new direction: one seamless body with face and clothes painted by code, plus real hair and beard meshes (short, swept and long hair; full and short beards; moustache) that take the skin weights of the face under them. A work in progress. |
+| `studies/body-viewer.html` | The new direction: one seamless body with face and clothes painted by code, a head built from cross-sections (square jaw, real chin, heavy brow), and hair and beards made of chunky locks: swept, ponytail, long, topknot and short hair; short, full, braided and forked beards; a moustache. A work in progress. |
 | `studies/tinker-viewer.html` | Review viewer for the Tinker hero model. |
 | `tools/blender/` | Blender (bpy) scripts that build the characters. `tinker.py` makes the hero and the rig with its Idle, Walk and Aim animations; `races.py` makes the kitbashed peoples model; `body.py` makes the clean seamless base body; `kit.py` is the original building kit, now generated in code inside the game; `glb2json.py` turns a `.glb` into a `.gltf.json`. |
 | `tools/test/smoke.js` | Headless smoke test: boots the game, visits a few places and reports page errors. |
