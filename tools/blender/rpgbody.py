@@ -151,11 +151,30 @@ for v in body.data.vertices:
     x, y, z = v.co; s_ = 1 if x > 0 else -1
     if z < 0.12:
         cx, cy = 0.15 * s_, -0.02
-        v.co.x = cx + (x - cx) * 0.52; v.co.y = cy + (y - cy) * 0.8
+        v.co.x = cx + (x - cx) * 0.546; v.co.y = cy + (y - cy) * 0.8
         if z > 0.02: v.co.z = 0.02 + (z - 0.02) * 0.8
     elif z < 0.36:
         k = 0.74 + 0.26 * sm(0.12, 0.36, z); cx, cy = 0.125 * s_, 0.045
         v.co.x = cx + (x - cx) * k; v.co.y = cy + (y - cy) * k
+# ---------- sculpt fixes on the source body: slimmer neck and traps, no flared hips above the waistband
+for v in body.data.vertices:
+    x, y, z = v.co; ax = abs(x)
+    if 1.38 < z < 1.56 and 0.04 < ax < 0.3:               # traps: one clean slope from the neck to the shoulder
+        line = 1.535 - (ax - 0.07) * 0.72
+        w = sm(0.05, 0.09, ax) * (1 - sm(0.19, 0.27, ax)) * (1 - sm(1.53, 1.56, z))
+        if z > line: v.co.z = z - (z - line) * 0.6 * w
+    if isarm(v.co) or ax > 0.24: continue
+    if 1.49 < z < 1.57 and ax < 0.1:                       # thinner neck column
+        v.co.x *= 0.88; v.co.y = 0.004 + (y - 0.004) * 0.92
+    if 0.86 < z < 1.12 and ax < 0.21:                      # hips and love handles: taper to the waist
+        cap = 0.158 + 0.012 * sm(0.98, 0.88, z)
+        if ax > cap * 0.8: v.co.x = math.copysign(cap * 0.8 + (ax - cap * 0.8) * 0.45, x)
+_nb = [[] for _ in body.data.vertices]
+for e in body.data.edges: _a, _b = e.vertices; _nb[_a].append(_b); _nb[_b].append(_a)
+_reg = [i for i, v in enumerate(body.data.vertices) if 1.36 < v.co.z < 1.56 and 0.04 < abs(v.co.x) < 0.3]
+for _ in range(4):
+    _new = {i: sum((body.data.vertices[j].co for j in _nb[i]), Vector()) / len(_nb[i]) for i in _reg if _nb[i]}
+    for i, c in _new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.5 + c * 0.5
 # ---------- per-people proportions. The mesh is reshaped and the rig refitted to it; paint still uses the original layout.
 ORIG = [v.co.copy() for v in body.data.vertices]
 ZM0, KX0, C0 = list(ZM), KX, C.copy()
@@ -163,9 +182,9 @@ Zm2c0 = lambda z: pl(z, ZM0, ZCAN)
 RACES = {  # leg length, neck length, head size, shoulder shift, torso width/depth bumps (z, spread, amount), limb thickness
   'ferrin': dict(KL=0.7, KN=0.55, HS=1.04, SHX=0.031, W=[(1.25, 0.17, 0.2), (1.05, 0.1, 0.08)], D=[(1.18, 0.2, 0.28)], D0=1.0, W0=1.0, belly=0.035,
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
-  'ilvari': dict(KL=1.07, KN=1.3, HS=0.98, SHX=-0.018, W=[(1.42, 0.06, 0.02), (1.28, 0.1, -0.1), (1.1, 0.08, -0.2), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
+  'ilvari': dict(KL=1.07, KN=1.08, HS=0.98, SHX=-0.018, W=[(1.42, 0.06, 0.02), (1.28, 0.1, -0.1), (1.1, 0.08, -0.2), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
-  'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
+  'zarhim': dict(KL=1.03, KN=1.0, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
                  ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
 }
 if RACE in RACES:
