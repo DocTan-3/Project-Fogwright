@@ -1,5 +1,5 @@
 # Fogwright base body from the Simple RPG Human Male (Sketchfab), rigged and repainted by code.
-# RACE=human (default) or RACE=ferrin, e.g.  RACE=ferrin python rpgbody.py -- ferrin.glb
+# RACE=human (default), ferrin, ilvari or zarhim, e.g.  RACE=ilvari python rpgbody.py -- ilvari.glb
 # (adapted from body.py): one continuous mesh, built for painting. Exports body.glb
 # Torso, limbs, hands and feet come from a skin-modifier stick figure; the head is built ring by ring and
 # shaped by one smooth function (skull, jaw, brow, nose, lips, chin), then bridged to the neck with no seam.
@@ -160,8 +160,17 @@ for v in body.data.vertices:
 ORIG = [v.co.copy() for v in body.data.vertices]
 ZM0, KX0, C0 = list(ZM), KX, C.copy()
 Zm2c0 = lambda z: pl(z, ZM0, ZCAN)
-if RACE == 'ferrin':
-    HIP, KL, NECK0, NECK1, KN, HS = 0.92, 0.7, 1.45, 1.556, 0.55, 1.04
+RACES = {  # leg length, neck length, head size, shoulder shift, torso width/depth bumps (z, spread, amount), limb thickness
+  'ferrin': dict(KL=0.7, KN=0.55, HS=1.04, SHX=0.031, W=[(1.25, 0.17, 0.2), (1.05, 0.1, 0.08)], D=[(1.18, 0.2, 0.28)], D0=1.0, W0=1.0, belly=0.035,
+                 ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
+  'ilvari': dict(KL=1.07, KN=1.3, HS=0.98, SHX=-0.018, W=[(1.42, 0.06, 0.02), (1.28, 0.1, -0.1), (1.1, 0.08, -0.2), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
+                 ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
+  'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
+                 ARM={'shoulder': 0.95, 'upper_arm': 0.86, 'forearm': 0.88, 'hand': 0.92}, LEG=0.88, LEGX=0.98),
+}
+if RACE in RACES:
+    P_ = RACES[RACE]
+    HIP, KL, NECK0, NECK1, KN, HS = 0.92, P_['KL'], 1.45, 1.556, P_['KN'], P_['HS']
     DZ = HIP * (1 - KL)
     LEGB = ('thigh', 'shin', 'foot')
     SEGS0 = [(bn, Vector(bh), Vector(bt)) for bn, bh, bt, bp in g['BONES']]
@@ -171,10 +180,10 @@ if RACE == 'ferrin':
             d = t - h; u = max(0.0, min(1.0, (co - h).dot(d) / d.length_squared)); q = h + d * u; dist = (co - q).length
             if best is None or dist < best[0]: best = (dist, nm, q)
         return best
-    def torso_w(z):  # barrel chest and belly
-        return (1 + 0.2 * math.exp(-((z - 1.25) / 0.17) ** 2) + 0.08 * math.exp(-((z - 1.05) / 0.1) ** 2),
-                1 + 0.28 * math.exp(-((z - 1.18) / 0.2) ** 2))
-    SHX = 0.17 * 0.18
+    def torso_w(z):
+        return (P_['W0'] + sum(a * math.exp(-((z - c) / w) ** 2) for c, w, a in P_['W']),
+                P_['D0'] + sum(a * math.exp(-((z - c) / w) ** 2) for c, w, a in P_['D']))
+    SHX = P_['SHX']
     def zmap(z):  # above the hips: lowered; the neck shortened
         z = z - DZ
         n0, n1 = NECK0 - DZ, NECK1 - DZ
@@ -185,15 +194,15 @@ if RACE == 'ferrin':
         x, y, z = co; s_ = 1 if x >= 0 else -1
         if nm.startswith(LEGB) and not (nm.startswith('thigh') and z > HIP + 0.02):
             cx, cy = 0.115 * s_, 0.03
-            return Vector((cx * 1.05 + (x - cx) * 1.22, cy + (y - cy) * 1.22, z * KL))
+            return Vector((cx * P_['LEGX'] + (x - cx) * P_['LEG'], cy + (y - cy) * P_['LEG'], z * KL))
         if nm.startswith(('shoulder', 'upper_arm', 'forearm', 'hand')):
-            k = {'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}[nm.split('.')[0]]
+            k = P_['ARM'][nm.split('.')[0]]
             off = co - q; qn = Vector((q.x + s_ * SHX, q.y, zmap(q.z)))
             return qn + off * k
         if z > NECK1:  # the head keeps its size
             return Vector((x * HS, C.y + (y - C.y) * HS, zmap(z)))
         wx, wy = torso_w(z)
-        return Vector((x * wx, 0.004 + (y - 0.004) * wy - 0.035 * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
+        return Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
     for v in body.data.vertices:
         d, nm, q = seg_of(v.co); v.co = F(v.co.copy(), nm, q)
     sm3 = body.modifiers.new('Settle', 'SMOOTH'); sm3.factor = 0.4; sm3.iterations = 3
@@ -203,7 +212,7 @@ if RACE == 'ferrin':
     eb = arm.data.edit_bones
     def Fj(p, nm):
         p = Vector(p); s_ = 1 if p.x >= 0 else -1
-        if nm.startswith(LEGB): return Vector((0.115 * s_ * 1.05 + (p.x - 0.115 * s_) * 1.22, p.y, p.z * KL)) if p.z < HIP + 0.02 else Vector((p.x, p.y, p.z - DZ))
+        if nm.startswith(LEGB): return Vector((0.115 * s_ * P_['LEGX'] + (p.x - 0.115 * s_) * P_['LEG'], p.y, p.z * KL)) if p.z < HIP + 0.02 else Vector((p.x, p.y, p.z - DZ))
         if nm.startswith(('shoulder', 'upper_arm', 'forearm', 'hand')): return Vector((p.x + s_ * SHX * (abs(p.x) > 0.05), p.y, zmap(p.z)))
         return Vector((p.x, p.y, zmap(p.z)))
     newB = []
@@ -222,7 +231,7 @@ if RACE == 'ferrin':
     hbm = bmesh.new(); hbm.from_mesh(body.data); hbm.verts.ensure_lookup_table()
     bmesh.ops.delete(hbm, geom=[v for v in hbm.verts if not (v.co.z > ZM[0] and math.hypot(v.co.x, v.co.y - C.y) < 0.14)], context='VERTS')
     HBVH = BVHTree.FromBMesh(hbm); ZB, ZT = ZM[0] + 0.02, top_z
-    print('FERRIN height', round(max(v.co.z for v in body.data.vertices), 3), 'eye', round(ZM[3], 3))
+    print(RACE.upper(), 'height', round(max(v.co.z for v in body.data.vertices), 3), 'eye', round(ZM[3], 3))
 body.shape_key_add(name='Basis')
 KEYS = {}
 for kname, lean in (('Lean', True), ('Heavy', False)):
