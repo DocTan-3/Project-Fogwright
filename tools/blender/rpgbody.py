@@ -208,7 +208,12 @@ if RACE in RACES:
             off = co - q; qn = Vector((q.x + s_ * SHX, q.y, zmap(q.z)))
             return qn + off * k
         if z > NECK1:  # the head keeps its size
-            if P_.get('FEM'): x *= 1 - 0.085 * sm(1.665, 1.575, z)   # softer, narrower jaw
+            if P_.get('FEM'):   # softer face, after WoW's elf women: tapered jaw, small pointed chin, a little width at the cheekbones
+                ax_ = abs(x)
+                x *= 1 - 0.085 * sm(1.665, 1.575, z) - 0.05 * sm(1.62, 1.565, z) * sm(0.02, 0.065, ax_)                      + 0.018 * math.exp(-((z - 1.665) / 0.018) ** 2) * sm(0.04, 0.07, ax_)
+                if z < 1.6: z = z + 0.006 * sm(1.6, 1.56, z)                       # a slightly shorter lower face
+                if y < -0.07 and ax_ < 0.022 and 1.635 < z < 1.715:                 # a smaller nose
+                    y += 0.004 * math.exp(-((z - 1.665) / 0.03) ** 2) * (1 - ax_ / 0.022)
             return Vector((x * HS, C.y + (y - C.y) * HS, zmap(z)))
         wx, wy = torso_w(z)
         out = Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
@@ -247,6 +252,10 @@ if RACE in RACES:
         nb2 = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb2[a_].append(b_); nb2[b_].append(a_)
         armreg = [i for i in ARMV if 0.97 < ORIG[i].z < 1.44 and nb2[i]]   # smoother arms: soften the muscle forms (not the hands)
+        pit = [i for i, c in enumerate(ORIG) if 1.12 < c.z < 1.43 and 0.11 < abs(c.x) < 0.24 and nb2[i]]   # armpit and lats: blend the side of the chest into the arm
+        for _ in range(6):
+            new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in pit}
+            for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.5 + c_ * 0.5
         for _ in range(4):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in armreg}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.55 + c_ * 0.45
