@@ -1,0 +1,7 @@
+# Blender exports before conversion, temp output, screenshots, node bits
+*.glb
+_full.glb
+shots/
+node_modules/
+*.png
+!docs/**/*.png
