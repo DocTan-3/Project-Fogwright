@@ -289,6 +289,25 @@ if RACE in RACES:
         for _ in range(3):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in soft}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.7 + c_ * 0.3
+        def lerpz(z, pts):
+            if z <= pts[0][0]: return pts[0][1]
+            for (z0, a0), (z1, a1) in zip(pts, pts[1:]):
+                if z <= z1: t = (z - z0) / (z1 - z0); return a0 + (a1 - a0) * t
+            return pts[-1][1]
+        BACK = [(1.34, 0.125), (1.4, 0.1), (1.45, 0.082), (1.5, 0.058), (1.55, 0.05)]     # the upper back and back of the neck
+        FRONT = [(1.36, -0.12), (1.41, -0.085), (1.46, -0.06), (1.5, -0.046), (1.55, -0.045)]   # the chest above the bust and the throat
+        for i, v in enumerate(body.data.vertices):
+            if i in ARMV: continue
+            x, y, z = v.co; ax = abs(x)
+            if 1.34 < z < 1.565 and ax < 0.17 and y > 0.02:
+                tb = lerpz(z, BACK) * (1 - 0.25 * sm(0.06, 0.17, ax))
+                if y > tb: v.co.y = y + (tb - y) * 0.85 * sm(1.34, 1.38, z)
+            if 1.36 < z < 1.565 and ax < 0.17 and y < -0.02:
+                tf = lerpz(z, FRONT)
+                if y < tf: v.co.y = y + (tf - y) * 0.8 * sm(1.36, 1.4, z) * (1 - sm(1.48, 1.525, z))   # leave the jaw's underside alone
+            if 1.465 < z < 1.565 and ax < 0.1 and y > -0.05:          # a slender neck, about 10 cm across
+                w = sm(1.465, 1.49, z) * (1 - sm(1.535, 1.56, z))
+                v.co.x = x * (1 - 0.3 * w)
         bust = [i for i, c in enumerate(ORIG) if 1.2 < c.z < 1.37 and abs(c.x) < 0.16 and c.y < 0.0 and i not in ARMV and nb2[i]]
         for _ in range(3):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in bust}
