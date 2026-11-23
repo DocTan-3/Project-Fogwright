@@ -22,6 +22,13 @@ def prof(front, side, n=240):
             ru=max(lst,key=lambda q:-abs((q[0]+q[1])/2-cx)) if False else min(lst,key=lambda q:abs((q[0]+q[1])/2-cx))
             return [((ru[0]+ru[1])/2-cx)/H, (ru[1]-ru[0])/2/H]
         out['legL'].append(legrun(L,'L')); out['legR'].append(legrun(Rr,'R'))
+        # arms: the outermost run on each side, once it has split from the body
+        if len(r)>=3:
+            out.setdefault('armL',[]).append([((r[0][0]+r[0][1])/2-cx)/H,(r[0][1]-r[0][0])/2/H])
+            out.setdefault('armR',[]).append([((r[-1][0]+r[-1][1])/2-cx)/H,(r[-1][1]-r[-1][0])/2/H])
+        else:
+            out.setdefault('armL',[]).append(None); out.setdefault('armR',[]).append(None)
+        out.setdefault('full',[]).append((max(b for a,b in r)-min(a for a,b in r))/2/H)
         s=srow(t); fx=max(b for a,b in s); bx=min(a for a,b in s)   # figure faces +x: front is the max
         out['front'].append((fx-kx)/Hs); out['back'].append((bx-kx)/Hs)
     # landmarks
@@ -30,11 +37,14 @@ def prof(front, side, n=240):
     # armpit: highest row below 0.85 where the arms are separate from the body (3+ runs)
     arm=max(tt for tt,nr in zip(t,out['nruns']) if nr>=3 and 0.5<tt<0.85)
     neck=min((v,tt) for tt,v in zip(t,tor) if 0.78<tt<0.9 and v>0)[1]
-    out['marks']=dict(crotch=float(crotch),armpit=float(arm),neck=float(neck))
+    armts=[tt for tt,a_ in zip(t,out['armL']) if a_ is not None and tt<arm+0.001 and tt>crotch+0.005]
+    # shoulder: the widest point of the body above the armpit
+    sh=max((out['torso'][i] or 0,t[i]) for i in range(len(t)) if arm<t[i]<neck)
+    out['marks']=dict(crotch=float(crotch),armpit=float(arm),neck=float(neck),armbot=float(min(armts)),shoulder=float(sh[1]),shoulderw=float(sh[0]))
     return out
 res={'m':prof('m_front','m_side'),'f':prof('f_front','f_side')}
 for k,v in res.items():
-    print(k,v['marks'])
+    print(k,v['marks']); print('   arm at 25/50/75% of its length',[v['armR'][int((v['marks']['armpit']-f*(v['marks']['armpit']-v['marks']['armbot']))*240)] for f in (0.25,0.5,0.75)])
     for tt in [0.3,0.45,0.55,0.6,0.65,0.7,0.75,0.8,0.85]:
         i=int(tt*240); print(f'  t{tt:.2f} torso {v["torso"][i]} front {v["front"][i]:.3f} back {v["back"][i]:.3f} legL {v["legL"][i]}')
 json.dump(res,open('aurelan_profile.json','w'))

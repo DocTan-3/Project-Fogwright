@@ -96,7 +96,7 @@ with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.
 tris1 = sum(len(p.vertices) - 2 for p in body.data.polygons)
 sm_ = body.modifiers.new('Calm', 'LAPLACIANSMOOTH'); sm_.iterations = 6; sm_.lambda_factor = 0.6; sm_.use_volume_preserve = True; sm_.use_normalized = True
 with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Calm')
-dm = body.modifiers.new('Dec', 'DECIMATE'); dm.ratio = 9000 / tris1
+dm = body.modifiers.new('Dec', 'DECIMATE'); dm.ratio = 16000 / tris1   # dense enough for the fitted curves
 with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Dec')
 sm2 = body.modifiers.new('Even', 'SMOOTH'); sm2.factor = 0.35; sm2.iterations = 2
 with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Even')
@@ -419,7 +419,7 @@ if os.environ.get('FIT'):
         if r:
             f_ = (r * crown) / max(vals)
             if not FEM_ and t < 0.56: f_ = min(1.08, max(0.8, f_))   # his loose shorts are not his hips
-            sx[k] = min(1.25, max(0.75, f_))
+            sx[k] = min(1.4, max(0.7, f_))
     sx = smooth(sx, 5)
     # leg widths, each side about its own centre
     lw = {}
@@ -432,7 +432,7 @@ if os.environ.get('FIT'):
             if not rr: continue
             cm = (max(xs) + min(xs)) / 2; wm = (max(xs) - min(xs)) / 2
             if len(xs) < 6 or wm < 0.03: continue
-            lw[(side, k)] = [cm, min(1.25, max(0.8, rr[1] * crown / wm))]
+            lw[(side, k)] = [cm, min(1.4, max(0.7, rr[1] * crown / wm))]
     for side in (1, -1):   # smooth the leg factors along the leg
         ks = sorted(k for s_, k in lw if s_ == side); f0 = {k: lw[(side, k)][1] for k in ks}
         for k in ks: lw[(side, k)][1] = sum(f0[j] for j in ks if abs(j - k) <= 5) / sum(1 for j in ks if abs(j - k) <= 5)
@@ -468,9 +468,59 @@ if os.environ.get('FIT'):
             ny = tf + (c.y - cf) * (tb - tf) / (cb - cf)
             v.co.y = c.y + (ny - c.y) * w
         moved += 1
+
+    # ---- shoulders: their width, with the arms (and their bones) moving in or out to match
+    sh_t = M['shoulder']; z_sh = neckz - (M['neck'] - sh_t) / (M['neck'] - M['armpit']) * (neckz - armpit)
+    full = max(abs(VV[i].co.x) for i in range(NV) if abs(VV[i].co.z - z_sh) < 0.008)
+    dsh = M['shoulderw'] * crown - full
+    print('FIT shoulder z', round(z_sh, 3), 'now', round(full, 3), 'target', round(M['shoulderw'] * crown, 3), 'shift', round(dsh, 3))
+    for i in range(NV):
+        c = VV[i].co; ax = abs(c.x); sgn = 1 if c.x > 0 else -1
+        if i in ARMV: c.x += sgn * dsh
+        elif armpit - 0.06 < c.z < neckz and ax > 0.06:
+            c.x += sgn * dsh * sm(0.06, 0.16, ax) * sm(armpit - 0.06, armpit, c.z) * (1 - sm(z_sh + 0.02, neckz, c.z))
+    bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='EDIT'); eb_ = arm.data.edit_bones
+    for sd, sg in (('L', 1), ('R', -1)):
+        eb_[f'shoulder.{sd}'].tail.x += sg * dsh
+        for nm in ('upper_arm', 'forearm', 'hand'): eb_[f'{nm}.{sd}'].head.x += sg * dsh; eb_[f'{nm}.{sd}'].tail.x += sg * dsh
+    g['BONES'][:] = [(nm, tuple(eb_[nm].head), tuple(eb_[nm].tail), par) for nm, h, t_, par in g['BONES']]
+    REST_ARM = {sd: [eb_[f'upper_arm.{sd}'].tail.copy(), eb_[f'forearm.{sd}'].tail.copy(), eb_[f'hand.{sd}'].tail.copy()] for sd in ('L', 'R')}
+    wrist_z = eb_['forearm.L'].tail.z; ua = (eb_['upper_arm.L'].tail - eb_['upper_arm.L'].head).normalized()
+    bpy.ops.object.mode_set(mode='OBJECT'); upd()
+    # ---- arms: thickness along their length, corrected for the different hang angle
+    am_ang = math.acos(min(1.0, abs(ua.z)))
+    ta, tb = M['armpit'], max(M['armbot'], M['crotch'] + 0.01)
+    def ref_arm(sd, f):
+        f = max(0.18, f)   # right at the armpit the arm is only a sliver on the sheet
+        t = ta - f * (ta - tb); i = int(round(t * NB)); return PR['armR' if sd > 0 else 'armL'][i], t
+    c0, _ = ref_arm(1, 0.1); c1, _ = ref_arm(1, 0.9)
+    ar_ang = math.atan(abs(c1[0] - c0[0]) / (0.8 * (ta - tb))) if c0 and c1 else 0.0
+    print('FIT arm angles model', round(math.degrees(am_ang)), 'sheet', round(math.degrees(ar_ang)))
+    for sd in (1, -1):
+        av = [i for i in ARMV if VV[i].co.x * sd > 0]
+        bands = {}
+        for i in av:
+            k = int(round(VV[i].co.z * 100)); bands.setdefault(k, []).append(i)
+        fac = {}
+        for k, ids in bands.items():
+            z = k / 100
+            if not (wrist_z < z < armpit) or len(ids) < 6: continue
+            f = (armpit - z) / (armpit - wrist_z); rr, _ = ref_arm(sd, f)
+            if not rr: continue
+            xs = [VV[i].co.x for i in ids]; wm = (max(xs) - min(xs)) / 2
+            if wm < 0.01: continue
+            fac[k] = min(1.25, max(0.8, (rr[1] * crown * math.cos(ar_ang)) / (wm * math.cos(am_ang))))
+        ks = sorted(fac); f0 = dict(fac)
+        for k in ks: fac[k] = sum(f0[j] for j in ks if abs(j - k) <= 4) / sum(1 for j in ks if abs(j - k) <= 4)
+        for k, f in fac.items():
+            ids = bands[k]; cx = sum(VV[i].co.x for i in ids) / len(ids); cy = sum(VV[i].co.y for i in ids) / len(ids)
+            z = k / 100; w = sm(wrist_z, wrist_z + 0.04, z) * (1 - sm(armpit - 0.03, armpit + 0.01, z))
+            for i in ids:
+                c = VV[i].co; c.x = cx + (c.x - cx) * (1 + (f - 1) * w); c.y = cy + (c.y - cy) * (1 + (f - 1) * w)
+        if ks: print('FIT arm', sd, 'factor range', round(min(fac.values()), 2), round(max(fac.values()), 2))
     nb_ = [[] for _ in VV]
     for e in body.data.edges: a_, b_ = e.vertices; nb_[a_].append(b_); nb_[b_].append(a_)
-    reg = [i for i, c in bp if 0.06 * crown < c.z < neckz and nb_[i]]
+    reg = [i for i in range(NV) if 0.06 * crown < VV[i].co.z < neckz and nb_[i] and not (i in ARMV and VV[i].co.z < wrist_z)]
     for _ in range(4):
         new = {i: sum((VV[j].co for j in nb_[i]), Vector()) / len(nb_[i]) for i in reg}
         for i, c_ in new.items(): VV[i].co = VV[i].co * 0.6 + c_ * 0.4
