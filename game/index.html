@@ -575,6 +575,7 @@ function box(w,h,d,mat,x,y,z,ry=0,rx=0,rz=0){const m=new THREE.Mesh(new THREE.Bo
 function cyl(rt,rb,h,seg,mat,x,y,z){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat);m.position.set(x,y,z);return m;}
 
 function buildLandmarks(){
+  CELLS.length=0;
   landmarks.children.slice().forEach(c=>{landmarks.remove(c);c.traverse(o=>{if(o.geometry)o.geometry.dispose();});});
   // Camp
   const camp=new THREE.Group(), gy=heightAt(0,0);
@@ -985,11 +986,28 @@ function kWalls(){
   kManor(); kTenement(); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','#4c5560'); kLonghouse('Lodge','#5c6b3e');
   kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber(); kChapel(); kShop(); kGarden(); kWalls();
 })();
-function kitInstances(name,list){ // list of {x,y,z,ry,sx,tint}
-  const geo=KIT.geo[name]; if(!geo||!list.length)return;
-  const m=new THREE.InstancedMesh(geo,kitMat,list.length), c=new THREE.Color();
-  list.forEach((p,i)=>{tmpObj.position.set(p.x,p.y,p.z);tmpObj.rotation.set(0,p.ry,0);tmpObj.scale.set(p.sx||1,1,1);tmpObj.updateMatrix();m.setMatrixAt(i,tmpObj.matrix);const t=p.tint||[1,1,1];m.setColorAt(i,c.setRGB(t[0],t[1],t[2]));});
-  m.instanceMatrix.needsUpdate=true; if(m.instanceColor)m.instanceColor.needsUpdate=true; m.castShadow=true; m.receiveShadow=true; landmarks.add(m);
+// Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
+// and only blocks near the player cast shadows. One batch per house type for the whole city drew all of it from anywhere.
+const CELLS=[], CELL=64, SHADOW_NEAR=70;
+function cellInstances(geo,mat,list,far,big,tinted){ // list of {x,y,z,ry,sx,tint}
+  if(!geo||!list.length)return; if(!geo.boundingSphere)geo.computeBoundingSphere();
+  const groups=new Map();
+  for(const p of list){const k=big?'all':Math.floor(p.x/CELL)+','+Math.floor(p.z/CELL);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(p);}
+  for(const sub of groups.values()){
+    const m=new THREE.InstancedMesh(geo,mat,sub.length), c=new THREE.Color(), ctr=new THREE.Vector3();
+    sub.forEach((p,i)=>{tmpObj.position.set(p.x,p.y,p.z);tmpObj.rotation.set(0,p.ry||0,0);tmpObj.scale.set(p.sx||1,1,1);tmpObj.updateMatrix();m.setMatrixAt(i,tmpObj.matrix);
+      if(tinted){const t=p.tint||[1,1,1];m.setColorAt(i,c.setRGB(t[0],t[1],t[2]));} ctr.x+=p.x/sub.length;ctr.y+=p.y/sub.length;ctr.z+=p.z/sub.length;});
+    let r=0; for(const p of sub)r=Math.max(r,Math.hypot(p.x-ctr.x,p.y-ctr.y,p.z-ctr.z)); r+=geo.boundingSphere.radius*Math.max(1,...sub.map(p=>p.sx||1))+Math.hypot(...geo.boundingSphere.center.toArray());
+    m.instanceMatrix.needsUpdate=true; if(m.instanceColor)m.instanceColor.needsUpdate=true; m.frustumCulled=false; m.receiveShadow=true;
+    landmarks.add(m); CELLS.push({m,sphere:new THREE.Sphere(ctr,r),far,shadow:true});
+  }
+}
+function kitInstances(name,list){cellInstances(KIT.geo[name],kitMat,list,/WallSeg|Tower|Gatehouse/.test(name)?1e9:360,/WallSeg|Tower|Gatehouse/.test(name),true);}
+const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
+function cullCells(){
+  camera.updateMatrixWorld(); _pm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); _frustum.setFromProjectionMatrix(_pm);
+  for(const c of CELLS){const d=Math.hypot(c.sphere.center.x-player.x,c.sphere.center.z-player.z)-c.sphere.radius;
+    c.m.visible=d<c.far&&(d<SHADOW_NEAR||_frustum.intersectsSphere(c.sphere)); c.m.castShadow=c.shadow&&d<SHADOW_NEAR;}
 }
 const kitReady=()=>!!KIT.geo.RowA;
 
@@ -2384,9 +2402,8 @@ function buildLamps(){
   buildOutskirts();
   // draw: one batch per part per type
   for(const t in LAMP_TYPES){const list=LAMPS.filter(L=>L.type===t);if(!list.length)continue;const T=LAMP_TYPES[t];
-    const body=new THREE.InstancedMesh(T.body,lampBodyMat,list.length), glass=new THREE.InstancedMesh(T.glass,lampGlassMat,list.length);
-    list.forEach((L,i)=>{tmpObj.position.set(L.x,L.y,L.z);tmpObj.rotation.set(0,L.ry,0);tmpObj.scale.set(1,1,1);tmpObj.updateMatrix();body.setMatrixAt(i,tmpObj.matrix);glass.setMatrixAt(i,tmpObj.matrix);});
-    body.castShadow=true; landmarks.add(body,glass);}
+    const items=list.map(L=>({x:L.x,y:L.y,z:L.z,ry:L.ry}));
+    cellInstances(T.body,lampBodyMat,items,300,false,false); const n0=CELLS.length; cellInstances(T.glass,lampGlassMat,items,300,false,false); for(let i=n0;i<CELLS.length;i++)CELLS[i].shadow=false;}
   const pools=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),lampPoolMat,LAMPS.length);
   LAMPS.forEach((L,i)=>{tmpObj.position.set(L.lx,heightAt(L.lx,L.lz)+0.08,L.lz);tmpObj.rotation.set(0,0,0);tmpObj.scale.set(11,1,11);tmpObj.updateMatrix();pools.setMatrixAt(i,tmpObj.matrix);});
   pools.renderOrder=2; landmarks.add(pools);
@@ -2900,7 +2917,7 @@ function frame(now){
   if(towerGlow){towerGlow.rotation.y+=dt*0.6;towerGlow.position.y=44+Math.sin(now*0.0015)*0.6;}
   if(capitalBeam){capitalBeam.position.set(CITY.x,450,CITY.z);}
 
-  renderer.render(scene,camera);
+  cullCells(); renderer.render(scene,camera);
 
   // HUD
   fpsAcc+=dt;fpsN++;
