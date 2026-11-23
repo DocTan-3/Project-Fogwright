@@ -980,6 +980,7 @@ float kWin=0.;
 // (kmat >= 50 marks parts that must stay plain: chimneys, pipes, castle walls.)
 vec3 kitWalls(vec3 c,float km,vec3 lp,vec3 ln,float seed){
   float fwa=fwidth(lp.x)+fwidth(lp.y)+fwidth(lp.z), wf=smoothstep(.04,.14,fwa);   // far away, a window is a soft dark patch
+  seed=floor(seed*997.+.5)/997.;   // the seed arrives with tiny interpolation errors; a hash would turn them into speckle
   float m=mod(km,50.); if(m<.5||abs(ln.y)>.3)return c;
   bool wall=(m<4.5&&m>.5)||m>9.5;
   float along=abs(ln.x)>.5?lp.z*sign(ln.x):-lp.x*sign(ln.z);
@@ -1005,7 +1006,7 @@ kitMat.onBeforeCompile=sh=>{
     .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;vKM=kmat;vLP=transformed;vLN=objectNormal;\n{mat4 mm=modelMatrix;\n#ifdef USE_INSTANCING\nmm=modelMatrix*instanceMatrix;\n#endif\nvKP=(mm*vec4(transformed,1.0)).xyz;vKN=normalize(mat3(mm)*objectNormal);}\n#ifdef USE_INSTANCING\nvec4 o4=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);\n#else\nvec4 o4=modelMatrix*vec4(0.0,0.0,0.0,1.0);\n#endif\nvSeed=fract(sin(dot(floor(o4.xz),vec2(12.9898,78.233)))*43758.5453);');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\nvarying vec3 vLP;\nvarying vec3 vLN;\n'+KIT_GLSL)
     .replace('#include <color_fragment>','#include <color_fragment>\n{float kmr=floor(vKM+.5);diffuseColor.rgb=kitWalls(kitSurface(diffuseColor.rgb,mod(kmr,50.),vKP,normalize(vKN)),kmr,vLP,normalize(vLN),vSeed);}')
-    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nif(vGlow>1.5){totalEmissiveRadiance+=vec3(0.62,0.42,1.0)*(0.3+1.1*uNight);}if(kWin>0.){totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*kWin*0.7;}\nif(vGlow>1.5){}else if(vGlow>0.0){float lit=step(0.38,fract(vGlow*7.13+vSeed*3.7));totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*lit*0.8;}');
+    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nif(vGlow>1.5){totalEmissiveRadiance+=vec3(0.62,0.42,1.0)*(0.3+1.1*uNight);}if(kWin>0.){totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*kWin*0.7;}\nif(vGlow>1.5){}else if(vGlow>0.0){float lit=step(0.38,fract(floor(vGlow*997.+.5)/997.*7.13+floor(vSeed*997.+.5)/997.*3.7));totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*lit*0.8;}');
 };
 const _unitBox=new THREE.BoxGeometry(1,1,1).toNonIndexed();
 let _winSeed=1;
@@ -1021,6 +1022,15 @@ class KitB{
     g.userData.small=!!this.small; this.parts.push(g);
   }
   sm(fn){this.small=true;fn();this.small=false;}
+  unfight(){ // two parts with faces in the same plane flicker against each other: nudge the smaller one out by a few millimetres
+    const B=this.parts.map(g=>{g.computeBoundingBox();return g.boundingBox.clone();}),V=B.map(b=>{const s=b.getSize(new THREE.Vector3());return s.x*s.y*s.z;}),grow=new Set();
+    for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){const a=B[i],b=B[j];if(!a.clone().expandByScalar(0.01).intersectsBox(b))continue;
+      let co=false;for(const ax of['x','y','z'])for(const ka of['min','max'])for(const kb of['min','max'])if(Math.abs(a[ka][ax]-b[kb][ax])<0.004){
+        const o1=ax==='x'?'y':'x',o2=ax==='z'?'y':'z';if(a.min[o1]<b.max[o1]-0.01&&b.min[o1]<a.max[o1]-0.01&&a.min[o2]<b.max[o2]-0.01&&b.min[o2]<a.max[o2]-0.01)co=true;}
+      if(co)grow.add(V[i]<V[j]?i:j);}
+    for(const i of grow){const g=this.parts[i],b=B[i],c=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3()),P=g.attributes.position;
+      const k=['x','y','z'].map(ax=>sz[ax]>1e-4?1+0.012/sz[ax]:1);for(let v=0;v<P.count;v++)P.setXYZ(v,c.x+(P.getX(v)-c.x)*k[0],c.y+(P.getY(v)-c.y)*k[1],c.z+(P.getZ(v)-c.z)*k[2]);P.needsUpdate=true;}
+  }
   bakeAO(){ // ambient occlusion, baked into the vertex colours once: corners, ledges, the wall under a jutting floor, the foot of every wall
     const S=this.solids;if(!S.length)return;const mn=[1e9,1e9,0],mx=[-1e9,-1e9,-1e9];for(const b of S)for(let i=0;i<3;i++){mn[i]=Math.min(mn[i],b[i]);mx[i]=Math.max(mx[i],b[i+3]);}
     for(let i=0;i<3;i++){mn[i]-=1;mx[i]+=1;} let v=0.3;const dims=()=>[0,1,2].map(i=>Math.ceil((mx[i]-mn[i])/v));let D=dims();while(D[0]*D[1]*D[2]>2.5e6){v*=1.25;D=dims();}
@@ -1063,7 +1073,7 @@ class KitB{
     this.poly([[-w0/2,-d0/2,0],[w0/2,-d0/2,0],[w0/2,d0/2,0],[-w0/2,d0/2,0],[-w1/2,-d1/2,h],[w1/2,-d1/2,h],[w1/2,d1/2,h],[-w1/2,d1/2,h]],
       [[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7],[3,2,1,0]],this.M(x,y,z),col);}
   finish(name,w,d,lean){
-    this.bakeAO();
+    this.unfight(); this.bakeAO();
     if(lean){const [z0,kx,ky]=lean,sh=(x,y,z)=>z>z0?[x+kx*(z-z0)*(z-z0)/6,y-ky*(z-z0)*(z-z0)/6]:[x,y];
       for(const g of this.parts){const p=g.attributes.position;for(let i=0;i<p.count;i++){const [x,y]=sh(p.getX(i),p.getY(i),p.getZ(i));p.setX(i,x);p.setY(i,y);}}
       this.vents=this.vents.map(([x,y,z,v])=>{const [a,b]=sh(x,y,z);return [a,b,z,v];});}
