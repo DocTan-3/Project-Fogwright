@@ -18,3 +18,10 @@ CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, packe
 brick_wall_001, old_stone_wall, damaged_plaster, medieval_wood, clay_roof_tiles_02, roof_slates_02, thatch_roof_angled,
 grey_roof_01, rusty_corrugated_iron, clay_plaster, white_sandstone_blocks_02, brown_planks_05, cobblestone_square,
 cobblestone_large_01, large_sandstone_blocks (cropped and mirrored), stony_dirt_path.
+
+## World and prop textures (game/tex/world.jpg)
+
+CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 4x4 sheet at 512 px each:
+leafy_grass, forest_leaves_02, coast_land_rocks_01, coast_sand_01, brown_mud, grass_path_2, bark_brown_02, forest_leaves_04,
+wood_table_worn, quatrefoil_jacquard_fabric (greyscale), brown_leather, rusty_metal_02, green_metal_rust, dirty_carpet,
+terry_cloth (greyscale), aerial_rocks_02.
