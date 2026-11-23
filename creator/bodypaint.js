@@ -361,7 +361,7 @@ function peopleClip(rig,clip){ // positions in the clips are the human skeleton'
 function setPeople(root,name){
   const rig=root.userData.rig; if(!rig)return;
   const body=rig.body, d=body.morphTargetDictionary;
-  for(const k of ['Ferrin','Ilvari','Zarhim'])if(k in d)body.morphTargetInfluences[d[k]]=(k===name)?1:0;
+  for(const k of ['Ferrin','Ilvari','Zarhim','Aurelan'])if(k in d)body.morphTargetInfluences[d[k]]=(k===name)?1:0;
   const J=rig.joints&&(rig.joints[name]||rig.joints.Human); rig.people=(rig.joints&&rig.joints[name])?name:'Human';
   if(!J){rig.local=null;return;}
   const byName={}; for(const k in J)byName[SANE(k)]=new THREE.Vector3(...J[k]);

@@ -1,5 +1,5 @@
 # Fogwright base body from the Simple RPG Human Male (Sketchfab), rigged and repainted by code.
-# RACE=human (default), ferrin, ilvari, zarhim or female, e.g.  RACE=female python rpgbody.py -- female.glb
+# RACE=human (default), ferrin, ilvari, zarhim or female; FIT=profile.json FITSEX=m|f fits the body to a reference sheet.
 # (adapted from body.py): one continuous mesh, built for painting. Exports body.glb
 # Torso, limbs, hands and feet come from a skin-modifier stick figure; the head is built ring by ring and
 # shaped by one smooth function (skull, jaw, brow, nose, lips, chin), then bridged to the neck with no seam.
@@ -369,6 +369,124 @@ if RACE in RACES:
     bmesh.ops.delete(hbm, geom=[v for v in hbm.verts if not (v.co.z > ZM[0] and math.hypot(v.co.x, v.co.y - C.y) < 0.14)], context='VERTS')
     HBVH = BVHTree.FromBMesh(hbm); ZB, ZT = ZM[0] + 0.02, top_z
     print(RACE.upper(), 'height', round(max(v.co.z for v in body.data.vertices), 3), 'eye', round(ZM[3], 3))
+# ---------- fit to a reference turnaround (FIT=profile.json, FITSEX=m|f): match its front-view widths and side-view outline
+if os.environ.get('FIT'):
+    import json
+    PR = json.load(open(os.environ['FIT']))[os.environ.get('FITSEX', 'm')]
+    VV = body.data.vertices; NV = len(VV)
+    crown = max(v.co.z for v in VV)
+    def body_pts(): return [(i, VV[i].co) for i in range(NV) if i not in ARMV]
+    bp = body_pts()
+    crotch = min(c.z for i, c in bp if abs(c.x) < 0.012 and c.z > 0.4 * crown)
+    neckz = None; best = 9
+    for k in range(int(0.83 * crown * 100), int(0.91 * crown * 100)):
+        z = k / 100; w = [abs(c.x) for i, c in bp if abs(c.z - z) < 0.006 and abs(c.y) < 0.12]
+        if w and max(w) < best: best, neckz = max(w), z
+    armpit = None
+    for k in range(int(0.6 * crown * 100), int(neckz * 100)):
+        z = k / 100
+        t_ = [abs(c.x) for i, c in bp if abs(c.z - z) < 0.006]
+        a_ = [abs(VV[i].co.x) for i in ARMV if abs(VV[i].co.z - z) < 0.006]
+        if t_ and a_ and min(a_) - max(t_) > 0.004: armpit = z
+    M = PR['marks']; RZ = [0, M['crotch'], M['neck'], 1]; MZ = [0, crotch / crown, neckz / crown, 1]
+    print('FIT landmarks model', [round(v, 3) for v in MZ], 'ref', [round(v, 3) for v in RZ])
+    def to_t(z):
+        u = z / crown
+        for a0, a1, b0, b1 in zip(MZ, MZ[1:], RZ, RZ[1:]):
+            if u <= a1: return b0 + (b1 - b0) * (u - a0) / (a1 - a0)
+        return 1.0
+    T = PR['t']; NB = len(T) - 1
+    def ref(key, t):
+        i = max(0, min(NB, int(round(t * NB)))); return PR[key][i]
+    def bins(sel):   # per 1 cm band: values from the vertices selected
+        out = {}
+        for i, c in bp:
+            r = sel(c)
+            if r is None: continue
+            k = int(round(c.z * 100)); out.setdefault(k, []).append(r)
+        return out
+    def smooth(d, rad=2):
+        ks = sorted(d); return {k: sum(d[j] for j in ks if abs(j - k) <= rad) / sum(1 for j in ks if abs(j - k) <= rad) for k in ks}
+    FEM_ = os.environ.get('FITSEX') == 'f'
+    t_leg = M['crotch'] - (0.02 if FEM_ else 0.06); t_tor = M['crotch'] + (0.015 if FEM_ else 0.08)
+    # torso width (crotch to armpit)
+    tw = bins(lambda c: abs(c.x) if abs(c.y) < 0.2 else None)
+    sx = {}
+    for k, vals in tw.items():
+        z = k / 100; t = to_t(z)
+        if not (t_tor < t < M['armpit'] - 0.005): continue
+        r = ref('torso', t)
+        if r:
+            f_ = (r * crown) / max(vals)
+            if not FEM_ and t < 0.56: f_ = min(1.08, max(0.8, f_))   # his loose shorts are not his hips
+            sx[k] = min(1.25, max(0.75, f_))
+    sx = smooth(sx, 5)
+    # leg widths, each side about its own centre
+    lw = {}
+    for side in (1, -1):
+        b = bins(lambda c: c.x if c.x * side > 0.01 else None)
+        for k, xs in b.items():
+            z = k / 100; t = to_t(z)
+            if not (0.06 < t < t_leg): continue
+            rr = ref('legR' if side > 0 else 'legL', t)
+            if not rr: continue
+            cm = (max(xs) + min(xs)) / 2; wm = (max(xs) - min(xs)) / 2
+            if len(xs) < 6 or wm < 0.03: continue
+            lw[(side, k)] = [cm, min(1.25, max(0.8, rr[1] * crown / wm))]
+    for side in (1, -1):   # smooth the leg factors along the leg
+        ks = sorted(k for s_, k in lw if s_ == side); f0 = {k: lw[(side, k)][1] for k in ks}
+        for k in ks: lw[(side, k)][1] = sum(f0[j] for j in ks if abs(j - k) <= 5) / sum(1 for j in ks if abs(j - k) <= 5)
+    # side outline: torso and legs together
+    dep = bins(lambda c: c.y)
+    kz = int(round(0.285 * crown * 100)); kys = dep.get(kz) or dep[min(dep, key=lambda k: abs(k - kz))]
+    ky = (max(kys) + min(kys)) / 2
+    dy = {}
+    for k, ys in dep.items():
+        z = k / 100; t = to_t(z)
+        if not (0.06 < t < M['neck'] - 0.01): continue
+        if t_leg <= t <= t_tor and not FEM_: continue
+        tf = ky - ref('front', t) * crown; tb = ky - ref('back', t) * crown   # the sheet faces +x, our front is -y
+        cf, cb = min(ys), max(ys)
+        if cb - cf > 0.02: dy[k] = [cf, cb, tf, tb]
+    ks = sorted(dy); d0 = {k: list(dy[k]) for k in ks}
+    for k in ks:
+        nbk = [j for j in ks if abs(j - k) <= 4]
+        dy[k] = [sum(d0[j][q] for j in nbk) / len(nbk) for q in range(4)]
+    def wfade(t, a, b, f=0.03): return sm(a, a + f, t) * (1 - sm(b - f, b, t))
+    moved = 0
+    for i, c in bp:
+        k = int(round(c.z * 100)); t = to_t(c.z); v = VV[i]
+        if k in sx and t > t_tor:
+            w = wfade(t, t_tor, M['armpit'] - 0.005, 0.04)
+            v.co.x = c.x * (1 + (sx[k] - 1) * w)
+        side = 1 if c.x > 0 else -1
+        if (side, k) in lw:
+            cm, f = lw[(side, k)]; w = wfade(t, 0.06, t_leg, 0.03)
+            v.co.x = cm + (c.x - cm) * (1 + (f - 1) * w)
+        if k in dy:
+            cf, cb, tf, tb = dy[k]; w = wfade(t, 0.06, M['neck'] - 0.01, 0.04) * (0.85 if t > M['armpit'] else 1.0)
+            ny = tf + (c.y - cf) * (tb - tf) / (cb - cf)
+            v.co.y = c.y + (ny - c.y) * w
+        moved += 1
+    nb_ = [[] for _ in VV]
+    for e in body.data.edges: a_, b_ = e.vertices; nb_[a_].append(b_); nb_[b_].append(a_)
+    reg = [i for i, c in bp if 0.06 * crown < c.z < neckz and nb_[i]]
+    for _ in range(4):
+        new = {i: sum((VV[j].co for j in nb_[i]), Vector()) / len(nb_[i]) for i in reg}
+        for i, c_ in new.items(): VV[i].co = VV[i].co * 0.6 + c_ * 0.4
+    for tt in (0.5, 0.55, 0.6, 0.65, 0.7):
+        zz = None
+        for k in sorted(tw):
+            if abs(to_t(k / 100) - tt) < 0.006: zz = k; break
+        if zz is None: continue
+        cur = max(abs(VV[i].co.x) for i, c in bp if int(round(c.z * 100)) == zz and abs(c.y) < 0.2)
+        r_ = ref('torso', tt); print('FIT check t', tt, 'z', zz / 100, 'now', round(cur, 3), 'target', round(r_ * crown, 3) if r_ else None, 'arm-free?', zz in sx)
+    for kk in sorted(dy)[::8]: print('FIT depth z', kk / 100, 't', round(to_t(kk / 100), 3), 'cur front/back', round(dy[kk][0], 3), round(dy[kk][1], 3), 'target', round(dy[kk][2], 3), round(dy[kk][3], 3))
+    print('FIT knee ky', round(ky, 3))
+    for kk in sorted(dy)[::8]:
+        ys_ = [VV[i].co.y for i, c in bp if int(round(VV[i].co.z * 100)) == kk]
+        if ys_: print('FIT after z', kk / 100, 'front/back', round(min(ys_), 3), round(max(ys_), 3), 'target', round(dy[kk][2], 3), round(dy[kk][3], 3))
+    print('FIT moved', moved, 'torso bands', len(sx), 'leg bands', len(lw), 'depth bands', len(dy))
 body.shape_key_add(name='Basis')
 KEYS = {}
 for kname, lean in (('Lean', True), ('Heavy', False)):

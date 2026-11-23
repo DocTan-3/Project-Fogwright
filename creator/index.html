@@ -37,7 +37,7 @@ input[type=range]{width:100%;accent-color:var(--brass)}
   <div class="label">People</div><div class="chips" id="people"></div>
   <p class="desc" id="pdesc"></p>
   <div class="label">Height <span id="hv"></span></div><input id="height" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="Height, within this people's range">
-  <div class="label">Build <span id="bv"></span></div><input id="build" type="range" min="0" max="1" step="0.01" value="0.4" aria-label="Build, from slight to heavy, within this people's range">
+  <div class="label">Build <span id="bv"></span></div><input id="build" type="range" min="0" max="1" step="0.01" value="0.55" aria-label="Build, from slight to heavy, within this people's range">
   <div class="label">Skin</div><div class="chips" id="skin"></div>
   <div class="label">Eyes</div><div class="chips" id="eyes"></div>
   <div class="label">Hair</div><div class="chips" id="hair"></div>
@@ -415,7 +415,7 @@ function peopleClip(rig,clip){ // positions in the clips are the human skeleton'
 function setPeople(root,name){
   const rig=root.userData.rig; if(!rig)return;
   const body=rig.body, d=body.morphTargetDictionary;
-  for(const k of ['Ferrin','Ilvari','Zarhim'])if(k in d)body.morphTargetInfluences[d[k]]=(k===name)?1:0;
+  for(const k of ['Ferrin','Ilvari','Zarhim','Aurelan'])if(k in d)body.morphTargetInfluences[d[k]]=(k===name)?1:0;
   const J=rig.joints&&(rig.joints[name]||rig.joints.Human); rig.people=(rig.joints&&rig.joints[name])?name:'Human';
   if(!J){rig.local=null;return;}
   const byName={}; for(const k in J)byName[SANE(k)]=new THREE.Vector3(...J[k]);
@@ -439,7 +439,7 @@ function playPeople(root,mixer,clipName){
 
 // ---- the peoples: shape, and the range each slider may move within (height is a scale, build runs -1 slight .. 0 muscular .. 1 heavy)
 const PEOPLE={
- Aurelan:{shape:'Human',desc:'Ingenious islanders; balanced and handsome.',m:{h:[0.97,1.03],w:[-0.85,0.1]},f:{h:[0.95,0.99],w:[-0.85,-0.25]},
+ Aurelan:{shape:'Aurelan',desc:'Ingenious islanders; balanced and handsome.',m:{h:[0.97,1.03],w:[-0.45,0.3]},f:{h:[0.95,0.99],w:[-0.45,0.15]},
    skin:['#efceb4','#e8c2a2','#d9ab88','#c9966e'],hair:['#4a3426','#2e2420','#6a4a30','#8a5a3a','#c7a66b'],eyes:['#4a6a8a','#5a7a4a','#5a3a26','#6e7a86']},
  Hrimfolk:{shape:'Human',desc:'The sturdiest of all: tall, broad northerners.',m:{h:[1.05,1.12],w:[-0.4,0.95]},f:{h:[1.0,1.05],w:[-0.6,0.15]},
    skin:['#f3d9c4','#f0cfb4','#e5bd9e','#dcae8c'],hair:['#e0c690','#c7a66b','#e6dcc0','#a8916c','#9a5a34'],eyes:['#5a8aa8','#7a9aae','#4a6a5a','#6e7a86']},
@@ -456,7 +456,7 @@ const PEOPLE={
 const HAIRS=[['None',null],['Short','Short'],['Swept','Swept'],['Ponytail','Ponytail'],['Long','Long'],['Topknot','Topknot']];
 const BEARDS=[['None',null],['Short','Short'],['Full','Full'],['Pointed','Pointed'],['Forked','Forked'],['Braided','Braided']];
 const STACHES=[['None',null],['Chevron','Chevron'],['Horseshoe','Horseshoe'],['Walrus','Walrus'],['Handlebar','Handlebar'],['Pencil','Pencil']];
-const st={sex:'m',people:'Aurelan',h:0.5,w:0.4,skin:1,eye:0,hair:'Swept',hcol:0,beard:null,stache:null,lower:0,view:'full'};
+const st={sex:'m',people:'Aurelan',h:0.5,w:0.55,skin:1,eye:0,hair:'Swept',hcol:0,beard:null,stache:null,lower:0,view:'full'};
 // ---- scene
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(28,1,0.05,100);
