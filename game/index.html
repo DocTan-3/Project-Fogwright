@@ -340,7 +340,7 @@ function heightAt(x,z){
   const dv=Math.hypot(x-VILLAGE.x,z-VILLAGE.z); if(dv<VILLAGE.r){h=lerp(2.4,h,smooth(30,VILLAGE.r,dv));}
   const dcy=Math.hypot(x-CITY.x,z-CITY.z); if(dcy<CITY.r+32){h=lerp(3,h,smooth(CITY.r+6,CITY.r+32,dcy));}
   const dp=Math.hypot(x-PORT.x,z-PORT.z); if(dp<PORT.r){h=lerp(0.9,h,smooth(22,PORT.r,dp));}
-  if(roadDist(x,z)<6.5)h=Math.max(h,0.6);
+  {const rd=roadDist(x,z);if(rd<10)h=lerp(Math.max(h,0.6),h,smooth(5.5,10,rd));}   // roads ride above wet ground, with sloping banks
   const dt=Math.hypot(x-TOWER.x,z-TOWER.z); if(dt<20){h=lerp(TOWER.h,h,smooth(11,20,dt));}
   return h;
 }
@@ -417,25 +417,26 @@ const KINDS={
 };
 
 /* ---------- Chunks ---------- */
-const CS=32, RES=16, STEP=CS/RES, RADIUS=4;
+const CS=32, RES=24, STEP=CS/RES, RADIUS=4;
 const chunks=new Map(); let queue=[];
 const tmpObj=new THREE.Object3D(), tmpCol=new THREE.Color();
 
-function terrainColor(x,z,y,ny,out){
+function terrainColor(x,z,y,ny,out){ // every change of ground blends over a metre or two, so edges never zig-zag along the grid
   const t=warpDist(x,z), m=biomeMix(t), A=BIOMES[m[0]].grass, B=BIOMES[m[1]].grass, k=m[2];
   let r=lerp(A[0],B[0],k), g=lerp(A[1],B[1],k), b=lerp(A[2],B[2],k);
+  const mix=(c0,c1,c2,w)=>{if(w<=0)return;r=lerp(r,c0,w);g=lerp(g,c1,w);b=lerp(b,c2,w);};
   const bi=biomeIndex(t);
-  if(y<-0.4){r=0.36;g=0.31;b=0.24;}
-  else if(y<0.45){ if(bi===2){r=0.33;g=0.30;b=0.21;} else {r=0.72;g=0.65;b=0.47;} }
-  else if(ny<0.78){ const s=bi===3?0.36:0.5; r=s;g=s*0.97;b=s*0.93; }
-  else if(bi===3 && y>9){ r=0.55;g=0.53;b=0.5; }
-  if(y>0.3&&inField(x,z)){const st=Math.sin(x*0.4)>0; r=st?0.80:0.52; g=st?0.70:0.66; b=st?0.30:0.27;}
-  if(y>0.2&&roadDist(x,z)<4.5){r=0.58;g=0.48;b=0.34;}
-  if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<13){r=0.62;g=0.58;b=0.52;}
+  if(bi===2)mix(0.33,0.30,0.21,smooth(0.7,0.3,y)); else mix(0.72,0.65,0.47,smooth(0.7,0.3,y));   // shore and riverbank
+  mix(0.36,0.31,0.24,smooth(-0.2,-0.6,y));                                                        // under water
+  {const s=bi===3?0.36:0.5; mix(s,s*0.97,s*0.93,smooth(0.82,0.7,ny)*smooth(0.2,0.6,y));}         // steep ground shows rock
+  if(bi===3)mix(0.55,0.53,0.5,smooth(8.5,9.5,y)*smooth(0.7,0.82,ny));
+  if(y>0.3&&inField(x,z)){const st=0.5+0.5*Math.sin(x*0.4),q=smooth(0.3,0.7,st);mix(lerp(0.52,0.8,q),lerp(0.66,0.7,q),lerp(0.27,0.3,q),0.9);}
+  mix(0.58,0.48,0.34,smooth(4.9,4.0,roadDist(x,z))*smooth(0.1,0.3,y));                            // roads
+  mix(0.62,0.58,0.52,smooth(13.5,12.3,Math.hypot(x-VILLAGE.x,z-VILLAGE.z)));                        // the village square
   if(cityStreet(x,z)){const cb=(Math.sin(x*2.1)*Math.sin(z*2.1)>0?0.03:-0.03)+N.c(x*0.4,z*0.4)*0.04;r=0.55+cb;g=0.53+cb;b=0.5+cb;} else if(Math.hypot(x-CITY.x,z-CITY.z)<CITY.r){r=0.5;g=0.5;b=0.42;}
-  if(y>0.3&&inOutskirts(x,z)){const near=smooth(OUT.r1,CITY.r+30,Math.hypot(x-CITY.x,z-CITY.z)),d=0.5+0.5*N.c(x*0.03,z*0.03),k2=Math.min(0.8,near*0.7+smooth(0.35,0.75,d)*0.35);r=lerp(r,0.5,k2);g=lerp(g,0.44,k2);b=lerp(b,0.33,k2);}
-  if(y>0.2&&Math.hypot(x-PORT.x,z-PORT.z)<26){r=0.6;g=0.56;b=0.5;}
-  if(y>0.45&&ny>=0.78){const pt=N.c(x*0.017,z*0.017);r+=pt*0.06;g+=pt*0.035;b-=pt*0.01;}
+  if(y>0.3&&inOutskirts(x,z)){const near=smooth(OUT.r1,CITY.r+30,Math.hypot(x-CITY.x,z-CITY.z)),d=0.5+0.5*N.c(x*0.03,z*0.03),k2=Math.min(0.8,near*0.7+smooth(0.35,0.75,d)*0.35);mix(0.5,0.44,0.33,k2);}
+  mix(0.6,0.56,0.5,smooth(27,24,Math.hypot(x-PORT.x,z-PORT.z))*smooth(0.1,0.3,y));               // the port
+  {const pt=N.c(x*0.017,z*0.017)*smooth(0.4,0.7,y)*smooth(0.72,0.82,ny);r+=pt*0.06;g+=pt*0.035;b-=pt*0.01;}
   const v=0.92+N.c(x*0.09,z*0.09)*0.08;
   out[0]=r*v;out[1]=g*v;out[2]=b*v;
 }
@@ -459,14 +460,32 @@ function gridMesh(ox,oz,st,R,hs,cols){
   }
   return {pos,col};
 }
+// the ground as drawn: characters stand on exactly this surface, never on the finer height function between its points
+const CHUNK_H=new Map();
+function surfaceAt(x,z){
+  const cx=Math.floor(x/CS), cz=Math.floor(z/CS), hs=CHUNK_H.get(cx+','+cz); if(!hs)return heightAt(x,z);
+  const W=RES+1, fx=(x-cx*CS)/STEP, fz=(z-cz*CS)/STEP, i=Math.min(RES-1,Math.max(0,Math.floor(fx))), j=Math.min(RES-1,Math.max(0,Math.floor(fz))), u=fx-i, v=fz-j;
+  const h00=hs[j*W+i], h10=hs[j*W+i+1], h01=hs[(j+1)*W+i], h11=hs[(j+1)*W+i+1];
+  if((i+j)&1)return u+v<=1?h00+(h10-h00)*u+(h01-h00)*v:h11+(h01-h11)*(1-u)+(h10-h11)*(1-v);
+  return u>=v?h00+(h10-h00)*u+(h11-h10)*v:h00+(h11-h01)*u+(h01-h00)*v;
+}
 function buildChunk(cx,cz){
-  const ox=cx*CS, oz=cz*CS, W=RES+1, hs=new Float32Array(W*W);
-  for(let j=0;j<W;j++)for(let i=0;i<W;i++)hs[j*W+i]=heightAt(ox+i*STEP,oz+j*STEP);
-  const {pos,col}=gridMesh(ox,oz,STEP,RES,hs,gridColors(ox,oz,STEP,W,hs));
+  const ox=cx*CS, oz=cz*CS, W=RES+1, E=W+2, he=new Float32Array(E*E), hs=new Float32Array(W*W);
+  for(let j=0;j<E;j++)for(let i=0;i<E;i++)he[j*E+i]=heightAt(ox+(i-1)*STEP,oz+(j-1)*STEP);
+  const pos=new Float32Array(W*W*3), nor=new Float32Array(W*W*3), col=new Float32Array(W*W*3), c=[0,0,0];
+  for(let j=0;j<W;j++)for(let i=0;i<W;i++){
+    const k=j*W+i, e=(j+1)*E+(i+1), h=he[e]; hs[k]=h;
+    const gx=(he[e+1]-he[e-1])/(2*STEP), gz=(he[e+E]-he[e-E])/(2*STEP), n=1/Math.sqrt(1+gx*gx+gz*gz);
+    pos[k*3]=ox+i*STEP; pos[k*3+1]=h; pos[k*3+2]=oz+j*STEP; nor[k*3]=-gx*n; nor[k*3+1]=n; nor[k*3+2]=-gz*n;
+    terrainColor(ox+i*STEP,oz+j*STEP,h,n,c); col.set(c,k*3);
+  }
+  const idx=new (W*W>65535?Uint32Array:Uint16Array)(RES*RES*6); let p=0;
+  for(let j=0;j<RES;j++)for(let i=0;i<RES;i++){const a=j*W+i,b=a+1,d=a+W,f=d+1;   // the same diagonals as surfaceAt
+    if((i+j)&1){idx[p++]=a;idx[p++]=d;idx[p++]=b;idx[p++]=b;idx[p++]=d;idx[p++]=f;}else{idx[p++]=a;idx[p++]=d;idx[p++]=f;idx[p++]=a;idx[p++]=f;idx[p++]=b;}}
   const geo=new THREE.BufferGeometry();
-  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
-  geo.computeVertexNormals();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3)); geo.setIndex(new THREE.BufferAttribute(idx,1));
+  CHUNK_H.set(cx+','+cz,hs);
   const group=new THREE.Group();
   {const tm=new THREE.Mesh(geo,terrainMat);tm.receiveShadow=true;group.add(tm);}
   populate(cx,cz,group);
@@ -492,7 +511,7 @@ function populate(cx,cz,group){
       else { if(r<0.08)kind='rock'; else if(r<0.2)kind='bush'; else if(r<0.3)kind='flower'; } }
     else if(b===2){ if(r<0.18)kind='dead'; else if(r<0.42)kind='bush'; else if(r<0.5)kind='pine'; else if(r<0.55)kind='rock'; else if(h<1.3&&r<0.7)kind='reed'; }
     else { if(r<0.2)kind='rock'; else if(r<0.25)kind='dead'; else if(r<0.31)kind='pine'; }
-    if(b<=2&&h>0.4&&!steep){for(let k=0;k<(b===2?2:3);k++){const tx=x+hash(gx,gz,140+k)*3.6-1.8,tz=z+hash(gx,gz,150+k)*3.6-1.8;L.tuft.push({x:tx,y:heightAt(tx,tz)-0.05,z:tz,sx:1.1,sy:0.8+hash(gx,gz,160+k)*0.7,sz:1.1,rot:hash(gx,gz,170+k)*6.28,c:hash(gx,gz,180+k)});}}
+    if(b<=2&&h>0.4&&!steep){for(let k=0;k<(b===2?2:3);k++){const tx=x+hash(gx,gz,140+k)*3.6-1.8,tz=z+hash(gx,gz,150+k)*3.6-1.8;L.tuft.push({x:tx,y:surfaceAt(tx,tz)-0.05,z:tz,sx:1.1,sy:0.8+hash(gx,gz,160+k)*0.7,sz:1.1,rot:hash(gx,gz,170+k)*6.28,c:hash(gx,gz,180+k)});}}
     if(!kind||(steep&&kind!=='rock'))continue;
     const s=0.7+hash(gx,gz,4)*0.65;
     const item={x,y:h-0.1,z,sx:s,sy:s*(0.85+hash(gx,gz,11)*0.4),sz:s,rot:hash(gx,gz,5)*6.283,c:hash(gx,gz,6),tx:(hash(gx,gz,12)-0.5)*0.1,tz:(hash(gx,gz,13)-0.5)*0.1};
@@ -551,7 +570,7 @@ function updateChunks(px,pz){
   want.sort((a,b)=>a[2]-b[2]); queue=want;
   for(const [key,g] of chunks){
     const [x,z]=key.split(',').map(Number);
-    if((x-ccx)**2+(z-ccz)**2>(RADIUS+1.5)**2){disposeChunk(g);chunks.delete(key);}
+    if((x-ccx)**2+(z-ccz)**2>(RADIUS+1.5)**2){disposeChunk(g);chunks.delete(key);CHUNK_H.delete(key);}
   }
 }
 function drainQueue(n){
@@ -1156,7 +1175,7 @@ function makePerson(guard){
 const guards=[];
 function placeGuards(){for(const g of guards)scene.remove(g);guards.length=0;for(let i=colliders.length-1;i>=0;i--)if(colliders[i].guard)colliders.splice(i,1);
   const spots=[[-12,CITY.r+5],[12,CITY.r+5],[-6,CITY.core+28],[6,CITY.core+28]];
-  for(const [dx,dz] of spots){const g=makePerson(true);const x=CITY.x+dx,z=CITY.z+dz;g.position.set(x,heightAt(x,z),z);guards.push(g);colliders.push({type:'circle',x,z,r:0.6,guard:true});}}
+  for(const [dx,dz] of spots){const g=makePerson(true);const x=CITY.x+dx,z=CITY.z+dz;g.position.set(x,surfaceAt(x,z),z);guards.push(g);colliders.push({type:'circle',x,z,r:0.6,guard:true});}}
 function streetPointNear(){
   const pa=Math.atan2(player.z-CITY.z,player.x-CITY.x), pr=Math.hypot(player.x-CITY.x,player.z-CITY.z);
   if(Math.random()<0.6){const R=RINGS.reduce((b,r)=>Math.abs(r-pr)<Math.abs(b-pr)?r:b),a=pa+(Math.random()-0.5)*130/R;return {ring:true,r:R+(Math.random()-0.5)*13,a};}
@@ -1172,7 +1191,7 @@ function crowdUpdate(dt,now,night){
     const a=p.a, x=CITY.x+Math.cos(a)*p.r+(p.ring?0:-Math.sin(a)*p.off), z=CITY.z+Math.sin(a)*p.r+(p.ring?0:Math.cos(a)*p.off);
     if(Math.hypot(x-player.x,z-player.z)>95){Object.assign(p,streetPointNear());continue;}
     const dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz),px=d<1.1?x+dx/d*(1.1-d):x,pz=d<1.1?z+dz/d*(1.1-d):z;
-    folkShadow(p.mesh,d); p.phase+=dt*p.speed*5; p.mesh.position.set(px,heightAt(px,pz)+Math.abs(Math.sin(p.phase))*0.05,pz);
+    folkShadow(p.mesh,d); p.phase+=dt*p.speed*5; p.mesh.position.set(px,surfaceAt(px,pz)+Math.abs(Math.sin(p.phase))*0.05,pz);
     p.mesh.rotation.y=p.ring?Math.atan2(-Math.sin(a)*p.dir,Math.cos(a)*p.dir):Math.atan2(Math.cos(a)*p.dir,Math.sin(a)*p.dir);
     if(p.mesh.userData.mixer){p.mesh.userData.mixer.timeScale=p.speed/1.3;p.mesh.userData.mixer.update(dt);}
   }
@@ -1452,7 +1471,7 @@ const ghostMatBad=new THREE.MeshBasicMaterial({color:0xe07a6a,transparent:true,o
 const flameMat=new THREE.MeshBasicMaterial({color:0xffa64a});
 const LEVEL=0.25, snapUp=v=>Math.ceil(v/LEVEL-1e-6)*LEVEL;
 function floorTopAt(x,z){let top=-Infinity;for(const p of game.pieces)if(p.t==='floor'&&Math.abs(x-p.x)<=1.001&&Math.abs(z-p.z)<=1.001)top=Math.max(top,p.y);return top;}
-function groundAt(x,z){return Math.max(heightAt(x,z),floorTopAt(x,z));}
+function groundAt(x,z){return Math.max(surfaceAt(x,z),floorTopAt(x,z));}
 function snapPiece(t,px,pz,rot){
   if(t==='floor'){
     const x=Math.round((px-1)/2)*2+1, z=Math.round((pz-1)/2)*2+1;
@@ -2016,7 +2035,7 @@ function playerDie(){
 // quest giver
 const qgMesh=new THREE.Group(); scene.add(qgMesh);
 function buildQuestGiver(){
-  qgMesh.clear(); const y=heightAt(QG.x,QG.z); qgMesh.position.set(QG.x,y,QG.z); qgMesh.rotation.y=Math.atan2(-QG.x,-QG.z+6)+0.4;
+  qgMesh.clear(); const y=surfaceAt(QG.x,QG.z); qgMesh.position.set(QG.x,y,QG.z); qgMesh.rotation.y=Math.atan2(-QG.x,-QG.z+6)+0.4;
   const robe=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.35,8),eMat(0x3d5a48));robe.position.y=0.68;qgMesh.add(robe);
   qgMesh.add(box(0.4,0.42,0.28,eMat(0x4a6a55),0,1.45,0));
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.15,10,8),eMat(0xd6a07c));head.position.y=1.8;qgMesh.add(head);
@@ -2508,13 +2527,13 @@ function outskirtsUpdate(dt,night){
   const near=Math.hypot(player.x-GATE.x,player.z-GATE.z)<OUT.r1-CITY.r+260&&Math.hypot(player.x-CITY.x,player.z-CITY.z)>CITY.r-30;
   // checkpoint guards and the queue
   if(near&&!OUTSK.built){OUTSK.built=true;
-    for(const s of OUTSK.static){const g=folkWith('Idle',true);g.position.set(s.x,heightAt(s.x,s.z),s.z);g.rotation.y=s.ry;s.mesh=g;colliders.push({type:'circle',x:s.x,z:s.z,r:0.5,outsk:true});}
-    for(const q of OUTSK.queue){const g=folkWith('Idle',false);g.position.set(q.x,heightAt(q.x,q.z),q.z);g.rotation.y=q.ry;q.mesh=g;}}
+    for(const s of OUTSK.static){const g=folkWith('Idle',true);g.position.set(s.x,surfaceAt(s.x,s.z),s.z);g.rotation.y=s.ry;s.mesh=g;colliders.push({type:'circle',x:s.x,z:s.z,r:0.5,outsk:true});}
+    for(const q of OUTSK.queue){const g=folkWith('Idle',false);g.position.set(q.x,surfaceAt(q.x,q.z),q.z);g.rotation.y=q.ry;q.mesh=g;}}
   if(!near&&OUTSK.built){OUTSK.built=false;for(const s of OUTSK.static.concat(OUTSK.queue)){scene.remove(s.mesh);s.mesh=null;}for(let i=colliders.length-1;i>=0;i--)if(colliders[i].outsk)colliders.splice(i,1);}
   if(OUTSK.built)for(const s of OUTSK.static.concat(OUTSK.queue))if(s.mesh)s.mesh.userData.mixer.update(dt);
   // the queue shuffles forward: every so often the first in line goes through the gate and a newcomer joins the back
   if(OUTSK.built){OUTSK.qt=(OUTSK.qt||0)+dt;if(OUTSK.qt>7){OUTSK.qt=0;const f=OUTSK.queue.shift();OUTSK.queue.push(f);
-    OUTSK.queue.forEach((q,i)=>{q.tz=GATE.z+24+i*1.7;});f.z=f.tz+6;f.mesh&&f.mesh.position.set(f.x,heightAt(f.x,f.z),f.z);}
+    OUTSK.queue.forEach((q,i)=>{q.tz=GATE.z+24+i*1.7;});f.z=f.tz+6;f.mesh&&f.mesh.position.set(f.x,surfaceAt(f.x,f.z),f.z);}
     for(const q of OUTSK.queue)if(q.tz!==undefined&&q.mesh){q.z+=(q.tz-q.z)*Math.min(1,dt*1.5);q.mesh.position.z=q.z;}}
   // bustle: people wander between stalls, fires and workshops
   const want=near?Math.round(30*(1-0.55*night)):0, P0=OUTSK.pois;
@@ -2527,12 +2546,12 @@ function outskirtsUpdate(dt,night){
     if(f.wait>0){f.wait-=dt;if(f.wait<=0)f.tgt=pickPoi(f.x,f.z);}
     else{const dx=f.tgt[0]-f.x,dz=f.tgt[1]-f.z,d=Math.hypot(dx,dz);if(d<1.2){f.wait=2+Math.random()*6;}else{f.x+=dx/d*f.speed*dt;f.z+=dz/d*f.speed*dt;f.mesh.rotation.y=Math.atan2(dx,dz);}}
     const idle=f.wait>0, walk=mix._actions.find(a=>a.getClip().name==='Walk');if(walk&&f.mesh.userData.idle){walk.weight=idle?0:1;f.mesh.userData.idle.enabled=true;if(!f.mesh.userData.idle.isRunning())f.mesh.userData.idle.play();f.mesh.userData.idle.weight=idle?1:0;}
-    folkShadow(f.mesh,Math.hypot(f.x-player.x,f.z-player.z)); f.mesh.position.set(f.x,heightAt(f.x,f.z),f.z); mix.timeScale=idle?1:f.speed/1.3; mix.update(dt);}
+    folkShadow(f.mesh,Math.hypot(f.x-player.x,f.z-player.z)); f.mesh.position.set(f.x,surfaceAt(f.x,f.z),f.z); mix.timeScale=idle?1:f.speed/1.3; mix.update(dt);}
   // patrols keep walking even unseen; they only get a body when the player is near
   if(!OUTSK.patrols.length)ROUTES.forEach((r,i)=>OUTSK.patrols.push({route:r,t:r.t0||i*1.7,mesh:null}));
   for(const p of OUTSK.patrols){p.t+=dt*p.route.speed/(p.route.len/2)*Math.PI;const [x,z,dir]=patrolPoint(p.route,p.t),d=Math.hypot(x-player.x,z-player.z);
     if(d<180&&!p.mesh)p.mesh=folkWith('Walk',true); if(d>200&&p.mesh){scene.remove(p.mesh);p.mesh=null;}
-    if(p.mesh){const lx=p.mesh.position.x,lz=p.mesh.position.z;p.mesh.position.set(x,heightAt(x,z),z);if(Math.hypot(x-lx,z-lz)>0.001)p.mesh.rotation.y=Math.atan2(x-lx,z-lz);p.mesh.userData.mixer.update(dt);}}
+    if(p.mesh){const lx=p.mesh.position.x,lz=p.mesh.position.z;p.mesh.position.set(x,surfaceAt(x,z),z);if(Math.hypot(x-lx,z-lz)>0.001)p.mesh.rotation.y=Math.atan2(x-lx,z-lz);p.mesh.userData.mixer.update(dt);}}
 }
 
 /* ---------- Night and lanterns ---------- */
@@ -2811,7 +2830,7 @@ function villageUpdate(dt){
   while(villagers.length<want)villagers.push({a:Math.random()*6.28,r:6+Math.random()*6,dir:Math.random()<0.5?1:-1,speed:0.8+Math.random()*0.6,mesh:makeFolk(false)});
   while(villagers.length>want){scene.remove(villagers.pop().mesh);}
   for(const v of villagers){v.a+=v.dir*v.speed*dt/v.r;const x=VILLAGE.x+Math.cos(v.a)*v.r,z=VILLAGE.z+Math.sin(v.a)*v.r;
-    v.mesh.position.set(x,heightAt(x,z),z);v.mesh.rotation.y=Math.atan2(-Math.sin(v.a)*v.dir,Math.cos(v.a)*v.dir);
+    v.mesh.position.set(x,surfaceAt(x,z),z);v.mesh.rotation.y=Math.atan2(-Math.sin(v.a)*v.dir,Math.cos(v.a)*v.dir);
     v.mesh.userData.mixer.timeScale=v.speed/1.3;v.mesh.userData.mixer.update(dt);}
 }
 
