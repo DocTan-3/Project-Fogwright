@@ -312,7 +312,8 @@ const BIOMES=[
 ];
 // Aldrath's districts, east first and turning toward the gate (south): each sized by its people's share of the city
 // (the same shares as the crowds below). The gate avenue stays due south, between the Market Ward and the Wayfolk Quarter.
-const Q_WEIGHT=[0.08,0.17,0.25,0.08,0.08,0.12,0.04,0.08];   // Ferrin, Market, Wayfolk, Ruadhan, Hrimfolk, Temple, Ilvari, Zarhim
+const Q_WEIGHT=[0.08,0.15,0.23,0.08,0.08,0.10,0.12,0.08];   // Ferrin, Market, Wayfolk, Ruadhan, Hrimfolk, Temple, Aurelan, Zarhim
+// (the Ilvari have no quarter: the lore makes them rare travellers with no city; in Aldrath they keep only the Laboratory)
 const Q_EDGE=(()=>{const e=[0],a=Q_WEIGHT.slice(0,2),b=Q_WEIGHT.slice(2),sa=a[0]+a[1],sb=b.reduce((x,y)=>x+y);let t=0;
   for(const w of a){t+=w/sa*Math.PI/2;e.push(t);} for(const w of b){t+=w/sb*Math.PI*1.5;e.push(t);} e[8]=Math.PI*2; return e;})();
 const CITY={x:0,z:-1400,r:300,core:72}, VILLAGE={x:0,z:2,r:46}, PORT={x:20,z:1000,r:38};
@@ -413,7 +414,7 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   else if(q<3.5)yard=mix(vec3(.28,.45,.21),vec3(.40,.56,.28),n);                             // Ruadhan: grass
   else if(q<4.5)yard=mix(vec3(.50,.52,.55),vec3(.63,.65,.68),n);                             // Hrimfolk: grey gravel
   else if(q<5.5)yard=mix(vec3(.78,.76,.70),vec3(.89,.87,.81),n);                             // Temple: white gravel
-  else if(q<6.5)yard=mix(vec3(.46,.57,.49),vec3(.60,.69,.62),n);                             // Ilvari: pale moss
+  else if(q<6.5)yard=mix(vec3(.38,.55,.28),vec3(.52,.66,.36),n);                             // Aurelan: kept lawns and orchards
   else yard=mix(vec3(.74,.62,.42),vec3(.83,.71,.51),n);                                      // Zarhim: sand
   if(q<.5){vec2 b=bricks(w,vec2(1.2,.6),.05);pv=mix(vec3(.30,.31,.34),vec3(.41,.42,.46),b.y)*(1.-.55*b.x);pv*=1.-.35*smoothstep(.55,.85,gn(w*.5));}     // slate flags, sooty
   else if(q<1.5){vec2 c=floor(w);vec2 lp=mod(c.x+c.y,2.)>.5?w.yx:w;vec2 b=bricks(lp,vec2(.32,.16),.025);pv=mix(vec3(.55,.24,.18),vec3(.69,.35,.25),b.y)*(1.-.4*b.x);}  // red brick, basket weave
@@ -421,7 +422,7 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   else if(q<3.5){vec2 c=cobble(w*1.6);pv=mix(vec3(.46,.46,.40),vec3(.59,.58,.51),c.y);pv=mix(pv,vec3(.25,.38,.18),(1.-smoothstep(.03,.14,c.x))*.85);}  // field stones, moss between
   else if(q<4.5){vec2 b=bricks(w,vec2(1.8,1.1),.06);pv=mix(vec3(.58,.60,.63),vec3(.71,.73,.76),b.y)*(1.-.35*b.x);pv=mix(pv,vec3(.93,.95,.98),step(.985,gh(floor(w*14.)))*.7);}  // granite slabs, frost
   else if(q<5.5){vec2 g=fract(w),e=min(g,1.-g);pv=mix(vec3(.86,.84,.79),vec3(.94,.93,.89),gh(floor(w)))*(1.+.04*gn(w*6.));pv=mix(pv,vec3(.79,.62,.27),1.-smoothstep(.015,.03,min(e.x,e.y)));}  // marble, gold joints
-  else if(q<6.5){vec2 rp=vec2(w.x+w.y,w.x-w.y)*1.01,g=fract(rp),e=min(g,1.-g);pv=mix(vec3(.86,.89,.93),vec3(.74,.82,.92),mod(floor(rp.x)+floor(rp.y),2.));pv=mix(pv,vec3(.18,.37,.66),1.-smoothstep(.03,.06,min(e.x,e.y)));}  // blue diamond tiles
+  else if(q<6.5){vec2 b=bricks(w,vec2(.7,.45),.035);pv=mix(vec3(.64,.56,.42),vec3(.77,.69,.53),b.y)*(1.-.45*b.x);pv*=1.-.12*smoothstep(.5,.9,gn(w*.6));}  // Aurelan: honey limestone setts
   else{vec2 b=bricks(w,vec2(.5,.5),.04);pv=mix(vec3(.66,.36,.22),vec3(.77,.47,.29),b.y);pv=mix(pv,vec3(.78,.66,.46),b.x);}  // terracotta, sand in the joints
   float grand=max(1.-smoothstep(9.,11.,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
   if(grand>0.){vec2 b=bricks(vec2(a*r,r),vec2(1.4,.9),.05);pv=mix(pv,mix(vec3(.70,.68,.62),vec3(.81,.79,.73),b.y)*(1.-.35*b.x),grand);}
@@ -1108,7 +1109,7 @@ function kHut(name,kind){
   else if(kind==='iron'){k.box(W,D,2.6,0,0,1.3,'stone:#6e6a66');k.shed(W+0.8,D+0.8,2.9,2.3,0,0,0,'iron:#4a4d52');k.cyl(0.15,0.15,1.6,6,1.4,1.2,2.4,'#3e3f42');kDoor(k,-0.8,y,0,1,1.9,'#2a2c30','iron:#4a4d52');}
   k.finish(name,W+0.8,D+0.6);
 }
-const HUT={'Ferrin Quarter':'HutIron','Market Ward':'Shack','Wayfolk Quarter':'Shack2','Ruadhan Quarter':'HutRound','Hrimfolk Quarter':'HutFrame','Temple Ward':'HutTemple','Ilvari Enclave':'HutWhite','Zarhim Quarter':'HutAdobe'};
+const HUT={'Ferrin Quarter':'HutIron','Market Ward':'Shack','Wayfolk Quarter':'Shack2','Ruadhan Quarter':'HutRound','Hrimfolk Quarter':'HutFrame','Temple Ward':'HutTemple','Aurelan Quarter':'Shack','Zarhim Quarter':'HutAdobe'};
 /* --- Hrimfolk: steep A-frame halls on stone footings --- */
 function kLonghouse(name,roof){
   const k=new KitB(),W=7.5,D=12,y=-D/2;
@@ -1397,11 +1398,11 @@ function cullCells(){
 const kitReady=()=>!!KIT.geo.RowA;
 
 /* ---------- Aldrath's districts: every people in one city, rich by the plaza, poor by the walls ---------- */
-const CULTURE={'Hrimfolk Quarter':['Longhouse','Lodge'],'Zarhim Quarter':['Adobe','AdobeDome'],'Ilvari Enclave':['Spire'],'Ferrin Quarter':['Forge','Tenement'],
+const CULTURE={'Hrimfolk Quarter':['Longhouse','Lodge'],'Zarhim Quarter':['Adobe','AdobeDome'],'Aurelan Quarter':['Timberframe','Manor','RowB'],'Ferrin Quarter':['Forge','Tenement'],
   'Ruadhan Quarter':['Roundhouse'],'Wayfolk Quarter':['Timberframe'],'Temple Ward':['Chapel','Manor'],'Market Ward':['Shopfront','RowA','RowB','RowC']};
-const ALL_CULT=['Longhouse','Lodge','Adobe','AdobeDome','Spire','Forge','Roundhouse','Timberframe','Shopfront'];
-const WEALTH_Q={'Temple Ward':0.15,'Ilvari Enclave':0.06,'Market Ward':0.06,'Ferrin Quarter':-0.06,'Wayfolk Quarter':-0.12,'Zarhim Quarter':-0.05};
-const QTINT={'Ferrin Quarter':[0.86,0.88,0.96],'Hrimfolk Quarter':[0.92,0.94,1],'Zarhim Quarter':[1.06,1,0.9],'Temple Ward':[1.06,1.05,1.02],'Ilvari Enclave':[0.94,0.98,1.06],'Ruadhan Quarter':[0.97,1.03,0.93]};
+const ALL_CULT=['Longhouse','Lodge','Adobe','AdobeDome','Forge','Roundhouse','Timberframe','Shopfront'];
+const WEALTH_Q={'Temple Ward':0.15,'Aurelan Quarter':0.1,'Market Ward':0.06,'Ferrin Quarter':-0.06,'Wayfolk Quarter':-0.12,'Zarhim Quarter':-0.05};
+const QTINT={'Ferrin Quarter':[0.86,0.88,0.96],'Hrimfolk Quarter':[0.92,0.94,1],'Zarhim Quarter':[1.06,1,0.9],'Temple Ward':[1.06,1.05,1.02],'Aurelan Quarter':[1.04,1.0,0.94],'Ruadhan Quarter':[0.97,1.03,0.93]};
 function cityWealth(a,r){const q=quarterOf(a).name;return smooth(CITY.r-20,CITY.core+30,r)*0.95+(WEALTH_Q[q]||0)+N.c(Math.cos(a)*2.2+7,Math.sin(a)*2.2)*0.22-0.05;}
 function pickHouse(a,r,rnd){ // a district builds its own people's houses; only the poorest streets fall to shacks
   const w=cityWealth(a,r), q=quarterOf(a).name, own=CULTURE[q]||['RowA','RowB','RowC'], u=rnd(), any=l=>l[Math.floor(rnd()*l.length)];
@@ -1499,7 +1500,7 @@ const QUARTERS=[ // by angle sector, starting east and turning toward the gate (
   {name:'Ferrin Quarter',roof:[0x5b5f66,0x8a3b2a]},{name:'Market Ward',roof:[0xb5473a,0xc98f2e]},
   {name:'Wayfolk Quarter',roof:[0xb5473a,0x4f8a4a,0x3f6fa8,0xc98f2e]},{name:'Ruadhan Quarter',roof:[0x4f8a4a,0x7a4a2a]},
   {name:'Hrimfolk Quarter',roof:[0x6f7c86,0x3d4a58]},{name:'Temple Ward',roof:[0xe6e0d0,0xc9a046]},
-  {name:'Ilvari Enclave',roof:[0x2f5fa8,0x7ab0d8]},{name:'Zarhim Quarter',roof:[0xd9b06a,0xb5703a]}];
+  {name:'Aurelan Quarter',roof:[0xa8452f,0x3f4a5c,0x8a4a3a]},{name:'Zarhim Quarter',roof:[0xd9b06a,0xb5703a]}];
 const quarterOf=a=>{a=((a%(2*Math.PI))+2*Math.PI)%(2*Math.PI);for(let i=0;i<8;i++)if(a<Q_EDGE[i+1])return QUARTERS[i];return QUARTERS[7];};
 const roofCache=new Map(); const roofMat=c=>{if(!roofCache.has(c))roofCache.set(c,flat(c));return roofCache.get(c);};
 function nearAvenue(a,r,w){for(const av of AVENUES){let d=a-av;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)*r<w)return true;}return false;}
@@ -1520,14 +1521,14 @@ function cityStreet(x,z){
 function buildCityInterior(parent){
   const rows=[[CITY.core+40,4],[RINGS[0]+17,3],[RINGS[1]-17,3],[RINGS[1]+17,3],[RINGS[2]-17,2],[RINGS[2]+19,2]];
   const [mx,mz]=marketPos(); let count=0; const qGroups=QUARTERS.map(()=>new THREE.Group());
-  const kitRows={RowA:[],RowB:[],RowC:[]}, QTINT={'Ferrin Quarter':[0.82,0.85,0.95],'Hrimfolk Quarter':[0.9,0.92,0.98],'Zarhim Quarter':[1.12,1.02,0.86],'Temple Ward':[1.15,1.12,1.06],'Ilvari Enclave':[0.9,0.98,1.15],'Ruadhan Quarter':[0.95,1.05,0.9]};
+  const kitRows={RowA:[],RowB:[],RowC:[]}, QTINT={'Ferrin Quarter':[0.82,0.85,0.95],'Hrimfolk Quarter':[0.9,0.92,0.98],'Zarhim Quarter':[1.12,1.02,0.86],'Temple Ward':[1.15,1.12,1.06],'Aurelan Quarter':[1.08,1.02,0.92],'Ruadhan Quarter':[0.95,1.05,0.9]};
   for(const [R,fl] of rows){
     if(kitReady()){count=buildCityHouses();break;}
     const n=Math.floor(2*Math.PI*R/(kitReady()?8.4:11.5));
     for(let k=0;k<n;k++){
       const a=k/n*Math.PI*2, x=CITY.x+Math.cos(a)*R, z=CITY.z+Math.sin(a)*R;
       if(nearAvenue(a,R,17)||Math.hypot(x-mx,z-mz)<MARKET.rad+9)continue;
-      const Qd=quarterOf(a), roofs=Qd.roof, wall={'Ferrin Quarter':'slate','Hrimfolk Quarter':'stone','Zarhim Quarter':'sand','Temple Ward':'white','Ilvari Enclave':'blue'}[Qd.name]||(hash(k,R,4)<0.5?'timber':'timberRed');
+      const Qd=quarterOf(a), roofs=Qd.roof, wall={'Ferrin Quarter':'slate','Hrimfolk Quarter':'stone','Zarhim Quarter':'sand','Temple Ward':'white'}[Qd.name]||(hash(k,R,4)<0.5?'timber':'timberRed');
       const facing=-a+Math.PI/2+(RINGS.some(rr=>R<rr&&rr-R<20)?0:Math.PI);
       if(kitReady()){const v=fl>=4?'RowC':['RowA','RowB','RowC'][Math.floor(hash(k,R,5)*3)],j=0.94+hash(k,R,6)*0.12,t=QTINT[Qd.name]||[1,1,1];
         kitRows[v].push({x,y:heightAt(x,z)-0.3,z,ry:facing,tint:[t[0]*j,t[1]*j,t[2]*j]});colliders.push({x,z,hw:4.2,hd:4.8,rot:facing});count++;continue;}
@@ -3248,10 +3249,10 @@ function makeLooked(gltf,look){
 // who you meet where
 const RACE_MIX={
   'Hrimfolk Quarter':{Hrimfolk:0.85,Wayfolk:0.08,Aurelan:0.04,Ruadhan:0.03},'Ferrin Quarter':{Ferrin:0.85,Wayfolk:0.08,Hrimfolk:0.04,Aurelan:0.03},
-  'Zarhim Quarter':{Zarhim:0.85,Wayfolk:0.08,Aurelan:0.04,Ruadhan:0.03},'Ilvari Enclave':{Ilvari:0.8,Penitent:0.08,Wayfolk:0.07,Aurelan:0.05},
+  'Zarhim Quarter':{Zarhim:0.85,Wayfolk:0.08,Aurelan:0.04,Ruadhan:0.03},'Aurelan Quarter':{Aurelan:0.85,Wayfolk:0.1,Ruadhan:0.05},
   'Ruadhan Quarter':{Ruadhan:0.85,Wayfolk:0.08,Hrimfolk:0.04,Aurelan:0.03},'Temple Ward':{Aurelan:0.5,Penitent:0.4,Wayfolk:0.1},
-  'Market Ward':{Aurelan:0.4,Wayfolk:0.25,Zarhim:0.07,Ruadhan:0.07,Hrimfolk:0.07,Ferrin:0.07,Ilvari:0.04,Penitent:0.03},'Wayfolk Quarter':{Wayfolk:0.85,Aurelan:0.06,Ruadhan:0.05,Zarhim:0.04},
-  city:{Wayfolk:0.35,Aurelan:0.25,Hrimfolk:0.08,Ferrin:0.08,Zarhim:0.08,Ruadhan:0.08,Ilvari:0.04,Penitent:0.04},
+  'Market Ward':{Aurelan:0.3,Wayfolk:0.33,Zarhim:0.08,Ruadhan:0.08,Hrimfolk:0.08,Ferrin:0.08,Penitent:0.05},'Wayfolk Quarter':{Wayfolk:0.85,Aurelan:0.06,Ruadhan:0.05,Zarhim:0.04},
+  city:{Wayfolk:0.38,Aurelan:0.25,Hrimfolk:0.08,Ferrin:0.08,Zarhim:0.08,Ruadhan:0.08,Penitent:0.05},
   outskirts:{Wayfolk:0.35,Zarhim:0.2,Ruadhan:0.2,Hrimfolk:0.1,Ferrin:0.1,Aurelan:0.05},
   village:{Wayfolk:0.5,Aurelan:0.3,Ruadhan:0.1,Hrimfolk:0.1},port:{Wayfolk:0.4,Hrimfolk:0.3,Aurelan:0.2,Ferrin:0.1},
 };
@@ -3339,7 +3340,7 @@ const SPOTS=[
   ['Ruadhan Quarter',()=>qSpot('Ruadhan Quarter')],
   ['Hrimfolk Quarter',()=>qSpot('Hrimfolk Quarter')],
   ['Temple Ward',()=>qSpot('Temple Ward')],
-  ['Ilvari Enclave',()=>qSpot('Ilvari Enclave')],
+  ['Aurelan Quarter',()=>qSpot('Aurelan Quarter')],
   ['Zarhim Quarter',()=>qSpot('Zarhim Quarter')],
   ['Wall slums',()=>{let b=0,bw=9;for(let a=0;a<6.28;a+=0.04){if(nearAvenue(a,262,30))continue;const w=cityWealth(a,288);if(w<bw){bw=w;b=a;}}return [CITY.x+Math.cos(b)*262,CITY.z+Math.sin(b)*262,0];}],
   ['Rich ring',()=>{let b=0,bw=-9;for(let a=0;a<6.28;a+=0.04){if(nearAvenue(a,118,30))continue;const w=cityWealth(a,118);if(w>bw){bw=w;b=a;}}return [CITY.x+Math.cos(b)*118,CITY.z+Math.sin(b)*118,0];}],
