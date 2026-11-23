@@ -4,6 +4,16 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 50 · Fur, robes and each people's style
+
+*Characters · 24 November 2026*
+
+**Surfaces.** Built pieces had only a colour at each corner, so fur looked like smooth plastic and steel like grey card. They now get their own surface shader: fur strands, leather grain and creases, brushed metal with a proper highlight, cloth weave. Fur is clumped and tufted at the hem, dark at the roots. Mail rings are larger and softened, so they no longer shimmer.
+
+**Robes and coats.** A chest piece can now add a skirt: rings from the hips to the hem, measured round each people's legs so it clears them, flaring towards the hem and following the thighs lower down, so it moves when walking. Coats leave the front open. A wool robe and a long coat to start.
+
+**Each people's style.** A first piece for each: an Aurelan striped doublet with buttons, a Hrimfolk jerkin with a fur collar, a Ferrin smith's apron, Zarhim desert wraps with a sash and a head wrap, an Ilvari fitted long coat with blue trim, and a Ruadhan woven check cloak. Hoods and wraps hide the hair.
+
 ## Devlog 49 · Necks, pauldrons and belts
 
 *Characters · 23 November 2026*
