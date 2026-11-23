@@ -360,76 +360,77 @@ me.materials.append(bpy.data.materials.new('Body'))
 
 # ---------- 8. hair, beards and moustaches: the old ones, carried onto this head by the same face landmarks
 HAIRS = []
-import tempfile, shutil
-tmp = os.path.join(tempfile.mkdtemp(), 'old.gltf'); shutil.copy(OLD, tmp)
-before = set(bpy.data.objects)
-bpy.ops.import_scene.gltf(filepath=tmp)
-new = [o for o in bpy.data.objects if o not in before]
-oldbody = next(o for o in new if o.type == 'MESH' and o.data.shape_keys and 'Lean' in o.data.shape_keys.key_blocks)
-def world_verts(o): return np.array([tuple(o.matrix_world @ v.co) for v in o.data.vertices])
-OB = world_verts(oldbody)
-oc = oldbody.data.color_attributes[0]
-if oc.domain == 'POINT': OR = np.array([tuple(oc.data[i].color) for i in range(len(OB))])
-else:
-    OR = np.zeros((len(OB), 4))
-    for lp in oldbody.data.loops: OR[lp.vertex_index] = tuple(oc.data[lp.index].color)
-if OR is not None and OR.max() > 1.5: OR /= 255.0
-def old_landmark(zc):   # the old body's height for a template height, on its face's front
-    rz = OR[:, 2] * 2
-    for tol in (0.004, 0.008, 0.015):
-        m_ = (np.abs(rz - zc) < tol) & (np.abs(OR[:, 0] - 0.5) < 0.04) & (OR[:, 1] - 0.5 < -0.02)
-        if m_.sum() >= 3: return float(np.median(OB[m_, 2]))
-    raise SystemExit(f'old body has no face point at template height {zc}')
-OZ = [old_landmark(z) for z in ZCAN[:-1]] + [float(OB[:, 2].max())]
-print('OLD face heights', OZ)
-def width_at(P, z, band=0.006, sel=None):
-    m_ = np.abs(P[:, 2] - z) < band
-    if sel is not None: m_ &= sel
-    return (np.abs(P[m_, 0]).max(), P[m_, 1].min(), P[m_, 1].max()) if m_.any() else None
-old_head = OB[:, 2] > OZ[0]; new_head = (headw > 0.5)
-bvh = BVHTree.FromPolygons([tuple(p) for p in LP], LF)
-for o in new:
-    if o.type != 'MESH' or o is oldbody or not o.name.startswith(('Hair_', 'Beard_', 'Moustache_')): continue
-    P = world_verts(o); Q = P.copy()
-    zn = pl(pl(P[:, 2], OZ, ZCAN), ZCAN, ZM)            # old height -> template -> this head
-    for i in range(len(P)):
-        wo = width_at(OB, P[i, 2], sel=old_head) or width_at(OB, P[i, 2])
-        wn = width_at(PB, zn[i], sel=new_head) or width_at(PB, zn[i])
-        if wo and wn:
-            sxx = wn[0] / max(wo[0], 1e-3); oc_ = (wo[1] + wo[2]) / 2; nc_ = (wn[1] + wn[2]) / 2
-            syy = (wn[2] - wn[1]) / max(wo[2] - wo[1], 1e-3)
-            Q[i] = (P[i, 0] * sxx, nc_ + (P[i, 1] - oc_) * syy, zn[i])
-        else: Q[i, 2] = zn[i]
-    for i in range(len(Q)):   # nothing may sink into the new head
-        loc, nor, _, _ = bvh.find_nearest(Vector(Q[i]))
-        if loc is not None and (Vector(Q[i]) - loc).dot(nor) < 0.002: Q[i] = tuple(loc + nor * 0.002)
-    m2 = o.data.copy()
-    _bm = bmesh.new(); _bm.from_mesh(m2)            # drop the old model's skin weights (stale group indices)
-    for _l in list(_bm.verts.layers.deform): _bm.verts.layers.deform.remove(_l)
-    _bm.to_mesh(m2); _bm.free()
-    for v, q in zip(m2.vertices, Q): v.co = Vector(q)
-    h = bpy.data.objects.new(o.name, m2); col.objects.link(h); h.vertex_groups.clear(); HAIRS.append(h)
-for o in new: bpy.data.objects.remove(o, do_unlink=True)
-for m_ in list(bpy.data.meshes):
-    if m_.users == 0: bpy.data.meshes.remove(m_)
-for h in HAIRS: h.name = h.name.split('.')[0]; h.data.name = h.name
-body.data.name = 'Body'
-for h in HAIRS:
-    h.matrix_world = Matrix()
-    dt = h.modifiers.new('DT', 'DATA_TRANSFER'); dt.object = body; dt.use_vert_data = True
-    dt.data_types_verts = {'VGROUP_WEIGHTS'}; dt.vert_mapping = 'POLYINTERP_NEAREST'; dt.layers_vgroup_select_src = 'ALL'; dt.layers_vgroup_select_dst = 'NAME'
-    with bpy.context.temp_override(object=h, active_object=h):
-        bpy.ops.object.datalayout_transfer(modifier='DT'); bpy.ops.object.modifier_apply(modifier='DT')
-    keep = {h.vertex_groups[n].index for n in ('head', 'neck') if n in h.vertex_groups}
-    hi = h.vertex_groups['head'].index if 'head' in h.vertex_groups else h.vertex_groups.new(name='head').index
-    for v in h.data.vertices:
-        ws = {gv.group: gv.weight for gv in v.groups if gv.group in keep}; tot = sum(ws.values())
-        for gv in list(v.groups):
-            if gv.group not in keep and gv.group < len(h.vertex_groups): h.vertex_groups[gv.group].remove([v.index])
-        if tot < 1e-4: h.vertex_groups[hi].add([v.index], 1.0, 'REPLACE')
-        else:
-            for gi, w in ws.items(): h.vertex_groups[gi].add([v.index], w / tot, 'REPLACE')
-    h.modifiers.new('Armature', 'ARMATURE').object = arm; h.parent = arm
+if not os.environ.get('NO_HAIR'):   # the far (LOD) bodies carry no hair meshes: the paint has a hairline
+    import tempfile, shutil
+    tmp = os.path.join(tempfile.mkdtemp(), 'old.gltf'); shutil.copy(OLD, tmp)
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=tmp)
+    new = [o for o in bpy.data.objects if o not in before]
+    oldbody = next(o for o in new if o.type == 'MESH' and o.data.shape_keys and 'Lean' in o.data.shape_keys.key_blocks)
+    def world_verts(o): return np.array([tuple(o.matrix_world @ v.co) for v in o.data.vertices])
+    OB = world_verts(oldbody)
+    oc = oldbody.data.color_attributes[0]
+    if oc.domain == 'POINT': OR = np.array([tuple(oc.data[i].color) for i in range(len(OB))])
+    else:
+        OR = np.zeros((len(OB), 4))
+        for lp in oldbody.data.loops: OR[lp.vertex_index] = tuple(oc.data[lp.index].color)
+    if OR is not None and OR.max() > 1.5: OR /= 255.0
+    def old_landmark(zc):   # the old body's height for a template height, on its face's front
+        rz = OR[:, 2] * 2
+        for tol in (0.004, 0.008, 0.015):
+            m_ = (np.abs(rz - zc) < tol) & (np.abs(OR[:, 0] - 0.5) < 0.04) & (OR[:, 1] - 0.5 < -0.02)
+            if m_.sum() >= 3: return float(np.median(OB[m_, 2]))
+        raise SystemExit(f'old body has no face point at template height {zc}')
+    OZ = [old_landmark(z) for z in ZCAN[:-1]] + [float(OB[:, 2].max())]
+    print('OLD face heights', OZ)
+    def width_at(P, z, band=0.006, sel=None):
+        m_ = np.abs(P[:, 2] - z) < band
+        if sel is not None: m_ &= sel
+        return (np.abs(P[m_, 0]).max(), P[m_, 1].min(), P[m_, 1].max()) if m_.any() else None
+    old_head = OB[:, 2] > OZ[0]; new_head = (headw > 0.5)
+    bvh = BVHTree.FromPolygons([tuple(p) for p in LP], LF)
+    for o in new:
+        if o.type != 'MESH' or o is oldbody or not o.name.startswith(('Hair_', 'Beard_', 'Moustache_')): continue
+        P = world_verts(o); Q = P.copy()
+        zn = pl(pl(P[:, 2], OZ, ZCAN), ZCAN, ZM)            # old height -> template -> this head
+        for i in range(len(P)):
+            wo = width_at(OB, P[i, 2], sel=old_head) or width_at(OB, P[i, 2])
+            wn = width_at(PB, zn[i], sel=new_head) or width_at(PB, zn[i])
+            if wo and wn:
+                sxx = wn[0] / max(wo[0], 1e-3); oc_ = (wo[1] + wo[2]) / 2; nc_ = (wn[1] + wn[2]) / 2
+                syy = (wn[2] - wn[1]) / max(wo[2] - wo[1], 1e-3)
+                Q[i] = (P[i, 0] * sxx, nc_ + (P[i, 1] - oc_) * syy, zn[i])
+            else: Q[i, 2] = zn[i]
+        for i in range(len(Q)):   # nothing may sink into the new head
+            loc, nor, _, _ = bvh.find_nearest(Vector(Q[i]))
+            if loc is not None and (Vector(Q[i]) - loc).dot(nor) < 0.002: Q[i] = tuple(loc + nor * 0.002)
+        m2 = o.data.copy()
+        _bm = bmesh.new(); _bm.from_mesh(m2)            # drop the old model's skin weights (stale group indices)
+        for _l in list(_bm.verts.layers.deform): _bm.verts.layers.deform.remove(_l)
+        _bm.to_mesh(m2); _bm.free()
+        for v, q in zip(m2.vertices, Q): v.co = Vector(q)
+        h = bpy.data.objects.new(o.name, m2); col.objects.link(h); h.vertex_groups.clear(); HAIRS.append(h)
+    for o in new: bpy.data.objects.remove(o, do_unlink=True)
+    for m_ in list(bpy.data.meshes):
+        if m_.users == 0: bpy.data.meshes.remove(m_)
+    for h in HAIRS: h.name = h.name.split('.')[0]; h.data.name = h.name
+    body.data.name = 'Body'
+    for h in HAIRS:
+        h.matrix_world = Matrix()
+        dt = h.modifiers.new('DT', 'DATA_TRANSFER'); dt.object = body; dt.use_vert_data = True
+        dt.data_types_verts = {'VGROUP_WEIGHTS'}; dt.vert_mapping = 'POLYINTERP_NEAREST'; dt.layers_vgroup_select_src = 'ALL'; dt.layers_vgroup_select_dst = 'NAME'
+        with bpy.context.temp_override(object=h, active_object=h):
+            bpy.ops.object.datalayout_transfer(modifier='DT'); bpy.ops.object.modifier_apply(modifier='DT')
+        keep = {h.vertex_groups[n].index for n in ('head', 'neck') if n in h.vertex_groups}
+        hi = h.vertex_groups['head'].index if 'head' in h.vertex_groups else h.vertex_groups.new(name='head').index
+        for v in h.data.vertices:
+            ws = {gv.group: gv.weight for gv in v.groups if gv.group in keep}; tot = sum(ws.values())
+            for gv in list(v.groups):
+                if gv.group not in keep and gv.group < len(h.vertex_groups): h.vertex_groups[gv.group].remove([v.index])
+            if tot < 1e-4: h.vertex_groups[hi].add([v.index], 1.0, 'REPLACE')
+            else:
+                for gi, w in ws.items(): h.vertex_groups[gi].add([v.index], w / tot, 'REPLACE')
+        h.modifiers.new('Armature', 'ARMATURE').object = arm; h.parent = arm
 print('HAIR', [h.name for h in HAIRS])
 
 # ---------- 9. idle and walk (as rpgbody.py): chest up, arms hanging out and down

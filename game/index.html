@@ -2637,6 +2637,7 @@ function loadPeople(){
     playHero('Idle');
   },undefined,()=>{});
   const B={}, BODY_DIR=window.FOGWRIGHT_BODIES||'../creator/';
+  if(typeof rigPeople==='function')for(const [k,f] of [['ml','mh_m_lod.gltf.json'],['fl','mh_f_lod.gltf.json']])L.load(BODY_DIR+f,g=>{preparePainted(g);(bodies||B)[k]=g;},undefined,()=>{});
   if(typeof rigPeople==='function')for(const [k,f] of [['m','mh_m.gltf.json'],['f','mh_f.gltf.json']])L.load(BODY_DIR+f,g=>{preparePainted(g);B[k]=g;
     if(B.m&&B.f){bodies=B;folk=folk||g;for(const p of crowd)scene.remove(p.mesh);crowd.length=0;for(const v of villagers)scene.remove(v.mesh);villagers.length=0;placeGuards();
       for(const f of OUTSK.folk)scene.remove(f.mesh);OUTSK.folk.length=0;for(const p of OUTSK.patrols)if(p.mesh){scene.remove(p.mesh);p.mesh=null;}
@@ -2785,9 +2786,25 @@ function makePainted(L,guard){
   const w=(R.w[0]+rnd()*(R.w[1]-R.w[0])-1)*7+(rnd()-0.5)*0.6;     // the old width range, as a build: under 0 lean, over 0 heavy
   setBuild(m,Math.min(1,Math.max(0,-w)),Math.min(1,Math.max(0,w))); setDefinition(m,fem?0.3:0.6);
   m.scale.setScalar(h); m.userData.look=L;
+  // the far body: 1,500 triangles on the same skeleton, paint and shapes; no hair meshes (the paint has a hairline)
+  const lg=bodies[(fem?'f':'m')+'l'], body=m.userData.rig&&m.userData.rig.body;
+  if(lg&&body){let src=null;lg.scene.traverse(o=>{if(o.isSkinnedMesh&&o.morphTargetDictionary)src=o;});
+    if(src){const lod=new THREE.SkinnedMesh(src.geometry,body.material);lod.name='BodyFar';
+      lod.morphTargetInfluences=body.morphTargetInfluences;lod.morphTargetDictionary=body.morphTargetDictionary;
+      lod.position.copy(body.position);lod.quaternion.copy(body.quaternion);lod.scale.copy(body.scale);body.parent.add(lod);
+      lod.bind(body.skeleton,body.bindMatrix);lod.visible=false;lod.castShadow=true;
+      const hair=[];m.traverse(o=>{if(o.isMesh&&o!==body&&o!==lod&&o.visible)hair.push(o);});
+      m.userData.lod={body,lod,hair,far:false};FOLK_LOD.push(m);}}
   // skip anyone off-screen: the bind-pose bounds, padded for the swing of arms and legs and for the peoples' shapes
   m.traverse(o=>{if(!o.isMesh)return;o.frustumCulled=true;const g=o.geometry;if(!g.userData.padded){g.computeBoundingSphere();g.boundingSphere.radius+=0.45;g.userData.padded=true;}});
   return m;
+}
+// near townsfolk show the full body and hair, far ones the light body
+const FOLK_LOD=[], LOD_FAR=22;
+function folkLod(){
+  for(let i=FOLK_LOD.length-1;i>=0;i--){const m=FOLK_LOD[i],u=m.userData.lod;if(!m.parent){FOLK_LOD.splice(i,1);continue;}
+    const far=camera.position.distanceTo(m.position)>LOD_FAR; if(far===u.far)continue; u.far=far;
+    u.body.visible=!far; u.lod.visible=far; for(const h of u.hair)h.visible=!far;}
 }
 function villageUpdate(dt){
   const near=Math.hypot(player.x-VILLAGE.x,player.z-VILLAGE.z)<160, want=near&&folk?7:0;
@@ -2919,7 +2936,7 @@ function frame(now){
   if(towerGlow){towerGlow.rotation.y+=dt*0.6;towerGlow.position.y=44+Math.sin(now*0.0015)*0.6;}
   if(capitalBeam){capitalBeam.position.set(CITY.x,450,CITY.z);}
 
-  cullCells(); renderer.render(scene,camera);
+  cullCells(); folkLod(); renderer.render(scene,camera);
 
   // HUD
   fpsAcc+=dt;fpsN++;
