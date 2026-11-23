@@ -456,7 +456,11 @@ const G={
   pine3:shade(new THREE.ConeGeometry(0.85,2.4,7).translate(0,6.6,0),0.65,1.12),
   branch:shade(new THREE.CylinderGeometry(0.07,0.12,1.7,4).rotateZ(0.75).translate(0.55,2.45,0.1),0.75,1),
   branch2:shade(new THREE.CylinderGeometry(0.06,0.1,1.4,4).rotateZ(-0.7).rotateY(2).translate(-0.3,2.6,-0.4),0.75,1),
-  round:shade(new THREE.IcosahedronGeometry(1.7,0).translate(0,3.2,0),0.55,1.08),
+  round:shade(new THREE.IcosahedronGeometry(1.75,1).translate(0,3.3,0),0.55,1.08),
+  round5:shade(new THREE.IcosahedronGeometry(1.0,1).translate(-1.2,3.9,0.9),0.58,1.1),
+  round6:shade(new THREE.IcosahedronGeometry(0.9,1).translate(1.0,4.6,-0.8),0.62,1.12),
+  pine4:shade(new THREE.ConeGeometry(0.55,1.7,8).translate(0,7.9,0),0.7,1.14),
+  birchTop2:shade(new THREE.IcosahedronGeometry(0.75,1).scale(0.9,1.4,0.9).translate(0.5,3.6,0.3),0.6,1.1),
   grass:grassGeo(),
   dead:shade(new THREE.CylinderGeometry(0.08,0.26,3.6,4).translate(0,1.8,0),0.85,1.05),
   rock:shade(new THREE.DodecahedronGeometry(1,0).translate(0,0.25,0),0.85,1.05),
@@ -474,9 +478,9 @@ const G={
 };
 const C=(h)=>new THREE.Color(h);
 const KINDS={
-  pine:[[G.trunk,C('#5b4330')],[G.pine,C('#355a35')],[G.pine2,C('#3b6538')],[G.pine3,C('#42703c')]],
-  round:[[G.trunk,C('#5f4632')],[G.branch,C('#5f4632')],[G.branch2,C('#5f4632')],[G.round,C('#5d8a3e')],[G.round2,C('#54803a')],[G.round3,C('#669444')],[G.round4,C('#6c9a48')]],
-  birch:[[G.birchTrunk,C('#e4e0d4')],[G.birchTop,C('#8fb04e')]],
+  pine:[[G.trunk,C('#5b4330')],[G.pine,C('#355a35')],[G.pine2,C('#3b6538')],[G.pine3,C('#42703c')],[G.pine4,C('#4a7a42')]],
+  round:[[G.trunk,C('#5f4632')],[G.branch,C('#5f4632')],[G.branch2,C('#5f4632')],[G.round,C('#5d8a3e')],[G.round2,C('#54803a')],[G.round3,C('#669444')],[G.round4,C('#6c9a48')],[G.round5,C('#5a8a3c')],[G.round6,C('#6a9a46')]],
+  birch:[[G.birchTrunk,C('#e4e0d4')],[G.birchTop,C('#8fb04e')],[G.birchTop2,C('#9aba58')]],
   tuft:[[G.grass,C('#78ad4a'),grassMat]],
   dead:[[G.dead,C('#6e6153')]],
   rock:[[G.rock,C('#8a857c')]],
@@ -590,9 +594,9 @@ function vegSpot(gx,gz){
   const t=warpDist(x,z), b=biomeIndex(t), r=hash(gx,gz,1);
   let kind=null;
   const forest=N.w(x*0.012,z*0.012)*0.8+N.w(x*0.05+7,z*0.05)*0.2, r2=hash(gx,gz,9);
-  if(b===0){ if(forest>0.42){ if(r<0.55)kind=r2<0.45?'birch':'round'; else if(r<0.7)kind='bush'; }
+  if(b===0){ if(forest>0.42){ if(r<0.33)kind=r2<0.45?'birch':'round'; else if(r<0.52)kind='bush'; }
     else { if(r<0.025)kind='round'; else if(r<0.05)kind='rock'; else if(r<0.13)kind='bush'; else if(r<0.32)kind='flower'; } }
-  else if(b===1){ if(forest>-0.15){ if(r<0.72)kind=r2<0.55?'pine':r2<0.8?'round':'birch'; else if(r<0.8)kind='bush'; else if(r<0.84)kind='rock'; }
+  else if(b===1){ if(forest>-0.15){ if(r<0.44)kind=r2<0.55?'pine':r2<0.8?'round':'birch'; else if(r<0.56)kind='bush'; else if(r<0.6)kind='rock'; }
     else { if(r<0.08)kind='rock'; else if(r<0.2)kind='bush'; else if(r<0.3)kind='flower'; } }
   else if(b===2){ if(r<0.18)kind='dead'; else if(r<0.42)kind='bush'; else if(r<0.5)kind='pine'; else if(r<0.55)kind='rock'; else if(h<1.3&&r<0.7)kind='reed'; }
   else { if(r<0.2)kind='rock'; else if(r<0.25)kind='dead'; else if(r<0.31)kind='pine'; }
@@ -606,7 +610,7 @@ function populate(cx,cz,group){
     const V=vegSpot(gx,gz); if(!V)continue; const {x,z,h,steep,b,kind}=V;
     if(b<=2&&h>0.4&&!steep){for(let k=0;k<(b===2?2:3);k++){const tx=x+hash(gx,gz,140+k)*3.6-1.8,tz=z+hash(gx,gz,150+k)*3.6-1.8;L.tuft.push({x:tx,y:surfaceAt(tx,tz)-0.05,z:tz,sx:1.1,sy:0.8+hash(gx,gz,160+k)*0.7,sz:1.1,rot:hash(gx,gz,170+k)*6.28,c:hash(gx,gz,180+k)});}}
     if(!kind||(steep&&kind!=='rock'))continue;
-    const s=0.7+hash(gx,gz,4)*0.65;
+    const s=(kind==='pine'||kind==='round'||kind==='birch'||kind==='dead'?1.0+hash(gx,gz,4)*0.8:0.7+hash(gx,gz,4)*0.65);   // trees: fewer and bigger
     const item={x,y:h-0.1,z,sx:s,sy:s*(0.85+hash(gx,gz,11)*0.4),sz:s,rot:hash(gx,gz,5)*6.283,c:hash(gx,gz,6),tx:(hash(gx,gz,12)-0.5)*0.1,tz:(hash(gx,gz,13)-0.5)*0.1};
     if(kind==='rock'){item.sx*=1+hash(gx,gz,7)*0.8;item.sy*=0.7+hash(gx,gz,8)*0.6;item.y-=0.2;}
     L[kind].push(item);
@@ -677,7 +681,7 @@ function updateFar(){
 function stepFar(n){ // a few 4 m cells of the block in work, then the block's meshes when it is done
   if(!farWork)return; const W=farWork, cells=FCS/4;
   for(let k=0;k<n&&W.gi<cells*cells;k++,W.gi++){const gx=W.x*cells+(W.gi%cells), gz=W.z*cells+Math.floor(W.gi/cells), V=vegSpot(gx,gz);
-    if(!V||!FARG[V.kind]||V.steep)continue; const s=0.7+hash(gx,gz,4)*0.65;
+    if(!V||!FARG[V.kind]||V.steep)continue; const kind=V.kind, s=(kind==='pine'||kind==='round'||kind==='birch'||kind==='dead'?1.0+hash(gx,gz,4)*0.8:0.7+hash(gx,gz,4)*0.65);
     W.L[V.kind].push({x:V.x,y:V.h-0.1,z:V.z,sx:s,sy:s*(0.85+hash(gx,gz,11)*0.4),rot:hash(gx,gz,5)*6.283,c:hash(gx,gz,6)});}
   if(W.gi<cells*cells)return;
   const group=new THREE.Group();
@@ -729,7 +733,7 @@ function box(w,h,d,mat,x,y,z,ry=0,rx=0,rz=0){const m=new THREE.Mesh(new THREE.Bo
 function cyl(rt,rb,h,seg,mat,x,y,z){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat);m.position.set(x,y,z);return m;}
 
 function buildLandmarks(){
-  CELLS.length=0; landmarks.userData.spin=null;
+  CELLS.length=0; VENTS.length=0; landmarks.userData.spin=null;
   landmarks.children.slice().forEach(c=>{landmarks.remove(c);c.traverse(o=>{if(o.geometry)o.geometry.dispose();});});
   // Camp
   const camp=new THREE.Group(), gy=heightAt(0,0);
@@ -906,7 +910,8 @@ function buildPort(){
 }
 /* ---------- Building kit, generated in code: every house is a recipe, nothing to download ---------- */
 // Recipes are written in "plan" coordinates: x along the frontage, -y is the street side, z is up.
-const KIT={done:true,geo:{},far:{},size:{},waiters:[]};
+const KIT={done:true,geo:{},far:{},size:{},vents:{},waiters:[]};
+const VENTS=[];
 const KMAT={brick:1,stone:2,plaster:3,timber:4,tile:5,slate:6,thatch:7,shingle:8,iron:9,adobe:10,marble:11,planks:12};
 const kitUniforms={uNight:{value:0}};
 const kitMat=new THREE.MeshLambertMaterial({vertexColors:true});
@@ -949,7 +954,8 @@ kitMat.onBeforeCompile=sh=>{
 const _unitBox=new THREE.BoxGeometry(1,1,1).toNonIndexed();
 let _winSeed=1;
 class KitB{
-  constructor(){this.parts=[];}
+  constructor(){this.parts=[];this.vents=[];}
+  vent(x,y,z,s){this.vents.push([x,y,z,s||1]);}   // where steam rises (plan coordinates)
   _add(g,m,col,glow){ // col is '#hex' or 'material:#hex' (brick, stone, plaster, timber, tile, slate, thatch, shingle, iron, adobe, marble, planks)
     g.applyMatrix4(m); let mt=0; if(typeof col==='string'&&col.includes(':')){const [k2,h]=col.split(':');mt=KMAT[k2]||0;col=h;}
     const n=g.attributes.position.count,c=new THREE.Color(col),ca=new Float32Array(n*3),ga=new Float32Array(n),ma=new Float32Array(n);
@@ -993,7 +999,7 @@ class KitB{
       bg.rotateX(-Math.PI/2); // plan (z up, street at -y) to world (y up, street at +z)
       bg.computeBoundingSphere(); return bg;};
     const bg=merge(this.parts), far=merge(this.parts.filter(g=>!g.userData.small)); this.parts.forEach(g=>g.dispose());
-    KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; return bg;
+    KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; KIT.vents[name]=this.vents.map(([x,y,z,v])=>[x,z,-y,v]); return bg;
   }
 }
 const PI=Math.PI; // plan-space helpers below
@@ -1027,12 +1033,12 @@ function kRow(name,brick,trim,roof,floors,bay,mansard,door){
   if(floors>2){const bx=bay?2.6:0;k.box(3.2,0.9,0.14,bx,y-0.45,0.8+2*F+0.05,trim);k.box(3.2,0.06,0.9,bx,y-0.88,0.8+2*F+0.5,'#26262b');}
   if(mansard){k.frustum(W+0.3,D+0.3,W-2.2,D-2.2,3,0,0,H+0.4,roof);for(const x of[-2.2,2.2]){k.box(1.4,1.6,1.7,x,-D/2+1.3,H+1.6,trim);k.glass(0.9,0.12,1.1,x,-D/2+0.48,H+1.6);k.prism(1.6,1.8,0.7,x,-D/2+1.3,H+2.45,roof,PI/2);}}
   else k.prism(W+0.6,D+0.8,3.6,0,0,H+0.4,roof);
-  for(const x of[-W/2+1,W/2-1]){const top=H+(mansard?3.4:4.2);k.box(1.3,0.8,top-H+0.6,x,1.5,H+(top-H)/2,brick);k.box(1.5,1,0.25,x,1.5,top+0.4,trim);for(const o of[-0.3,0.3])k.cyl(0.16,0.13,0.55,6,x+o,1.5,top+0.5,'#9a5a3a');}
+  for(const x of[-W/2+1,W/2-1]){const top=H+(mansard?3.4:4.2);k.vent(x,1.5,top+1.1,0.6);k.box(1.3,0.8,top-H+0.6,x,1.5,H+(top-H)/2,brick);k.box(1.5,1,0.25,x,1.5,top+0.4,trim);for(const o of[-0.3,0.3])k.cyl(0.16,0.13,0.55,6,x+o,1.5,top+0.5,'#9a5a3a');}
   if(name==='RowC'){k.cyl(0.14,0.14,H+1.2,6,W/2+0.25,1,0.2,'#b8893e');k.cyl(0.35,0.35,0.15,10,W/2+0.3,1,2.6,'#b8893e',PI/2);}
   k.sm(()=>{for(let x=-W/2+0.2;x<=W/2-0.2;x+=0.42){if(Math.abs(x-dx)<1.15)continue;k.box(0.05,0.05,0.95,x,y-1.45,0.48,'#1e1f24');}
     for(const s0 of[-1,1]){const x0=s0<0?-W/2+0.2:dx+1.15,x1=s0<0?dx-1.15:W/2-0.2;if(x1>x0)k.box(x1-x0,0.07,0.07,(x0+x1)/2,y-1.45,0.95,'#1e1f24');}
     for(let x=-W/2+0.4;x<=W/2-0.4;x+=0.8)k.box(0.16,0.35,0.3,x,y-0.12,H-0.18,trim);
-    k.disc(0.62,0.1,dx,y-0.08,3.22,'#2a2a33'); k.box(1.4,0.12,0.08,dx,y-0.1,3.22,trim); k.box(0.3,0.05,0.2,dx+0.95,y-0.06,2.1,'#c9a046');});
+    k.disc(0.62,0.1,dx,y-0.08,3.22,'#2a2a33'); k.box(0.08,0.4,0.08,dx-1.05,y-0.25,2.7,'#b8893e'); k.box(0.22,0.22,0.34,dx-1.05,y-0.45,2.55,'#e8d08a'); k.pipe(W/2-0.15,y-0.12,H,W/2-0.15,y-0.12,0.9,0.06,'#b06a3a'); k.box(1.4,0.12,0.08,dx,y-0.1,3.22,trim); k.box(0.3,0.05,0.2,dx+0.95,y-0.06,2.1,'#c9a046');});
   k.finish(name,W,D);
 }
 /* --- the rich: a pale stone manor with a columned portico and hipped roof --- */
@@ -1058,7 +1064,7 @@ function kTenement(){
   for(let f=0;f<fl;f++){const yy=y-f*0.09-0.02;for(const x of(f===0?[1.6]:[-1.5,1.5]))kWin(k,x,yy,F*f+F*0.55,0.9,1.4,'#5a4a38');}
   k.box(1.2,0.2,2.3,-1.5,y-0.02,1.15,'#3a2a20');
   k.prism(W+1.4,D+1.4,2.8,0,-0.36,F*fl,'shingle:#4d4a46'); k.box(2.2,1.4,0.1,1.2,-1.2,F*fl+1.05,'#6a5848',0,-0.62);
-  k.cyl(0.22,0.18,3.5,6,-2,1.8,F*fl+0.6,'#5c5f63');
+  k.cyl(0.22,0.18,3.5,6,-2,1.8,F*fl+0.6,'#5c5f63'); k.vent(-2,1.8,F*fl+4.3,0.5);
   k.box(0.05,0.05,W+3,0,y-1.4,F*2+2.3,'#26262b',PI/2); for(let i=0;i<4;i++)k.box(0.7,0.06,0.9,-2+i*1.3,y-1.4,F*2+1.8,['#c0392b','#e8e2d2','#2e6db4','#d4a017'][i]);
   k.finish('Tenement',W+1,D);
 }
@@ -1068,7 +1074,7 @@ function kShack(name,two){
   k.box(W,D,H,0,0,H/2,'planks:#6b5440'); k.box(1.2,0.8,0.9,-1.1,y-0.02,1.6,'#8a6c4a'); k.box(0.9,0.06,1.3,1.2,y-0.04,1.4,'#7a5a3e');
   k.box(1,0.1,2,-0.9,y-0.05,1,'#8a3b2a'); k.glass(0.8,0.12,0.6,1.3,y-0.05,1.75);
   k.shed(W+0.8,D+0.8,H+0.2,H-0.5,0,0,0,'iron:#5e5a52'); k.box(1.6,1.2,0.06,-0.9,0.6,H+0.15,'#7c6248',0,0.2); k.box(1.2,1.4,0.06,1.2,-1,H+0.4,'#4f5c5a',0,0.2);
-  k.cyl(0.12,0.12,1.6,6,1.6,1.4,H-0.2,'#3e3f42');
+  k.cyl(0.12,0.12,1.6,6,1.6,1.4,H-0.2,'#3e3f42'); k.vent(1.6,1.4,H+1.5,0.35);
   k.box(0.8,0.8,0.8,W/2+0.5,y+0.6,0.4,'#7a5a3e'); k.cyl(0.35,0.32,0.9,8,W/2+0.6,y+1.7,0,'#5e4632');
   if(two){k.box(3.2,3.4,2.2,-0.5,0.5,H+1.3,'#7a6048');k.glass(0.7,0.12,0.6,-0.5,0.5-1.72,H+1.5);k.shed(3.8,4,H+2.6,H+2.1,-0.5,0.5,0,'#565a5c');
     for(let i=0;i<5;i++)k.box(0.9,0.12,0.08,W/2-0.3,y-0.3,0.4+i*0.55,'#8a6c4a');for(const s of[-0.45,0.45])k.box(0.08,0.12,3,W/2-0.3+s,y-0.3,1.5,'#6b5440');}
@@ -1101,7 +1107,7 @@ function kLonghouse(name,roof){
     for(const s0 of[-1,1]){k.box(0.08,0.08,0.7,s0*0.35,y-0.05,4.3,'#d8ccb0',-s0*0.6);k.box(0.06,0.06,0.35,s0*0.6,y-0.05,4.55,'#d8ccb0',-s0*1.1);}
     for(const s0 of[-1,1])for(let i=0;i<4;i++){const yy=-D/2+2+i*2.6,c=['#8a2a24','#2e4a6a','#c9a046','#3e5a3a'][(i+(s0>0?2:0))%4];
       k.box(0.08,0.75,0.75,s0*((W-1.2)/2+0.05),yy,2.4,c);k.box(0.12,0.2,0.2,s0*((W-1.2)/2+0.1),yy,2.4,'#9aa2a8');}
-    k.box(1.2,1.4,0.5,0,1.5,8.7,'shingle:#4a3a2c');});
+    k.box(1.2,1.4,0.5,0,1.5,8.7,'shingle:#4a3a2c');}); k.vent(0,1.5,9.2,0.8);
   k.finish(name,W+1.6,D+0.8);
 }
 /* --- Zarhim: sun-baked flat roofs, parapets, awnings and domes --- */
@@ -1143,7 +1149,7 @@ function kForge(){
   k.box(2.6,0.3,3,-2.4,y-0.02,1.5,'#2a2c30'); k.box(2.2,0.32,2.6,-2.4,y-0.03,1.3,'#4a2e22');
   k.glass(1.4,0.2,1,2.4,y-0.02,1.9); k.glass(1,0.2,0.9,-2.4,y-0.02,4.6); k.glass(1,0.2,0.9,2.4,y-0.02,4.6);
   k.box(1.6,0.25,0.8,2.4,y-0.04,0.6,'#2a2c30'); k.glass(1.1,0.27,0.4,2.4,y-0.05,0.65);
-  k.box(2,2,11,W/2-1.2,2.4,5.5,'brick:#7a3c31'); k.box(2.3,2.3,0.4,W/2-1.2,2.4,11,'#4a4d52');
+  k.box(2,2,11,W/2-1.2,2.4,5.5,'brick:#7a3c31'); k.vent(W/2-1.2,2.4,11.6,1.3); k.box(2.3,2.3,0.4,W/2-1.2,2.4,11,'#4a4d52');
   k.cyl(1.3,1.3,4.4,12,W/2+1.4,-0.5,1.6,'#8a5a32',PI/2); k.cyl(1.35,1.35,0.15,12,W/2+1.4,-2.6,1.6,'#b8893e',PI/2);
   k.cyl(0.2,0.2,5.6,6,W/2+1.4,1.4,1.6,'#b8893e'); k.box(0.4,0.4,2.4,W/2+1.4,-0.5,0.5,'#2a2c30');
   k.sm(()=>{k.pipe(-W/2+0.3,y-0.25,5.4,W/2+1,y-0.25,5.4,0.12,'#8a5a32');k.pipe(W/2-0.3,y-0.25,5.4,W/2-0.3,y-0.25,0.4,0.12,'#8a5a32');
@@ -1163,7 +1169,7 @@ function kRound(){
   k.sm(()=>{for(const s0 of[-1,1]){k.cyl(0.18,0.2,2.4,6,s0*0.95,-5.45,0,'timber:#5a4030');for(let i=0;i<5;i++)k.box(0.4,0.4,0.06,s0*0.95,-5.45,0.3+i*0.45,'#3a2a20');}
     k.box(0.4,0.12,0.45,0,-5.6,3.6,'#e8e0cc');for(const s0 of[-1,1])k.box(0.08,0.08,0.6,s0*0.3,-5.62,3.95,'#e8e0cc',s0*0.7);
     for(let i=0;i<10;i++){const a=i/10*PI*2+0.3;if(Math.abs(Math.sin(a)+1)<0.25)continue;k.box(0.14,0.14,0.45,Math.cos(a)*4.6,Math.sin(a)*4.6,2.05,i%2?'#6a7a3a':'#8a7040');}
-    k.cyl(0.6,0.15,0.6,8,0,0,7.9,'thatch:#8c7340');});
+    k.cyl(0.6,0.15,0.6,8,0,0,7.9,'thatch:#8c7340');}); k.vent(0,0,8.7,0.7);
   k.finish('Roundhouse',10.4,10.6);
 }
 /* --- Wayfolk: timber-framed houses with a copper boiler on the side --- */
@@ -1176,7 +1182,7 @@ function kTimber(){
   k.prism(W+1.4,D+2.2,4,0,-0.2,6.2,'tile:#a8452f'); kDoor(k,1.6,y,0,1.2,2.2,'#4a2e22','timber:#4a3222'); kWin(k,-1.6,y,1.7,1.3,1.0,'timber:#4a3222',0,'#3f6a3e');
   for(const x of[-2.4,0,2.4])kWin(k,x,fy-0.01,4.8,0.9,1.1,'timber:#4a3222',0,'#3f6a3e');
   k.cyl(0.95,0.95,3.2,10,W/2+1,1,0,'#b06a3a'); k.dome(0.95,W/2+1,1,3.2,'#b06a3a',10); for(const z of[0.8,2.4])k.cyl(1,1,0.12,10,W/2+1,1,z,'#c9a046');
-  k.cyl(0.13,0.13,5.2,6,W/2+1.3,1.4,3.6,'#c9a046'); k.cyl(0.3,0.3,0.12,10,W/2+1,0.05,2,'#e8e2d2',PI/2);
+  k.cyl(0.13,0.13,5.2,6,W/2+1.3,1.4,3.6,'#c9a046'); k.vent(W/2+1.3,1.4,9,0.5); k.cyl(0.3,0.3,0.12,10,W/2+1,0.05,2,'#e8e2d2',PI/2);
   k.box(1,0.8,3,-1.8,1.6,9.6,'#7a3c31');
   k.sm(()=>{for(const x of[-2.4,0,2.4]){k.box(1.1,0.3,0.25,x,fy-0.25,4.1,'planks:#6a4a2e');for(let i=0;i<4;i++)k.box(0.18,0.18,0.18,x-0.38+i*0.25,fy-0.25,4.33,['#d0485a','#e8c040','#9a5ad0','#4f8a3a'][i]);}
     k.box(0.08,1.2,0.08,-W/2-0.1,fy-0.5,3.4,'#2a2420');k.box(0.06,0.85,0.6,-W/2-0.1,fy-0.95,2.9,'planks:#7a5a3e');k.pipe(W/2+0.5,fy+0.2,6.1,W/2+0.5,fy+0.2,0.2,0.07,'#b06a3a');});
@@ -1202,7 +1208,7 @@ function kShop(){
   k.box(W,2.2,0.08,0,y-1.2,3.3,'#e8e2d2',0,-0.32); for(let i=0;i<4;i++)k.box(0.9,2.22,0.09,-3+i*2,y-1.2,3.31,'#b5473a',0,-0.32);
   for(let f=1;f<3;f++)for(const x of[-2.6,0,2.6])kWin(k,x,y,0.6+f*F+F*0.5,1,1.7,tr);
   k.box(W+0.5,D+0.5,0.45,0,0,3*F+0.8,tr); k.prism(W+0.6,D+0.8,3.4,0,0,3*F+1,'slate:#4a3f3a');
-  k.box(1.3,0.8,4,-W/2+1,1.5,3*F+2.8,br);
+  k.box(1.3,0.8,4,-W/2+1,1.5,3*F+2.8,br); k.vent(-W/2+1,1.5,3*F+5.1,0.6);
   k.sm(()=>{k.box(0.08,1.4,0.08,W/2-0.6,y-0.7,4.4,'#1e1f24');k.box(0.06,0.9,0.6,W/2-0.6,y-1.1,3.95,'planks:#2e5a46');k.box(0.07,0.6,0.08,W/2-0.6,y-1.1,3.95,'#c9a046');
     for(let i=0;i<3;i++)k.box(0.7,0.6,0.5,-2.6+i*0.8,y-1.2,0.25,['#c0392b','#d4a017','#3c8d4f'][i]);k.cyl(0.3,0.28,0.7,8,-3.3,y-1.6,0,'#8a5a32');
     k.box(0.25,0.25,0.4,2.1,y-0.35,2.7,'#c9a046');});
@@ -1215,6 +1221,76 @@ function kGarden(){
   k.cyl(1.6,1.8,0.6,12,0,0,0,'#cfc8b8'); k.cyl(1.4,1.4,0.1,12,0,0,0.55,'#4f86a8'); k.cyl(0.25,0.3,1.4,8,0,0,0.6,'#cfc8b8');
   for(const [x,y] of[[-3.6,-3.6],[3.6,3.6],[3.6,-3.6],[-3.6,3.6]]){k.cyl(0.25,0.3,2.2,6,x,y,0,'#5a4030');k.cyl(1.4,0.1,3.6,8,x,y,1.6,'#3d6b36');}
   k.finish('Garden',S,S);
+}
+/* --- the city's landmarks: taverns, a foundry, the watch's barracks, the artificers' laboratory, the great clock --- */
+function kTavern(name,wall,roof,sign){
+  const k=new KitB(),W=12,D=10,y=-D/2,tm='timber:#3e2a1c';
+  k.box(W,D,3.4,0,0,1.7,'stone:#8f877b'); k.box(W+0.6,D+0.6,3.6,0,0,5.2,'plaster:'+wall);
+  for(const x of[-5.7,-2.85,0,2.85,5.7])k.box(0.3,0.16,3.6,x,y-0.32,5.2,tm); for(const z of[3.5,6.9])k.box(W+0.7,0.18,0.3,0,y-0.32,z,tm);
+  k.prism(W+1.4,D+1.8,4.4,0,0,7,'tile:'+roof);
+  for(const x of[-3.2,3.2]){k.box(1.8,1.6,1.6,x,y+1.3,8.1,'plaster:'+wall);k.prism(2.1,2.1,0.9,x,y+1.3,8.9,'tile:'+roof,PI/2);kWin(k,x,y+0.48,8.1,0.8,0.9,tm);}
+  kDoor(k,0,y,0,2,2.6,'#4a2e22',tm); for(const x of[-4,4])kWin(k,x,y,1.8,1.8,1.4,tm,0,sign); for(const x of[-4.3,-1.4,1.4,4.3])kWin(k,x,y-0.32,5.4,1,1.3,tm);
+  k.box(1.2,1,6,W/2-1.2,1.5,8,'brick:#7a3c31'); k.cyl(0.32,0.32,0.45,8,W/2-1.2,1.5,11,'#b8893e'); k.vent(W/2-1.2,1.5,11.7,1);
+  k.sm(()=>{k.box(0.08,1.6,0.08,-W/2+0.4,y-0.8,4.4,'#1e1f24'); k.box(0.08,1.1,0.8,-W/2+0.4,y-1.35,3.85,'planks:'+sign); k.disc(0.28,0.1,-W/2+0.34,y-1.35,3.85,'#c9a046');
+    k.box(5.4,1.1,0.18,0,y-0.9,3.55,'planks:#6a4a2e'); for(let x=-2.6;x<=2.6;x+=0.4)k.box(0.05,0.05,0.8,x,y-1.4,3.95,'#3e2a1c'); k.box(5.4,0.06,0.06,0,y-1.4,4.35,'#3e2a1c');
+    for(const x of[3,3.9,4.8])k.cyl(0.42,0.38,1,8,x,y-1.3,0,'#7a5232'); k.box(2.4,0.5,0.45,-3.6,y-1.2,0.45,'planks:#6a4a2e');
+    for(const x of[-1.4,1.4]){k.box(0.08,0.35,0.08,x,y-0.25,2.9,'#b8893e');k.box(0.24,0.24,0.36,x,y-0.45,2.75,'#e8d08a');}
+    k.pipe(W/2-0.3,y-0.2,3.2,W/2-0.3,y-0.2,0.2,0.08,'#b8893e'); k.disc(0.2,0.08,W/2-0.3,y-0.28,1.8,'#e8e2d2');});
+  k.finish(name,W+1.4,D+2.6);
+}
+function kFoundry(){
+  const k=new KitB(),W=16,D=14,y=-D/2,br='brick:#7a3c31',ir='iron:#3b3f45';
+  k.box(W,D,7,0,0,3.5,br); k.box(W+0.3,D+0.3,0.4,0,0,7.1,'stone:#6e6a66'); k.prism(W+1,D+1,3,0,0,7.3,ir); k.box(W*0.6,1.6,1.2,0,0,10.5,ir);
+  k.box(6,0.3,5,0,y-0.02,2.5,'#1a1410'); k.box(3,0.32,1.1,0,y-0.06,0.7,'#ff8a3a'); k.box(6.8,0.5,0.7,0,y-0.12,5.3,'stone:#8f877b');
+  for(const x of[-3.25,3.25])k.box(0.6,0.5,5,x,y-0.12,2.5,'stone:#8f877b');
+  for(const x of[-6,-4.6,4.6,6])kWin(k,x,y,5.4,1,1.2,ir);
+  for(const cx of[-5,5]){k.cyl(0.9,1.1,17,10,cx,D/2-2,0,br); k.vent(cx,D/2-2,17.4,2.2); k.sm(()=>{for(const z of[6,11,16])k.cyl(1.02,1.02,0.22,10,cx,D/2-2,z,'#b8893e');});}
+  k.cyl(1.6,1.6,3.2,12,-W/2-1.8,-2,0,'#8a5a32'); k.dome(1.6,-W/2-1.8,-2,3.2,'#8a5a32',12);
+  k.sm(()=>{for(const z of[0.6,2.4])k.cyl(1.65,1.65,0.12,12,-W/2-1.8,-2,z,'#b8893e'); k.pipe(-W/2-1.8,-2,3.6,-W/2,-2,5.6,0.14,'#b8893e');
+    k.box(1,0.5,0.6,2.2,y-1.6,0.3,'#2a2c30'); k.box(0.6,0.4,0.25,2.2,y-1.6,0.7,'#3a3c40'); k.dome(1.2,-2.6,y-1.8,0,'#1e1c1a',8);
+    k.pipe(-W/2+0.4,y-0.25,6.2,W/2-0.4,y-0.25,6.2,0.14,'#8a5a32'); for(const gx of[-6.5,6.5])k.disc(0.3,0.08,gx,y-0.32,4,'#b8893e');
+    k.ring(0.75,0.14,0,y-0.24,6.2,'#b8893e'); for(let i=0;i<10;i++){const a=i/10*PI*2;k.box(0.22,0.1,0.22,Math.cos(a)*0.95,y-0.24,6.2+Math.sin(a)*0.95,'#b8893e');}});
+  k.finish('Foundry',W+4,D+3);
+}
+function kBarracks(){
+  const k=new KitB(),W=20,D=12,y=-D/2,st='stone:#9a938a',watch='#3f3a6c';
+  k.box(W,D,8,0,0,4,st); k.box(W+0.4,D+0.4,0.5,0,0,8.25,'stone:#7f786d'); k.box(W-1,D-1,0.2,0,0,8.4,'slate:#4a5a78');
+  for(let i=0;i<13;i++)for(const sy of[-1,1])k.box(0.9,0.6,0.9,-W/2+0.6+i*1.565,sy*(D/2-0.1),8.95,st);
+  for(const x of[-8,-5,-2,2,5,8])for(const z of[2.4,5.6])kWin(k,x,y,z,0.9,1.3,'stone:#7f786d');
+  k.box(3.2,0.3,3.8,0,y-0.02,1.9,'#2a2420'); k.box(2.9,0.34,3.5,0,y-0.06,1.75,'planks:#4a3020'); k.box(3.8,0.5,0.6,0,y-0.12,4,'stone:#7f786d');
+  k.cyl(3,3.2,15,10,W/2-1,-D/2+1,0,st); k.cyl(3.4,0.2,4.5,10,W/2-1,-D/2+1,15,'slate:#4a5a78');
+  for(const x of[-5,5]){k.box(1.3,0.08,3.4,x,y-0.08,5.4,watch); k.box(1.3,0.09,0.2,x,y-0.09,7.1,'#c9a046');}
+  k.sm(()=>{k.box(0.08,0.08,3,W/2-1,-D/2+1,20.5,'#2a2420'); k.box(0.05,1.4,0.9,W/2-1,-D/2+1.7,21.4,watch);
+    for(const x of[-7,-4]){k.cyl(0.08,0.08,1.6,6,x,y-3,0,'planks:#6a4a2e');k.box(0.55,0.35,0.7,x,y-3,1.45,'#b8a070');k.box(0.7,0.1,0.1,x,y-3,1.5,'#6a4a2e');}
+    k.box(2.4,0.3,0.12,5,y-2.4,1.2,'planks:#6a4a2e'); for(let i=0;i<6;i++)k.box(0.05,0.05,2,4+i*0.4,y-2.4,1,'#5a4030'),k.box(0.08,0.08,0.18,4+i*0.4,y-2.4,2.05,'#9aa2a8');});
+  k.finish('Barracks',W+2,D+6);
+}
+function kLab(){
+  const k=new KitB(),W=12,D=12,y=-D/2,tr='stone:#d9cfba',cu='#b8893e';
+  k.box(W,D,7,0,0,3.5,'brick:#6a3a2e'); k.box(W+0.3,D+0.3,0.4,0,0,7.2,tr);
+  k.cyl(4.6,4.6,1,16,0,0,7.4,cu); k.dome(4.4,0,0,8.4,'#9fd0dc',16); k.cyl(0.15,0.05,2,6,0,0,12.6,cu);
+  k._add(new THREE.SphereGeometry(0.5,10,8).toNonIndexed(),k.M(0,0,15),'#7ff0ff');
+  for(const x of[-3.5,3.5])kWin(k,x,y,3,1.3,2.6,tr); kDoor(k,0,y,0,1.8,2.8,'#2e3a4a',tr);
+  for(const s0 of[-1,1]){const cx=s0*(W/2+1.2),cy=-D/2+1.6;k.cyl(0.25,0.35,5,8,cx,cy,0,'#8a5a32');k._add(new THREE.SphereGeometry(0.4,10,8).toNonIndexed(),k.M(cx,cy,5.3),'#7ff0ff');
+    k.sm(()=>{for(const z of[1.8,2.8,3.8,4.6])k.cyl(0.62-z*0.06,0.62-z*0.06,0.12,10,cx,cy,z,cu);});}
+  k.sm(()=>{for(let i=0;i<8;i++){const a=i/8*PI*2;let px=Math.cos(a)*4.4,py=Math.sin(a)*4.4,pz=8.4;for(let j=1;j<=4;j++){const t=j/4*PI/2,nx=Math.cos(a)*4.4*Math.cos(t),ny=Math.sin(a)*4.4*Math.cos(t),nz=8.4+4.4*Math.sin(t);k.pipe(px,py,pz,nx,ny,nz,0.06,cu);px=nx;py=ny;pz=nz;}}
+    k.ring(1,0.14,0,y-0.16,5.4,cu); for(let i=0;i<10;i++){const a=i/10*PI*2;k.box(0.2,0.1,0.2,Math.cos(a)*1.22,y-0.16,5.4+Math.sin(a)*1.22,cu);}
+    k.pipe(W/2-0.3,y-0.2,7,W/2-0.3,y-0.2,0.4,0.1,cu); k.pipe(-W/2+0.3,y-0.2,7,-W/2+0.3,y-0.2,3,0.1,cu); k.disc(0.24,0.08,-W/2+0.3,y-0.3,2.6,'#e8e2d2');});
+  k.cyl(0.3,0.3,3,8,W/2-1.2,D/2-1.2,7.4,cu); k.vent(W/2-1.2,D/2-1.2,10.6,0.8);
+  k.finish('Laboratory',W+3.4,D+1);
+}
+function kClock(){
+  const k=new KitB(),cu='#b8893e';
+  k.box(7,7,4,0,0,2,'stone:#8f877b'); k.box(5,5,20,0,0,14,'brick:#7a3c31'); k.box(5.4,5.4,0.4,0,0,8,'stone:#d9cfba'); k.box(5.4,5.4,0.4,0,0,16,'stone:#d9cfba');
+  for(const sy of[-1,1]){k.disc(1.9,0.2,0,sy*2.6,21,'#efe6d2'); k.ring(1.95,0.12,0,sy*2.62,21,cu);
+    k._add(new THREE.BoxGeometry(0.14,0.06,1.35).toNonIndexed().rotateY(0.6).translate(0,sy*2.74,21+0.5),new THREE.Matrix4(),'#1e1f24');
+    k._add(new THREE.BoxGeometry(0.1,0.06,1.0).toNonIndexed().rotateY(-1.9).translate(0.35,sy*2.74,21-0.12),new THREE.Matrix4(),'#1e1f24');}
+  for(const sx of[-1,1]){k._add(new THREE.CylinderGeometry(1.9,1.9,0.2,16).toNonIndexed().rotateZ(PI/2),k.M(sx*2.6,0,21),'#efe6d2');}
+  k.box(5.6,5.6,0.4,0,0,24.2,'stone:#d9cfba'); for(const sx of[-1,1])for(const sy of[-1,1])k.box(0.6,0.6,3.5,sx*2.4,sy*2.4,26.1,'stone:#d9cfba');
+  k.dome(1.1,0,0,24.6,cu,10); k.box(5.8,5.8,0.4,0,0,28,'stone:#d9cfba'); k.cyl(3.6,0.2,7,8,0,0,28.2,'#3f8f8f'); k.cyl(0.08,0.02,2,6,0,0,35,cu);
+  kDoor(k,0,-3.5,0,1.6,2.8,'#4a2e22','stone:#d9cfba');
+  k.sm(()=>{for(const [gx,gz,R] of[[-1.2,11,0.9],[0.9,12.4,0.6]]){k.ring(R,0.14,gx,-2.6,gz,cu);for(let i=0;i<8;i++){const a=i/8*PI*2;k.box(0.18,0.1,0.18,gx+Math.cos(a)*(R+0.2),-2.6,gz+Math.sin(a)*(R+0.2),cu);}}});
+  k.finish('Clocktower',7.5,7.5);
 }
 /* --- castle wall, round tower, gatehouse --- */
 function kWalls(){
@@ -1235,7 +1311,7 @@ function kWalls(){
 (function buildKit(){
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement(); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
-  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber(); kChapel(); kShop(); kGarden(); kWalls();
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber(); kChapel(); kShop(); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kLab(); kClock();
 })();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
 // and only blocks near the player cast shadows. One batch per house type for the whole city drew all of it from anywhere.
@@ -1254,7 +1330,8 @@ function cellInstances(geo,mat,list,far,big,tinted,farGeo){ // list of {x,y,z,ry
     landmarks.add(m); CELLS.push({m,mf,sphere:new THREE.Sphere(ctr,r),far,shadow:true});
   }
 }
-function kitInstances(name,list){const big=/WallSeg|Tower|Gatehouse/.test(name);cellInstances(KIT.geo[name],kitMat,list,big?1e9:360,big,true,big?null:KIT.far[name]);}
+function kitInstances(name,list){
+  for(const v of KIT.vents[name]||[])for(const p of list){const c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lx=v[0]*(p.sx||1);VENTS.push({x:p.x+lx*c+v[2]*sn,y:p.y+v[1],z:p.z-lx*sn+v[2]*c,s:v[3]});}const big=/WallSeg|Tower|Gatehouse/.test(name);cellInstances(KIT.geo[name],kitMat,list,big?1e9:360,big,true,big?null:KIT.far[name]);}
 const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
 function cullCells(){
   camera.updateMatrixWorld(); _pm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); _frustum.setFromProjectionMatrix(_pm);
@@ -1289,9 +1366,18 @@ function rectHit(a,b){
   return true;
 }
 function footprintFree(f){for(const c of colliders)if(c.type!=='circle'&&rectHit(f,c))return false;return true;}
+const LANDMARKS=[
+  {name:'Tavern',label:'The Lantern & Gear',R:196,side:1,a:1.05},{name:'Tavern2',label:'The Fogbound Arms',R:262,side:-1,a:1.78},
+  {name:'Foundry',label:'The Ironway Foundry',R:196,side:-1,a:0.36},{name:'Barracks',label:'Barracks of the City Watch',R:262,side:1,a:1.4},
+  {name:'Laboratory',label:"The Artificers' Laboratory",R:118,side:1,a:0.98},{name:'Clocktower',label:'The Great Clock',plaza:88,a:1.71}];
+const LANDMARK_AT=[];
 function buildCityHouses(){
   const [mx,mz]=marketPos(), lists={}, put=(name,x,z,ry,tint,y)=>{(lists[name]=lists[name]||[]).push({x,y:y!==undefined?y:heightAt(x,z)-0.3,z,ry,tint});};
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
+  LANDMARK_AT.length=0;
+  for(const L of LANDMARKS){const [w,d]=KIT.size[L.name]; const r=L.plaza||L.R+L.side*(10+d/2), x=CITY.x+Math.cos(L.a)*r, z=CITY.z+Math.sin(L.a)*r;
+    const ry=L.plaza?-L.a-Math.PI/2:-L.a+Math.PI/2+(L.side>0?Math.PI:0);
+    put(L.name,x,z,ry,[1,1,1]); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d});}
   const blocked=(a,r,half)=>nearAvenue(a,r,10.5+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
   const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterOf(a).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   // houses face the ring streets, on both kerbs of each ring
@@ -1467,6 +1553,7 @@ function buildFarTerrain(){
   const m=new THREE.Mesh(g,farMat);m.receiveShadow=false;landmarks.add(m);
 }
 function placeName(x,z){
+  for(const L of LANDMARK_AT)if(Math.hypot(x-L.x,z-L.z)<L.r)return L.label;
   if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<58)return 'The village';
   if(Math.hypot(x-PORT.x,z-PORT.z)<80)return "Hollin's Cross";
   const dc=Math.hypot(x-CITY.x,z-CITY.z);
@@ -2842,6 +2929,28 @@ function nightUpdate(dt,now,night){
   if(!landmarks.userData.spin){const l=[];landmarks.traverse(o=>{if(o.userData.spin)l.push(o);});landmarks.userData.spin=l;} for(const o of landmarks.userData.spin)o.rotation.y+=dt*0.3;
 }
 
+/* ---------- Steam: soft puffs from the chimneys, stacks and vents near the player, one batch for all of them ---------- */
+const PUFF_N=260, puffPos=new Float32Array(PUFF_N*3), puffA=new Float32Array(PUFF_N), puffS=new Float32Array(PUFF_N);
+const puffV=new Float32Array(PUFF_N*3), puffAge=new Float32Array(PUFF_N), puffLife=new Float32Array(PUFF_N), puffS0=new Float32Array(PUFF_N); let puffNext=0, ventNear=[], ventPick=0;
+const puffGeo=new THREE.BufferGeometry(); puffGeo.setAttribute('position',new THREE.BufferAttribute(puffPos,3)); puffGeo.setAttribute('a',new THREE.BufferAttribute(puffA,1)); puffGeo.setAttribute('sz',new THREE.BufferAttribute(puffS,1));
+const puffMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uCol:{value:new THREE.Color('#e8e6e2')},uScale:{value:600}},
+  vertexShader:'attribute float a; attribute float sz; varying float vA; uniform float uScale; void main(){vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=sz*uScale/max(1.0,-mv.z); gl_Position=projectionMatrix*mv; vA=a;}',
+  fragmentShader:'uniform vec3 uCol; varying float vA; void main(){vec2 d=gl_PointCoord-0.5; float r=dot(d,d)*4.0; if(r>1.0)discard; gl_FragColor=vec4(uCol,vA*(1.0-r)*(1.0-r));}'});
+const puffs=new THREE.Points(puffGeo,puffMat); puffs.frustumCulled=false; puffs.renderOrder=3; scene.add(puffs);
+for(let i=0;i<PUFF_N;i++){puffPos[i*3+1]=-999;puffLife[i]=1;puffAge[i]=1;}
+function steamUpdate(dt,night){
+  if((ventPick-=dt)<=0){ventPick=0.5;ventNear=VENTS.filter(v=>Math.abs(v.x-player.x)<80&&Math.abs(v.z-player.z)<80);}
+  for(const v of ventNear)if(Math.random()<dt*v.s*2.2){const i=puffNext;puffNext=(puffNext+1)%PUFF_N;
+    puffPos[i*3]=v.x+(Math.random()-0.5)*0.3;puffPos[i*3+1]=v.y;puffPos[i*3+2]=v.z+(Math.random()-0.5)*0.3;
+    puffV[i*3]=0.35+Math.random()*0.3;puffV[i*3+1]=0.9+Math.random()*0.6;puffV[i*3+2]=(Math.random()-0.5)*0.3;puffAge[i]=0;puffLife[i]=2.5+Math.random()*2*v.s;puffS0[i]=0.6+0.5*v.s;}
+  for(let i=0;i<PUFF_N;i++){if(puffAge[i]>=puffLife[i]){puffA[i]=0;continue;}puffAge[i]+=dt;const k=puffAge[i]/puffLife[i];
+    puffPos[i*3]+=puffV[i*3]*dt;puffPos[i*3+1]+=puffV[i*3+1]*dt*(1-0.5*k);puffPos[i*3+2]+=puffV[i*3+2]*dt;
+    puffS[i]=puffS0[i]*(1+2.6*k);puffA[i]=0.42*Math.min(1,puffAge[i]*3)*(1-k);}
+  puffGeo.attributes.position.needsUpdate=true;puffGeo.attributes.a.needsUpdate=true;puffGeo.attributes.sz.needsUpdate=true;
+  puffMat.uniforms.uCol.value.setRGB(0.91,0.9,0.88).lerp(scene.fog.color,0.35+0.4*night);
+  puffMat.uniforms.uScale.value=innerHeight*renderer.getPixelRatio()/(2*Math.tan(camera.fov*Math.PI/360));
+}
+
 /* ---------- Sky: one procedural dome with sun, moons, stars and clouds ---------- */
 const MOONS=3; // three moons, one of them broken
 const skyMat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
@@ -3188,7 +3297,7 @@ function frame(now){const __j0=performance.now();
   heroAnim(dt,mag,run);
   combatUpdate(dt,now);
   actionUpdate(dt);
-  nightUpdate(dt,now,cs.night);
+  nightUpdate(dt,now,cs.night); steamUpdate(dt,cs.night);
   crowdUpdate(dt,now,cs.night);
   villageUpdate(dt);
   outskirtsUpdate(dt,cs.night);
