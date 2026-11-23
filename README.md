@@ -26,7 +26,7 @@ python3 -m http.server 8000
 | `game/*.gltf.json` | The hero (Tinker) and the townsfolk (eight peoples). They're glTF with embedded buffers, saved as `.gltf.json` so any static host serves them. |
 | `studies/peoples-viewer.html` | Lineup of the eight peoples and the city watch (first pass, kitbashed). |
 | `studies/body-viewer.html` | The new direction: one seamless body with face and clothes painted by code, a head built from cross-sections (square jaw, real chin, heavy brow), and hair and beards as solid sculpted masses with painted strands, the way Valheim does them: short, swept, long, ponytail and topknot hair; short, full (spade), pointed, forked and braided beards; a moustache. A work in progress. |
-| `creator/mh_m.gltf.json`, `creator/mh_f.gltf.json` | **The MakeHuman bodies** the creator now loads: one mesh per sex from MakeHuman (CC0), rigged to our skeleton with MakeHuman's own skin weights. Every people, Lean and Heavy is a morph of that one mesh, women included. Open the creator with `?body=old` to compare with the previous bodies. |
+| `creator/mh_m.gltf.json`, `creator/mh_f.gltf.json` | **The MakeHuman bodies** the creator now loads: one light mesh per sex (6,000 triangles, half of them in the face) from MakeHuman (CC0), rigged to our skeleton with MakeHuman's own skin weights. Every people, Lean and Heavy is a morph of that one mesh, women included. Open the creator with `?body=old` to compare with the previous bodies. |
 | `creator/index.html` | **The character creator:** one body per sex with each people as a built-in shape; the skeleton moves to match the chosen people, so the same animations, hair and (later) clothing fit everyone. Height and build sliders are limited to each people's range. |
 | `studies/base-body-viewer.html` | **The current base body:** a Sketchfab model (see CREDITS.md) rigged to our skeleton and repainted by code, with our hair, beards, moustaches, Lean and Heavy builds, idle and walk. |
 | `studies/female-body-viewer.html` | The female base body: the base model reshaped (`RACE=female` in `tools/blender/rpgbody.py`), with its arms and legs kept and a reworked torso and bust. `tools/blender/femalebody.py` is the from-scratch alternative. Work in progress. |
@@ -46,7 +46,9 @@ python merge_peoples.py Human_m.glb mh_m.glb Ferrin=Ferrin_m.glb Ilvari=Ilvari_m
 python glb2json.py mh_m.glb ../../creator/mh_m.gltf.json
 ```
 
-Use `SEX=f` and `mh_f` for the women. Each people's shape is a list of MakeHuman targets in `PEOPLES` at the top of `mhbody.py`, so changing a people is a matter of changing numbers there.
+Use `SEX=f` and `mh_f` for the women.
+
+The bodies are light: MakeHuman's 27,000-triangle body is brought down to 6,000 (`TRIS`), with about half kept in the head and face (`FACE`, just under 1). The reduction runs once per sex and is saved as `tools/blender/light_m.npz` / `light_f.npz`, so every people and build shares exactly the same light mesh; each light point is pinned to the full MakeHuman surface, which is where its shapes, skin weights and paint come from. Delete those files to redo the reduction (for a new budget, say), then rebuild every people. Each people's shape is a list of MakeHuman targets in `PEOPLES` at the top of `mhbody.py`, so changing a people is a matter of changing numbers there.
 
 ### Rebuilding the characters
 

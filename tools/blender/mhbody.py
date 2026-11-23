@@ -162,15 +162,6 @@ KEYS = {}
 for b in BUILDS: KEYS[b], _ = place(make(PEOPLE, b))
 print('BODY', PEOPLE, SEX, 'scale', round(SCALE, 4), 'height', round(PB[:, 2].max(), 3))
 
-# ---------- 3. the mesh
-me = bpy.data.meshes.new('Body'); me.from_pydata([tuple(p) for p in PB], [], faces); me.update()
-body = bpy.data.objects.new('Body', me); col.objects.link(body)
-for p in me.polygons: p.use_smooth = True
-body.shape_key_add(name='Basis')
-for nm, P in KEYS.items():
-    k = body.shape_key_add(name=nm)
-    for i, p in enumerate(P): k.data[i].co = Vector(p)
-
 # ---------- 4. our bones on MakeHuman's joints
 J = JB; V3 = lambda a: Vector(tuple(a))
 crown = PB[:, 2].max()
@@ -192,14 +183,6 @@ g['BONES'][:] = [(nm, tuple(eb[nm].head), tuple(eb[nm].tail), par) for nm, h, t,
 bpy.ops.object.mode_set(mode='OBJECT'); upd()
 for nm in ('hips', 'neck', 'upper_arm.L', 'forearm.L', 'hand.L', 'thigh.L', 'shin.L', 'foot.L'):
     print('BONE', nm, [round(x, 3) for x in POS[nm][0]], '->', [round(x, 3) for x in POS[nm][1]])
-
-# ---------- 5. skin weights (at most four per point, as glTF carries)
-for nm in OURS: body.vertex_groups.new(name=nm)
-top4 = np.argsort(-W, axis=1)[:, :4]
-for i in range(len(PB)):
-    ks = [k for k in top4[i] if W[i, k] > 1e-4]; tot = sum(W[i, k] for k in ks)
-    for k in ks: body.vertex_groups[k].add([i], float(W[i, k] / tot), 'REPLACE')
-body.parent = arm; body.modifiers.new('Armature', 'ARMATURE').object = arm
 
 # ---------- 6. paint coordinates: where each point sits on the painted template (see the PAINT shader in creator/index.html)
 # The paint is drawn in a fixed layout (the old template body): torso bands, nipples, navel, knees and the face's features at
@@ -285,12 +268,97 @@ xt = xt * (1 - a) + ax_ * a; yt = yt * (1 - a) + ay_ * a; zt = zt * (1 - a) + az
 fz_ = pl(Z, ZM, ZCAN)
 t = np.array([sm(1.47, 1.555, z) for z in zt]) * (1 - a)
 xt = xt + (X * KX - xt) * t; yt = yt + ((Y - Cy) * KX + 0.004 - yt) * t; zt = zt + (fz_ - zt) * t
+REST = np.stack([xt + 0.5, yt + 0.5, zt / 2, 1 - a], axis=1)
+
+# ---------- 7. the light mesh: MakeHuman's body brought down to a game budget, most of it kept in the face
+# The reduction runs once, on the Human body, so every people and build gets the same light mesh (and they stay morphs of
+# each other). Each light point is pinned to a spot on the full MakeHuman surface; every shape, skin weight and paint
+# coordinate is read from the full body at that spot.
+TRIS = int(os.environ.get('TRIS', '6000'))
+REF = place(make('Human'))[0]
+tri = np.array([t for f in faces for t in ([f[0], f[1], f[2]], [f[0], f[2], f[3]])[:len(f) - 2]])
+hw = bw('head')
+FACE = float(os.environ.get('FACE', '0.99'))   # just under 1 is enough: the collapse cost is very sensitive to it
+LIGHT = os.environ.get('LIGHT', f'light_{SEX}.npz')   # the light mesh and its pins, made once and shared by every people
+_c = np.load(LIGHT) if os.path.exists(LIGHT) else None
+if _c is not None and (int(_c['tris']) != TRIS or float(_c['face']) != FACE or int(_c['full']) != len(REF)): _c = None
+if _c is not None:
+    LV, BT, BW_ = _c['LV'], _c['BT'], _c['BW']; LF = [tuple(int(x) for x in f) for f in _c['LF']]
+    print('LIGHT mesh from', LIGHT)
+else:
+    rme = bpy.data.meshes.new('ref'); rme.from_pydata([tuple(p) for p in REF], [], faces); rme.update()
+    rob = bpy.data.objects.new('ref', rme); col.objects.link(rob)
+    keep = rob.vertex_groups.new(name='keep')     # how freely each point may be collapsed: the face least
+    for i in range(len(REF)): keep.add([i], float(1 - (1 - FACE) * min(1.0, hw[i])), 'REPLACE')
+    def decimate(ratio):
+        for m_ in list(rob.modifiers): rob.modifiers.remove(m_)
+        d = rob.modifiers.new('dec', 'DECIMATE'); d.decimate_type = 'COLLAPSE'; d.ratio = ratio
+        d.use_symmetry = True; d.symmetry_axis = 'X'; d.use_collapse_triangulate = True
+        d.vertex_group = 'keep'; d.invert_vertex_group = False; d.vertex_group_factor = float(os.environ.get('FACE_KEEP', '1'))
+        dg = bpy.context.evaluated_depsgraph_get(); ev = rob.evaluated_get(dg); m2 = ev.to_mesh()
+        V_ = np.array([tuple(v.co) for v in m2.vertices]); F_ = [tuple(p.vertices) for p in m2.polygons]
+        ev.to_mesh_clear(); return V_, F_
+    lo, hi_ = 0.02, 0.6
+    for _ in range(14):     # find the ratio that lands on the budget
+        r_ = (lo + hi_) / 2; LV, LF = decimate(r_)
+        if len(LF) > TRIS: hi_ = r_
+        else: lo = r_
+    LV, LF = decimate(lo)
+    bpy.data.objects.remove(rob, do_unlink=True)
+    # which full-body triangle each light point lies on (eyes bind only to the eyes, the body only to the body)
+    iseye = np.zeros(len(REF), bool); iseye[EYES] = True
+    tri_eye = iseye[tri].all(1)
+    par = list(range(len(LV)))
+    def find(x):
+        while par[x] != x: par[x] = par[par[x]]; x = par[x]
+        return x
+    for f in LF:
+        for v in f[1:]: par[find(v)] = find(f[0])
+    comp = np.array([find(i) for i in range(len(LV))])
+    from mathutils.kdtree import KDTree
+    kd = KDTree(len(REF))
+    for i, p in enumerate(REF): kd.insert(Vector(p), i)
+    kd.balance()
+    near_eye = np.array([iseye[kd.find(Vector(p))[1]] for p in LV])
+    eye_comp = {c for c in set(comp) if near_eye[comp == c].mean() > 0.5}
+    BT = np.zeros((len(LV), 3), int); BW_ = np.zeros((len(LV), 3))
+    for want_eye in (False, True):
+        ts = np.where(tri_eye == want_eye)[0]
+        tb = BVHTree.FromPolygons([tuple(REF[k]) for k in range(len(REF))], [tuple(tri[t]) for t in ts])
+        for i in np.where(np.array([c in eye_comp for c in comp]) == want_eye)[0]:
+            loc, _, fi, _ = tb.find_nearest(Vector(LV[i])); t = tri[ts[fi]]
+            a_, b_, c_ = REF[t[0]], REF[t[1]], REF[t[2]]; p_ = np.array(loc)
+            v0, v1, v2 = b_ - a_, c_ - a_, p_ - a_
+            d00, d01, d11, d20, d21 = v0 @ v0, v0 @ v1, v1 @ v1, v2 @ v0, v2 @ v1
+            den = d00 * d11 - d01 * d01 or 1e-12
+            v = (d11 * d20 - d01 * d21) / den; w = (d00 * d21 - d01 * d20) / den
+            BT[i] = t; BW_[i] = np.clip([1 - v - w, v, w], 0, 1); BW_[i] /= BW_[i].sum()
+    np.savez(LIGHT, LV=LV, LF=np.array(LF), BT=BT, BW=BW_, tris=TRIS, face=FACE, full=len(REF))
+    print('LIGHT mesh saved to', LIGHT)
+def bind(A): return np.einsum('ij,ij...->i...', BW_, A[BT])
+LP = bind(PB); LK = {k: bind(P) for k, P in KEYS.items()}; LW = bind(W); LR = bind(REST)
+_lh = bind(hw); headtris = sum(1 for f in LF if _lh[list(f)].mean() > 0.5)
+print('LIGHT', len(LF), 'triangles,', headtris, 'on the head;', len(LV), 'points (full body', len(tri), 'triangles)')
+
+me = bpy.data.meshes.new('Body'); me.from_pydata([tuple(p) for p in LP], [], LF); me.update()
+body = bpy.data.objects.new('Body', me); col.objects.link(body)
+for p in me.polygons: p.use_smooth = True
+body.shape_key_add(name='Basis')
+for nm, P in LK.items():
+    k = body.shape_key_add(name=nm)
+    for i, p in enumerate(P): k.data[i].co = Vector(p)
+for nm in OURS: body.vertex_groups.new(name=nm)
+top4 = np.argsort(-LW, axis=1)[:, :4]
+for i in range(len(LP)):
+    ks = [k for k in top4[i] if LW[i, k] > 1e-3]; tot = sum(LW[i, k] for k in ks)
+    for k in ks: body.vertex_groups[k].add([i], float(LW[i, k] / tot), 'REPLACE')
+body.parent = arm; body.modifiers.new('Armature', 'ARMATURE').object = arm
 ca = me.color_attributes.new('rest', 'FLOAT_COLOR', 'POINT')
-for i in range(len(PB)): ca.data[i].color = (float(xt[i] + 0.5), float(yt[i] + 0.5), float(zt[i] / 2), float(1 - a[i]))
+for i in range(len(LP)): ca.data[i].color = tuple(float(x) for x in LR[i])
 me.color_attributes.active_color = ca
 me.materials.append(bpy.data.materials.new('Body'))
 
-# ---------- 7. hair, beards and moustaches: the old ones, carried onto this head by the same face landmarks
+# ---------- 8. hair, beards and moustaches: the old ones, carried onto this head by the same face landmarks
 HAIRS = []
 import tempfile, shutil
 tmp = os.path.join(tempfile.mkdtemp(), 'old.gltf'); shutil.copy(OLD, tmp)
@@ -319,7 +387,7 @@ def width_at(P, z, band=0.006, sel=None):
     if sel is not None: m_ &= sel
     return (np.abs(P[m_, 0]).max(), P[m_, 1].min(), P[m_, 1].max()) if m_.any() else None
 old_head = OB[:, 2] > OZ[0]; new_head = (headw > 0.5)
-bvh = BVHTree.FromPolygons([tuple(p) for p in PB], faces)
+bvh = BVHTree.FromPolygons([tuple(p) for p in LP], LF)
 for o in new:
     if o.type != 'MESH' or o is oldbody or not o.name.startswith(('Hair_', 'Beard_', 'Moustache_')): continue
     P = world_verts(o); Q = P.copy()
@@ -335,7 +403,10 @@ for o in new:
     for i in range(len(Q)):   # nothing may sink into the new head
         loc, nor, _, _ = bvh.find_nearest(Vector(Q[i]))
         if loc is not None and (Vector(Q[i]) - loc).dot(nor) < 0.002: Q[i] = tuple(loc + nor * 0.002)
-    m2 = o.data.copy(); m2.shape_keys and None
+    m2 = o.data.copy()
+    _bm = bmesh.new(); _bm.from_mesh(m2)            # drop the old model's skin weights (stale group indices)
+    for _l in list(_bm.verts.layers.deform): _bm.verts.layers.deform.remove(_l)
+    _bm.to_mesh(m2); _bm.free()
     for v, q in zip(m2.vertices, Q): v.co = Vector(q)
     h = bpy.data.objects.new(o.name, m2); col.objects.link(h); h.vertex_groups.clear(); HAIRS.append(h)
 for o in new: bpy.data.objects.remove(o, do_unlink=True)
@@ -354,14 +425,14 @@ for h in HAIRS:
     for v in h.data.vertices:
         ws = {gv.group: gv.weight for gv in v.groups if gv.group in keep}; tot = sum(ws.values())
         for gv in list(v.groups):
-            if gv.group not in keep: h.vertex_groups[gv.group].remove([v.index])
+            if gv.group not in keep and gv.group < len(h.vertex_groups): h.vertex_groups[gv.group].remove([v.index])
         if tot < 1e-4: h.vertex_groups[hi].add([v.index], 1.0, 'REPLACE')
         else:
             for gi, w in ws.items(): h.vertex_groups[gi].add([v.index], w / tot, 'REPLACE')
     h.modifiers.new('Armature', 'ARMATURE').object = arm; h.parent = arm
 print('HAIR', [h.name for h in HAIRS])
 
-# ---------- 8. idle and walk (as rpgbody.py): chest up, arms hanging out and down
+# ---------- 9. idle and walk (as rpgbody.py): chest up, arms hanging out and down
 for a_ in list(bpy.data.actions):
     if a_.name in ('Idle', 'Walk', 'Aim'): bpy.data.actions.remove(a_)
 pose, bake = g['pose'], g['bake']
