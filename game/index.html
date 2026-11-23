@@ -370,6 +370,7 @@ function biomeMix(t){ // returns [indexA, indexB, k]
   }
   const L=BIOMES.length-1;return [L,L,0];
 }
+const PADS=[];
 function heightAt(x,z){
   if(PLAN){const q=P2W(x,z);x=q[0];z=q[1];}
   const t=warpDist(x,z), m=biomeMix(t), A=BIOMES[m[0]], B=BIOMES[m[1]];
@@ -392,6 +393,8 @@ function heightAt(x,z){
   const dp=Math.hypot(x-PORT.x,z-PORT.z); if(dp<PORT.r){h=lerp(0.9,h,smooth(22,PORT.r,dp));}
   {const rd=roadDist(x,z);if(rd<10){const gr=rhoW(x,z),g=gr>CITY.r-2&&gr<CITY.r+160?1-smooth(CITY.r+30,CITY.r+160,gr):0,tgt=lerp(Math.max(h,0.6),3,g);h=lerp(tgt,h,smooth(5.5,10,rd));}}   // roads ride above wet ground, with sloping banks
   const dt=Math.hypot(x-TOWER.x,z-TOWER.z); if(dt<20){h=lerp(TOWER.h,h,smooth(11,20,dt));}
+  for(const Q of PADS){const dx=x-Q.x,dz=z-Q.z;if(Math.abs(dx)>Q.r||Math.abs(dz)>Q.r)continue;const c=Math.cos(Q.ry),sn=Math.sin(Q.ry),lx=Math.abs(dx*c-dz*sn)-Q.hw,lz=Math.abs(dx*sn+dz*c)-Q.hd,o=Math.hypot(Math.max(lx,0),Math.max(lz,0));
+    if(o<7)h=lerp(Q.y,h,smooth(0,7,o));}
   return h;
 }
 
@@ -2109,7 +2112,7 @@ function buildCityHouses(){
         plinths.push({x:x+cx*c+cz*sn,z:z-cx*sn+cz*c,ry,y:y+0.05,sx:(b.max.x-b.min.x)*0.9,sy:hi-lo+0.6,sz:(b.max.z-b.min.z)*0.9,tint:[0.82,0.8,0.76]});}else y=lo-0.12;}
     const e={x,y,z,ry,tint};(lists[name]=lists[name]||[]).push(e);return e;};
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
-  LANDMARK_AT.length=0; LM_RECTS.length=0;
+  LANDMARK_AT.length=0; LM_RECTS.length=0; PADS.length=0;
   for(const L of LANDMARKS){const u=L.s||1,[w0,d0]=KIT.size[L.name],w=w0*u,d=d0*u; let x,z,ry;
     for(let push=0;push<=20;push+=0.5){
     if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(8.6+d/2+push)*L.side;x=CITY.x+Math.cos(L.av)*L.r+px*off;z=CITY.z+Math.sin(L.av)*L.r+pz*off;ry=Math.atan2(-px*L.side,-pz*L.side);}
@@ -2117,6 +2120,7 @@ function buildCityHouses(){
     if(L.plaza)break;let onRoad=false;PAVE_NOLANE=true;const c0=Math.cos(ry),s0=Math.sin(ry);for(let u=-1;u<=1&&!onRoad;u+=0.25)for(let v=-1;v<=1&&!onRoad;v+=0.25){const lx=u*(w/2-0.2),lz=v*(d/2-0.2);if(cityPaved(x+lx*c0+lz*s0,z-lx*s0+lz*c0)>0.5)onRoad=true;}
     PAVE_NOLANE=false;if(!onRoad)break;}
     PAVE_NOLANE=false;LM_RECTS.push({x,z,hw:w/2+1.2,hd:d/2+1.2,rot:ry});
+    if(!L.plaza){const fl=d/2+3.5,h0=heightAt(x+fl*Math.sin(ry),z+fl*Math.cos(ry)),[wx,wz,wry]=warpPose(x,z,ry);PADS.push({x:wx,z:wz,ry:wry,hw:w/2+1.0,hd:d/2+1.0,y:h0,r:Math.hypot(w,d)/2+9});}
     {const c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;for(const [p,q] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=p*w*0.48,lz=q*d*0.48,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}
      const y=hi>lo+0.3?hi-0.05:lo-0.15; if(hi>lo+0.3)plinths.push({x,z,ry,y:y+0.05,sx:w+0.4,sy:hi-lo+0.7,sz:d+0.4,tint:[0.82,0.8,0.76]});
      (lists[L.name]=lists[L.name]||[]).push({x,y,z,ry,tint:[1,1,1],s:u});} colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d,name:L.name,u,y:lists[L.name][lists[L.name].length-1].y});}
@@ -3728,7 +3732,8 @@ function buildInteriors(){
     {const W2=(lx,lz)=>[L.x+lx*c+lz*sn,L.z-lx*sn+lz*c],zf0=-S.face*u+((S.floor?0:0.35)),pf=(KIT.size[L.name]?KIT.size[L.name][1]*u/2+0.25:zf0),zf=L.y>hi-0.2?Math.max(zf0,pf):zf0,out=W2(ddx,zf+4),hs=heightAt(out[0],out[1]),rise=y-hs;   // steps up to the door when the hub stands high
       if(rise>0.3){const n=Math.ceil(rise/0.22),run=n*0.34,g=new THREE.Group(),w=gw+1.6;for(let k2=0;k2<n;k2++){const top=y-(k2+1)*rise/n+rise/n,h=top-hs+0.4;
           g.add(box(w,h,0.36,cityStone,ddx,top-h/2,zf+0.18+k2*0.34));}
-        for(const s2 of[-1,1])g.add(box(0.45,rise+0.6,run+0.2,cityStone,ddx+s2*(w/2+0.22),hs+(rise+0.6)/2-0.3,zf+run/2));
+        for(let k2=0;k2<n;k2++){const top=y-(k2+1)*rise/n+rise/n;for(const s2 of[-1,1])g.add(box(0.45,top-hs+0.75,0.36,cityStone,ddx+s2*(w/2+0.22),hs+(top-hs+0.75)/2-0.3,zf+0.18+k2*0.34));
+          g.add(box(w+0.04,0.06,0.08,stoneDark,ddx,top+0.005,zf+0.34+k2*0.34));}
         g.position.set(L.x,0,L.z);g.rotation.y=L.ry;landmarks.add(g);const m=W2(ddx,zf+run/2);RAMPS.push({x:m[0],z:m[1],ry:L.ry,hw:w/2,hl:run/2,y0:y,y1:hs,flip:1});
         for(const s2 of[-1,1]){const q=W2(ddx+s2*(w/2+0.22),zf+run/2);colliders.push({x:q[0],z:q[1],hw:0.25,hd:run/2,rot:L.ry});}}}
     const I=buildInterior(label,{...def,W,D,H,ddx,gw,gh},i,{x:L.x,z:L.z,ry:L.ry,y,cy});
