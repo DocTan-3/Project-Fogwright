@@ -89,7 +89,7 @@ vec3 paintClothes(vec3 p,float ax,bool armR);
 vec3 linen(vec3 p,float k);
 vec4 femWrap(vec3 p){ // a linen chest wrap: colour and coverage
   float band=inside(abs(p.z-1.3)-0.062); vec3 w=linen(p,1.)*1.04;
-  w*=1.-0.12*inside(abs(fract((p.z-1.238)*48.)-0.5)-0.06); w*=mix(0.85,1.,smoothstep(1.238,1.25,p.z))*mix(1.,0.85,smoothstep(1.35,1.362,p.z));
+  w*=1.-0.04*smoothstep(0.35,0.5,abs(fract((p.z-1.238)*30.+0.6*vnoise(p.xz*40.))-0.5));   // soft, irregular folds w*=mix(0.85,1.,smoothstep(1.238,1.25,p.z))*mix(1.,0.85,smoothstep(1.35,1.362,p.z));
   w*=1.-0.08*smoothstep(0.03,0.07,p.y);                                               // the back, in its own shade
   return vec4(w,band);}
 // ---- the base layer: bare skin, shaded softly like a painted texture, and plain undyed underclothes

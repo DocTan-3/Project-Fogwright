@@ -108,7 +108,7 @@ islands = find_islands(); print('pieces after weld', len(islands), sorted(len(k)
 if RACE == 'female':   # more triangles over the bust, so it rounds smoothly
     _b = bmesh.new(); _b.from_mesh(body.data)
     _e = [e for e in _b.edges if all(1.2 < v.co.z < 1.37 and 0.0 < abs(v.co.x) < 0.15 and v.co.y < 0.0 for v in e.verts)]
-    bmesh.ops.subdivide_edges(_b, edges=_e, cuts=1, use_grid_fill=True, smooth=0.5)
+    bmesh.ops.subdivide_edges(_b, edges=_e, cuts=2, use_grid_fill=True, smooth=0.5)
     bmesh.ops.triangulate(_b, faces=[f for f in _b.faces if len(f.verts) > 4])
     _b.to_mesh(body.data); _b.free(); V = body.data.vertices
     print('BUST subdivided edges', len(_e), 'tris', sum(len(p.vertices) - 2 for p in body.data.polygons))
@@ -263,17 +263,16 @@ if RACE in RACES:
             if 1.38 < z < 1.56 and 0.035 < ax < 0.24:   # small traps: a gentle slope from the neck to the shoulder
                 t = math.exp(-((ax - 0.11) / 0.06) ** 2) * math.exp(-((z - 1.465) / 0.045) ** 2)
                 v.co.z -= 0.038 * t; v.co.x -= math.copysign(0.008, x) * t
-            if y > 0.03 or abs(x) > 0.2: continue
-            # a rounded dome, fuller in its lower half, easing into the chest at its rim
-            dz = z - 1.278; ry = 0.062 if dz > 0 else 0.052
-            d = math.sqrt(((ax - 0.077) / 0.06) ** 2 + (dz / ry) ** 2)
-            if d < 1.35:
-                dome = (1 - min(d, 1.0) ** 2) ** 0.55 if d < 1 else 0.0
-                rim = math.exp(-((d - 0.95) / 0.18) ** 2) * 0.18
-                k = max(dome, rim) * (1 - sm(1.15, 1.35, d))
-                v.co.y -= 0.072 * k
-                v.co.z -= 0.01 * k * (1 if dz < 0 else 0.4)
-                v.co.x += math.copysign(0.01, x) * k * (ax - 0.04) / 0.06
+            # the bust, built fresh: press the chest into a smooth rounded front, then add two domes that fade into it
+            cx_, cy_, cz_ = v.co
+            if not (1.15 < cz_ < 1.42 and abs(cx_) < 0.16 and cy_ < 0.02) or i in ARMV: continue
+            ax_ = abs(cx_)
+            plane = 0.008 - 0.097 * max(0.0, 1 - (ax_ / 0.134) ** 2.4) ** (1 / 2.4)
+            dz_ = (cz_ - 1.27) / (1.2 if cz_ > 1.27 else 0.85)
+            q_ = ((ax_ - 0.079) ** 2 + dz_ ** 2) / 0.074 ** 2
+            bulge = 0.066 * (1 - q_) ** 1.5 if q_ < 1 else 0.0
+            w_ = sm(1.15, 1.2, cz_) * (1 - sm(1.33, 1.42, cz_)) * (1 - sm(0.125, 0.16, ax_)) * (1 - sm(-0.035, 0.02, cy_))
+            v.co.y = cy_ + (plane - bulge - cy_) * w_
         # a real neck: the shoulder line slopes gently down from beside the neck, well below the chin
         reg = []
         for i, v in enumerate(body.data.vertices):
@@ -308,8 +307,8 @@ if RACE in RACES:
             if 1.465 < z < 1.565 and ax < 0.1 and y > -0.05:          # a slender neck, about 10 cm across
                 w = sm(1.465, 1.49, z) * (1 - sm(1.535, 1.56, z))
                 v.co.x = x * (1 - 0.3 * w)
-        bust = [i for i, c in enumerate(ORIG) if 1.2 < c.z < 1.37 and abs(c.x) < 0.16 and c.y < 0.0 and i not in ARMV and nb2[i]]
-        for _ in range(3):
+        bust = [i for i, c in enumerate(ORIG) if 1.18 < c.z < 1.45 and abs(c.x) < 0.16 and c.y < 0.0 and i not in ARMV and nb2[i]]
+        for _ in range(6):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in bust}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.6 + c_ * 0.4
         for i, c in enumerate(ORIG):   # a slender neck: the column drawn in toward its centre
