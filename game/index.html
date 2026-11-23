@@ -420,7 +420,7 @@ vec2 bricks(vec2 p,vec2 s,float j){p/=s;float row=floor(p.y);p.x+=mod(row,2.)*.5
 // rough cobbles where there is none, big flags on the avenues and the plaza.
 #define CITY_SPAN 620.
 vec4 qLook(float q){ // grass in yards, soot, sand, moss
-  return q<.5?vec4(.05,.85,0.,0.):q<1.5?vec4(.15,.2,.1,0.):q<2.5?vec4(.4,.2,0.,.35):q<3.5?vec4(.75,0.,0.,.7):q<4.5?vec4(.3,.15,0.,.25):q<5.5?vec4(.25,0.,.05,0.):q<6.5?vec4(.8,0.,0.,.35):vec4(.05,0.,.85,0.);}
+  return q<.5?vec4(.02,.85,0.,0.):q<1.5?vec4(.06,.25,.1,0.):q<2.5?vec4(.14,.25,0.,.35):q<3.5?vec4(.35,.05,0.,.7):q<4.5?vec4(.1,.2,0.,.25):q<5.5?vec4(.1,.05,.05,0.):q<6.5?vec4(.4,.05,0.,.35):vec4(.02,.05,.85,0.);}
 vec3 qTint(float q){ // a whisper of each people's colour in the stone
   return q<.5?vec3(.93,.95,1.):q<1.5?vec3(1.04,1.,.96):q<2.5?vec3(1.02,1.,.97):q<3.5?vec3(.99,1.02,.97):q<4.5?vec3(.96,.99,1.04):q<5.5?vec3(1.08,1.07,1.04):q<6.5?vec3(1.05,1.02,.95):vec3(1.07,1.01,.92);}
 vec3 cityGround(vec2 w,float paved,float wealth){
@@ -436,7 +436,7 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   float aa=1.-smoothstep(.06,.3,length(fwidth(w)));                                       // patterns fade out with distance, no shimmer
   // yards: trodden earth, grass where it is let grow, sand blown in, cinders where the forges are
   float g=smoothstep(1.-lk.x-.18,1.-lk.x+.18,gn(w*.18)*.6+n*.4);
-  vec3 yard=mix(vec3(.40,.34,.27),vec3(.32,.42,.22),g); yard=mix(yard,vec3(.68,.58,.42),lk.z*.8); yard*=(.9+.12*n)*(1.-.45*lk.y);
+  vec3 yard=mix(vec3(.33,.29,.24),vec3(.30,.38,.21),g); yard=mix(yard,vec3(.42,.40,.36)*(.85+.3*gh(floor(w*1.3))),.35*smoothstep(.5,.8,gn(w*.4+2.)));   // trodden earth, broken stone, a little grass yard=mix(yard,vec3(.68,.58,.42),lk.z*.8); yard*=(.9+.12*n)*(1.-.45*lk.y);
   // the street stone
   float rough=smoothstep(.42,.12,wealth)+(gn(w*.15)-.5)*.25;
   vec2 b=bricks(w,vec2(.62,.38),.035); vec2 cb=cobble(w*1.7); float useC=smoothstep(.42,.58,rough);
@@ -445,7 +445,7 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   vec3 jc=mix(vec3(.24,.22,.20),vec3(.62,.54,.40),lk.z); jc=mix(jc,vec3(.22,.32,.16),lk.w*.8); jc=mix(jc,vec3(.08,.08,.09),lk.y*.6);
   vec3 pv=mix(stone,jc,joint*aa*.85);
   pv*=1.-.3*lk.y*(.55+.45*gn(w*.12));                                                       // soot settles on the stone by the forges
-  float grand=max(1.-smoothstep(9.,11.,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
+  float grand=max(1.-smoothstep(7.,8.5,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
   if(grand>0.){vec2 fb=bricks(vec2(a*r,r),vec2(1.4,.9),.05);vec3 fl=vec3(.55,.52,.47)*tint*(.88+.2*mix(.5,fb.y,aa));fl=mix(fl,jc,fb.x*aa*.7);pv=mix(pv,fl,grand);}
   vec3 c=mix(yard,pv,paved);
   // wear follows the place: dirt gathers where street meets yard and along the kerbs, stays light where feet keep the
@@ -970,14 +970,38 @@ vec3 kitSurface(vec3 c,float m,vec3 p,vec3 n){
   else if(m<11.5){c*=.96+.05*g; c*=1.-.08*smoothstep(.48,.5,abs(kn(uv*1.2)-.5)+.47);}                                                    // marble with faint veins
   else{float pl=fract(along/.19); c*=(.84+.24*kh(vec2(floor(along/.19),3.)))*(.86+.18*kn(vec2(along*40.,p.y*2.)))*(1.-.4*(1.-smoothstep(0.,.06,min(pl,1.-pl))));}  // planks
   return c;
+}
+float kWin=0.;
+// Side and back walls get what the street fronts have in geometry: windows in rows by floor, sills and lintels, a few
+// bricked up or shuttered, lit at night. Every wall is weathered: grime rising from the ground, rain streaks below.
+// (kmat >= 50 marks parts that must stay plain: chimneys, pipes, castle walls.)
+vec3 kitWalls(vec3 c,float km,vec3 lp,vec3 ln,float seed){
+  float m=mod(km,50.); if(m<.5||abs(ln.y)>.3)return c;
+  bool wall=(m<4.5&&m>.5)||m>9.5;
+  float along=abs(ln.x)>.5?lp.z*sign(ln.x):-lp.x*sign(ln.z);
+  if(wall){c*=1.-.22*(1.-smoothstep(0.,1.8,lp.y)); c*=1.-.12*smoothstep(.62,.95,kn(vec2(along*1.3,lp.y*.12+seed*9.)));}
+  if(!wall||km>49.5||ln.z>.5||lp.y<.9)return c;
+  float fl=(lp.y-.3)/3., row=floor(fl), fy=fract(fl), col=floor(along/2.6+.5), fx=fract(along/2.6+.5);
+  float h=kh(vec2(col+seed*31.,row+seed*7.));
+  if(h<.18)return c;                                                                       // bricked up, or never had one
+  float inx=step(.33,fx)*step(fx,.67), iny=step(.28,fy)*step(fy,.76);
+  float frame=step(.30,fx)*step(fx,.70)*step(.25,fy)*step(fy,.80)*(1.-inx*iny);
+  if(frame>0.)return c*1.18+.04;                                                           // stone sill, lintel and jambs
+  if(inx*iny<.5)return c;
+  float fw=fwidth(fx)+fwidth(fy);
+  if(h<.32)return vec3(.2,.27,.18)*(.9+.12*step(.5,fx))*(1.-.5*(1.-smoothstep(0.,.008+fw,abs(fx-.5))));   // shutters closed
+  vec3 gl=mix(vec3(.10,.11,.14),vec3(.24,.27,.32),smoothstep(.7,.3,fy));
+  float mull=max(1.-smoothstep(.0,.012+fw,abs(fx-.5)),1.-smoothstep(.0,.015+fw,abs(fy-.55)))*(1.-smoothstep(.02,.07,fw));
+  kWin=step(.55,h)*(1.-mull);
+  return mix(gl,vec3(.2,.17,.14),mull);
 }`;
 kitMat.onBeforeCompile=sh=>{
   sh.uniforms.uNight=kitUniforms.uNight;
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float glow;\nattribute float kmat;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;')
-    .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;vKM=kmat;\n{mat4 mm=modelMatrix;\n#ifdef USE_INSTANCING\nmm=modelMatrix*instanceMatrix;\n#endif\nvKP=(mm*vec4(transformed,1.0)).xyz;vKN=normalize(mat3(mm)*objectNormal);}\n#ifdef USE_INSTANCING\nvec4 o4=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);\n#else\nvec4 o4=modelMatrix*vec4(0.0,0.0,0.0,1.0);\n#endif\nvSeed=fract(sin(dot(floor(o4.xz),vec2(12.9898,78.233)))*43758.5453);');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\n'+KIT_GLSL)
-    .replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=kitSurface(diffuseColor.rgb,vKM,vKP,normalize(vKN));')
-    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nif(vGlow>1.5){totalEmissiveRadiance+=vec3(0.62,0.42,1.0)*(0.3+1.1*uNight);}else if(vGlow>0.0){float lit=step(0.38,fract(vGlow*7.13+vSeed*3.7));totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*lit*0.8;}');
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float glow;\nattribute float kmat;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\nvarying vec3 vLP;\nvarying vec3 vLN;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;vKM=kmat;vLP=transformed;vLN=objectNormal;\n{mat4 mm=modelMatrix;\n#ifdef USE_INSTANCING\nmm=modelMatrix*instanceMatrix;\n#endif\nvKP=(mm*vec4(transformed,1.0)).xyz;vKN=normalize(mat3(mm)*objectNormal);}\n#ifdef USE_INSTANCING\nvec4 o4=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);\n#else\nvec4 o4=modelMatrix*vec4(0.0,0.0,0.0,1.0);\n#endif\nvSeed=fract(sin(dot(floor(o4.xz),vec2(12.9898,78.233)))*43758.5453);');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\nvarying vec3 vLP;\nvarying vec3 vLN;\n'+KIT_GLSL)
+    .replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=kitWalls(kitSurface(diffuseColor.rgb,mod(vKM,50.),vKP,normalize(vKN)),vKM,vLP,normalize(vLN),vSeed);')
+    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nif(vGlow>1.5){totalEmissiveRadiance+=vec3(0.62,0.42,1.0)*(0.3+1.1*uNight);}if(kWin>0.){totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*kWin*0.7;}\nif(vGlow>1.5){}else if(vGlow>0.0){float lit=step(0.38,fract(vGlow*7.13+vSeed*3.7));totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*lit*0.8;}');
 };
 const _unitBox=new THREE.BoxGeometry(1,1,1).toNonIndexed();
 let _winSeed=1;
@@ -988,7 +1012,7 @@ class KitB{
     g.applyMatrix4(m); let mt=0; if(typeof col==='string'&&col.includes(':')){const [k2,h]=col.split(':');mt=KMAT[k2]||0;col=h;}
     const n=g.attributes.position.count,c=new THREE.Color(col),ca=new Float32Array(n*3),ga=new Float32Array(n),ma=new Float32Array(n);
     const gv=glow===2?2:glow?((_winSeed=(_winSeed*16807)%2147483647)/2147483647)*0.98+0.02:0;   // 2: the portal's violet glow
-    for(let i=0;i<n;i++){ca[i*3]=c.r;ca[i*3+1]=c.g;ca[i*3+2]=c.b;ga[i]=gv;ma[i]=mt;}
+    if(this._plain)mt+=50;for(let i=0;i<n;i++){ca[i*3]=c.r;ca[i*3+1]=c.g;ca[i*3+2]=c.b;ga[i]=gv;ma[i]=mt;}
     g.setAttribute('color',new THREE.BufferAttribute(ca,3)); g.setAttribute('glow',new THREE.BufferAttribute(ga,1)); g.setAttribute('kmat',new THREE.BufferAttribute(ma,1));
     g.userData.small=!!this.small; this.parts.push(g);
   }
@@ -1000,9 +1024,9 @@ class KitB{
   glowBox(sx,sy,sz,x,y,z,col){this._add(_unitBox.clone(),this.M(x,y,z,0,0,sx,sy,sz),col,2);}
   disc(R,t,x,y,z,col){this._add(new THREE.CylinderGeometry(R,R,t,12).toNonIndexed(),this.M(x,y,z),col);}                 // flat on the front wall   // small parts: drawn near, left out of the far version
   M(x,y,z,rz,rx,sx,sy,sz){const m=new THREE.Matrix4().makeTranslation(x,y,z);if(rz)m.multiply(new THREE.Matrix4().makeRotationZ(rz));if(rx)m.multiply(new THREE.Matrix4().makeRotationX(rx));if(sx!==undefined)m.multiply(new THREE.Matrix4().makeScale(sx,sy,sz));return m;}
-  box(sx,sy,sz,x,y,z,col,rz,rx){this._add(_unitBox.clone(),this.M(x,y,z,rz,rx,sx,sy,sz),col);}
+  box(sx,sy,sz,x,y,z,col,rz,rx){this._plain=Math.min(sx,sy)<2.4;this._add(_unitBox.clone(),this.M(x,y,z,rz,rx,sx,sy,sz),col);this._plain=false;}
   glass(sx,sy,sz,x,y,z,rz){this._add(_unitBox.clone(),this.M(x,y,z,rz,0,sx,sy,sz),'#2a2a33',true);}
-  cyl(r1,r2,h,seg,x,y,z,col,rx){const g=new THREE.CylinderGeometry(r2,r1,h,seg).toNonIndexed();g.rotateX(Math.PI/2);this._add(g,this.M(x,y,z+(rx?0:h/2),0,rx),col);}
+  cyl(r1,r2,h,seg,x,y,z,col,rx){const g=new THREE.CylinderGeometry(r2,r1,h,seg).toNonIndexed();g.rotateX(Math.PI/2);this._plain=Math.max(r1,r2)<3.5;this._add(g,this.M(x,y,z+(rx?0:h/2),0,rx),col);this._plain=false;}
   dome(r,x,y,z,col,seg){const g=new THREE.SphereGeometry(r,seg||10,5,0,Math.PI*2,0,Math.PI/2).toNonIndexed();g.rotateX(Math.PI/2);this._add(g,this.M(x,y,z),col);}
   poly(verts,faces,m,col,hint){ // convex shapes: every triangle is turned to face away from the centre
     const c=[0,0,0];verts.forEach(v=>{c[0]+=v[0]/verts.length;c[1]+=v[1]/verts.length;c[2]+=v[2]/verts.length;});const p=[];
@@ -1030,6 +1054,7 @@ class KitB{
       bg.setAttribute('color',new THREE.BufferAttribute(col,3));bg.setAttribute('glow',new THREE.BufferAttribute(gl,1));bg.setAttribute('kmat',new THREE.BufferAttribute(km,1));
       bg.rotateX(-Math.PI/2); // plan (z up, street at -y) to world (y up, street at +z)
       bg.computeBoundingSphere(); return bg;};
+    if(/WallSeg|Tower|Gatehouse|Aqueduct|Well|Span|Walkway|LaneLine|Portal|Granary|Garden|Clocktower|Observatory|Stall|Pen|Tent|Yurt|Pavilion|Wagon|Crates|Boom|Booth|Tannery|Smithy|Spire|Round|Hut/.test(name))for(const g of this.parts){const a=g.attributes.kmat.array;for(let i=0;i<a.length;i++)if(a[i]<49.5)a[i]+=50;}
     const bg=merge(this.parts), far=merge(this.parts.filter(g=>!g.userData.small)); this.parts.forEach(g=>g.dispose());
     KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; KIT.vents[name]=this.vents.map(([x,y,z,v])=>[x,z,-y,v]); return bg;
   }
@@ -1320,7 +1345,7 @@ function kArcade(){
   k.finish('Arcade',W+1,D+1);
 }
 function kSpan(){
-  const k=new KitB(),L=21,ir='#2a2c30',cu='#8a5a32';
+  const k=new KitB(),L=13.6,ir='#2a2c30',cu='#8a5a32';
   for(const sx of[-1,1]){k.box(0.4,0.4,11.5,sx*L/2,0,5.75,ir);k.box(0.8,0.8,0.3,sx*L/2,0,0.15,ir);}
   k._add(new THREE.CylinderGeometry(0.32,0.32,L,8).toNonIndexed().rotateZ(PI/2),k.M(0,0,10.2),cu);
   k._add(new THREE.CylinderGeometry(0.2,0.2,L,6).toNonIndexed().rotateZ(PI/2),k.M(0,0.6,10.9),ir);
@@ -1408,6 +1433,38 @@ function kWell(){ // a public well with a hand pump: every street's water
   k.sm(()=>{k.cyl(0.22,0.18,0.35,8,0,0,1.6,'planks:#6a4a2e');k.box(0.03,0.03,0.8,0,0,2.0,'#1e1f24');});
   k.finish('Well',3.4,2.4);
 }
+function kRoofShack(name,two){ // a shack on stilts built onto a roof: the city grows upward when it cannot grow out
+  const k=new KitB(),pl='planks:#6a5440',ir='iron:#4a4d52';
+  k.box(4.6,3.8,0.25,0,0,0.12,'planks:#5a4632'); for(const sx of[-1,1])for(const sy of[-1,1])k.box(0.18,0.18,5,sx*2.1,sy*1.7,-2.4,'#3a2c20');
+  k.box(3.6,3,2.6,0.3,0.3,1.55,pl); k.shed(4.2,3.8,2.95,3.4,0.3,0.3,0,ir); k.box(0.9,0.12,1.9,-0.6,-1.24,1.2,'#2a2018'); k.glass(0.8,0.14,0.6,1.2,-1.24,1.8);
+  k.cyl(0.12,0.12,2.2,6,1.6,1.2,2.9,'#2a2c30'); k.vent(1.6,1.2,5.2,0.4);
+  k.sm(()=>{k.box(4.4,0.06,0.06,0,-1.85,1.0,'#3a2c20');for(let i=0;i<6;i++)k.box(0.05,0.05,0.9,-2+i*0.8,-1.85,0.55,'#3a2c20');
+    for(const sx of[-1.9,-1.4])k.box(0.07,0.07,5,sx,-1.95,-2.4,'#3a2c20');for(let i=0;i<10;i++)k.box(0.6,0.05,0.05,-1.65,-1.95,-4.6+i*0.5,'#3a2c20');});
+  if(two){k.box(2.6,2.4,2.2,0.6,0.6,4.6,'planks:#5e4a36');k.shed(3,2.8,5.7,6.1,0.6,0.6,0,ir);k.glass(0.7,0.14,0.55,0.6,-0.62,4.7);k.cyl(0.8,0.8,1.4,10,-1.2,0.8,3.4,'planks:#6a4a2e');}
+  k.finish(name,4.6,3.8);
+}
+function kBridgeRoom(name,L){ // a room built across an alley, from one house to the other
+  const k=new KitB(),pl=name==='BridgeRoomB'?'plaster:#8a7a62':'planks:#655038';
+  k.box(L,3,3,0,0,6.6,pl); k.shed(L+0.4,3.4,8.1,8.6,0,0,0,'iron:#4a4d52'); k.box(L,3.2,0.3,0,0,5.0,'#3a2c20');
+  for(const sx of[-1,1]){k.pipe(sx*(L/2-0.2),0,3.2,sx*(L/2-1.6),0,5.0,0.08,'#2a2c30');}
+  for(const x of[-1.6,0,1.6])for(const sy of[-1,1])k.glass(0.8,0.12,0.8,x,sy*1.52,6.8);
+  k.sm(()=>{k.box(0.04,0.04,0.9,0,-1.7,4.4,'#1e1f24');k.glass(0.3,0.3,0.4,0,-1.7,3.8);k.pipe(-L/2,1.3,8.4,L/2,1.3,8.4,0.12,'#8a5a32');});
+  k.finish(name,L,3.4);
+}
+function kWalkway(){ // a plank walkway between upper floors, with a lantern under it
+  const k=new KitB(),L=7,wd='planks:#6a5440';
+  k.box(L,1.5,0.18,0,0,5.6,wd); for(const sy of[-0.7,0.7]){k.box(L,0.06,0.06,0,sy,6.6,'#3a2c20');for(let i=0;i<8;i++)k.box(0.05,0.05,1,-L/2+0.4+i*0.88,sy,6.1,'#3a2c20');}
+  for(const sx of[-1,1])k.pipe(sx*(L/2-0.1),0,3.6,sx*(L/2-1.4),0,5.5,0.07,'#2a2c30');
+  k.sm(()=>{k.box(0.04,0.04,0.7,0.6,0,5.15,'#1e1f24');k.glass(0.32,0.32,0.42,0.6,0,4.6);for(let i=0;i<3;i++)k.box(0.6,0.04,0.7,-2+i*0.9,0.72,6.15,['#c9b48e','#8a5a5a','#6a7a8a'][i]);});
+  k.finish('Walkway',L,1.5);
+}
+function kLaneLine(){ // a line across the lane: lanterns, and washing hung out to dry
+  const k=new KitB(),L=7;
+  for(let i=0;i<6;i++){const x0=-L/2+i*L/6,x1=x0+L/6,sg=t=>5.4-0.5*(1-((t/(L/2))**2));k.pipe(x0,0,sg(x0),x1,0,sg(x1),0.025,'#1e1f24');}
+  k.sm(()=>{for(const x of[-1.6,1.4]){k.box(0.03,0.03,0.4,x,0,4.85,'#1e1f24');k.glass(0.3,0.3,0.36,x,0,4.5);}
+    for(let i=0;i<5;i++)k.box(0.55,0.04,0.6+0.2*(i%2),-2.6+i*1.2,0,4.75-0.1*(i%2),['#c9b48e','#8a5a5a','#e8e2d2','#5a6a7a','#9a8a5a'][i]);});
+  k.finish('LaneLine',L,0.6);
+}
 function kBarracks(){
   const k=new KitB(),W=20,D=12,y=-D/2,st='stone:#9a938a',watch='#3f3a6c';
   k.box(W,D,8,0,0,4,st); k.box(W+0.4,D+0.4,0.5,0,0,8.25,'stone:#7f786d'); k.box(W-1,D-1,0.2,0,0,8.4,'slate:#4a5a78');
@@ -1482,7 +1539,7 @@ function kWalls(){
 (function buildKit(){
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
-  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); kLab(); kClock(); kPortal();
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
 })();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
 // and only blocks near the player cast shadows. One batch per house type for the whole city drew all of it from anywhere.
@@ -1531,7 +1588,7 @@ function pickHouse(a,r,rnd){ // a district builds its own people's houses; only 
   if(w>0.8&&(q==='Market Ward'||q==='Temple Ward'||q==='Aurelan Quarter')&&u<0.4)return 'Manor';
   if(w>0.25)return u<0.18?any(w>0.55?['RowA','RowB','RowC','Shopfront']:['RowB','Tenement4','Tenement']):any(own);
   if(w>0.08)return u<0.35?any(['Tenement','Tenement4','Tenement7']):any(own);
-  return u<0.45?(HUT[q]||'Shack'):u<0.75?any(['Tenement7','Tenement','Shack2']):any(own);
+  return u<0.22?(HUT[q]||'Shack'):u<0.75?any(['Tenement7','Tenement7','Tenement','Shack2']):any(own);
 }
 // two placed footprints overlap? (rotated rectangles, as the colliders store them)
 function rectHit(a,b){
@@ -1560,10 +1617,10 @@ function buildCityHouses(){
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
   LANDMARK_AT.length=0;
   for(const L of LANDMARKS){const u=L.s||1,[w0,d0]=KIT.size[L.name],w=w0*u,d=d0*u; let x,z,ry;
-    if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(11.5+d/2)*L.side;x=CITY.x+Math.cos(L.av)*L.r+px*off;z=CITY.z+Math.sin(L.av)*L.r+pz*off;ry=Math.atan2(-px*L.side,-pz*L.side);}
-    else{const r=L.plaza||L.R+L.side*(10+d/2);x=CITY.x+Math.cos(L.a)*r;z=CITY.z+Math.sin(L.a)*r;ry=L.plaza?Math.PI/2-L.a:-L.a+Math.PI/2+(L.side>0?Math.PI:0);}
+    if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(8.6+d/2)*L.side;x=CITY.x+Math.cos(L.av)*L.r+px*off;z=CITY.z+Math.sin(L.av)*L.r+pz*off;ry=Math.atan2(-px*L.side,-pz*L.side);}
+    else{const r=L.plaza||L.R+L.side*(6.8+d/2);x=CITY.x+Math.cos(L.a)*r;z=CITY.z+Math.sin(L.a)*r;ry=L.plaza?Math.PI/2-L.a:-L.a+Math.PI/2+(L.side>0?Math.PI:0);}
     (lists[L.name]=lists[L.name]||[]).push({x,y:heightAt(x,z)-0.3,z,ry,tint:[1,1,1],s:u}); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d});}
-  const blocked=(a,r,half)=>nearAvenue(a,r,10.5+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
+  const blocked=(a,r,half)=>nearAvenue(a,r,8.2+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
   const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterAR(a,r).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   // houses face the ring streets, on both kerbs of each ring
   for(const rr of RINGS)for(const side of[-1,1]){
@@ -1571,8 +1628,8 @@ function buildCityHouses(){
     let arc=rnd()*6; const L=2*Math.PI*rr;
     while(arc<L){
       const a0=arc/rr, name=pickHouse(a0,rr+side*14,rnd), [w,d]=KIT.size[name], poor=cityWealth(a0,rr)<0.3;
-      const gap=name==='Manor'?3:poor?0.8+rnd()*1.6:0.4+rnd()*0.6;
-      const r=rr+side*(10+d/2)+(poor?(rnd()-0.5)*1.4:0), a=(arc+w/2)/r;
+      const gap=name==='Manor'?2.5:poor?0.05+rnd()*0.4:0.1+rnd()*0.3;
+      const r=rr+side*(6.5+d/2)+(poor?(rnd()-0.5)*1.0:0), a=(arc+w/2)/r;
       if(blocked(a,r,w/2)||(side<0&&r-d/2<CITY.core+25)){arc+=4;continue;}
       {const x0=CITY.x+Math.cos(a)*r,z0=CITY.z+Math.sin(a)*r,r0=-a+Math.PI/2+(side>0?Math.PI:0),f={x:x0,z:z0,hw:w/2+0.5,hd:d/2+0.5,rot:r0};if(!footprintFree(f)||footOnLane(f)){arc+=2;continue;}}
       const x=CITY.x+Math.cos(a)*r, z=CITY.z+Math.sin(a)*r, ry=-a+Math.PI/2+(side>0?Math.PI:0)+(poor?(rnd()-0.5)*0.16:0);
@@ -1583,7 +1640,7 @@ function buildCityHouses(){
   for(const rr of RINGS){let arc=rnd()*20;const L=2*Math.PI*rr;while(arc<L){const a=arc/rr;arc+=34+rnd()*30;const q=quarterAR(a,rr).name;
     if((cityWealth(a,rr)>0.42&&q!=='Ferrin Quarter')||blocked(a,rr,16))continue;const x=CITY.x+Math.cos(a)*rr,z=CITY.z+Math.sin(a)*rr;put('Span',x,z,-a,[1,1,1]);}}
   for(const G of GATES){const x=CITY.x+Math.cos(G.a)*CITY.r,z=CITY.z+Math.sin(G.a)*CITY.r;LANDMARK_AT.push({x,z,label:G.label,r:30*G.s,ry:Math.atan2(-Math.cos(G.a),-Math.sin(G.a)),d:10});}
-  for(const rr of RINGS){let arc=rnd()*30,sd=1;const L=2*Math.PI*rr;while(arc<L){const a=arc/rr;arc+=60+rnd()*40;sd=-sd;const r=rr+sd*7.8,x=CITY.x+Math.cos(a)*r,z=CITY.z+Math.sin(a)*r;
+  for(const rr of RINGS){let arc=rnd()*30,sd=1;const L=2*Math.PI*rr;while(arc<L){const a=arc/rr;arc+=60+rnd()*40;sd=-sd;const r=rr+sd*4.6,x=CITY.x+Math.cos(a)*r,z=CITY.z+Math.sin(a)*r;
     if(blocked(a,r,4)||!footprintFree({x,z,hw:2,hd:1.6,rot:-a}))continue;put('Well',x,z,-a+Math.PI/2+(sd>0?Math.PI:0),[1,1,1]);colliders.push({type:'circle',x,z,r:1.6});}}
   // gardens behind the grand houses near the plaza
   for(let k=0,n=Math.floor(2*Math.PI*157/17);k<n;k++){const a=k/n*Math.PI*2;if(cityWealth(a,157)<0.62||blocked(a,157,6))continue;
@@ -1591,7 +1648,7 @@ function buildCityHouses(){
   // the back lanes: houses on both sides face the lane, sized to the room between the lane and the ring-street houses;
   // along the wall only the poor build, sheds and shacks leaning on the old stones
   const SMALL=['Shack','Shack2','Tenement4','Tenement','HutRound','HutFrame','HutAdobe','HutIron','HutTemple'];
-  for(const ln of LANES){if(!ln.back)continue;const maxD=ln.M<200?13:ln.M<260?9.5:6.2,wallLane=ln.M>260;
+  for(const ln of LANES){if(!ln.back)continue;const maxD=ln.M<200?13:ln.M<260?11:6.2,wallLane=ln.M>260;
     for(const side of(wallLane?[1]:[-1,1])){let carry=rnd()*6;
       for(let i=0;i<ln.pts.length-1;i++){const A=ln.pts[i],B=ln.pts[i+1],len=Math.hypot(B[0]-A[0],B[1]-A[1]);let t=carry;
         while(t<len){const px=A[0]+(B[0]-A[0])*t/len,pz=A[1]+(B[1]-A[1])*t/len,tx=(B[0]-A[0])/len,tz=(B[1]-A[1])/len,a=Math.atan2(pz-CITY.z,px-CITY.x),rr=Math.hypot(px-CITY.x,pz-CITY.z);
@@ -1602,8 +1659,26 @@ function buildCityHouses(){
           const [w,d]=KIT.size[name],off=LANE_HALF+0.5+d/2+(w0<0.25?rnd()*0.6:0),x=px+nx*side*off,z=pz+nz*side*off,ry=Math.atan2(-nx*side,-nz*side)+(w0<0.25?(rnd()-0.5)*0.12:0);
           const f={x,z,hw:w/2+0.3,hd:d/2+0.3,rot:ry};
           if(blocked(a,rr,w/2)||!footprintFree(f)||footOnLane({x,z,hw:w/2,hd:d/2,rot:ry},LANE_HALF+0.2)){t+=3;continue;}
-          put(name,x,z,ry,tintFor(a,rr,name)); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++; t+=w+(w0<0.3?0.3+rnd()*0.8:0.6+rnd()*1.2);}
+          put(name,x,z,ry,tintFor(a,rr,name)); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++; t+=w+(w0<0.3?0.1+rnd()*0.4:0.15+rnd()*0.5);}
         carry=t-len;}}}
+  {const TALL=/^(Row[ABC]|Tenement|Tenement4|Tenement7|Timberframe|Timberframe3|TimberframeB|Shopfront|Forge|Lodge|Longhouse)$/,H=[];
+    const height=n=>{const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();return g.boundingBox.max.y;};
+    for(const n in lists){if(!TALL.test(n))continue;const [w,d]=KIT.size[n],hh=height(n);for(const p of lists[n])H.push({x:p.x,z:p.z,y:p.y,ry:p.ry,hw:w/2,hd:d/2,h:hh,n});}
+    const grid=new Map(),key=(x,z)=>Math.floor(x/20)+','+Math.floor(z/20);for(const h of H){const k2=key(h.x,h.z);if(!grid.has(k2))grid.set(k2,[]);grid.get(k2).push(h);}
+    const houseAt=(x,z)=>{for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=grid.get((Math.floor(x/20)+i)+','+(Math.floor(z/20)+j));if(!l)continue;
+      for(const h of l){const c=Math.cos(h.ry),sn=Math.sin(h.ry),dx=x-h.x,dz=z-h.z,lx=dx*c-dz*sn,lz=dx*sn+dz*c;if(Math.abs(lx)<h.hw&&Math.abs(lz)<h.hd)return h;}}return null;};
+    // shacks on stilts on the roofs, more of them where the poor live
+    for(const h of H){const a=Math.atan2(h.z-CITY.z,h.x-CITY.x),r=Math.hypot(h.x-CITY.x,h.z-CITY.z),w0=cityWealth(a,r);if(h.h<6.5||rnd()>0.42-0.4*Math.min(1,Math.max(0,w0)))continue;
+      const bx=-Math.sin(h.ry)*h.hd*0.35,bz=-Math.cos(h.ry)*h.hd*0.35,sx=(rnd()-0.5)*h.hw*0.6;
+      put(rnd()<0.35?'RoofShack2':'RoofShack',h.x+bx+Math.cos(h.ry)*sx,h.z+bz-Math.sin(h.ry)*sx,h.ry+(rnd()<0.5?0:Math.PI)+(rnd()-0.5)*0.2,[0.9+rnd()*0.15,0.9+rnd()*0.12,0.9],h.y+h.h*0.72);}
+    // across the lanes: rooms bridging the alley, walkways, and lines of lanterns and washing, wherever both sides are built
+    for(const ln of LANES){let acc=rnd()*8;for(let i=0;i<ln.pts.length-1;i++){const A=ln.pts[i],B=ln.pts[i+1],len=Math.hypot(B[0]-A[0],B[1]-A[1]);
+      for(;acc<len;acc+=7+rnd()*9){const px=A[0]+(B[0]-A[0])*acc/len,pz=A[1]+(B[1]-A[1])*acc/len,tx=(B[0]-A[0])/len,tz=(B[1]-A[1])/len,nx=-tz,nz=tx;
+        const L1=houseAt(px+nx*(LANE_HALF+1.6),pz+nz*(LANE_HALF+1.6)),L2=houseAt(px-nx*(LANE_HALF+1.6),pz-nz*(LANE_HALF+1.6));if(!L1||!L2)continue;
+        const a=Math.atan2(pz-CITY.z,px-CITY.x),r=Math.hypot(px-CITY.x,pz-CITY.z),w0=cityWealth(a,r),u=rnd(),lo=Math.min(L1.h,L2.h),ry=Math.atan2(-nz,nx),y=heightAt(px,pz)-0.2;
+        const kind=lo>8.5&&u<0.16+0.12*(w0<0.35)?(rnd()<0.5?'BridgeRoom':'BridgeRoomB'):lo>6.5&&u<0.4?'Walkway':u<0.85?'LaneLine':null;if(!kind)continue;
+        put(kind,px,pz,ry,[1,1,1],y);}
+      acc-=len;}}}
   for(const n in lists)kitInstances(n,lists[n]);
   return count;
 }
@@ -1650,7 +1725,7 @@ const RINGS=[118,196,262], MARKET={r:232,rad:24};
 const LANE_HALF=2.1, LANES=(()=>{let sd=4242;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647,L=[],C={x:0,z:-1400};
   const P=(a,r)=>[C.x+Math.cos(a)*r,C.z+Math.sin(a)*r];
   for(const [M,amp,ph] of[[157,3.2,0.4],[229,2.4,1.9],[288,1.2,3.1]]){const pts=[];for(let a=0;a<=Math.PI*2+0.001;a+=8/M)pts.push(P(a,M+amp*Math.sin(a*7+ph)+amp*0.6*Math.sin(a*17+ph*2)));L.push({pts,back:true,M});}
-  for(const [r0,r1,M] of[[127,187,157],[205,253,229],[271,285,288]]){let a=rnd()*0.2;while(a<Math.PI*2){a+=(45+rnd()*25)/M;
+  for(const [r0,r1,M] of[[124.5,189.5,157],[202.5,255.5,229],[268.5,285,288]]){let a=rnd()*0.2;while(a<Math.PI*2){a+=(45+rnd()*25)/M;
       if(typeof AVENUES!=='undefined'&&AVENUES.some(v=>Math.abs(Math.atan2(Math.sin(a-v),Math.cos(a-v)))*M<24))continue;
       const pts=[],n=4;for(let i=0;i<=n;i++){const r=r0+(r1-r0)*i/n,jit=(i===0||i===n)?0:(rnd()-0.5)*9;pts.push(P(a+jit/r,r));}L.push({pts,back:false});}}
   return L;})();
@@ -1671,8 +1746,8 @@ function nearAvenue(a,r,w){for(const av of AVENUES){let d=a-av;d=Math.atan2(Math
 const marketPos=()=>[CITY.x,CITY.z+MARKET.r];
 function cityPaved(x,z){ // 0 in yards, 1 on streets, the avenues, the plaza and the market; a soft kerb between
   const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return 0;
-  let k=smooth(CITY.core+25,CITY.core+23,r); for(const R of RINGS)k=Math.max(k,smooth(9.6,8.4,Math.abs(r-R)));
-  const a=Math.atan2(dz,dx); for(const av of AVENUES){let d=a-av;d=Math.atan2(Math.sin(d),Math.cos(d));k=Math.max(k,smooth(11.6,10.4,Math.abs(d)*r));}
+  let k=smooth(CITY.core+25,CITY.core+23,r); for(const R of RINGS)k=Math.max(k,smooth(6.4,5.6,Math.abs(r-R)));
+  const a=Math.atan2(dz,dx); for(const av of AVENUES){let d=a-av;d=Math.atan2(Math.sin(d),Math.cos(d));k=Math.max(k,smooth(8.4,7.6,Math.abs(d)*r));}
   k=Math.max(k,smooth(LANE_HALF+0.5,LANE_HALF-0.4,laneDist(x,z)));
   const [mx,mz]=marketPos(); return Math.max(k,smooth(MARKET.rad+0.6,MARKET.rad-0.6,Math.hypot(x-mx,z-mz)));
 }
@@ -1683,8 +1758,8 @@ const CITY_MAP=(()=>{const N=768,span=620,d=new Uint8Array(N*N);let t0=performan
 function cityStreet(x,z){
   const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return false;
   if(r<CITY.core+24)return true; // grand plaza before the sealed walls
-  for(const R of RINGS)if(Math.abs(r-R)<9)return true;
-  if(nearAvenue(Math.atan2(dz,dx),r,11)||laneDist(x,z)<LANE_HALF)return true;
+  for(const R of RINGS)if(Math.abs(r-R)<6)return true;
+  if(nearAvenue(Math.atan2(dz,dx),r,8)||laneDist(x,z)<LANE_HALF)return true;
   const [mx,mz]=marketPos(); return Math.hypot(x-mx,z-mz)<MARKET.rad;
 }
 function buildCityInterior(parent){
@@ -1780,7 +1855,7 @@ function buildPeople(){
   QUARTERS.forEach((Q,qi)=>{const n=Math.round(70*Q_WEIGHT[qi])+3, sp=spans[qi].filter(t=>(t.a1-t.a0)*t.R>30); if(!sp.length)return;
     for(let k=0;k<n;k++){const r=seeded(id*31),t=sp[Math.floor(r()*sp.length)],R=t.R,a0=t.a0,a1=t.a1,pad=10/R,lo=a0+pad,hi=Math.max(lo+0.01,a1-pad),aa=lo+r()*(hi-lo),span=Math.min(hi-lo,(14+r()*40)/R);
       const race=(()=>{const mix=RACE_MIX[Q.name]||RACE_MIX.city;let u=r();for(const k2 in mix){u-=mix[k2];if(u<=0)return k2;}return 'Wayfolk';})();
-      RESIDENTS.push({id:id++,R,off:(r()-0.5)*12,a0:Math.max(lo,aa-span/2),a1:Math.min(hi,aa+span/2),a:aa,dir:r()<0.5?1:-1,speed:0.9+r()*0.5,wait:r()*5,race,owl:r()<0.25,mesh:null,walking:true});}});
+      RESIDENTS.push({id:id++,R,off:(r()-0.5)*7,a0:Math.max(lo,aa-span/2),a1:Math.min(hi,aa+span/2),a:aa,dir:r()<0.5?1:-1,speed:0.9+r()*0.5,wait:r()*5,race,owl:r()<0.25,mesh:null,walking:true});}});
   const routes=[{ring:118},{ring:196},{ring:262},{ring:196,back:true},{avenue:Math.PI/2}];
   routes.forEach((rt,i)=>{for(const side of[-0.7,0.7])PATROLS.push({id:900+i*2+(side>0?1:0),rt,side,t:i*0.21,mesh:null});});
   for(const H of HUBS){const L=LANDMARK_AT.find(q=>q.label===H.at);if(!L)continue;const fx=Math.sin(L.ry),fz=Math.cos(L.ry),d=L.d/2+(H.near||2.2);
@@ -3048,11 +3123,11 @@ function buildLamps(){
   LAMPS.length=0; LAMP_GRID.clear();
   const C=(r,a)=>[CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r];
   // city: both kerbs of every ring street, every ~22 m, staggered
-  for(const R of RINGS)for(const s of[-1,1]){const r=R+s*7.6,n=Math.floor(2*Math.PI*r/22);
-    for(let k=0;k<n;k++){const a=(k+(s>0?0.5:0))/n*Math.PI*2;if(nearAvenue(a,r,12))continue;const [x,z]=C(r,a);addLamp('city',x,z,0);}}
+  for(const R of RINGS)for(const s of[-1,1]){const r=R+s*5.3,n=Math.floor(2*Math.PI*r/22);
+    for(let k=0;k<n;k++){const a=(k+(s>0?0.5:0))/n*Math.PI*2;if(nearAvenue(a,r,9.5))continue;const [x,z]=C(r,a);addLamp('city',x,z,0);}}
   // avenues, from the plaza out to the wall
   for(const av of AVENUES)for(const s of[-1,1])for(let r=CITY.core+30;r<CITY.r-10;r+=20){
-    if(RINGS.some(R=>Math.abs(r-R)<12))continue;const a=av+s*9.2/r;const [x,z]=C(r,a);addLamp('city',x,z,0);}
+    if(RINGS.some(R=>Math.abs(r-R)<9))continue;const a=av+s*7.2/r;const [x,z]=C(r,a);addLamp('city',x,z,0);}
   // the grand plaza and the market square
   for(let k=0;k<32;k++){const a=(k+0.5)/32*Math.PI*2;if(nearAvenue(a,CITY.core+21,8))continue;const [x,z]=C(CITY.core+21,a);addLamp('city',x,z,0);}
   {const [mx,mz]=marketPos();for(let k=0;k<12;k++){const a=k/12*Math.PI*2;addLamp('city',mx+Math.cos(a)*(MARKET.rad-2),mz+Math.sin(a)*(MARKET.rad-2),0);}}
