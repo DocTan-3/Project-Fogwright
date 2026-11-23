@@ -366,6 +366,56 @@ addEventListener('resize',()=>{resize();restStick();});resize();
 
 /* ---------- Shared materials and geometry ---------- */
 const terrainMat=new THREE.MeshLambertMaterial({vertexColors:true});
+// The ground's detail is painted per pixel from where it lies: grain and pebbles in the wild, and in Aldrath each district's
+// own paving and yards (slate, brick, cobbles, mossy stones, granite, marble, blue tiles, terracotta), worn and muddied where
+// the city is poor. The chunk carries one extra attribute per point: surf = (road, paved, wealth).
+terrainMat.onBeforeCompile=sh=>{
+  sh.uniforms.uCity={value:new THREE.Vector4(CITY.x,CITY.z,CITY.r,CITY.core)};
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 surf;\nvarying vec3 vSurf;\nvarying vec3 vWP;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\nvSurf=surf;\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+uniform vec4 uCity; varying vec3 vSurf; varying vec3 vWP;
+float gh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float gn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(gh(i),gh(i+vec2(1.,0.)),f.x),mix(gh(i+vec2(0.,1.)),gh(i+vec2(1.,1.)),f.x),f.y);}
+vec2 cobble(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
+  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y)),o=vec2(gh(i+g),gh(i+g+17.))*.8+.1,r=g+o-f;float d=dot(r,r);if(d<d1){d2=d1;d1=d;id=gh(i+g+3.);}else if(d<d2)d2=d;}
+  return vec2(sqrt(d2)-sqrt(d1),id);}
+vec2 bricks(vec2 p,vec2 s,float j){p/=s;float row=floor(p.y);p.x+=mod(row,2.)*.5;vec2 f=fract(p),e=min(f,1.-f)*s;return vec2(1.-smoothstep(j*.5,j,min(e.x,e.y)),gh(floor(p)+row*7.));}
+vec3 cityGround(vec2 w,float paved,float wealth){
+  vec2 d=w-uCity.xy; float r=length(d), a=atan(d.y,d.x); if(a<0.)a+=6.2831853;
+  float q=mod(floor(a/.7853982),8.), sa=mod(a,.7853982), av=min(sa,.7853982-sa)*r, n=gn(w*.7)*.5+gn(w*3.1)*.5;
+  vec3 yard, pv;
+  if(q<.5)yard=mix(vec3(.18,.16,.15),vec3(.29,.26,.23),n);                                   // Ferrin: cinders
+  else if(q<1.5)yard=mix(vec3(.45,.36,.26),vec3(.56,.46,.34),n);                             // Market: packed earth
+  else if(q<2.5)yard=mix(vec3(.40,.33,.24),vec3(.36,.46,.24),smoothstep(.45,.7,n));          // Wayfolk: dirt and weeds
+  else if(q<3.5)yard=mix(vec3(.28,.45,.21),vec3(.40,.56,.28),n);                             // Ruadhan: grass
+  else if(q<4.5)yard=mix(vec3(.50,.52,.55),vec3(.63,.65,.68),n);                             // Hrimfolk: grey gravel
+  else if(q<5.5)yard=mix(vec3(.78,.76,.70),vec3(.89,.87,.81),n);                             // Temple: white gravel
+  else if(q<6.5)yard=mix(vec3(.46,.57,.49),vec3(.60,.69,.62),n);                             // Ilvari: pale moss
+  else yard=mix(vec3(.74,.62,.42),vec3(.83,.71,.51),n);                                      // Zarhim: sand
+  if(q<.5){vec2 b=bricks(w,vec2(1.2,.6),.05);pv=mix(vec3(.30,.31,.34),vec3(.41,.42,.46),b.y)*(1.-.55*b.x);pv*=1.-.35*smoothstep(.55,.85,gn(w*.5));}     // slate flags, sooty
+  else if(q<1.5){vec2 c=floor(w);vec2 lp=mod(c.x+c.y,2.)>.5?w.yx:w;vec2 b=bricks(lp,vec2(.32,.16),.025);pv=mix(vec3(.55,.24,.18),vec3(.69,.35,.25),b.y)*(1.-.4*b.x);}  // red brick, basket weave
+  else if(q<2.5){vec2 c=cobble(w*2.2);pv=mix(vec3(.42,.38,.33),vec3(.56,.51,.45),c.y)*(1.-.5*(1.-smoothstep(.02,.12,c.x)));pv=mix(pv,vec3(.38,.30,.22),smoothstep(.55,.75,gn(w*.35))*.8);}  // rough cobbles and mud
+  else if(q<3.5){vec2 c=cobble(w*1.6);pv=mix(vec3(.46,.46,.40),vec3(.59,.58,.51),c.y);pv=mix(pv,vec3(.25,.38,.18),(1.-smoothstep(.03,.14,c.x))*.85);}  // field stones, moss between
+  else if(q<4.5){vec2 b=bricks(w,vec2(1.8,1.1),.06);pv=mix(vec3(.58,.60,.63),vec3(.71,.73,.76),b.y)*(1.-.35*b.x);pv=mix(pv,vec3(.93,.95,.98),step(.985,gh(floor(w*14.)))*.7);}  // granite slabs, frost
+  else if(q<5.5){vec2 g=fract(w),e=min(g,1.-g);pv=mix(vec3(.86,.84,.79),vec3(.94,.93,.89),gh(floor(w)))*(1.+.04*gn(w*6.));pv=mix(pv,vec3(.79,.62,.27),1.-smoothstep(.015,.03,min(e.x,e.y)));}  // marble, gold joints
+  else if(q<6.5){vec2 rp=vec2(w.x+w.y,w.x-w.y)*1.01,g=fract(rp),e=min(g,1.-g);pv=mix(vec3(.86,.89,.93),vec3(.74,.82,.92),mod(floor(rp.x)+floor(rp.y),2.));pv=mix(pv,vec3(.18,.37,.66),1.-smoothstep(.03,.06,min(e.x,e.y)));}  // blue diamond tiles
+  else{vec2 b=bricks(w,vec2(.5,.5),.04);pv=mix(vec3(.66,.36,.22),vec3(.77,.47,.29),b.y);pv=mix(pv,vec3(.78,.66,.46),b.x);}  // terracotta, sand in the joints
+  float grand=max(1.-smoothstep(9.,11.,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
+  if(grand>0.){vec2 b=bricks(vec2(a*r,r),vec2(1.4,.9),.05);pv=mix(pv,mix(vec3(.70,.68,.62),vec3(.81,.79,.73),b.y)*(1.-.35*b.x),grand);}
+  vec3 c=mix(yard,pv,paved);
+  float poor=1.-smoothstep(.15,.45,wealth), m=gn(w*.4)+.5*gn(w*1.7);
+  c=mix(c,c*.72,poor*.6); c=mix(c,vec3(.30,.25,.19),poor*smoothstep(.75,1.,m));
+  c=mix(c,vec3(.20,.22,.25),smoothstep(.93,.97,gn(w*.25+13.))*poor*paved*.85);             // puddles
+  return c*(1.+.06*smoothstep(.65,.9,wealth));
+}`).replace('#include <color_fragment>',`#include <color_fragment>
+  {vec2 w=vWP.xz; diffuseColor.rgb*=.9+.13*gn(w*.9)+.06*gn(w*4.3);                       // ground grain everywhere
+   if(vSurf.x>.01){float peb=step(.86,gh(floor(w*9.)));diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*(1.-.14*gn(w*1.3))+vec3(.07)*peb,vSurf.x);}
+   float inCity=1.-smoothstep(uCity.z-2.,uCity.z+2.,length(w-uCity.xy));
+   if(inCity>0.)diffuseColor.rgb=mix(diffuseColor.rgb,cityGround(w,vSurf.y,vSurf.z),inCity);
+   else if(vSurf.y>.01){vec2 c=cobble(w*2.);vec3 v=mix(vec3(.50,.47,.42),vec3(.62,.59,.53),c.y)*(1.-.45*(1.-smoothstep(.02,.12,c.x)));diffuseColor.rgb=mix(diffuseColor.rgb,v,vSurf.y);}}`);
+};
+terrainMat.customProgramCacheKey=()=>'ground-detail';
 const flat=(c)=>new THREE.MeshPhongMaterial({color:c,flatShading:true,shininess:0,specular:0x000000});
 const instMat=flat(0xffffff);
 // ---- vegetation shading: darker at the base, lighter at the top
@@ -472,19 +522,23 @@ function surfaceAt(x,z){
 function buildChunk(cx,cz){
   const ox=cx*CS, oz=cz*CS, W=RES+1, E=W+2, he=new Float32Array(E*E), hs=new Float32Array(W*W);
   for(let j=0;j<E;j++)for(let i=0;i<E;i++)he[j*E+i]=heightAt(ox+(i-1)*STEP,oz+(j-1)*STEP);
-  const pos=new Float32Array(W*W*3), nor=new Float32Array(W*W*3), col=new Float32Array(W*W*3), c=[0,0,0];
+  const pos=new Float32Array(W*W*3), nor=new Float32Array(W*W*3), col=new Float32Array(W*W*3), srf=new Float32Array(W*W*3), c=[0,0,0];
   for(let j=0;j<W;j++)for(let i=0;i<W;i++){
     const k=j*W+i, e=(j+1)*E+(i+1), h=he[e]; hs[k]=h;
     const gx=(he[e+1]-he[e-1])/(2*STEP), gz=(he[e+E]-he[e-E])/(2*STEP), n=1/Math.sqrt(1+gx*gx+gz*gz);
     pos[k*3]=ox+i*STEP; pos[k*3+1]=h; pos[k*3+2]=oz+j*STEP; nor[k*3]=-gx*n; nor[k*3+1]=n; nor[k*3+2]=-gz*n;
-    terrainColor(ox+i*STEP,oz+j*STEP,h,n,c); col.set(c,k*3);
+    const X=ox+i*STEP, Z=oz+j*STEP; terrainColor(X,Z,h,n,c); col.set(c,k*3);
+    const dc=Math.hypot(X-CITY.x,Z-CITY.z), inC=dc<CITY.r+6;
+    srf[k*3]=inC?0:smooth(4.9,4.0,roadDist(X,Z))*smooth(0.1,0.3,h);
+    srf[k*3+1]=inC?cityPaved(X,Z):smooth(13.5,12.3,Math.hypot(X-VILLAGE.x,Z-VILLAGE.z));
+    srf[k*3+2]=inC?Math.max(0,Math.min(1,cityWealth(Math.atan2(Z-CITY.z,X-CITY.x),dc))):0.5;
   }
   const idx=new (W*W>65535?Uint32Array:Uint16Array)(RES*RES*6); let p=0;
   for(let j=0;j<RES;j++)for(let i=0;i<RES;i++){const a=j*W+i,b=a+1,d=a+W,f=d+1;   // the same diagonals as surfaceAt
     if((i+j)&1){idx[p++]=a;idx[p++]=d;idx[p++]=b;idx[p++]=b;idx[p++]=d;idx[p++]=f;}else{idx[p++]=a;idx[p++]=d;idx[p++]=f;idx[p++]=a;idx[p++]=f;idx[p++]=b;}}
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));
-  geo.setAttribute('color',new THREE.BufferAttribute(col,3)); geo.setIndex(new THREE.BufferAttribute(idx,1));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3)); geo.setAttribute('surf',new THREE.BufferAttribute(srf,3)); geo.setIndex(new THREE.BufferAttribute(idx,1));
   CHUNK_H.set(cx+','+cz,hs);
   const group=new THREE.Group();
   {const tm=new THREE.Mesh(geo,terrainMat);tm.receiveShadow=true;group.add(tm);}
@@ -1117,6 +1171,12 @@ const quarterOf=a=>QUARTERS[((Math.floor(((a%(2*Math.PI))+2*Math.PI)%(2*Math.PI)
 const roofCache=new Map(); const roofMat=c=>{if(!roofCache.has(c))roofCache.set(c,flat(c));return roofCache.get(c);};
 function nearAvenue(a,r,w){for(const av of AVENUES){let d=a-av;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)*r<w)return true;}return false;}
 const marketPos=()=>[CITY.x,CITY.z+MARKET.r];
+function cityPaved(x,z){ // 0 in yards, 1 on streets, the avenues, the plaza and the market; a soft kerb between
+  const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return 0;
+  let k=smooth(CITY.core+25,CITY.core+23,r); for(const R of RINGS)k=Math.max(k,smooth(9.6,8.4,Math.abs(r-R)));
+  const a=Math.atan2(dz,dx); for(const av of AVENUES){let d=a-av;d=Math.atan2(Math.sin(d),Math.cos(d));k=Math.max(k,smooth(11.6,10.4,Math.abs(d)*r));}
+  const [mx,mz]=marketPos(); return Math.max(k,smooth(MARKET.rad+0.6,MARKET.rad-0.6,Math.hypot(x-mx,z-mz)));
+}
 function cityStreet(x,z){
   const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return false;
   if(r<CITY.core+24)return true; // grand plaza before the sealed walls
@@ -1197,13 +1257,21 @@ function crowdUpdate(dt,now,night){
   }
 }
 
+// the coarse ground for the whole island (points 20 m apart) sinks out of the way where the detailed ground is drawn,
+// so it can never poke up through a dip such as a river channel and lie across a road
+const farUniforms={uNear:{value:new THREE.Vector2()}};
+const farMat=new THREE.MeshLambertMaterial({vertexColors:true});
+farMat.onBeforeCompile=sh=>{sh.uniforms.uNear=farUniforms.uNear;
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform vec2 uNear;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\n{vec4 wq=modelMatrix*vec4(transformed,1.0);transformed.y-=6.0*(1.0-smoothstep(105.0,130.0,distance(wq.xz,uNear)));}');};
+farMat.customProgramCacheKey=()=>'far-ground';
 function buildFarTerrain(){
   const x0=-1500,z0=-2100,st=20,R=150, W=R+1, hs=new Float32Array(W*W);
   for(let j=0;j<W;j++)for(let i=0;i<W;i++)hs[j*W+i]=heightAt(x0+i*st,z0+j*st)-0.35;
   const cols=gridColors(x0,z0,st,W,hs.map(v=>v+0.35)); for(let k=0;k<cols.length;k++)cols[k]*=0.96;
   const {pos,col}=gridMesh(x0,z0,st,R,hs,cols);
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();
-  const m=new THREE.Mesh(g,terrainMat);m.receiveShadow=false;landmarks.add(m);
+  const m=new THREE.Mesh(g,farMat);m.receiveShadow=false;landmarks.add(m);
 }
 function placeName(x,z){
   if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<58)return 'The village';
@@ -1406,7 +1474,7 @@ $('presets').addEventListener('click',e=>{const b=e.target.closest('button');if(
 $('newBtn').addEventListener('click',()=>newWorld((Math.random()*1e6)|0));
 
 /* ---------- Core loop: gather, craft, build, survive ---------- */
-const DAY_LEN=300;
+const DAY_LEN=3000;   // seconds for a full day and night (50 minutes)
 const HARVEST={
   pine:{verb:'Chop',label:'pine',hits:3,tool:'axe',give:{wood:4}},
   round:{verb:'Chop',label:'oak',hits:3,tool:'axe',give:{wood:3}},
@@ -2836,14 +2904,21 @@ function villageUpdate(dt){
 
 /* ---------- Admin tools: teleport, time, god mode, speed ---------- */
 const ADMIN={god:false,fast:false};
+function qSpot(name){const i=QUARTERS.findIndex(q=>q.name===name),a=(i+0.5)*Math.PI/4;return [CITY.x+Math.cos(a)*196,CITY.z+Math.sin(a)*196,-a-Math.PI/2];}
 const SPOTS=[
   ['The village',()=>[VILLAGE.x+4,VILLAGE.z+18,Math.PI]],['South road',()=>[-20,380,0]],["Hollin's Cross pier",()=>[PORT.x,PORT.z+20,0]],
   ['Outside the city gate',()=>[CITY.x,CITY.z+CITY.r+40,0]],['The outskirts',()=>[CITY.x+70,CITY.z+CITY.r+80,0]],['Market square',()=>{const [x,z]=marketPos();return [x,z+14,0];}],
-  ['Grand plaza',()=>[CITY.x,CITY.z+CITY.core+20,0]],['Hrimfolk Quarter',()=>[CITY.x-196*Math.cos(0.4),CITY.z-196*Math.sin(0.4),0]],
-  ['Ferrin Quarter',()=>[CITY.x+196,CITY.z+20,0]],['Zarhim Quarter',()=>[CITY.x+196*Math.cos(-0.4),CITY.z+196*Math.sin(-0.4),0]],
+  ['Grand plaza',()=>[CITY.x,CITY.z+CITY.core+20,0]],
+  ['Ferrin Quarter',()=>qSpot('Ferrin Quarter')],
+  ['Market Ward',()=>qSpot('Market Ward')],
+  ['Wayfolk Quarter',()=>qSpot('Wayfolk Quarter')],
+  ['Ruadhan Quarter',()=>qSpot('Ruadhan Quarter')],
+  ['Hrimfolk Quarter',()=>qSpot('Hrimfolk Quarter')],
+  ['Temple Ward',()=>qSpot('Temple Ward')],
+  ['Ilvari Enclave',()=>qSpot('Ilvari Enclave')],
+  ['Zarhim Quarter',()=>qSpot('Zarhim Quarter')],
   ['Wall slums',()=>{let b=0,bw=9;for(let a=0;a<6.28;a+=0.04){if(nearAvenue(a,262,30))continue;const w=cityWealth(a,288);if(w<bw){bw=w;b=a;}}return [CITY.x+Math.cos(b)*262,CITY.z+Math.sin(b)*262,0];}],
   ['Rich ring',()=>{let b=0,bw=-9;for(let a=0;a<6.28;a+=0.04){if(nearAvenue(a,118,30))continue;const w=cityWealth(a,118);if(w>bw){bw=w;b=a;}}return [CITY.x+Math.cos(b)*118,CITY.z+Math.sin(b)*118,0];}],
-  ['Temple Ward',()=>[CITY.x-196*Math.cos(-0.4),CITY.z+196*Math.sin(-0.4),0]],['Ilvari Enclave',()=>[CITY.x+196*Math.cos(Math.PI*1.4),CITY.z+196*Math.sin(Math.PI*1.4),0]],
   ['Broken tower',()=>[TOWER.x-20,TOWER.z+20,0]],['Old woods',()=>[-260,120,0]],['Overgrown wilds',()=>[-600,300,0]],['Fog-worn edge',()=>[-1000,-200,0]],
 ];
 function teleport(i){const [x,z,yaw]=SPOTS[i][1]();player.x=x;player.z=z;cam.yaw=yaw;setTarget(null);P.dash=null;updateChunks(x,z);drainQueue(12);toast('Teleported: '+SPOTS[i][0]);}
@@ -2955,7 +3030,7 @@ function frame(now){
   if(towerGlow){towerGlow.rotation.y+=dt*0.6;towerGlow.position.y=44+Math.sin(now*0.0015)*0.6;}
   if(capitalBeam){capitalBeam.position.set(CITY.x,450,CITY.z);}
 
-  cullCells(); folkLod(); renderer.render(scene,camera);
+  farUniforms.uNear.value.set(player.x,player.z); cullCells(); folkLod(); renderer.render(scene,camera);
 
   // HUD
   fpsAcc+=dt;fpsN++;
