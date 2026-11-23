@@ -173,7 +173,7 @@ RACES = {  # leg length, neck length, head size, shoulder shift, torso width/dep
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
   'ilvari': dict(SLENDER=True, KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
-  'female': dict(KL=1.035, KN=0.4, HS=0.93, SHX=-0.052, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.16), (1.4, 0.06, -0.15), (1.3, 0.07, -0.17), (1.2, 0.07, -0.22), (1.12, 0.06, -0.33), (1.04, 0.05, -0.14), (0.93, 0.06, 0.12)],
+  'female': dict(KL=1.035, KN=0.22, HS=0.93, SHX=-0.052, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.16), (1.4, 0.06, -0.15), (1.3, 0.07, -0.17), (1.2, 0.07, -0.22), (1.12, 0.06, -0.33), (1.04, 0.05, -0.14), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.25, 0.09, -0.07), (1.33, 0.07, -0.13), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
                  ARM={'shoulder': 0.76, 'upper_arm': 0.58, 'forearm': 0.54, 'hand': 0.58}, LEG=0.8, LEGX=1.02, FEM=True, UCK=0.8),
   'zarhim': dict(KL=1.03, KN=1.1, HS=1.0, SHX=-0.008, W=[(1.28, 0.1, -0.04), (1.1, 0.08, -0.14), (0.97, 0.07, -0.06)], D=[(1.2, 0.2, -0.03)], D0=0.9, W0=0.98, belly=-0.008,
@@ -271,10 +271,11 @@ if RACE in RACES:
             if not (1.15 < cz_ < 1.42 and abs(cx_) < 0.16 and cy_ < 0.02) or i in ARMV: continue
             ax_ = abs(cx_)
             plane = 0.008 - 0.097 * max(0.0, 1 - (ax_ / 0.134) ** 2.4) ** (1 / 2.4)
-            dz_ = (cz_ - 1.27) / (1.2 if cz_ > 1.27 else 0.85)
-            q_ = ((ax_ - 0.079) ** 2 + dz_ ** 2) / 0.074 ** 2
-            bulge = 0.066 * (1 - q_) ** 1.5 if q_ < 1 else 0.0
-            w_ = sm(1.15, 1.2, cz_) * (1 - sm(1.33, 1.42, cz_)) * (1 - sm(0.125, 0.16, ax_)) * (1 - sm(-0.035, 0.02, cy_))
+            dz_ = cz_ - 1.272                                   # a circular outline,
+            q_ = ((ax_ - 0.08) ** 2 + dz_ ** 2) / 0.066 ** 2
+            bulge = 0.078 * (1 - q_) ** 0.6 if q_ < 1 else 0.0   # a full, rounded dome that projects
+            if q_ < 1.25: bulge += 0.006 * math.exp(-((q_ - 1.0) / 0.12) ** 2)   # eased into the chest at its edge
+            w_ = sm(1.15, 1.19, cz_) * (1 - sm(1.35, 1.42, cz_)) * (1 - sm(0.125, 0.16, ax_)) * (1 - sm(-0.035, 0.02, cy_))
             v.co.y = cy_ + (plane - bulge - cy_) * w_
         # a real neck: the shoulder line slopes gently down from beside the neck, well below the chin
         reg = []
@@ -331,6 +332,16 @@ if RACE in RACES:
         for _ in range(3):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in reg if nb2[i]}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.6 + c_ * 0.4
+        if FEM:   # the bust once more, last, so no smoothing flattens it: a circular dome on the chest
+            for i, v in enumerate(body.data.vertices):
+                if i in ARMV: continue
+                cx_, cy_, cz_ = v.co; ax_ = abs(cx_)
+                if not (1.18 < cz_ < 1.37 and ax_ < 0.15 and cy_ < 0.0): continue
+                q_ = ((ax_ - 0.08) ** 2 + (cz_ - 1.272) ** 2) / 0.066 ** 2
+                if q_ >= 1: continue
+                plane = 0.008 - 0.097 * max(0.0, 1 - (ax_ / 0.134) ** 2.4) ** (1 / 2.4)
+                target = plane - 0.078 * (1 - q_) ** 0.6
+                if target < cy_: v.co.y = cy_ + (target - cy_) * (1 - q_ ** 3)
     sm3 = body.modifiers.new('Settle', 'SMOOTH'); sm3.factor = 0.4; sm3.iterations = 3
     with bpy.context.temp_override(object=body, active_object=body): bpy.ops.object.modifier_apply(modifier='Settle')
     # refit the rig to the new shape
