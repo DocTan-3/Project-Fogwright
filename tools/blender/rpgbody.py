@@ -171,7 +171,7 @@ Zm2c0 = lambda z: pl(z, ZM0, ZCAN)
 RACES = {  # leg length, neck length, head size, shoulder shift, torso width/depth bumps (z, spread, amount), limb thickness
   'ferrin': dict(KL=0.7, KN=0.55, HS=1.04, SHX=0.031, W=[(1.25, 0.17, 0.2), (1.05, 0.1, 0.08)], D=[(1.18, 0.2, 0.28)], D0=1.0, W0=1.0, belly=0.035,
                  ARM={'shoulder': 1.15, 'upper_arm': 1.25, 'forearm': 1.45, 'hand': 1.4}, LEG=1.22, LEGX=1.05),
-  'ilvari': dict(KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
+  'ilvari': dict(SLENDER=True, KL=1.07, KN=0.9, HS=0.98, SHX=-0.026, W=[(1.42, 0.06, 0.0), (1.33, 0.08, -0.08), (1.28, 0.1, -0.12), (1.1, 0.08, -0.2), (1.02, 0.045, -0.05), (0.97, 0.07, -0.12)], D=[(1.2, 0.2, -0.05)], D0=0.84, W0=0.96, belly=-0.012,
                  ARM={'shoulder': 0.9, 'upper_arm': 0.76, 'forearm': 0.78, 'hand': 0.84}, LEG=0.82, LEGX=0.96),
   'female': dict(KL=1.035, KN=0.4, HS=0.93, SHX=-0.052, W=[(1.5, 0.05, -0.18), (1.465, 0.035, -0.16), (1.4, 0.06, -0.15), (1.3, 0.07, -0.17), (1.2, 0.07, -0.22), (1.12, 0.06, -0.33), (1.04, 0.05, -0.14), (0.93, 0.06, 0.12)],
                  D=[(1.1, 0.1, -0.12), (1.25, 0.09, -0.07), (1.33, 0.07, -0.13), (1.42, 0.05, -0.06)], D0=0.92, W0=0.95, belly=-0.012,
@@ -256,7 +256,9 @@ if RACE in RACES:
             w = sm(0.93, 0.98, z) * (1 - sm(1.24, 1.28, z)) * 0.8
             tx, ty = sx_ * r, CY + cy_ * r
             v.co.x = x + (tx - x) * w; v.co.y = y + (ty - y) * w
-    if P_.get('FEM'):   # the bust, after the blending so it keeps its shape: full and rounded on a flattened chest
+    if P_.get('FEM') or P_.get('SLENDER'):   # slender neck and shoulders (women, Ilvari); the bust for women only
+        FEM = bool(P_.get('FEM'))
+        ZSH = zmap(ZM0[3]) - 1.644      # tables below were tuned on the female; shift them to this people's height
         for i, v in enumerate(body.data.vertices):
             x, y, z = ORIG[i]
             ax = abs(x)
@@ -265,6 +267,7 @@ if RACE in RACES:
                 v.co.z -= 0.038 * t; v.co.x -= math.copysign(0.008, x) * t
             # the bust, built fresh: press the chest into a smooth rounded front, then add two domes that fade into it
             cx_, cy_, cz_ = v.co
+            if not FEM: continue
             if not (1.15 < cz_ < 1.42 and abs(cx_) < 0.16 and cy_ < 0.02) or i in ARMV: continue
             ax_ = abs(cx_)
             plane = 0.008 - 0.097 * max(0.0, 1 - (ax_ / 0.134) ** 2.4) ** (1 / 2.4)
@@ -277,14 +280,14 @@ if RACE in RACES:
         reg = []
         for i, v in enumerate(body.data.vertices):
             ax = abs(v.co.x); z = v.co.z
-            if not (1.3 < z < 1.58 and 0.045 < ax < 0.27 and abs(v.co.y) < 0.13): continue
-            L = 1.455 - (ax - 0.06) * 0.32
+            if not (1.3 + ZSH < z < 1.58 + ZSH and 0.045 < ax < 0.27 and abs(v.co.y) < 0.13): continue
+            L = 1.455 + ZSH - (ax - 0.06) * 0.32 * (1 if FEM else 0.8)
             w = sm(0.045, 0.08, ax) * (1 - sm(0.22, 0.27, ax))
             if z > L: v.co.z = z - (z - L) * 0.7 * w
             reg.append(i)
         nb2 = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb2[a_].append(b_); nb2[b_].append(a_)
-        soft = [i for i, c in enumerate(ORIG) if 0.13 < c.z < 1.47 and not (c.z < 0.97 and i in ARMV) and nb2[i]]   # softer forms all over
+        soft = [i for i, c in enumerate(ORIG) if FEM and 0.13 < c.z < 1.47 and not (c.z < 0.97 and i in ARMV) and nb2[i]]   # softer forms all over
         for _ in range(3):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in soft}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.7 + c_ * 0.3
@@ -294,20 +297,22 @@ if RACE in RACES:
                 if z <= z1: t = (z - z0) / (z1 - z0); return a0 + (a1 - a0) * t
             return pts[-1][1]
         BACK = [(1.34, 0.125), (1.4, 0.1), (1.45, 0.082), (1.5, 0.058), (1.55, 0.05)]     # the upper back and back of the neck
-        FRONT = [(1.36, -0.12), (1.41, -0.085), (1.46, -0.06), (1.5, -0.046), (1.55, -0.045)]   # the chest above the bust and the throat
+        FRONT = [(1.33 + ZSH, -0.118), (1.36 + ZSH, -0.105), (1.41 + ZSH, -0.08), (1.46 + ZSH, -0.06), (1.5 + ZSH, -0.046), (1.55 + ZSH, -0.045)]   # the chest above the bust and the throat
         for i, v in enumerate(body.data.vertices):
             if i in ARMV: continue
             x, y, z = v.co; ax = abs(x)
+            z = z - ZSH; y0 = y
             if 1.34 < z < 1.565 and ax < 0.17 and y > 0.02:
                 tb = lerpz(z, BACK) * (1 - 0.25 * sm(0.06, 0.17, ax))
                 if y > tb: v.co.y = y + (tb - y) * 0.85 * sm(1.34, 1.38, z)
-            if 1.36 < z < 1.565 and ax < 0.17 and y < -0.02:
-                tf = lerpz(z, FRONT)
-                if y < tf: v.co.y = y + (tf - y) * 0.8 * sm(1.36, 1.4, z) * (1 - sm(1.48, 1.525, z))   # leave the jaw's underside alone
-            if 1.465 < z < 1.565 and ax < 0.1 and y > -0.05:          # a slender neck, about 10 cm across
+            if 1.33 < z < 1.565 and ax < 0.17 and y < -0.02:   # one smooth surface from the top of the bust to the throat: no clavicle lumps
+                tf = lerpz(z + ZSH, FRONT) * max(0.0, 1 - (ax / 0.175) ** 2.6) ** (1 / 2.6)
+                w = 0.85 * sm(1.33, 1.37, z) * (1 - sm(1.48, 1.525, z)) * (1 - sm(0.13, 0.17, ax))   # leave the jaw's underside alone
+                if FEM or y < tf: v.co.y = y + (tf - y) * w
+            if 1.465 < z < 1.565 and ax < 0.1 and y0 > -0.05:          # a slender neck, about 10 cm across
                 w = sm(1.465, 1.49, z) * (1 - sm(1.535, 1.56, z))
                 v.co.x = x * (1 - 0.3 * w)
-        bust = [i for i, c in enumerate(ORIG) if 1.18 < c.z < 1.45 and abs(c.x) < 0.16 and c.y < 0.0 and i not in ARMV and nb2[i]]
+        bust = [i for i, c in enumerate(ORIG) if FEM and 1.18 < c.z < 1.47 and abs(c.x) < 0.17 and c.y < 0.0 and i not in ARMV and nb2[i]]
         for _ in range(6):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in bust}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.6 + c_ * 0.4
@@ -315,8 +320,8 @@ if RACE in RACES:
             if not (1.43 < c.z < 1.575) or math.hypot(c.x, c.y - 0.01) > 0.09 or i in ARMV: continue
             w = sm(1.43, 1.47, c.z) * (1 - sm(1.545, 1.575, c.z)) * 0.2
             v = body.data.vertices[i]; v.co.x *= 1 - w; v.co.y = 0.01 + (v.co.y - 0.01) * (1 - w)
-        armreg = [i for i in ARMV if 0.97 < ORIG[i].z < 1.44 and nb2[i]]   # smoother arms: soften the muscle forms (not the hands)
-        pit = [i for i, c in enumerate(ORIG) if 1.12 < c.z < 1.43 and 0.11 < abs(c.x) < 0.24 and nb2[i]]   # armpit and lats: blend the side of the chest into the arm
+        armreg = [i for i in ARMV if FEM and 0.97 < ORIG[i].z < 1.44 and nb2[i]]   # smoother arms: soften the muscle forms (not the hands)
+        pit = [i for i, c in enumerate(ORIG) if FEM and 1.12 < c.z < 1.43 and 0.11 < abs(c.x) < 0.24 and nb2[i]]   # armpit and lats: blend the side of the chest into the arm
         for _ in range(6):
             new = {i: sum((body.data.vertices[j].co for j in nb2[i]), Vector()) / len(nb2[i]) for i in pit}
             for i, c_ in new.items(): body.data.vertices[i].co = body.data.vertices[i].co * 0.5 + c_ * 0.5
