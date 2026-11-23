@@ -360,7 +360,15 @@ scene.fog=new THREE.FogExp2(FOG_CLEAR.clone(),0.012);
 scene.background=scene.fog.color;
 const hemi=new THREE.HemisphereLight(0xd9dfea,0x4c4236,0.68);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d8,0.95);sun.position.set(60,90,40);scene.add(sun);scene.add(sun.target);
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
+// Shadows, cheated: only the still world (ground, houses, trees, walls) casts into the shadow map, and the map is redrawn
+// only when the player has moved a few metres, the sun has turned a little, or nearby buildings came in or out.
+// People and creatures carry a soft blob at their feet instead, so they never force a redraw.
+renderer.shadowMap.autoUpdate=false;
+const SHADOW={x:1e9,z:1e9,t:-1e9,dirty:true};
+const blobGeo=new THREE.CircleGeometry(0.42,18).rotateX(-Math.PI/2);
+const blobMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.22,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
+function addBlob(root,size){const b=new THREE.Mesh(blobGeo,blobMat);b.position.y=0.04;b.scale.setScalar(size||1);b.renderOrder=1;root.add(b);return b;}
 sun.castShadow=true; {const ss=coarse?1024:2048;sun.shadow.mapSize.set(ss,ss);const sc=sun.shadow.camera;sc.left=-38;sc.right=38;sc.top=38;sc.bottom=-38;sc.near=1;sc.far=220;}
 sun.shadow.bias=-0.0006; sun.shadow.normalBias=0.04;
 
@@ -548,7 +556,7 @@ function buildChunk(cx,cz){
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('normal',new THREE.BufferAttribute(nor,3));
   geo.setAttribute('color',new THREE.BufferAttribute(col,3)); geo.setAttribute('surf',new THREE.BufferAttribute(srf,3)); geo.setIndex(new THREE.BufferAttribute(idx,1));
   CHUNK_H.set(cx+','+cz,hs);
-  const group=new THREE.Group();
+  SHADOW.dirty=true; const group=new THREE.Group();
   {const tm=new THREE.Mesh(geo,terrainMat);tm.receiveShadow=true;group.add(tm);}
   populate(cx,cz,group);
   scene.add(group);
@@ -1195,7 +1203,7 @@ const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
 function cullCells(){
   camera.updateMatrixWorld(); _pm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); _frustum.setFromProjectionMatrix(_pm);
   for(const c of CELLS){const d=Math.hypot(c.sphere.center.x-player.x,c.sphere.center.z-player.z)-c.sphere.radius;
-    const vis=d<c.far&&(d<SHADOW_NEAR||_frustum.intersectsSphere(c.sphere)); c.m.castShadow=c.shadow&&d<SHADOW_NEAR;
+    const vis=d<c.far&&(d<SHADOW_NEAR||_frustum.intersectsSphere(c.sphere)), cs=c.shadow&&d<SHADOW_NEAR; if(cs!==c.m.castShadow){c.m.castShadow=cs;SHADOW.dirty=true;}
     if(c.mf){const near=d<110;c.m.visible=vis&&near;c.mf.visible=vis&&!near;}else c.m.visible=vis;}
 }
 const kitReady=()=>!!KIT.geo.RowA;
@@ -1530,7 +1538,7 @@ gear.crossbow=new THREE.Group();
  gear.crossbow.add(mesh(new THREE.BoxGeometry(0.4,0.006,0.006),M.leatherDark,0,0.02,0.3));
  gear.crossbow.add(mesh(new THREE.BoxGeometry(0.012,0.012,0.3),M.brass,0,0.04,0.22));}
 gear.crossbow.position.set(0,-0.31,0.02); gear.crossbow.rotation.x=1.6; parts.elbowR.add(gear.crossbow);
-hero.traverse(o=>{if(o.isMesh&&o!==shadow)o.castShadow=true;});
+hero.traverse(o=>{if(o.isMesh&&o!==shadow)o.castShadow=false;});
 
 const state={seed:0,gear:{helmet:false,goggles:true,armor:false,pack:true,cape:false},weapon:'none'};
 const PRESETS={
@@ -1734,8 +1742,8 @@ function levelFrom(p){
   }
   for(const q of group)if(q.y<lvl)shiftPiece(q,lvl-q.y);
 }
-function addPiece(p){p._g=pieceMesh(p,null);piecesGroup.add(p._g);game.pieces.push(p);}
-function removePiece(p){piecesGroup.remove(p._g);p._g.traverse(o=>{if(o.geometry&&o.geometry!==G.rock)o.geometry.dispose();});game.pieces.splice(game.pieces.indexOf(p),1);}
+function addPiece(p){p._g=pieceMesh(p,null);piecesGroup.add(p._g);game.pieces.push(p);SHADOW.dirty=true;}
+function removePiece(p){SHADOW.dirty=true;piecesGroup.remove(p._g);p._g.traverse(o=>{if(o.geometry&&o.geometry!==G.rock)o.geometry.dispose();});game.pieces.splice(game.pieces.indexOf(p),1);}
 function clearPieces(){for(const p of game.pieces.slice())removePiece(p);}
 const fireLights=[0,1,2].map(()=>{const l=new THREE.PointLight(0xffa050,0,18,2);scene.add(l);return l;});
 function fires(){const list=[{x:CAMPFIRE.x,z:CAMPFIRE.z,camp:true}];for(const p of game.pieces)if(p.t==='fire')list.push(p);return list;}
@@ -2013,7 +2021,7 @@ function enemyMesh(type){
     g.rotation.x=0.18; root.userData.chest=big?2.2:1.3;
     if(big)root.scale.setScalar(1.75);
   }
-  root.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+  root.traverse(o=>{if(o.isMesh)o.castShadow=false;}); addBlob(root,type==='wolf'?1.3:1.1);
   root.userData.legs=legs; root.userData.body=g;
   return root;
 }
@@ -2819,7 +2827,7 @@ function skyUpdate(now,f,night){
   skyMat.uniforms.uCloud.value.setRGB(1,1,1).lerp(skyGrey,f*0.5).multiplyScalar(1-night*0.85);
   sky.position.copy(camera.position);
   const dir=sd.y>-0.05?sd:md, low=1-Math.min(1,Math.max(0,sd.y)*2.5);
-  sun.position.set(player.x+dir.x*110,hero.position.y+dir.y*110+8,player.z+dir.z*110);
+  sun.position.set(sun.target.position.x+dir.x*110,sun.target.position.y+dir.y*110+8,sun.target.position.z+dir.z*110);   // the shadow map's centre moves only when it is redrawn
   sun.color.copy(sd.y>-0.05?sunNoon.clone().lerp(sunWarm,low):moonCol);
   hemi.color.copy(hemiDay).lerp(hemiNight,night);
   waterMat.userData.time&&(waterMat.userData.time.value=now/1000);
@@ -2843,7 +2851,7 @@ function loadPeople(){
   if(!THREE.GLTFLoader)return;
   const L=new THREE.GLTFLoader();
   L.load('tinker.gltf.json',g=>{
-    heroModel=g.scene; toSceneMats(heroModel); heroModel.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}});
+    heroModel=g.scene; toSceneMats(heroModel); heroModel.traverse(o=>{if(o.isMesh){o.castShadow=false;o.frustumCulled=false;}});
     body.visible=false; hero.add(heroModel);
     heroMixer=new THREE.AnimationMixer(heroModel); g.animations.forEach(c=>heroActs[c.name]=heroMixer.clipAction(c));
     const hl=boneOf(heroModel,'hand.L'); if(hl){hl.add(lanternMesh);lanternMesh.position.set(0,0.12,0.06);lanternMesh.scale.setScalar(1.6);}
@@ -2944,7 +2952,7 @@ function preparePeoples(gltf){
 }
 function makeLooked(gltf,look){
   const m=THREE.SkeletonUtils.clone(gltf.scene);
-  m.traverse(o=>{if(o.isMesh){const [mat,dep]=peopleMaterials(look);o.material=mat;o.customDepthMaterial=dep;o.castShadow=true;o.frustumCulled=false;}});
+  m.traverse(o=>{if(o.isMesh){const [mat,dep]=peopleMaterials(look);o.material=mat;o.customDepthMaterial=dep;o.castShadow=false;o.frustumCulled=false;}}); addBlob(m,1);
   m.scale.set(look.w,look.h,look.w); m.userData.look=look; return m;
 }
 // who you meet where
@@ -2964,7 +2972,7 @@ function raceAt(x,z){
   let u=Math.random(); for(const k in mix){u-=mix[k];if(u<=0)return k;} return 'Wayfolk';
 }
 
-function folkShadow(m,d){const on=d<28;if(m.userData.sh!==on){m.userData.sh=on;m.traverse(o=>{if(o.isMesh)o.castShadow=on;});}}
+function folkShadow(m,d){}   // townsfolk carry a blob shadow instead (see SHADOW)
 function makeFolk(guard,race){
   const look=rollPerson(race||raceAt(player.x,player.z),guard), m=bodies?makePainted(look,guard):makeLooked(folk,look);
   const mix=new THREE.AnimationMixer(m); m.userData.mixer=mix;
@@ -2998,14 +3006,14 @@ function makePainted(L,guard){
   const hr=BODY_H[L.race]?(fem&&L.race==='Ferrin'?[1.06,1.12]:BODY_H[L.race]):R.h, h=hr[0]+rnd()*(hr[1]-hr[0]);
   const w=(R.w[0]+rnd()*(R.w[1]-R.w[0])-1)*7+(rnd()-0.5)*0.6;     // the old width range, as a build: under 0 lean, over 0 heavy
   setBuild(m,Math.min(1,Math.max(0,-w)),Math.min(1,Math.max(0,w))); setDefinition(m,fem?0.3:0.6);
-  m.scale.setScalar(h); m.userData.look=L;
+  m.scale.setScalar(h); m.userData.look=L; m.traverse(o=>{if(o.isMesh)o.castShadow=false;}); addBlob(m,1/h);
   // the far body: 1,500 triangles on the same skeleton, paint and shapes; no hair meshes (the paint has a hairline)
   const lg=bodies[(fem?'f':'m')+'l'], body=m.userData.rig&&m.userData.rig.body;
   if(lg&&body){let src=null;lg.scene.traverse(o=>{if(o.isSkinnedMesh&&o.morphTargetDictionary)src=o;});
     if(src){const lod=new THREE.SkinnedMesh(src.geometry,body.material);lod.name='BodyFar';
       lod.morphTargetInfluences=body.morphTargetInfluences;lod.morphTargetDictionary=body.morphTargetDictionary;
       lod.position.copy(body.position);lod.quaternion.copy(body.quaternion);lod.scale.copy(body.scale);body.parent.add(lod);
-      lod.bind(body.skeleton,body.bindMatrix);lod.visible=false;lod.castShadow=true;
+      lod.bind(body.skeleton,body.bindMatrix);lod.visible=false;lod.castShadow=false;
       const hair=[];m.traverse(o=>{if(o.isMesh&&o!==body&&o!==lod&&o.visible)hair.push(o);});
       m.userData.lod={body,lod,hair,far:false};FOLK_LOD.push(m);}}
   // skip anyone off-screen: the bind-pose bounds, padded for the swing of arms and legs and for the peoples' shapes
@@ -3115,7 +3123,6 @@ function frame(now){
   body.position.y=(Math.abs(cpz)*0.05-0.025)*amt;
   gear.cape.rotation.x=0.08+amt*(run>1?0.65:0.35)+Math.sin(now*0.004)*0.04;
   shadow.position.y=Math.max(0.03,-hero.position.y+0.03);
-  sun.target.position.set(player.x,hero.position.y,player.z);
   const cs=coreUpdate(dt,now);
   heroAnim(dt,mag,run);
   combatUpdate(dt,now);
@@ -3158,7 +3165,12 @@ function frame(now){
   if(towerGlow){towerGlow.rotation.y+=dt*0.6;towerGlow.position.y=44+Math.sin(now*0.0015)*0.6;}
   if(capitalBeam){capitalBeam.position.set(CITY.x,450,CITY.z);}
 
-  farUniforms.uNear.value.set(player.x,player.z); cullCells(); folkLod(); renderer.render(scene,camera);
+  farUniforms.uNear.value.set(player.x,player.z); cullCells(); folkLod();
+  if(SHADOW.dirty||Math.hypot(player.x-SHADOW.x,player.z-SHADOW.z)>3||now-SHADOW.t>4000){
+    const tex=(sun.shadow.camera.right-sun.shadow.camera.left)/sun.shadow.mapSize.x, sx=Math.round(player.x/tex)*tex, sz=Math.round(player.z/tex)*tex, sy=Math.round(hero.position.y/tex)*tex;
+    const d=sun.position.clone().sub(sun.target.position); sun.target.position.set(sx,sy,sz); sun.position.set(sx+d.x,sy+d.y,sz+d.z); sun.target.updateMatrixWorld(); sun.updateMatrixWorld();
+    renderer.shadowMap.needsUpdate=true; SHADOW.x=player.x; SHADOW.z=player.z; SHADOW.t=now; SHADOW.dirty=false;}
+  renderer.render(scene,camera);
 
   // HUD
   fpsAcc+=dt;fpsN++;

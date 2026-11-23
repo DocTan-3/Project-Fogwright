@@ -134,6 +134,18 @@ def place(V):
             if b.startswith('upperarm_' + s): J[b] = (Mu(J[b][0]), Mu(J[b][1]))
             elif b.startswith(('lowerarm_' + s, 'hand_' + s)) or (b.endswith('_' + s) and b.split('_')[0] in ('thumb', 'index', 'middle', 'ring', 'pinky')):
                 J[b] = (Mf(J[b][0]), Mf(J[b][1]))
+    # the legs: MakeHuman stands with its ankles well outside its hips; bring each leg in about the hip until the ankle
+    # is under it (a hand's width apart for the feet), and carry the foot across without tilting it, so the sole stays flat
+    for s, sx in (('l', 1), ('r', -1)):
+        Hp = J[f'thigh_{s}'][0]; A = J[f'foot_{s}'][0]
+        want = np.array([sx * (abs(Hp[0]) - 0.012), A[1], A[2]])
+        R = rot_between(A - Hp, want - Hp); A2 = Hp + R @ (A - Hp); dA = A2 - A
+        S = s.upper(); wl = (bw(f'thigh.{S}') + bw(f'shin.{S}'))[:, None]; wfo = bw(f'foot.{S}')[:, None]
+        Ml = lambda p: Hp + (p - Hp) @ R.T
+        P = P * (1 - wl - wfo) + Ml(P) * wl + (P + dA) * wfo
+        for b in list(J):
+            if b.startswith(('thigh_' + s, 'calf_' + s)): J[b] = (Ml(J[b][0]), Ml(J[b][1]))
+            elif b.startswith(('foot_' + s, 'ball_' + s)): J[b] = (J[b][0] + dA, J[b][1] + dA)
     return P, J
 
 place(make('Human'))                     # the scale comes from the Human body, so every people keeps its own height
@@ -449,11 +461,11 @@ def arms(sw=0.0, br=0.0):
 def idle2(f):
     ph = 2 * math.pi * f / 48; b = math.sin(ph)
     d = {'spine': (-0.02, 0, 0), 'chest': (-0.07 + 0.015 * b, 0, 0), 'neck': (0.07 - 0.012 * b, 0, 0), 'head': (0.01, 0, 0.04 * math.sin(ph * 0.5)),
-         'thigh.L': (0.07, -0.07, 0), 'thigh.R': (0.07, -0.07, 0), 'shin.L': (-0.13, 0, 0), 'shin.R': (-0.13, 0, 0), 'foot.L': (0.06, 0.05, 0), 'foot.R': (0.06, 0.05, 0)}
+         'thigh.L': (0.06, 0.0, 0), 'thigh.R': (0.06, 0.0, 0), 'shin.L': (-0.13, 0, 0), 'shin.R': (-0.13, 0, 0), 'foot.L': (0.06, 0.05, 0), 'foot.R': (0.06, 0.05, 0)}
     return d, -0.012 - 0.004 * (1 - math.cos(ph)) / 2, arms(0.0, 0.004 * b)
 def walk2(f):
     ph = 2 * math.pi * f / 24; s, c = math.sin(ph), math.cos(ph)
-    d = {'thigh.L': (0.4 * s + 0.04, -0.03, 0), 'thigh.R': (-0.4 * s + 0.04, -0.03, 0),
+    d = {'thigh.L': (0.4 * s + 0.04, 0.035, 0), 'thigh.R': (-0.4 * s + 0.04, 0.035, 0),
          'shin.L': (-(0.14 + 0.85 * max(0, c)), 0, 0), 'shin.R': (-(0.14 + 0.85 * max(0, -c)), 0, 0),
          'foot.L': (0.25 * max(0, -s) - 0.15 * max(0, s), 0, 0), 'foot.R': (0.25 * max(0, s) - 0.15 * max(0, -s), 0, 0),
          'hips': (0, 0, -0.08 * s), 'spine': (0.07, 0, 0.08 * s), 'chest': (-0.01, 0, 0.07 * s), 'neck': (-0.02, 0, -0.1 * s)}   # a little forward lean
