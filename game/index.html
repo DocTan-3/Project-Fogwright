@@ -3513,7 +3513,9 @@ function villageUpdate(dt){
 
 /* ---------- Admin tools: teleport, time, god mode, speed ---------- */
 const ADMIN={god:false,fast:false};
-function qSpot(name){const i=QUARTERS.findIndex(q=>q.name===name),[a,r0]=QSEED_AR[i],R=RINGS.reduce((b,v)=>Math.abs(v-r0)<Math.abs(b-r0)?v:b);return [CITY.x+Math.cos(a)*R,CITY.z+Math.sin(a)*R,-a-Math.PI/2];}
+function qSpot(name){const i=QUARTERS.findIndex(q=>q.name===name),[a0,r0]=QSEED_AR[i],sx=CITY.x+Math.cos(a0)*r0,sz=CITY.z+Math.sin(a0)*r0;let best=null,bd=1e9;
+  for(const R of RINGS)for(let a=0;a<6.283;a+=0.01){const x=CITY.x+Math.cos(a)*R,z=CITY.z+Math.sin(a)*R;if(qIndex(x,z)!==i)continue;const d=Math.hypot(x-sx,z-sz);if(d<bd){bd=d;best=[x,z,-a-Math.PI/2];}}
+  return best||[sx,sz,0];}
 const SPOTS=[
   ['The village',()=>[VILLAGE.x+4,VILLAGE.z+18,Math.PI]],['South road',()=>[-20,380,0]],["Hollin's Cross pier",()=>[PORT.x,PORT.z+20,0]],
   ['Outside the city gate',()=>[CITY.x,CITY.z+CITY.r+40,0]],['The outskirts',()=>[CITY.x+70,CITY.z+CITY.r+80,0]],['Market square',()=>{const [x,z]=marketPos();return [x,z+14,0];}],
