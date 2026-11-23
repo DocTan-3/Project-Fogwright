@@ -101,7 +101,7 @@ def joints_of(V):
     return J
 
 # ---------- 2. into our space: scaled to our height, feet on the ground, arms hanging at our rig's angle
-ARM_DIR = {'ua': np.array([0.0857, 0.0, -0.2514]), 'fa': np.array([0.0675, 0.0, -0.2134])}   # the old rig's upper arm and forearm
+ARM_DIR = {'ua': np.array([0.0857, 0.03, -0.2514]), 'fa': np.array([0.0675, -0.04, -0.2134])}   # the old rig's arm, with a relaxed bend at the elbow
 for k in ARM_DIR: ARM_DIR[k] /= np.linalg.norm(ARM_DIR[k])
 def rot_between(a, b):
     a = a / np.linalg.norm(a); b = b / np.linalg.norm(b); v = np.cross(a, b); c = float(np.dot(a, b))
@@ -442,8 +442,8 @@ def arms(sw=0.0, br=0.0):
         k = sw * (1 if side == 'L' else -1)
         e, w, h = REST_ARM[side]
         out += [(f'upper_arm.{side}', (e[0] + 0.01 * sx_, e[1] + 0.07 * k, e[2] + br)),
-                (f'forearm.{side}', (w[0] - 0.01 * sx_, w[1] + 0.14 * k - 0.04 * abs(sw), w[2] + br + 0.01)),
-                (f'hand.{side}', (h[0] - 0.015 * sx_, h[1] + 0.18 * k - 0.05 * abs(sw), h[2] + br + 0.02))]
+                (f'forearm.{side}', (w[0] - 0.01 * sx_, w[1] + 0.12 * k - 0.03 - 0.05 * abs(sw) - 0.04 * max(0, -k), w[2] + br + 0.015 + 0.02 * max(0, -k))),
+                (f'hand.{side}', (h[0] - 0.015 * sx_, h[1] + 0.15 * k - 0.045 - 0.07 * abs(sw) - 0.06 * max(0, -k), h[2] + br + 0.03 + 0.03 * max(0, -k)))]
     return out
 def idle2(f):
     ph = 2 * math.pi * f / 48; b = math.sin(ph)
@@ -452,10 +452,10 @@ def idle2(f):
     return d, -0.012 - 0.004 * (1 - math.cos(ph)) / 2, arms(0.0, 0.004 * b)
 def walk2(f):
     ph = 2 * math.pi * f / 24; s, c = math.sin(ph), math.cos(ph)
-    d = {'thigh.L': (0.5 * s, -0.03, 0), 'thigh.R': (-0.5 * s, -0.03, 0),
-         'shin.L': (-(0.1 + 0.75 * max(0, c)), 0, 0), 'shin.R': (-(0.1 + 0.75 * max(0, -c)), 0, 0),
+    d = {'thigh.L': (0.4 * s + 0.04, -0.03, 0), 'thigh.R': (-0.4 * s + 0.04, -0.03, 0),
+         'shin.L': (-(0.14 + 0.85 * max(0, c)), 0, 0), 'shin.R': (-(0.14 + 0.85 * max(0, -c)), 0, 0),
          'foot.L': (0.25 * max(0, -s) - 0.15 * max(0, s), 0, 0), 'foot.R': (0.25 * max(0, s) - 0.15 * max(0, -s), 0, 0),
-         'hips': (0, 0, -0.08 * s), 'spine': (0.03, 0, 0.08 * s), 'chest': (-0.04, 0, 0.07 * s), 'neck': (0.03, 0, -0.1 * s)}
+         'hips': (0, 0, -0.08 * s), 'spine': (0.07, 0, 0.08 * s), 'chest': (-0.01, 0, 0.07 * s), 'neck': (-0.02, 0, -0.1 * s)}   # a little forward lean
     return d, -0.03 * (1 - abs(c)), arms(s, 0.008 * abs(c))
 arm.data.pose_position = 'POSE'
 bake('Idle', range(0, 49, 4), idle2)
