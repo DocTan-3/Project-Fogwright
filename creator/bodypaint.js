@@ -1,3 +1,5 @@
+// Shared by the character creator and the game: painted bodies, hair, builds, and peoples as built-in shapes.
+// Load after three.js, GLTFLoader and SkeletonUtils.
 /* ---------- Painted bodies: one seamless mesh, everything else is paint, computed from where each point sits on the body ---------- */
 // rest-space coordinates (as modelled): x across, y forward is negative, z up, metres.
 const PAINT_GLSL=`
@@ -387,3 +389,4 @@ function playPeople(root,mixer,clipName){
   const rig=root.userData.rig, src=(rig?rig.clips:[]).find(c=>c.name===clipName); if(!src)return null;
   mixer.stopAllAction(); const a=mixer.clipAction(rig?peopleClip(rig,src):src); a.play(); return a;
 }
+

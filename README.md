@@ -4,11 +4,15 @@ A lightweight, cross-platform co-op MMO prototype: a high-fantasy world with ste
 
 ## Run it
 
+**On a Windows laptop:** download the repository (Code → Download ZIP on GitHub, or `git clone`), unzip it, and double-click **`Play Fogwright.bat`**. It starts a small local server (`tools/serve.ps1`, nothing to install) and opens a start page with the world, the character creator and the old bodies for comparison. Close its window to stop it.
+
+**Anywhere else (Mac, Linux, or Windows with Python):**
+
 Serve the repository with any static file server and open `game/index.html`:
 
 ```sh
 python3 -m http.server 8000
-# then open http://localhost:8000/game/index.html
+# then open http://localhost:8000/ (the start page) or http://localhost:8000/game/index.html
 ```
 
 `file://` won't work, because the character models are loaded over HTTP. On phones and tablets the game asks for landscape.
@@ -22,7 +26,8 @@ python3 -m http.server 8000
 
 | Path | What it is |
 | --- | --- |
-| `game/index.html` | The playable prototype (v0.14), a single file. |
+| `index.html` | The start page: the world, the creator, and the creator with the old bodies. |
+| `game/index.html` | The playable prototype (v0.14), a single file. Townsfolk, guards and villagers are the creator's MakeHuman bodies (painted clothes and hair, every people's shape, men and women), through `creator/bodypaint.js`; if those fail to load, the old `peoples.gltf.json` model is used. |
 | `game/*.gltf.json` | The hero (Tinker) and the townsfolk (eight peoples). They're glTF with embedded buffers, saved as `.gltf.json` so any static host serves them. |
 | `studies/peoples-viewer.html` | Lineup of the eight peoples and the city watch (first pass, kitbashed). |
 | `studies/body-viewer.html` | The new direction: one seamless body with face and clothes painted by code, a head built from cross-sections (square jaw, real chin, heavy brow), and hair and beards as solid sculpted masses with painted strands, the way Valheim does them: short, swept, long, ponytail and topknot hair; short, full (spade), pointed, forked and braided beards; a moustache. A work in progress. |
@@ -33,6 +38,8 @@ python3 -m http.server 8000
 | `studies/tinker-viewer.html` | Review viewer for the Tinker hero model. |
 | `tools/blender/` | Blender (bpy) scripts that build the characters. `tinker.py` makes the hero and the rig with its Idle, Walk and Aim animations; `races.py` makes the kitbashed peoples model; `body.py` makes the clean seamless base body; `kit.py` is the original building kit, now generated in code inside the game; `merge_peoples.py` merges the per-people bodies into one model with a morph per people and each people's joint positions; `glb2json.py` turns a `.glb` into a `.gltf.json`. |
 | `tools/test/smoke.js` | Headless smoke test: boots the game, visits a few places and reports page errors. |
+| `tools/test/creator.js` | Creator test: every body, people, build extreme and view; fails on page errors or a missing shape. |
+| `creator/bodypaint.js` | The painted bodies, hair, builds and peoples' shapes, shared by the creator and the game. |
 
 ### Rebuilding the MakeHuman bodies
 

@@ -260,6 +260,7 @@ button:disabled{opacity:.4;cursor:default}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="../creator/bodypaint.js"></script>
 <script>
 (() => {
 'use strict';
@@ -2484,7 +2485,7 @@ function patrolPoint(route,t){
 const ROUTES=(()=>{const road=ROADS[1].slice().reverse(),len=road.reduce((s,p,i)=>i?s+Math.hypot(p[0]-road[i-1][0],p[1]-road[i-1][1]):0,0);
   return [{arc:true,r:CITY.r+60,a0:OUT.a0+0.05,a1:OUT.a1-0.05,speed:1.4,len:2*(CITY.r+60)*1.4},{arc:true,r:CITY.r+165,a0:OUT.a1-0.05,a1:OUT.a0+0.05,speed:1.4,len:2*(CITY.r+165)*1.4},
     {arc:true,r:CITY.r+16,a0:OUT.a0-0.9,a1:OUT.a1+0.9,speed:1.4,len:2*(CITY.r+16)*3.2},{pts:road,len:2*len,side:3,speed:1.5},{pts:road,len:2*len,side:-3,speed:1.5,t0:Math.PI}];})();
-function folkWith(clip,guard){const m=makeFolk(guard);const mix=m.userData.mixer;mix.stopAllAction();const c=folk.animations.find(a=>a.name===clip);if(c){const a=mix.clipAction(c);a.play();a.time=Math.random()*c.duration;}return m;}
+function folkWith(clip,guard){const m=makeFolk(guard);const mix=m.userData.mixer;mix.stopAllAction();const a=folkAction(m,clip);if(a){a.play();a.time=Math.random()*a.getClip().duration;}return m;}
 function outskirtsUpdate(dt,night){
   if(!folk)return;
   const near=Math.hypot(player.x-GATE.x,player.z-GATE.z)<OUT.r1-CITY.r+260&&Math.hypot(player.x-CITY.x,player.z-CITY.z)>CITY.r-30;
@@ -2502,7 +2503,7 @@ function outskirtsUpdate(dt,night){
   const want=near?Math.round(30*(1-0.55*night)):0, P0=OUTSK.pois;
   const pickPoi=(x,z)=>{let best=null;for(let k=0;k<6;k++){const p=P0[Math.floor(Math.random()*P0.length)];if(Math.hypot(p[0]-x,p[1]-z)<70){best=p;break;}best=p;}return best;};
   for(let tries=0;OUTSK.folk.length<want&&P0.length&&tries<60;tries++){const p=P0[Math.floor(Math.random()*P0.length)];if(Math.hypot(p[0]-player.x,p[1]-player.z)>140&&OUTSK.folk.length>4)continue;
-    const m=makeFolk(false),idle=folk.animations.find(c=>c.name==='Idle');m.userData.idle=idle?m.userData.mixer.clipAction(idle):null;
+    const m=makeFolk(false);m.userData.idle=folkAction(m,'Idle');
     OUTSK.folk.push({x:p[0]+(Math.random()-0.5)*4,z:p[1]+(Math.random()-0.5)*4,tgt:pickPoi(p[0],p[1]),wait:Math.random()*4,speed:0.9+Math.random()*0.5,mesh:m});}
   while(OUTSK.folk.length>want)scene.remove(OUTSK.folk.pop().mesh);
   for(const f of OUTSK.folk){const mix=f.mesh.userData.mixer;
@@ -2595,7 +2596,7 @@ function skyUpdate(now,f,night){
 }
 
 /* ---------- People: the Tinker model for the player, townsfolk for crowds ---------- */
-let folk=null, heroModel=null, heroMixer=null, heroActs={}, heroClip='';
+let folk=null, bodies=null, heroModel=null, heroMixer=null, heroActs={}, heroClip='';
 const villagers=[];
 function toSceneMats(root){
   root.traverse(o=>{if(!o.isMesh)return;const m=o.material;
@@ -2618,7 +2619,12 @@ function loadPeople(){
     const hl=boneOf(heroModel,'hand.L'); if(hl){hl.add(lanternMesh);lanternMesh.position.set(0,0.12,0.06);lanternMesh.scale.setScalar(1.6);}
     playHero('Idle');
   },undefined,()=>{});
-  L.load('peoples.gltf.json',g=>{folk=g;preparePeoples(folk);for(const p of crowd)scene.remove(p.mesh);crowd.length=0;for(const v of villagers)scene.remove(v.mesh);villagers.length=0;placeGuards();},undefined,()=>{});
+  const B={}, BODY_DIR=window.FOGWRIGHT_BODIES||'../creator/';
+  if(typeof rigPeople==='function')for(const [k,f] of [['m','mh_m.gltf.json'],['f','mh_f.gltf.json']])L.load(BODY_DIR+f,g=>{preparePainted(g);B[k]=g;
+    if(B.m&&B.f){bodies=B;folk=folk||g;for(const p of crowd)scene.remove(p.mesh);crowd.length=0;for(const v of villagers)scene.remove(v.mesh);villagers.length=0;placeGuards();
+      for(const f of OUTSK.folk)scene.remove(f.mesh);OUTSK.folk.length=0;for(const p of OUTSK.patrols)if(p.mesh){scene.remove(p.mesh);p.mesh=null;}
+      if(OUTSK.built){OUTSK.built=false;for(const s of OUTSK.static.concat(OUTSK.queue)){scene.remove(s.mesh);s.mesh=null;}for(let i=colliders.length-1;i>=0;i--)if(colliders[i].outsk)colliders.splice(i,1);}}},undefined,()=>{});
+  L.load('peoples.gltf.json',g=>{folk=g;if(bodies)return;preparePeoples(folk);for(const p of crowd)scene.remove(p.mesh);crowd.length=0;for(const v of villagers)scene.remove(v.mesh);villagers.length=0;placeGuards();},undefined,()=>{});
 }
 function playHero(n){if(n===heroClip||!heroActs[n])return;const next=heroActs[n];next.reset().play();if(heroActs[heroClip])heroActs[heroClip].crossFadeTo(next,0.2,false);heroClip=n;}
 function heroAnim(dt,mag,run){
@@ -2729,12 +2735,40 @@ function raceAt(x,z){
 
 function folkShadow(m,d){const on=d<28;if(m.userData.sh!==on){m.userData.sh=on;m.traverse(o=>{if(o.isMesh)o.castShadow=on;});}}
 function makeFolk(guard,race){
-  const look=rollPerson(race||raceAt(player.x,player.z),guard), m=makeLooked(folk,look);
-  const mix=new THREE.AnimationMixer(m), clip=folk.animations.find(c=>c.name===(guard?'Idle':'Walk'));
-  if(clip){const a=mix.clipAction(clip);a.play();a.time=Math.random()*clip.duration;}
-  m.userData.mixer=mix;
-  if(guard){const hr=boneOf(m,'hand.R');if(hr){const sp=new THREE.Group();sp.add(cyl(0.03,0.03,2.6,4,timberDark,0,0.6,0));const tip=new THREE.Mesh(new THREE.ConeGeometry(0.07,0.3,4),stone);tip.position.y=2;sp.add(tip);hr.add(sp);}}
+  const look=rollPerson(race||raceAt(player.x,player.z),guard), m=bodies?makePainted(look,guard):makeLooked(folk,look);
+  const mix=new THREE.AnimationMixer(m); m.userData.mixer=mix;
+  const a=folkAction(m,guard?'Idle':'Walk'); if(a){a.play();a.time=Math.random()*a.getClip().duration;}
+  if(guard){const hr=boneOf(m,'hand.R');if(hr){const sp=new THREE.Group();sp.add(cyl(0.03,0.03,2.6,4,timberDark,0,0.6,0));const tip=new THREE.Mesh(new THREE.ConeGeometry(0.07,0.3,4),stone);tip.position.y=2;sp.add(tip);
+    if(m.userData.rig)sp.scale.setScalar(1/m.scale.x);hr.add(sp);}}
   scene.add(m); return m;
+}
+// an animation for a townsperson: on the MakeHuman bodies the clip is rebased on that people's skeleton
+function folkAction(m,name){
+  const rig=m.userData.rig, src=(rig?rig.clips:folk.animations).find(c=>c.name===name); if(!src)return null;
+  return m.userData.mixer.clipAction(rig?peopleClip(rig,src):src);
+}
+/* ---------- Townsfolk on the MakeHuman bodies (the creator's bodies, paint and hair; creator/bodypaint.js) ---------- */
+const BODY_SHAPE={Aurelan:'Aurelan',Ilvari:'Ilvari',Ferrin:'Ferrin',Zarhim:'Zarhim'};   // the others are the Human body, sized
+const BODY_H={Aurelan:[0.97,1.03],Ilvari:[0.98,1.02],Ferrin:[0.96,1.0],Zarhim:[0.97,1.03]};
+const EYE_COLS=['#4a6a8a','#5a7a4a','#5a3a26','#6e7a86','#3a2a1a','#4a3a2a'];
+function makePainted(L,guard){
+  const rnd=Math.random, any=a=>a[Math.floor(rnd()*a.length)], on=L.on, R=PEOPLES[L.race]||PEOPLES.Wayfolk;
+  const fem=rnd()<(guard?0.25:0.5), col=i=>new THREE.Color(L.pal[i][0],L.pal[i][1],L.pal[i][2]);
+  const covered=on[9]||on[10]||on[16];
+  let hair=covered?null:on[8]?any(fem?['Long','Ponytail']:['Long','Ponytail']):on[1]?any(fem?['Topknot','Swept','Ponytail','Long']:['Short','Swept','Short','Topknot']):null;
+  if(fem&&!hair&&!covered)hair='Long';
+  const look={name:L.race,people:L.race,fem:fem?1:0,hair,beard:!fem&&on[7]?any(['Full','Short','Pointed','Braided','Forked']):null,
+    moustache:!fem&&on[2]&&!on[7]?any(['Chevron','Handlebar','Horseshoe','Pencil','Walrus']):null,base:[0,0,0,0.5],
+    uSkin:col(0),uHair:col(1),uEye:any(EYE_COLS),uShirt:col(2),uVest:on[4]?col(7):col(3),uPants:col(4),uBelt:col(5),uBoots:col(17),
+    uTrim:guard?col(15):col(14),uInk:col(10),uLip:fem?'#b8605a':'#a8665a',
+    f1:[on[3]||on[4]?1:0,0,on[13]?1:0,L.race==='Ruadhan'&&rnd()<0.6?1:0],f2:[hair?1:0,on[18]?1:0,on[4]?3:(rnd()<0.2?1:0),on[15]?1:0]};
+  const g=bodies[fem?'f':'m'], m=THREE.SkeletonUtils.clone(g.scene);
+  rigPeople(m,g); dressFigure(m,look); setPeople(m,BODY_SHAPE[L.race]||'Human');
+  const hr=BODY_H[L.race]?(fem&&L.race==='Ferrin'?[1.06,1.12]:BODY_H[L.race]):R.h, h=hr[0]+rnd()*(hr[1]-hr[0]);
+  const w=(R.w[0]+rnd()*(R.w[1]-R.w[0])-1)*7+(rnd()-0.5)*0.6;     // the old width range, as a build: under 0 lean, over 0 heavy
+  setBuild(m,Math.min(1,Math.max(0,-w)),Math.min(1,Math.max(0,w))); setDefinition(m,fem?0.3:0.6);
+  m.scale.setScalar(h); m.userData.look=L; m.traverse(o=>{if(o.isMesh)o.frustumCulled=false;});
+  return m;
 }
 function villageUpdate(dt){
   const near=Math.hypot(player.x-VILLAGE.x,player.z-VILLAGE.z)<160, want=near&&folk?7:0;
