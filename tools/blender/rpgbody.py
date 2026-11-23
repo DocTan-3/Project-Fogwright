@@ -1,5 +1,4 @@
 # Fogwright base body from the Simple RPG Human Male (Sketchfab), rigged and repainted by code.
-# RACE=human (default), ferrin, ilvari, zarhim or female; FIT=profile.json FITSEX=m|f fits the body to a reference sheet.
 # (adapted from body.py): one continuous mesh, built for painting. Exports body.glb
 # Torso, limbs, hands and feet come from a skin-modifier stick figure; the head is built ring by ring and
 # shaped by one smooth function (skull, jaw, brow, nose, lips, chin), then bridged to the neck with no seam.
@@ -18,9 +17,17 @@ sm = lambda a, b, x: (lambda t: t * t * (3 - 2 * t))(min(1.0, max(0.0, (x - a) /
 
 import os
 RACE = os.environ.get('RACE', 'human')
-MODEL_DIR = os.path.abspath('source')   # put model_0.obj from the Sketchfab download here (not committed)
+MODEL_DIR = os.path.abspath('source')
 # ---------- 1. fit our rig's arms to the model (its arms are longer, with bigger hands)
 ARMFIT = {'L': [(0.2, 0.03, 1.43), (0.255, 0.05, 1.17), (0.296, 0.03, 0.95), (0.315, 0.01, 0.70)]}
+ARM_OUT = math.radians(float(os.environ.get('ARM_OUT', '7')))            # the arms hang out at the reference sheets' A-pose
+ARM_PIV = (0.2, 1.43)
+WELD_OUT = math.radians(float(os.environ.get('WELD_OUT', '12')))   # the weld runs with the arms further out, so it cannot bridge the armpit
+def swing(x, z, a=None):
+    s_ = 1 if x > 0 else -1; dx, dz = abs(x) - ARM_PIV[0], z - ARM_PIV[1]
+    a = ARM_OUT if a is None else a; c, n = math.cos(a), math.sin(a)
+    return s_ * (ARM_PIV[0] + dx * c - dz * n), ARM_PIV[1] + dx * n + dz * c
+ARMFIT['L'] = [ARMFIT['L'][0]] + [(lambda p: (swing(p[0], p[2])[0], p[1], swing(p[0], p[2])[1]))(p) for p in ARMFIT['L'][1:]]
 bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='EDIT')
 eb = arm.data.edit_bones
 for side, sx in (('L', 1), ('R', -1)):
@@ -71,6 +78,25 @@ BODYI = order[0]; HEADI = order[1]; ARMI = [k for k in order if box(k)[0] > 0.15
 EYEI = [k for k in order[2:] if k not in ARMI and abs((box(k)[0] + box(k)[1]) / 2) > 0.01]
 MOUTHI = [k for k in order[2:] if k not in ARMI and k not in EYEI]
 hb_ = box(HEADI)
+# the arm shells swing out for the weld. Their open top edge is closed only by the torso shell it lies on, so the swing fades
+# to nothing along that seam: the arm bends out from the shoulder instead of tearing a hole the weld would leak through
+from mathutils.kdtree import KDTree
+_armpre = set(i for k in ARMI for i in islands[k])
+_kt = KDTree(len(V))
+for v in V:
+    if v.index not in _armpre: _kt.insert(v.co, v.index)
+_kt.balance()
+_seam = [i for i in _armpre if _kt.find(V[i].co)[2] < 0.004]
+_ks = KDTree(max(1, len(_seam)))
+for n_, i in enumerate(_seam): _ks.insert(V[i].co, n_)
+_ks.balance()
+FADE = {i: (sm(0.015, 0.1, _ks.find(V[i].co)[2]) if _seam else 1.0) for i in _armpre}
+print('ARM seam points', len(_seam))
+for i in _armpre:
+    c = V[i].co; nx, nz = swing(c.x, c.z, WELD_OUT * FADE[i]); c.x, c.z = nx, nz
+PREKD = KDTree(len(V))
+for v in V: PREKD.insert(v.co, v.index)
+PREKD.balance()
 eye_z = sum(V[i].co.z for k in EYEI for i in islands[k]) / sum(len(islands[k]) for k in EYEI)
 eye_x = sum(abs(V[i].co.x) for k in EYEI for i in islands[k]) / sum(len(islands[k]) for k in EYEI)
 mouth_z = 1.624
@@ -104,6 +130,14 @@ for p in body.data.polygons: p.use_smooth = True
 V = body.data.vertices
 _b = bmesh.new(); _b.from_mesh(body.data)
 print('WELD tris', tris0, '->', tris1, '->', sum(len(p.vertices) - 2 for p in body.data.polygons), 'open edges', sum(1 for e in _b.edges if e.is_boundary)); _b.free()
+# the arms swing back in from the weld angle to the rig's: every welded point that came from an arm shell turns back about the shoulder
+_back = ARM_OUT - WELD_OUT; _n = 0
+for v in body.data.vertices:
+    co, idx, _d = PREKD.find(v.co)
+    if idx not in _armpre: continue
+    nx, nz = swing(v.co.x, v.co.z, _back * FADE[idx]); v.co.x, v.co.z = nx, nz; _n += 1
+SB = [(v.co.copy(), FADE.get(PREKD.find(v.co)[1], 0.0)) for v in body.data.vertices]   # where the arm swing applies, for the paint
+print('ARMS swung back', _n, 'points by', round(math.degrees(_back), 1))
 islands = find_islands(); print('pieces after weld', len(islands), sorted(len(k) for k in islands)[-4:])
 if RACE == 'female':   # more triangles over the bust, so it rounds smoothly
     _b = bmesh.new(); _b.from_mesh(body.data)
@@ -819,10 +853,39 @@ for ob in HAIRS:
 me = body.data
 ca = me.color_attributes.new('rest', 'FLOAT_COLOR', 'POINT')
 armset = set(i for i in range(len(me.vertices)) if isarm(ORIG[i]))
+# The paint is drawn on a template: the borrowed model's layout, arms hanging at its own angle. Each point keeps its identity on that
+# template (ORIG), so painted forms stay on the same flesh however the body is reshaped. Two corrections bring it to the new rig:
+#  - the arms are painted as if swung back in, so elbows, wrists and shoulder caps sit where the template has them;
+#  - on a body fitted to a sheet, torso heights are remapped by landmarks, so the template's bands land on this body's anatomy.
+_ksb = KDTree(len(SB))
+for n_, (p_, f_) in enumerate(SB): _ksb.insert(p_, n_)
+_ksb.balance()
+SWF = [SB[_ksb.find(ORIG[i])[1]][1] for i in range(len(me.vertices))]
+def front_z(pred):   # the height, on this body, of the (non-arm) points whose template height passes pred
+    zs = sorted(me.vertices[i].co.z for i in range(len(me.vertices)) if i not in armset and pred(ORIG[i].z))
+    return zs[len(zs) // 2] if zs else None
+ZA, ZB = [], []                                    # landmarks: this body's height -> the template's
+for zt in (0.13, 0.52, 0.9, 1.01, 1.45):
+    zf = front_z(lambda z, zt=zt: abs(z - zt) < 0.008)
+    if zf is not None: ZA.append(zf); ZB.append(zt)
+if os.environ.get('FIT') and RACE == 'female':     # her bust: the wrap and the shadow beneath it are drawn about 1.30 on the template
+    cand = [v for v in me.vertices if v.index not in armset and 0.04 < abs(v.co.x) < 0.13 and 1.1 < v.co.z < 1.45]
+    apex = min(cand, key=lambda v: v.co.y)
+    ZA.append(apex.co.z); ZB.append(1.30)
+    print('PAINT bust apex', round(apex.co.x, 3), round(apex.co.y, 3), round(apex.co.z, 3), 'template z was', round(ORIG[apex.index].z, 3))
+LM = sorted(zip(ZA, ZB)); ZA, ZB = [a for a, b in LM], [b for a, b in LM]
+print('PAINT landmarks', [(round(a, 3), b) for a, b in LM])
+FITTED = bool(os.environ.get('FIT'))
 for v in me.vertices:
-    x, y, z = ORIG[v.index]                       # paint follows the original body, whatever shape it took
-    if z > 1.47 and v.index not in armset:      # blend from body space into the face layout up the neck
-        t = sm(1.47, 1.555, z)
+    o_ = ORIG[v.index]; x, y, z = o_
+    if FITTED and z < 1.45:                        # torso heights from the landmarks, fading back to the template up the neck
+        z = z + (pl(v.co.z, ZA, ZB) - z) * (1 - sm(1.40, 1.45, z))
+    f_ = SWF[v.index]
+    if f_ > 0:                                     # the arm, swung back to the template's angle
+        ax_, az_ = swing(o_.x, o_.z, -ARM_OUT * f_); a_ = sm(0.0, 0.25, f_)
+        x = x + (ax_ - x) * a_; z = z + (az_ - z) * a_
+    if z > 1.47 and v.index not in armset:      # blend from body space into the face layout up the neck (the neck only, not the shoulder tops)
+        t = sm(1.47, 1.555, z) * max(1 - sm(0.07, 0.1, math.hypot(x, y - C0.y)), sm(1.53, 1.56, z))
         x = x + (x * KX0 - x) * t; y = y + ((y - C0.y) * KX0 + 0.004 - y) * t; z = z + (Zm2c0(z) - z) * t
     ca.data[v.index].color = (x + 0.5, y + 0.5, z / 2, 0.0 if v.index in armset else 1.0)   # alpha: 0 on the arms
 me.color_attributes.active_color = ca
@@ -831,7 +894,9 @@ mat = bpy.data.materials.new('Body'); me.materials.append(mat)
 # ---------- skin it to the rig
 bpy.ops.object.select_all(action='DESELECT'); body.select_set(True); arm.select_set(True); bpy.context.view_layer.objects.active = arm
 bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-print('GROUPS', len(body.vertex_groups))
+_unw = sum(1 for v in body.data.vertices if not v.groups)
+print('GROUPS', len(body.vertex_groups), 'unweighted', _unw)
+if _unw: raise SystemExit(f'skinning failed: {_unw} vertices have no weights (bone heat found no solution)')
 # alpha of the rest colour: how much each point belongs to the torso (not the upper arm, forearm or hand), from the skin weights
 _arm = {body.vertex_groups[n].index for n in ('upper_arm.L', 'upper_arm.R', 'forearm.L', 'forearm.R', 'hand.L', 'hand.R') if n in body.vertex_groups}
 _ca = body.data.color_attributes['rest']

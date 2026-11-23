@@ -74,6 +74,16 @@ for name, f in others:
     names.append(name); joints[name] = joint_world(j)
     print(name, 'max shift', round(max(math.sqrt(sum(c * c for c in d)) for d in dp), 3))
 
+# REST_FROM=body.glb: paint coordinates (COLOR_0) come from that body, e.g. the people fitted to a reference sheet
+import os
+if os.environ.get('REST_FROM'):
+    j2, b2 = load(os.environ['REST_FROM']); m2, p2 = body_prim(j2)
+    a1 = J['accessors'][P['attributes']['COLOR_0']]; a2 = j2['accessors'][p2['attributes']['COLOR_0']]
+    v1 = J['bufferViews'][a1['bufferView']]; v2 = j2['bufferViews'][a2['bufferView']]
+    if a1['count'] != a2['count'] or a1['componentType'] != a2['componentType'] or v1['byteLength'] != v2['byteLength']: raise SystemExit('REST_FROM does not match')
+    o1 = v1.get('byteOffset', 0); o2 = v2.get('byteOffset', 0)
+    B[o1:o1 + v1['byteLength']] = b2[o2:o2 + v2['byteLength']]
+    print('paint coordinates from', os.environ['REST_FROM'])
 # a morph needs a weight on the mesh node too
 for n in J['nodes']:
     if n.get('mesh') == J['meshes'].index(M) and 'weights' in n: n['weights'] += [0.0] * len(others)

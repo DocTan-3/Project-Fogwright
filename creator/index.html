@@ -149,6 +149,7 @@ vec4 femWrap(vec3 p){ // a linen chest wrap: colour and coverage
 // ---- the base layer: bare skin, shaded softly like a painted texture, and plain undyed underclothes
 vec3 skinTone(vec3 p){return uSkin*(0.965+0.045*vnoise(p.xz*170.)+0.02*vnoise(p.yz*55.));}
 vec3 linen(vec3 p,float k){vec3 c=uPants*(0.93+0.07*vnoise(p.xz*vec2(240.,80.))); return c*(1.-0.05*k*(vnoise(p.xy*35.)-0.5));}
+float NECK=0.;
 vec3 paintBase(vec3 p,float ax,bool armR){
   float fr=1.-smoothstep(-0.06,0.0,p.y), bk=smoothstep(0.0,0.06,p.y);
   vec3 c=skinTone(p);
@@ -170,7 +171,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
       for(int i=0;i<2;i++){float zz=1.385-float(i)*0.022; t=max(t,inside(abs(p.z-zz-abs(p.y)*0.55)-0.0055)*step(abs(p.y),0.035));}
       c=mix(c,uInk*0.85,t*0.85);}
     return c;}
-  if(p.z>1.468&&ax<0.075){                                                          // neck
+  if(NECK>1.5||(NECK<0.5&&p.z>1.468&&ax<0.075)){                                  // neck (NECK: 0 by height, 1 never, 2 always)
     if(uFem>0.5){c*=1.-0.08*fr*smoothstep(1.5,1.556,p.z); return c;}               // her neck: smooth, only a soft shadow under the jaw
     c*=1.-0.16*fr*smoothstep(1.5,1.556,p.z);                                       // shadow under the jaw
     c*=1.-0.08*fr*gss(vec2(ax,p.z),vec2(0.,1.475),vec2(0.012,0.012));               // the pit of the throat
@@ -186,7 +187,7 @@ vec3 paintBase(vec3 p,float ax,bool armR){
       c*=1.-0.025*fr*exp(-pow(ax/0.006,2.))*smoothstep(1.1,1.13,p.z)*(1.-smoothstep(1.2,1.23,p.z));  // the faintest line above the navel
       c*=1.-0.3*fr*inside(length(vec2(ax/0.0035,(p.z-1.09)/0.007))-1.);           // navel
       c*=1.+0.04*fr*gss(vec2(ax,p.z),vec2(0.,1.06),vec2(0.05,0.03));               // the lower belly, softly lit
-      c*=1.+0.03*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // collarbones, gently
+      c*=1.+0.03*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*smoothstep(0.01,0.035,ax)*(1.-smoothstep(0.11,0.15,ax));  // collarbones, gently
       c*=1.-0.06*bk*exp(-pow(ax/0.014,2.));                                             // spine
       c*=1.+0.03*bk*gss(vec2(ax,p.z),vec2(0.07,1.35),vec2(0.04,0.05));               // shoulder blades
       return c*mix(0.88,1.,smoothstep(1.035,1.07,p.z));}
@@ -196,9 +197,9 @@ vec3 paintBase(vec3 p,float ax,bool armR){
     float pz=1.296+0.02*(1.-clamp(abs(ax-0.075)/0.075,0.,1.));
     c*=1.+0.07*fr*gss(vec2(ax,p.z),vec2(0.075,1.355),vec2(0.05,0.035));             // chest catches the light
     c*=1.-0.12*fr*exp(-pow((p.z-pz)/0.017,2.))*(1.-smoothstep(0.12,0.17,ax))*smoothstep(0.,0.025,ax);  // soft shadow under the chest
-    c*=1.-0.06*fr*exp(-pow(ax/0.011,2.))*step(1.22,p.z)*step(p.z,1.43);             // breastbone
-    c*=1.+0.05*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // collarbones, lit
-    c*=1.-0.05*fr*exp(-pow((p.z-(1.436-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // and the hollow beneath
+    c*=1.-0.06*fr*exp(-pow(ax/0.011,2.))*smoothstep(1.2,1.24,p.z)*(1.-smoothstep(1.4,1.44,p.z));  // breastbone
+    c*=1.+0.05*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*smoothstep(0.01,0.035,ax)*(1.-smoothstep(0.11,0.15,ax));  // collarbones, lit
+    c*=1.-0.05*fr*exp(-pow((p.z-(1.436-(ax-0.03)*0.15))/0.009,2.))*smoothstep(0.01,0.035,ax)*(1.-smoothstep(0.11,0.15,ax));  // and the hollow beneath
     float rows=0.; for(int i=0;i<3;i++){rows+=gss(vec2(ax,p.z),vec2(0.03,1.235-float(i)*0.055),vec2(0.02,0.022));}
     c*=1.+0.03*fr*rows;                                                              // the stomach: only a hint of form
     c*=1.-0.045*fr*exp(-pow(ax/0.008,2.))*smoothstep(1.07,1.1,p.z)*(1.-smoothstep(1.24,1.27,p.z));
@@ -248,12 +249,16 @@ vec3 paintBase(vec3 p,float ax,bool armR){
   return c;
 }
 vec3 paintBody(vec3 p){
-  float ax=abs(p.x); bool armR=(ax>0.168-0.25*max(0.,p.z-1.40)&&p.z>1.05)||(ax>0.25&&p.z>0.6);
-  if(p.z>1.556&&!armR)return paintHead(p);
-  if(uB.x>0.5){                                                                     // blend torso and arm paint across the armpit, no seam
-    float bd=ax-(0.168-0.25*max(0.,p.z-1.40));
-    vec3 r=(p.z>1.06&&p.z<1.47&&abs(bd)<0.035)?mix(paintBase(p,ax,false),paintBase(p,ax,true),smoothstep(-0.035,0.035,bd)):paintBase(p,ax,armR);
-    if(uFem>0.5&&abs(p.z-1.3)<0.07){vec4 w=femWrap(p); r=mix(r,w.rgb,w.a*max(smoothstep(0.08,0.3,vTorso),1.-smoothstep(0.185,0.2,ax)));}   // the wrap goes all the way round the torso, never onto the arm
+  // how much a point belongs to the arm comes from the rig's own skin weights (vTorso), so arm and torso paint meet where the body bends
+  float ax=abs(p.x), arm=1.-smoothstep(0.3,0.7,vTorso); bool armR=arm>0.5;
+  float hk=(1.-arm)*smoothstep(1.535,1.568,p.z);                                   // face paint fades in up the neck, no line
+  if(hk>0.998)return paintHead(p);
+  if(uB.x>0.5){
+    vec3 r=(arm>0.002&&arm<0.998)?mix(paintBase(p,ax,false),paintBase(p,ax,true),arm):paintBase(p,ax,armR);
+    float nk=(1.-arm)*smoothstep(1.452,1.484,p.z)*(1.-smoothstep(0.062,0.088,ax));   // the neck fades in over the collar, no line
+    if(nk>0.002&&nk<0.998&&p.z>1.04){NECK=1.;vec3 t=paintBase(p,ax,false);NECK=2.;vec3 n=paintBase(p,ax,false);NECK=0.;r=mix(r,mix(t,n,nk),1.-arm);}
+    if(uFem>0.5&&abs(p.z-1.3)<0.07){vec4 w=femWrap(p); r=mix(r,w.rgb,w.a*(1.-arm));}   // the wrap goes all the way round the torso, never onto the arm
+    if(hk>0.002)r=mix(r,paintHead(p),hk);
     return r;}
   return paintClothes(p,ax,armR);
 }
