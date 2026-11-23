@@ -29,6 +29,7 @@ body{
   padding-right:max(16px, env(safe-area-inset-right, 0px));
 }
 #world{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .22s;z-index:50}#fade.on{opacity:1}
 #vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(20,12,6,.38) 100%)}
 .hud{position:fixed;z-index:5;pointer-events:none}
 .panel{background:var(--panel);border:1px solid var(--panel-line);border-radius:10px;padding:10px 12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
@@ -173,7 +174,7 @@ button:disabled{opacity:.4;cursor:default}
 #rotate p{color:var(--ink-dim)}
 </style>
 
-<canvas id="world" aria-label="Fogwright world view" tabindex="0"></canvas><div id="vignette" aria-hidden="true"></div>
+<canvas id="world" aria-label="Fogwright world view" tabindex="0"></canvas><div id="vignette" aria-hidden="true"></div><div id="fade" aria-hidden="true"></div>
 <div id="loading">Raising the world…</div>
 
 <div class="hud pframe" id="pframe">
@@ -1731,6 +1732,7 @@ function kYardForge(name,seed){ // a smith's yard behind a house: hearth tower, 
     k.box(1.4,0.3,0.08,1.8,2.4,1.6,wd);for(let i=0;i<5;i++)k.box(0.05,0.05,1.2,1.3+i*0.25,2.45,1.0,'#8a8f96');                    // a rack of bars and blades
     k.pipe(hx+0.9,-0.2,0.35,hx+2.1,-0.2,0.35,0.03,ir);k.box(0.08,0.3,0.06,hx-1.0,-0.18,1.2,ir);k.box(0.7,0.5,0.5,-3.2,-1.6,0.25,'planks:#7a5a3e');k.cyl(0.3,0.28,0.7,8,-2.4,-1.8,0,'#7a5232');
     k.ring(0.28,0.05,1.9,-1.45,1.6,'#8a8f96');});
+  for(const sx of[-1,1])k.box(0.4,5.2,1.1,sx*3.6,0.2,0.55,'stone:#7a746c');
   k.vent(hx,1.0,6.3,0.8); k.finish(name,7.6,5.8);
 }
 function kBarracks(){
@@ -1884,7 +1886,10 @@ const LANDMARKS=[
 const LANDMARK_AT=[];
 const portalLight=new THREE.PointLight(0xb48cff,0,22,2); scene.add(portalLight);
 function buildCityHouses(){
-  const [mx,mz]=marketPos(), lists={}, put=(name,x,z,ry,tint,y)=>{(lists[name]=lists[name]||[]).push({x,y:y!==undefined?y:heightAt(x,z)-0.22,z,ry,tint});};
+  const footY=(name,x,z,ry)=>{const s0=KIT.size[name]||[6,6],c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;
+    for(const [u,v] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=u*s0[0]*0.45,lz=v*s0[1]*0.45,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}return [lo,hi];};
+  const [mx,mz]=marketPos(), lists={}, put=(name,x,z,ry,tint,y)=>{if(y===undefined){const [lo,hi]=footY(name,x,z,ry);if(hi-lo>1.1&&!/Span|Well|Garden/.test(name))return false;y=lo-0.15;}
+    (lists[name]=lists[name]||[]).push({x,y,z,ry,tint});return true;};
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
   LANDMARK_AT.length=0;
   for(const L of LANDMARKS){const u=L.s||1,[w0,d0]=KIT.size[L.name],w=w0*u,d=d0*u; let x,z,ry;
@@ -1904,7 +1909,7 @@ function buildCityHouses(){
       if(blocked(a,r,w/2)||(side<0&&r-d/2<CITY.core+25)){arc+=4;continue;}
       {const x0=CITY.x+Math.cos(a)*r,z0=CITY.z+Math.sin(a)*r,r0=-a+Math.PI/2+(side>0?Math.PI:0),f={x:x0,z:z0,hw:w/2+0.5,hd:d/2+0.5,rot:r0};if(!footprintFree(f)||footOnLane(f)){arc+=2;continue;}}
       const x=CITY.x+Math.cos(a)*r, z=CITY.z+Math.sin(a)*r, ry=-a+Math.PI/2+(side>0?Math.PI:0)+(poor?(rnd()-0.5)*0.16:0);
-      put(name,x,z,ry,tintFor(a,r,name)); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++;
+      if(put(name,x,z,ry,tintFor(a,r,name))){colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++;}
       arc+=(w+gap)*rr/r;
     }
   }
@@ -1916,12 +1921,14 @@ function buildCityHouses(){
   for(const T of TERRACES){const rc=T.b+1.5-0.05,n=Math.floor(2*Math.PI*rc/6);let sc=0;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,x=CITY.x+Math.cos(a)*rc,z=CITY.z+Math.sin(a)*rc;
     const [rp]=rampAt(x,z,rc);if(rp>0.05)continue;const stair=(++sc%11)===0,ry=-a+Math.PI/2,lo=3+cityLevel(x+Math.cos(a)*4,z+Math.sin(a)*4,rc+4)-1;
     put(stair?'TerraceStair':'Terrace',x,z,ry,[1,1,1],lo);colliders.push({x,z,hw:3.05,hd:1.6,rot:ry});}}
-  // smiths' yards in the gaps behind the houses: most in the Ferrin quarter, some among the Hrimfolk and Wayfolk, a few anywhere
-  {const FQ={'Ferrin Quarter':1,'Hrimfolk Quarter':0.55,'Wayfolk Quarter':0.4,'Ruadhan Quarter':0.3},yards=[];let n=0;
-    for(let t=0;t<9000&&n<90;t++){const a=rnd()*Math.PI*2,rr=128+rnd()*158,x=CITY.x+Math.cos(a)*rr,z=CITY.z+Math.sin(a)*rr;if(rnd()>(FQ[quarterAt(x,z).name]||0.15))continue;
-      if(cityPaved(x,z)>0.1||blocked(a,rr,5))continue;const ry=-a+Math.PI/2+(rnd()<0.5?0:Math.PI)+(rnd()<0.5?0:Math.PI/2),f={x,z,hw:4.1,hd:3.2,rot:ry};
-      if(!footprintFree(f)||footOnLane(f,LANE_HALF+0.5))continue;const h0=heightAt(x,z);if([[3.6,2.7],[-3.6,2.7],[3.6,-2.7],[-3.6,-2.7]].some(([u,v])=>Math.abs(heightAt(x+u*Math.cos(ry)+v*Math.sin(ry),z-u*Math.sin(ry)+v*Math.cos(ry))-h0)>0.35))continue;
-      put('YardForge'+Math.floor(rnd()*4),x,z,ry,[1,1,1],h0-0.1);colliders.push({x,z,hw:3.8,hd:2.9,rot:ry});n++;}}
+  // smiths' yards built onto the back of real houses: the hearth against the house's back wall, the yard opening onto the
+  // back lane, a low stone wall on either side. Mostly Ferrin, some Hrimfolk, Wayfolk and Ruadhan.
+  {const FQ={'Ferrin Quarter':0.55,'Hrimfolk Quarter':0.25,'Wayfolk Quarter':0.15,'Ruadhan Quarter':0.15};let n=0;
+    for(const name in lists){if(!/^(Gen_|Row|Tenement|Timberframe|Forge|Lodge|Longhouse|Shopfront)/.test(name))continue;const [w,d]=KIT.size[name];
+      for(const p of lists[name]){if(n>=70)break;const q=quarterAt(p.x,p.z).name;if(rnd()>(FQ[q]||0))continue;
+        const bx=-Math.sin(p.ry),bz=-Math.cos(p.ry),off=d/2+3.0,x=p.x+bx*off,z=p.z+bz*off,ry=p.ry+Math.PI,f={x,z,hw:3.7,hd:2.8,rot:ry};
+        if(cityPaved(x,z)>0.2||footOnLane(f,LANE_HALF+0.2)||!footprintFree(f))continue;const h0=heightAt(x,z);if(Math.abs(h0-heightAt(p.x,p.z))>0.6)continue;
+        put('YardForge'+Math.floor(rnd()*4),x,z,ry,[1,1,1],h0-0.1);colliders.push({x,z,hw:3.6,hd:2.7,rot:ry});n++;}}}
   // gardens behind the grand houses near the plaza
   for(let k=0,n=Math.floor(2*Math.PI*157/17);k<n;k++){const a=k/n*Math.PI*2;if(cityWealth(a,157)<0.62||blocked(a,157,6))continue;
     const x=CITY.x+Math.cos(a)*157,z=CITY.z+Math.sin(a)*157,ry=-a+Math.PI/2;if(!footprintFree({x,z,hw:6.3,hd:6.3,rot:ry})||footOnLane({x,z,hw:6.3,hd:6.3,rot:ry}))continue;put('Garden',x,z,ry,[1,1,1]);colliders.push({x,z,hw:6,hd:6,rot:ry});}
@@ -1939,7 +1946,7 @@ function buildCityHouses(){
           const [w,d]=KIT.size[name],off=LANE_HALF+0.5+d/2+(w0<0.25?rnd()*0.6:0),x=px+nx*side*off,z=pz+nz*side*off,ry=Math.atan2(-nx*side,-nz*side)+(w0<0.25?(rnd()-0.5)*0.12:0);
           const f={x,z,hw:w/2+0.3,hd:d/2+0.3,rot:ry};
           if(blocked(a,rr,w/2)||!footprintFree(f)||footOnLane({x,z,hw:w/2,hd:d/2,rot:ry},LANE_HALF+0.2)){t+=3;continue;}
-          put(name,x,z,ry,tintFor(a,rr,name)); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++; t+=w+(w0<0.3?0.1+rnd()*0.4:0.15+rnd()*0.5);}
+          if(put(name,x,z,ry,tintFor(a,rr,name))){colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++;} t+=w+(w0<0.3?0.1+rnd()*0.4:0.15+rnd()*0.5);}
         carry=t-len;}}}
   {const TALL=/^(Gen_\w+|Row[ABC]|Tenement|Tenement4|Tenement7|Timberframe|Timberframe3|TimberframeB|Shopfront|Forge|Lodge|Longhouse)$/,H=[];
     const height=n=>{const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();return g.boundingBox.max.y;};
@@ -2163,6 +2170,7 @@ function buildPeople(){
   const routes=[{ring:118},{ring:196},{ring:262},{ring:196,back:true},{avenue:Math.PI/2}];
   routes.forEach((rt,i)=>{for(const side of[-0.7,0.7])PATROLS.push({id:900+i*2+(side>0?1:0),rt,side,t:i*0.21,mesh:null});});
   for(const H of HUBS){const L=LANDMARK_AT.find(q=>q.label===H.at);if(!L)continue;const fx=Math.sin(L.ry),fz=Math.cos(L.ry),d=L.d/2+(H.near||2.2);
+    const I=INTERIORS.find(q=>q.label===H.at); if(I){HUBFOLK.push({...H,x:I.npc.x,z:I.npc.z,y:I.npc.y,face:I.npc.face,mesh:null,id:500+HUBFOLK.length});continue;}
     HUBFOLK.push({...H,x:L.x+fx*d+Math.cos(L.ry)*(H.side||0),z:L.z+fz*d-Math.sin(L.ry)*(H.side||0),face:L.ry,mesh:null,id:500+HUBFOLK.length});}
 }
 const HUBS=[
@@ -2189,29 +2197,36 @@ function nameplate(name,title){
   g.font='500 30px "Alegreya Sans",system-ui,sans-serif';g.strokeText(title,256,100);g.fillStyle='#efe9dc';g.fillText(title,256,100);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));sp.scale.set(2.6,0.65,1);return sp;
 }
+const _aq=new THREE.Quaternion(),_av=new THREE.Vector3(),_pq=new THREE.Quaternion(),_hp=new THREE.Vector3();
+function armsIn(m,ang){
+  if(!m.userData.arms){m.userData.arms=['upper_arm.L','upper_arm.R'].map(n=>boneOf(m,n)).filter(Boolean);}
+  if(!m.userData.arms.length)return; m.updateMatrixWorld(true);
+  for(const b of m.userData.arms){b.parent.getWorldQuaternion(_pq).invert();_av.set(0,0,1).applyQuaternion(m.quaternion).applyQuaternion(_pq).normalize();
+    b.getWorldPosition(_hp);m.worldToLocal(_hp);_aq.setFromAxisAngle(_av,(_hp.x>0?-1:1)*ang);b.quaternion.premultiply(_aq);}
+}
 function walkOrIdle(m,walk){const mix=m.userData.mixer;if(!mix||m.userData.walking===walk)return;m.userData.walking=walk;mix.stopAllAction();const a=folkAction(m,walk?'Walk':'Idle');if(a){a.play();a.time=Math.random()*a.getClip().duration;}}
 function ensureMesh(p,x,z,make){const d=Math.hypot(x-player.x,z-player.z);
   if(!p.mesh&&d<120&&folk){p.mesh=make();p.mesh.userData.walking=null;}
   else if(p.mesh&&d>150){scene.remove(p.mesh);p.mesh=null;}
   return p.mesh;}
 function crowdUpdate(dt,now,night){
-  if(!RESIDENTS.length&&LANDMARK_AT.length)buildPeople();
+  if(!RESIDENTS.length&&LANDMARK_AT.length){if(kitReady())buildInteriors();buildPeople();}
   const inCity=Math.hypot(player.x-CITY.x,player.z-CITY.z)<CITY.r+160;
   for(const p of RESIDENTS){
     if(p.wait>0){p.wait-=dt;}else{p.a+=p.dir*p.speed*dt/p.R;if(p.a>p.a1||p.a<p.a0){p.a=Math.max(p.a0,Math.min(p.a1,p.a));p.dir*=-1;p.wait=2+((p.id*37)%60)/10;}}
     const out=!(night>0.6&&!p.owl), x=CITY.x+Math.cos(p.a)*(p.R+p.off), z=CITY.z+Math.sin(p.a)*(p.R+p.off);
     const m=inCity&&out?ensureMesh(p,x,z,()=>makeFolk(false,p.race,seeded(p.id))):(p.mesh&&(scene.remove(p.mesh),p.mesh=null));
     if(!m)continue; folkShadow(m,Math.hypot(x-player.x,z-player.z)); m.position.set(x,surfaceAt(x,z),z); m.rotation.y=Math.atan2(-Math.sin(p.a)*p.dir,Math.cos(p.a)*p.dir);
-    walkOrIdle(m,p.wait<=0); m.userData.mixer.timeScale=p.wait>0?1:p.speed/1.3; m.userData.mixer.update(dt);}
+    walkOrIdle(m,p.wait<=0); m.userData.mixer.timeScale=p.wait>0?1:p.speed/1.3; m.userData.mixer.update(dt); armsIn(m,0.2);}
   for(const p of PATROLS){const rt=p.rt;let x,z,f;
     if(rt.avenue!=null){p.t+=dt*1.3/(CITY.r-CITY.core-40);const u=0.5-0.5*Math.cos(p.t*Math.PI),r=CITY.core+30+u*(CITY.r-CITY.core-44),a=rt.avenue+p.side*1.2/r;x=CITY.x+Math.cos(a)*r;z=CITY.z+Math.sin(a)*r;f=Math.sin(p.t*Math.PI)>=0?1:-1;
       if(p.mesh)p.mesh.rotation.y=Math.atan2(Math.cos(rt.avenue)*f,Math.sin(rt.avenue)*f);}
     else{const dir=rt.back?-1:1;p.t+=dt*1.3/rt.ring*dir;const a=p.t*2*Math.PI/(2*Math.PI)+(rt.back?Math.PI:0);x=CITY.x+Math.cos(a)*(rt.ring+p.side*1.4);z=CITY.z+Math.sin(a)*(rt.ring+p.side*1.4);
       if(p.mesh)p.mesh.rotation.y=Math.atan2(-Math.sin(a)*dir,Math.cos(a)*dir);}
     const m=inCity?ensureMesh(p,x,z,()=>makeFolk(true,'Aurelan',seeded(p.id))):(p.mesh&&(scene.remove(p.mesh),p.mesh=null)); if(!m)continue;
-    folkShadow(m,Math.hypot(x-player.x,z-player.z)); m.position.set(x,surfaceAt(x,z),z); walkOrIdle(m,true); m.userData.mixer.timeScale=1; m.userData.mixer.update(dt);}
-  for(const h of HUBFOLK){const m=inCity?ensureMesh(h,h.x,h.z,()=>{const q=makeFolk(!!h.guard,h.race,seeded(h.id),{fem:h.fem});const sp=nameplate(h.name,h.title);sp.position.y=2.35/q.scale.y;q.add(sp);q.userData.plate=sp;return q;}):(h.mesh&&(scene.remove(h.mesh),h.mesh=null));
-    if(!m)continue; folkShadow(m,Math.hypot(h.x-player.x,h.z-player.z)); m.position.set(h.x,surfaceAt(h.x,h.z),h.z); m.rotation.y=h.face; walkOrIdle(m,false); m.userData.mixer.update(dt);
+    folkShadow(m,Math.hypot(x-player.x,z-player.z)); m.position.set(x,surfaceAt(x,z),z); walkOrIdle(m,true); m.userData.mixer.timeScale=1; m.userData.mixer.update(dt); armsIn(m,0.2);}
+  for(const h of HUBFOLK){const m=inCity?ensureMesh(h,h.x,h.z,()=>{const q=makeFolk(!!h.guard,h.race,seeded(h.id),{fem:h.fem,dressed:1});const sp=nameplate(h.name,h.title);sp.position.y=2.35/q.scale.y;q.add(sp);q.userData.plate=sp;return q;}):(h.mesh&&(scene.remove(h.mesh),h.mesh=null));
+    if(!m)continue; folkShadow(m,Math.hypot(h.x-player.x,h.z-player.z)); m.position.set(h.x,h.y!=null?h.y:surfaceAt(h.x,h.z),h.z); m.rotation.y=h.face; walkOrIdle(m,false); m.userData.mixer.update(dt); armsIn(m,0.2);
     m.userData.plate.visible=Math.hypot(h.x-player.x,h.z-player.z)<32;}
 }
 function hubNear(){for(const h of HUBFOLK)if(h.mesh&&Math.hypot(h.x-player.x,h.z-player.z)<3.2)return h;return null;}
@@ -2234,6 +2249,7 @@ function buildFarTerrain(){
   const m=new THREE.Mesh(g,farMat);m.receiveShadow=false;landmarks.add(m);
 }
 function placeName(x,z){
+  if(INSIDE)return INSIDE.label;
   for(const L of LANDMARK_AT)if(Math.hypot(x-L.x,z-L.z)<L.r)return L.label;
   if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<58)return 'The village';
   if(Math.hypot(x-PORT.x,z-PORT.z)<80)return "Hollin's Cross";
@@ -2503,7 +2519,7 @@ const ghostMatBad=new THREE.MeshBasicMaterial({color:0xe07a6a,transparent:true,o
 const flameMat=new THREE.MeshBasicMaterial({color:0xffa64a});
 const LEVEL=0.25, snapUp=v=>Math.ceil(v/LEVEL-1e-6)*LEVEL;
 function floorTopAt(x,z){let top=-Infinity;for(const p of game.pieces)if(p.t==='floor'&&Math.abs(x-p.x)<=1.001&&Math.abs(z-p.z)<=1.001)top=Math.max(top,p.y);return top;}
-function groundAt(x,z){return Math.max(surfaceAt(x,z),floorTopAt(x,z));}
+function groundAt(x,z){if(INSIDE)return INSIDE.oy;return Math.max(surfaceAt(x,z),floorTopAt(x,z));}
 function snapPiece(t,px,pz,rot){
   if(t==='floor'){
     const x=Math.round((px-1)/2)*2+1, z=Math.round((pz-1)/2)*2+1;
@@ -2587,7 +2603,7 @@ function collide(){
     const qx=w.x+ax*t, qz=w.z+az*t; let ex=player.x-qx, ez=player.z-qz; const d=Math.hypot(ex,ez), R=w.t==='stonewall'?0.58:0.5;
     if(d<R){if(d<1e-4){ex=az;ez=ax;}else{ex/=d;ez/=d;}player.x=qx+ex*R;player.z=qz+ez*R;}
   }
-  for(const c of colliders){
+  for(const c of (INSIDE?INSIDE.colliders:colliders)){
     if(c.type==='circle'){const dx=player.x-c.x,dz=player.z-c.z,d=Math.hypot(dx,dz),R=c.r+0.45;if(d<R&&d>1e-4){player.x=c.x+dx/d*R;player.z=c.z+dz/d*R;}continue;}
     const dx=player.x-c.x, dz=player.z-c.z; if(dx*dx+dz*dz>(c.hw+c.hd+2)**2)continue;
     const co=Math.cos(c.rot), si=Math.sin(c.rot), lx=dx*co-dz*si, lz=dx*si+dz*co, R=0.45, ex=c.hw+R-Math.abs(lx), ez=c.hd+R-Math.abs(lz);
@@ -3134,7 +3150,7 @@ function salvage(i){const it=P.bag[i];if(!it)return;const n=2+it.r*3;P.shards+=n
 
 // spawning
 let spawnT=0;
-function spawner(dt){
+function spawner(dt){if(INSIDE)return;
   spawnT-=dt; if(spawnT>0)return; spawnT=1.4;
   for(const e of enemies.slice())if(!e.D.elite&&Math.hypot(e.x-player.x,e.z-player.z)>85&&e!==P.target)removeEnemy(e);
   if(Q.state==='active'&&QUESTS[Q.i]&&QUESTS[Q.i].id==='tower')ensureWarden();
@@ -3269,7 +3285,136 @@ function updateCombatHud(){
   drawMarker();
 }
 // contextual interact
+
+/* ---------- Interiors: the hub buildings open. Each interior is a furnished set of rooms built in a sealed space under the
+   core (nothing else is down there), entered through the building's front door with a short fade. Inside, the normal
+   camera follows, held under the ceiling and gliding off the walls. ---------- */
+const INTERIORS=[]; let INSIDE=null;
+const INT_LIGHTS=[new THREE.PointLight(0xffb070,0,34,1.3),new THREE.PointLight(0xffc890,0,28,1.3)]; for(const l of INT_LIGHTS)scene.add(l);
+const INT_DEFS={
+  'The Lantern & Gear':{type:'tavern',W:17,D:14,H:5.2,floor:'planks:#6a4a2e',wall:'plaster:#d8c8a8'},
+  'The Fogbound Arms':{type:'tavern',W:16,D:13,H:5,floor:'planks:#5a3e28',wall:'timber:#4a3626',dark:1},
+  'The Ironway Foundry':{type:'forge',W:20,D:15,H:8,floor:'stone:#5e5a56',wall:'brick:#6a3a2e'},
+  'Hall of the Lantern Vigil':{type:'hall',W:19,D:15,H:6.5,floor:'stone:#8f877b',wall:'stone:#a8a091'},
+  "The Artificers' Laboratory":{type:'lab',W:15,D:13,H:6,floor:'planks:#4a3a30',wall:'plaster:#c9c4b8'},
+  'The Treasury of Aldrath':{type:'bank',W:21,D:16,H:8,floor:'marble:#ddd6c6',wall:'marble:#e6e0d0'},
+  "The Adventurers' Guildhall":{type:'guild',W:17,D:14,H:6,floor:'planks:#5a3e28',wall:'plaster:#d8c8a0'},
+  'Ironhide Armoury':{type:'shop',goods:'armor',W:11,D:9,H:4.2,floor:'planks:#5a4030',wall:'stone:#8a8680'},
+  'Blackanvil Blades':{type:'shop',goods:'weapons',W:11,D:9,H:4.2,floor:'stone:#6e6a66',wall:'brick:#6a3a2e'},
+  'Thistle & Retort':{type:'shop',goods:'alchemy',W:10,D:9,H:4.2,floor:'planks:#6a4a2e',wall:'plaster:#c9b48e'},
+  "Lisle's Fine Cloth":{type:'shop',goods:'cloth',W:10,D:9,H:4.2,floor:'planks:#7a5a3e',wall:'plaster:#d8ccb0'}};
+function buildInterior(label,def,i){
+  const ox=CITY.x+((i%4)-1.5)*42, oz=CITY.z+(Math.floor(i/4)-1)*42, oy=-40, {W,D,H}=def, k=new KitB(), C=[];
+  let sd=i*977+5;const r=()=>(sd=(sd*16807)%2147483647)/2147483647,pick=a=>a[Math.floor(r()*a.length)];
+  const solid=(sx,sy,sz,x,y,z,col)=>{k.box(sx,sy,sz,x,y,z,col);C.push({x:ox+x,z:oz-y,hw:sx/2+0.05,hd:sy/2+0.05,rot:0});};
+  const dk='#2a2c30',brass='#b8893e',T=0.5,back=D/2-4.2;
+  // shell: floor, ceiling and beams, walls with the door gap at the front (plan y=-D/2), wainscot
+  k.box(W,D,0.3,0,0,-0.15,def.floor); k.box(W+1,D+1,0.4,0,0,H+0.2,'planks:#4a3626');
+  for(let x=-W/2+2;x<W/2-1;x+=3)k.box(0.4,D,0.45,x,0,H-0.22,'timber:#3a2a1e');
+  solid(W+1,T,H,0,D/2+T/2,H/2,def.wall); for(const s of[-1,1])solid(T,D+1,H,s*(W/2+T/2),0,H/2,def.wall);
+  for(const s of[-1,1])solid(W/2-1,T,H,s*(W/4+0.5),-D/2-T/2,H/2,def.wall); k.box(2.2,T,H-3,0,-D/2-T/2,3+(H-3)/2,def.wall);
+  solid(2.2,0.2,3,0,-D/2-T-0.15,1.5,'#4a2e22'); for(const s of[-1,1])k.box(0.25,0.3,3,s*1.12,-D/2-0.1,1.5,'timber:#3a2a1e');
+  for(const [x,y,w,d] of[[0,D/2-0.02,W,0.06],[-W/2+0.02,0,0.06,D],[W/2-0.02,0,0.06,D]])k.box(w,d,1.1,x,y,0.55,'planks:#4a3626');
+  // back rooms behind a partition with two doorways
+  solid(W*0.3,0.35,H,-W*0.35,back,H/2,def.wall); solid(W*0.3,0.35,H,W*0.35,back,H/2,def.wall); k.box(W*0.4-2.4,0.35,H,0,back,H/2,def.wall); C.push({x:ox,z:oz-back,hw:W*0.2-1.2,hd:0.25,rot:0});
+  solid(0.35,D/2-back,H,0,(back+D/2)/2,H/2,def.wall);
+  const crate=(x,y,s0)=>solid(s0,s0,s0,x,y,s0/2,pick(['planks:#7a5a3e','planks:#6b4a30']));
+  const barrel=(x,y)=>{k.cyl(0.42,0.38,1,10,x,y,0,'planks:#6a4a2e');for(const z of[0.2,0.8])k.cyl(0.43,0.43,0.06,10,x,y,z,dk);C.push({type:'circle',x:ox+x,z:oz-y,r:0.45});};
+  const table=(x,y,w,d)=>{solid(w,d,0.12,x,y,0.82,'planks:#6a4a2e');for(const sx of[-1,1])for(const sy of[-1,1])k.box(0.1,0.1,0.8,x+sx*(w/2-0.15),y+sy*(d/2-0.15),0.4,'planks:#4a3626');};
+  const stool=(x,y)=>{k.cyl(0.22,0.22,0.08,8,x,y,0.48,'planks:#6a4a2e');k.cyl(0.05,0.05,0.48,5,x,y,0,'planks:#4a3626');};
+  const shelf=(x,y,w,rot)=>{solid(rot?0.5:w,rot?w:0.5,2.4,x,y,1.2,'planks:#4a3626');for(const z of[0.9,1.6,2.3])for(let j=0;j<6;j++)k.box(rot?0.3:0.22,rot?0.22:0.3,0.3,x+(rot?(x<0?0.35:-0.35):(j-2.5)*w/6),y+(rot?(j-2.5)*w/6:(y<0?0.35:-0.35)),z+0.15,pick(['#7a2a24','#2f4a5e','#c9a046','#3f5a3a','#6a4a6a','#d8cfb8']));};
+  const bed=(x,y)=>{solid(1.3,2.2,0.5,x,y,0.25,'planks:#5a3e28');k.box(1.2,1.8,0.18,x,y+0.15,0.58,pick(['#7a2a24','#2f4a5e','#5a6a4a']));k.box(1.1,0.4,0.2,x,y-0.85,0.62,'#e8e2d2');};
+  const lamp=(x,y,z)=>{k.box(0.04,0.04,H-z,x,y,(H+z)/2,dk);k.fire(0.22,0.22,0.3,x,y,z);k.box(0.34,0.34,0.06,x,y,z+0.18,brass);};
+  const hearth=(x,y,rot)=>{solid(rot?0.9:3,rot?3:0.9,2.4,x,y,1.2,'stone:#7a746c');k.box(rot?1.0:3.3,rot?3.3:1.0,0.25,x,y,2.45,'stone:#5e5a56');k.box(rot?0.9:1.6,rot?1.6:0.9,H-2.6,x,y,2.6+(H-2.6)/2,'stone:#7a746c');
+    k.fire(rot?0.3:1.6,rot?1.6:0.3,0.7,x-(rot?Math.sign(x)*0.42:0),y-(rot?0:Math.sign(y)*0.42),0.5);};
+  let npc=[0,0,0], lights=[[0,0,H-1],[W*0.3,back-2,H-1]];
+  const t=def.type;
+  if(t==='tavern'){ // the bar along the left, a hearth on the right, round tables, a chandelier; store room and kitchen behind
+    solid(1.0,D*0.42,1.1,-W/2+3.2,-0.8,0.55,'planks:#5a3e28'); k.box(1.2,D*0.44,0.1,-W/2+3.2,-0.8,1.12,'planks:#7a5a3e');
+    shelf(-W/2+0.5,-0.8,D*0.4,true); barrel(-W/2+1.6,back-1.0);
+    hearth(W/2-0.45,0,true);
+    for(const [x,y] of[[-1.5,-3.5],[2.4,-3.6],[0.4,0.6],[3.8,-0.4],[-1.6,2.2]]){k.cyl(0.85,0.85,0.1,12,x,y,0.82,'planks:#6a4a2e');k.cyl(0.12,0.2,0.82,6,x,y,0,'planks:#4a3626');C.push({type:'circle',x:ox+x,z:oz-y,r:0.9});
+      for(let j=0;j<3;j++){const a=j/3*PI*2+r();stool(x+Math.cos(a)*1.25,y+Math.sin(a)*1.25);} k.box(0.12,0.12,0.2,x+0.2,y,0.97,'#c9a046');}
+    k.ring(1.6,0.06,0,-1,H-1.4,dk); for(let j=0;j<6;j++){const a=j/6*PI*2;k.fire(0.08,0.08,0.18,Math.cos(a)*1.6,-1+Math.sin(a)*1.6,H-1.25);} k.box(0.04,0.04,1.4,0,-1,H-0.7,dk);
+    for(let j=0;j<5;j++)k.box(0.5,0.05,0.8,-W*0.3+j*0.8,D/2-0.3,2.7,pick(['#7a2a24','#2f4a5e','#c9a046']));
+    for(let j=0;j<4;j++)crate(W*0.15+j*0.9,back+2.6,0.8); barrel(W*0.42,back+1.4);
+    hearth(-W/4,D/2-0.45,false); table(-W*0.3,back+1.8,2.0,1.0);
+    lights=[[0,-1,H-1.4],[W/2-2.2,0,1.4]]; npc=[-W/2+1.7,-1.5,PI/2];
+  } else if(t==='forge'){ // the great furnace at the back, anvils, a quench trough, a crucible on a beam, coal, racks
+    solid(5,3,4.5,0,back-1.6,2.25,'stone:#4e4a48'); k.box(5.6,3.6,0.6,0,back-1.6,4.6,'iron:#2a2c30'); k.box(2.6,2,H-5,0,back-1.2,5+(H-5)/2,'brick:#5a2e24');
+    k.box(2.6,0.2,2.2,0,back-3.12,1.6,'#140c08'); k.fire(2.2,0.2,1.8,0,back-3.22,1.5); k.fire(1.0,4,0.1,0,back-5.2,0.05); k.box(1.6,4.2,0.16,0,back-5.2,0.02,'stone:#3e3a38');
+    for(const [x,y] of[[-3.5,-1],[3.5,-2],[-1.8,-4.2]]){k.box(0.8,0.8,0.7,x,y,0.35,'timber:#4a3222');k.box(1.1,0.4,0.32,x,y,0.86,'iron:#3b3f45');k.box(0.4,0.26,0.14,x+0.7,y,0.95,'iron:#3b3f45');C.push({x:ox+x,z:oz-y,hw:0.6,hd:0.5,rot:0});}
+    solid(3,1.1,0.9,W/2-2.2,-4.5,0.45,'stone:#6e6a66'); k.box(2.7,0.85,0.06,W/2-2.2,-4.5,0.92,'#3f6f86');
+    k.box(W-2,0.5,0.5,0,-1,H-1,'iron:#2a2c30'); k.box(0.05,0.05,2.6,2.5,-1,H-2.4,dk); k.cyl(0.6,1.0,1.2,10,2.5,-1,H-4.8,'iron:#3b3f45'); k.fire(1.3,1.3,0.06,2.5,-1,H-3.6);
+    for(let j=0;j<3;j++)k.cyl(0.9,0.2,0.9,8,-W/2+1.5+j*1.8,back-0.9,0,'#1a1614');
+    shelf(-W/2+0.5,-2.5,4,true); for(let j=0;j<4;j++)k.box(0.05,0.05,1.6,W/2-0.4,-1.5+j*0.5,1.6,'#8a8f96');
+    for(const s of[-1,1])k.pipe(s*(W/2-0.6),back-1,0.5,s*(W/2-0.6),-D/2+1,H-0.6,0.2,'#8a5a32');
+    for(let j=0;j<4;j++)crate(W*0.3+(j%2)*0.9,back+1.6+Math.floor(j/2)*0.9,0.8); bed(-W*0.3,back+2.4);
+    lights=[[0,back-4.5,2.5],[2.5,-1,H-3]]; npc=[-3.5,0.4,PI*0.1];
+  } else if(t==='bank'){ // a marble hall, columns, the teller counter behind brass grilles, the vault door
+    for(const x of[-W/2+3,W/2-3])for(const y of[-D/2+3,-1]){k.cyl(0.5,0.45,H,12,x,y,0,'marble:#ebe5d8');C.push({type:'circle',x:ox+x,z:oz-y,r:0.55});}
+    solid(W-8,0.9,1.2,0,back-3.2,0.6,'marble:#ddd6c6'); for(let x=-W/2+5;x<=W/2-5;x+=1.4){k.box(0.06,0.06,1.4,x,back-3.2,1.9,brass);} k.box(W-8,0.08,0.1,0,back-3.2,2.6,brass);
+    k.disc(2.0,0.5,0,back-0.2,2.6,brass); k.disc(1.6,0.56,0,back-0.24,2.6,'#8a6a3a'); for(let j=0;j<6;j++){const a=j/6*PI*2;k.pipe(0,back-0.55,2.6,Math.cos(a)*1.3,back-0.55,2.6+Math.sin(a)*1.3,0.08,brass);}
+    for(const x of[-4,4])solid(2.4,0.6,0.5,x,-3.5,0.25,'planks:#5a3e28'); k.box(6,3,0.04,0,-2,0.02,'#7a2a24');
+    for(let j=0;j<6;j++)k.box(0.6,0.6,0.5,-W*0.4+j*0.7,back+1.4,0.25,'#c9a046'); for(let j=0;j<4;j++)crate(W*0.28+(j%2)*0.9,back+2,0.8);
+    lights=[[0,-2,H-1.5],[0,back-4.5,H-2]]; npc=[0,back-1.9,PI];
+  } else if(t==='guild'){ // long tables and benches, the notice board, banners, a hearth, bunks behind
+    for(const x of[-3.4,3.4]){table(x,-1,1.4,6);for(const s of[-1,1])solid(0.35,5.6,0.45,x+s*1.1,-1,0.23,'planks:#5a3e28');}
+    table(0,back-1.6,5,1.3); k.box(4.2,0.12,2.4,-W/2+3.5,-D/2+0.2,1.9,'planks:#4a3626'); for(let j=0;j<10;j++)k.box(0.5,0.04,0.6,-W/2+2+(j%5)*0.7,-D/2+0.3,1.4+Math.floor(j/5)*0.8,'#e8e2d2');
+    for(const x of[-W/2+0.3,W/2-0.3])for(const y of[-4,1]){k.box(0.06,1.4,2.6,x,y,H-2,pick(['#7a2a24','#2f4a5e','#3f5a3a']));}
+    hearth(W/2-0.45,-2.5,true);
+    for(let j=0;j<2;j++)bed(-W*0.38+j*1.8,back+2.3); for(let j=0;j<3;j++)crate(W*0.3+j*0.9,back+2.6,0.8);
+    lights=[[0,-1,H-1.2],[W/2-2.2,-2.5,1.4]]; npc=[0,back-2.7,PI];
+  } else if(t==='lab'){ // workbenches, a coil under a cage, glowing tanks, pipes, books
+    for(const [x,y] of[[-3.2,-2.5],[3.2,-2.5]]){table(x,y,2.6,1.1);for(let j=0;j<3;j++)k.glass(0.25,0.25,0.4,x-0.8+j*0.8,y,1.1);}
+    k.cyl(0.6,0.8,0.6,10,0,1,0,'iron:#2a2c30');k.cyl(0.18,0.18,2.6,8,0,1,0.6,'#8a5a32');for(let z=1;z<3;z+=0.35)k.cyl(0.4,0.4,0.12,10,0,1,z,'#b8893e');k.dome(0.55,0,1,3.2,'#c0c6cc',10);C.push({type:'circle',x:ox,z:oz-1,r:1});
+    for(const x of[-W/2+1.2,W/2-1.2]){k.cyl(0.6,0.6,2.4,12,x,0.5,0,'#2a2c30');k._add(new THREE.CylinderGeometry(0.55,0.55,2.2,12).toNonIndexed().rotateX(PI/2),k.M(x,0.5,1.3),'#7fb4ff',2);C.push({type:'circle',x:ox+x,z:oz-0.5,r:0.7});}
+    shelf(-W/2+0.5,-4.5,3,true); shelf(W/2-0.5,-4.5,3,true); for(const s of[-1,1])k.pipe(s*(W/2-0.3),-D/2+1,H-0.6,0,1,3.6,0.08,'#8a5a32');
+    bed(-W*0.35,back+2.3); for(let j=0;j<3;j++)crate(W*0.3+j*0.9,back+2.4,0.8);
+    lights=[[0,-2.5,H-1.2],[0,1,3.8]]; npc=[2.6,-0.6,PI*1.2];
+  } else if(t==='hall'){ // the Vigil's hall: weapon racks, armour stands, a long table, banners, bunks behind
+    table(0,-0.5,1.6,7); for(const s of[-1,1])solid(0.35,6.6,0.45,s*1.2,-0.5,0.23,'planks:#5a3e28');
+    for(const y of[-4,-1,2]){solid(0.5,2,2,-W/2+0.5,y,1,'planks:#4a3626');for(let j=0;j<4;j++)k.box(0.05,0.05,1.8,-W/2+0.85,y-0.7+j*0.45,1.4,'#8a8f96');}
+    for(const y of[-4,0]){k.cyl(0.12,0.12,1.6,6,W/2-1.6,y,0,'timber:#4a3222');k.box(0.7,0.45,0.8,W/2-1.6,y,1.5,'iron:#6a6e74');k.cyl(0.2,0.2,0.3,8,W/2-1.6,y,2.0,'iron:#6a6e74');C.push({type:'circle',x:ox+W/2-1.6,z:oz-y,r:0.45});}
+    for(const x of[-3.5,3.5]){k.box(1.6,0.06,3,x,back-0.25,H-2.2,'#c9a046');k.box(1.0,0.07,1.0,x,back-0.28,H-2.0,'#7a2a24');}
+    for(let j=0;j<3;j++){bed(-W*0.42+j*1.6,back+2.3);bed(W*0.18+j*1.6,back+2.3);}
+    lights=[[0,-1,H-1.2],[0,back-1.5,H-1.5]]; npc=[0,back-1.2,PI];
+  } else { // shops: a counter, the goods on racks and shelves, a back room
+    solid(W*0.5,0.8,1.0,0,back-1.6,0.5,'planks:#5a3e28'); k.box(W*0.52,0.95,0.08,0,back-1.6,1.04,'planks:#7a5a3e');
+    const g=def.goods;
+    if(g==='armor'){for(const y of[-2.4,0]){k.cyl(0.1,0.1,1.5,6,-W/2+1.2,y,0,'timber:#4a3222');k.box(0.7,0.45,0.85,-W/2+1.2,y,1.55,'iron:#6a6e74');k.cyl(0.2,0.2,0.32,8,-W/2+1.2,y,2.1,'iron:#6a6e74');C.push({type:'circle',x:ox-W/2+1.2,z:oz-y,r:0.45});}
+      for(let j=0;j<4;j++)k._add(new THREE.CylinderGeometry(0.45,0.45,0.1,14).toNonIndexed().rotateZ(PI/2),k.M(W/2-0.1,-3+j*1.1,2.2),pick(['#7a2a24','#2f4a5e','#8a8f96','#c9a046']));}
+    if(g==='weapons'){for(const y of[-2.5,0]){solid(0.5,1.8,2,-W/2+0.4,y,1,'planks:#4a3626');for(let j=0;j<4;j++)k.box(0.05,0.05,1.6,-W/2+0.75,y-0.6+j*0.4,1.4,'#c0c6cc');}
+      for(let j=0;j<3;j++)k.box(0.06,0.08,1.6,W/2-0.1,-2.5+j*1.1,2.2,'#c0c6cc');}
+    if(g==='alchemy'){shelf(-W/2+0.5,-1.5,4,true);shelf(W/2-0.5,-1.5,4,true);k.cyl(0.7,0.55,0.9,10,0,-1.5,0,'#2a2c30');k.cyl(0.6,0.6,0.05,10,0,-1.5,0.88,'#4f8a3a');C.push({type:'circle',x:ox,z:oz+1.5,r:0.8});}
+    if(g==='cloth'){for(let j=0;j<5;j++)k.cyl(0.25,0.25,1.4,10,-W/2+0.6,-3+j*0.7,0.2,pick(['#7a2a24','#2f4a5e','#c9a046','#5a3a6a','#3f5a3a']));
+      k.cyl(0.1,0.1,1.2,6,W/2-1.5,-1.5,0,'timber:#4a3222');k.box(0.6,0.4,0.8,W/2-1.5,-1.5,1.6,'#9a5ad0');C.push({type:'circle',x:ox+W/2-1.5,z:oz+1.5,r:0.45});}
+    for(let j=0;j<3;j++)crate(-W*0.3+j*0.9,back+2.2,0.8); bed(W*0.3,back+2.3);
+    lights=[[0,-1,H-0.8],[0,back-1,H-0.8]]; npc=[0,back-0.9,PI];
+  }
+  for(const [x,y,z] of lights)if(z>H-2)lamp(x,y,z);
+  const name='Int_'+i; k.finish(name,W,D);
+  const m=new THREE.Mesh(KIT.geo[name],kitMat); m.position.set(ox,oy,oz); m.castShadow=m.receiveShadow=true; landmarks.add(m);
+  const I={label,def,ox,oy,oz,W,D,H,colliders:C,lights:lights.map(([x,y,z])=>[ox+x,oy+z,oz-y]),npc:{x:ox+npc[0],y:oy,z:oz-npc[1],face:npc[2]},door:{x:ox,z:oz+D/2-1.2}};
+  INTERIORS.push(I); return I;
+}
+function buildInteriors(){
+  if(INTERIORS.length)return; let i=0;
+  for(const label in INT_DEFS){const L=LANDMARK_AT.find(q=>q.label===label);if(!L)continue;const I=buildInterior(label,INT_DEFS[label],i++);
+    I.outside={x:L.x+Math.sin(L.ry)*(L.d/2+0.9),z:L.z+Math.cos(L.ry)*(L.d/2+0.9),face:L.ry};}
+}
+function interiorDoorNear(){if(INSIDE)return Math.hypot(player.x-INSIDE.door.x,player.z-INSIDE.door.z)<2.4?INSIDE:null;
+  for(const I of INTERIORS)if(I.outside&&Math.hypot(player.x-I.outside.x,player.z-I.outside.z)<2.8)return I;return null;}
+function goThrough(I){
+  const fade=$('fade');fade.classList.add('on');
+  setTimeout(()=>{
+    if(INSIDE){const O=INSIDE.outside;INSIDE=null;player.x=O.x+Math.sin(O.face)*1.6;player.z=O.z+Math.cos(O.face)*1.6;player.face=O.face;cam.yaw=O.face+Math.PI;for(const l of INT_LIGHTS)l.intensity=0;}
+    else{INSIDE=I;player.x=I.door.x;player.z=I.door.z-0.8;player.face=Math.PI;cam.yaw=0;cam.dist=Math.min(cam.dist,6);
+      I.lights.forEach((p,j)=>{const l=INT_LIGHTS[j];if(!l)return;l.position.set(p[0],p[1],p[2]);l.intensity=I.def.type==='forge'?2.2:2.4;l.color.set(I.def.type==='lab'&&j===1?0x9ac0ff:0xffb070);});}
+    cam.kS=0.3;setTarget(null);SHADOW.dirty=true;updateChunks(player.x,player.z);setTimeout(()=>fade.classList.remove('on'),80);},240);
+}
 function interactTarget(){
+  {const I=interiorDoorNear();if(I)return {label:INSIDE?'Leave':'Enter',fn:()=>goThrough(I)};}
   {const h=hubNear();if(h)return {label:'Talk',fn:()=>talkTo(h)};}
   if(Math.hypot(QG.x-player.x,QG.z-player.z)<4)return {label:'Talk',fn:openDialog};
   for(const b of bags)if(Math.hypot(b.x-player.x,b.z-player.z)<2.8)return {label:'Loot',fn:()=>lootBag(b)};
@@ -3745,7 +3890,7 @@ const PEOPLES={
     scarf:['#2f5fb8','#7ab0d8'],coat:['#1e2a4a','#2a3a5a','#3e4656','#4a5a7a'],lining:['#2f5fb8','#7ab0d8'],ink:['#2f5fd0','#3a6ae0'],
     p:{1:1,8:0.55,13:1,4:0.75,5:0.45,3:0.4,6:0.5}},
   Ferrin:{name:'Ferrin',h:[0.82,0.87],w:[1.12,1.18],skin:['#d4977a','#c48466','#b87a5e','#dca88c'],hair:['#2a201c','#5a3a28','#8a4a2a','#6e6a66','#3a2a22'],
-    shirt:['#8a7e6e','#6e665c','#9a8a76'],vest:['#4a4440','#5a3a2a','#3a3a3e'],pants:['#3a3634','#4a4038','#2e2c2a'],leather:['#5a3a26','#6a4a30','#4a3020'],boots:['#2a2420','#3a2a20'],
+    shirt:['#4e4a46','#3e3c3a','#5a4a3a','#6a3a2a'],vest:['#4a4440','#5a3a2a','#3a3a3e'],pants:['#3a3634','#4a4038','#2e2c2a'],leather:['#5a3a26','#6a4a30','#4a3020'],boots:['#2a2420','#3a2a20'],
     scarf:['#8a3a20','#5a5a5a'],coat:['#3a3a3e','#4a3a30'],
     p:{1:0.7,2:0.6,7:1,12:0.6,18:0.7,6:0.85,3:0.4,5:0.2}},
   Zarhim:{name:'Zarhim',h:[0.98,1.04],w:[0.94,0.99],skin:['#8a5a3c','#6e4630','#9c6a48','#7a4e34','#5a3a28'],hair:['#14100e','#1e1814','#2a2018'],
@@ -3845,6 +3990,7 @@ const BODY_SHAPE={Aurelan:'Aurelan',Ilvari:'Ilvari',Ferrin:'Ferrin',Zarhim:'Zarh
 const BODY_H={Aurelan:[0.97,1.03],Ilvari:[0.98,1.02],Ferrin:[0.96,1.0],Zarhim:[0.97,1.03]};
 const EYE_COLS=['#4a6a8a','#5a7a4a','#5a3a26','#6e7a86','#3a2a1a','#4a3a2a'];
 function makePainted(L,guard,rnd0,opt){
+  if(opt&&opt.dressed){L.on[3]=1;L.on[4]=1;}
   const rnd=rnd0||Math.random, any=a=>a[Math.floor(rnd()*a.length)], on=L.on, R=PEOPLES[L.race]||PEOPLES.Wayfolk;
   const fem=opt&&opt.fem!=null?opt.fem:rnd()<(guard?0.25:0.5), col=i=>new THREE.Color(L.pal[i][0],L.pal[i][1],L.pal[i][2]);
   const covered=on[9]||on[10]||on[16];
@@ -3972,7 +4118,7 @@ function frame(now){const __j0=performance.now();
   }
   game.moving=mag>0.1;
   const gy=groundAt(player.x,player.z);
-  hero.position.set(player.x,Math.max(gy,-1.0),player.z); hero.rotation.y=player.face;
+  hero.position.set(player.x,INSIDE?gy:Math.max(gy,-1.0),player.z); hero.rotation.y=player.face;
   const amt=Math.min(1,mag*1.4), p=player.phase, sp=Math.sin(p), cpz=Math.cos(p), idle=Math.sin(now*0.0021);
   parts.legL.rotation.x=-sp*0.62*amt; parts.legR.rotation.x=sp*0.62*amt;
   parts.kneeL.rotation.x=(0.04+Math.max(0,cpz)*0.95)*amt; parts.kneeR.rotation.x=(0.04+Math.max(0,-cpz)*0.95)*amt;
@@ -4007,12 +4153,14 @@ function frame(now){const __j0=performance.now();
   let tx=player.x, ty=hero.position.y+1.3, tz=player.z; const cp=Math.cos(cam.pitch);
   if(P.ctrl==='action'){tx+=rx*0.7;tz+=rz*0.7;ty+=0.4;}
   let cx=tx+Math.sin(cam.yaw)*cp*cam.dist, cz=tz+Math.cos(cam.yaw)*cp*cam.dist, cy=ty+Math.sin(cam.pitch)*cam.dist;
-  cy=Math.max(cy,heightAt(cx,cz)+1.2, 0.8);
-  { // pull the camera in front of walls and buildings
-    const near=colliders.filter(c=>Math.hypot(c.x-tx,c.z-tz)<cam.dist+(c.r||c.hw+c.hd)+2);
+  if(INSIDE){cam.dist=Math.min(cam.dist,INSIDE.W<12?4.5:7);}else cy=Math.max(cy,heightAt(cx,cz)+1.2, 0.8);
+  { // pull the camera in front of walls and buildings, gliding: in quickly, back out slowly
+    const near=(INSIDE?INSIDE.colliders:colliders).filter(c=>Math.hypot(c.x-tx,c.z-tz)<cam.dist+(c.r||c.hw+c.hd)+2);
     const inside=(x,z)=>near.some(c=>{if(c.type==='circle')return Math.hypot(x-c.x,z-c.z)<c.r+0.3;const co=Math.cos(c.rot),si=Math.sin(c.rot),dx=x-c.x,dz=z-c.z;return Math.abs(dx*co-dz*si)<c.hw+0.3&&Math.abs(dx*si+dz*co)<c.hd+0.3;});
-    if(near.length){let k=1;for(let i=1;i<=24;i++){const u=i/24;if(inside(tx+(cx-tx)*u,tz+(cz-tz)*u)){k=Math.max(0.12,(i-1)/24);break;}}
-      if(k<1){cx=tx+(cx-tx)*k;cz=tz+(cz-tz)*k;cy=ty+(cy-ty)*k;}}
+    let k=1;if(near.length&&!window.__nocol){for(let i=1;i<=32;i++){const u=i/32;if(inside(tx+(cx-tx)*u,tz+(cz-tz)*u)){k=Math.max(0.1,(i-1.5)/32);break;}}}
+    if(INSIDE)k=Math.max(k,Math.min(1,1.9/Math.max(cam.dist,0.1)));if(cam.kS===undefined)cam.kS=k; cam.kS+=(k-cam.kS)*Math.min(1,dt*(k<cam.kS?16:2.6)); cam.kS=Math.min(cam.kS,k+0.06);
+    cx=tx+(cx-tx)*cam.kS;cz=tz+(cz-tz)*cam.kS;cy=ty+(cy-ty)*cam.kS;
+    if(INSIDE){cy=Math.min(cy,INSIDE.oy+INSIDE.H-0.5);cy=Math.max(cy,INSIDE.oy+0.6);}
   }
   camera.position.set(cx,cy,cz); camera.lookAt(tx,ty,tz);
 
@@ -4023,6 +4171,7 @@ function frame(now){const __j0=performance.now();
   scene.fog.density=Math.max(lerp(0.0011,0.022,f),cityAir*0.0068)*(1+cs.night*(0.9+1.8*f)*(inSafeLight(player.x,player.z)?0.25:1))*(P.lantern?1-0.3*cs.night:1);
   hemi.intensity=lerp(0.68,0.52,f)*(0.3+0.7*cs.dl)*(1-0.22*cityAir); sun.intensity=lerp(0.95,0.45,f)*(0.16+0.84*cs.dl)*(1+0.15*cityAir);
   skyUpdate(now,f,cs.night);
+  if(INSIDE){scene.fog.density=0.004;scene.fog.color.setRGB(0.12,0.08,0.05);hemi.intensity=0.95;hemi.color.setRGB(1,0.88,0.74);hemi.groundColor.setRGB(0.42,0.32,0.24);sun.intensity=0;}
   sun.color.lerp(SUN_CITY,cityAir*0.55*cs.dl); hemi.color.lerp(HEMI_SKY_CITY,cityAir*0.6*cs.dl); hemi.groundColor.lerp(HEMI_GND_CITY,cityAir*0.6);
 
   // landmarks
