@@ -4,6 +4,18 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 49 · Necks, pauldrons and belts
+
+*Characters · 23 November 2026*
+
+Your notes: the whole neck showed, pauldrons needed attention, and belts need room for the relics coming later.
+
+**Necklines.** Clothes stopped at the paint template's collarbone height, which on the MakeHuman bodies sits well below the neck, so every outfit looked strapless. They now come up to the base of the neck, and collars are rings round it.
+
+**Pauldrons.** Domed lames on the outer shoulder, each tucked under the one above, with rivets along the rims, an optional raised guard by the neck and an optional roll of fur. Five so far: leather pads, layered spaulders, steel, brass and fur-trimmed pauldrons.
+
+**Belts.** Each belt carries sockets at the hips and back where attachments hang: a pouch, a flask and a scroll case for now, and relics later through the same sockets. An empty socket shows its brass ring. Three belts: a plain belt with two sockets, a studded tool belt with four, and a sash with one.
+
 ## Devlog 48 · Gear that fits everyone
 
 *Characters · 23 November 2026*

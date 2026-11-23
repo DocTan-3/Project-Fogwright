@@ -453,8 +453,8 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 | Feet | Painted, with built cuffs and soles for boots | From the start |
 | Wrists | Painted bracers, with a small built cuff | From the start |
 | Hands | Painted gloves, with built cuffs for gauntlets | From the start |
-| Waist | Painted belt, with a built buckle and pouches | From the start |
-| Shoulders | Built: pauldrons, mantles, fur | From the start |
+| Waist | Painted belt, with a built buckle; belts carry sockets (hips and back) where pouches, flasks and other attachments hang, and relics will later | From the start |
+| Shoulders | Built: pauldrons of layered, domed lames with rivets, guards and fur, or mantles | From the start |
 | Head | Built: helmets, hats, hoods; trims the hair underneath | From the start |
 | Back | A built cloak that hangs and swings | From the start |
 | Main and off hand | Built, held or sheathed at the hip or back | From the start |
