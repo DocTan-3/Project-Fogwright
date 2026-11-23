@@ -329,13 +329,23 @@ function setBuild(root,lean,heavy){
   root.userData.build=[lean,heavy];
   root.traverse(o=>{if(o.isMesh&&o.morphTargetDictionary&&'Lean' in o.morphTargetDictionary){o.morphTargetInfluences[o.morphTargetDictionary.Lean]=lean;o.morphTargetInfluences[o.morphTargetDictionary.Heavy]=heavy;}});
 }
-function buildPosture(root){ // call after the animation mixer each frame; offsets are applied once, never accumulated
-  const [lean,heavy]=root.userData.build||[0,0];
-  const B=root.userData.bones||(root.userData.bones={list:[['spine','x',0.1,0],['neck','x',0.16,0],['head','x',-0.12,0],['upper_armL','z',0,0.2],['upper_armR','z',0,-0.2]]
-    .map(([n,ax,kl,kh])=>({o:root.getObjectByName(n),ax,kl,kh,prev:0,q:null})).filter(e=>e.o)});
-  for(const e of B.list){
-    if(e.q&&e.o.quaternion.equals(e.q))e.o.rotation[e.ax]-=e.prev;   // the mixer left it alone: undo last frame's offset first
-    const off=e.kl*lean+e.kh*heavy; e.o.rotation[e.ax]+=off; e.prev=off; e.q=e.o.quaternion.clone();
+// Posture, laid over the animation each frame. Offsets are applied once, never accumulated: [bone, axis, per lean, per heavy,
+// always]. The arms are brought in toward the thighs (the clips hang them a little wide). root.userData.pose adds offsets of
+// its own ({'head.y': 0.2, ...}), which NPC personality drives.
+const POSTURE=[['spine','x',0.1,0,0],['neck','x',0.16,0,0],['head','x',-0.12,0,0],['upper_armL','z',0,0.2,0.26],['upper_armR','z',0,-0.2,-0.26],
+  ['forearmL','z',0,0,0.06],['forearmR','z',0,0,-0.06]];
+function buildPosture(root){ // call after the animation mixer each frame
+  const [lean,heavy]=root.userData.build||[0,0], pose=root.userData.pose||{};
+  const want=new Map();   // bone -> {x, y, z}
+  const add=(k,v)=>{const d=k.lastIndexOf('.'),n=k.slice(0,d),ax=k.slice(d+1);if(!want.has(n))want.set(n,{x:0,y:0,z:0});want.get(n)[ax]+=v;};
+  for(const [n,ax,kl,kh,k0] of POSTURE)add(n+'.'+ax,kl*lean+kh*heavy+k0);
+  for(const k in pose)add(k,pose[k]);
+  const B=root.userData.bones||(root.userData.bones={map:new Map()});
+  for(const n of B.map.keys())if(!want.has(n))want.set(n,{x:0,y:0,z:0});
+  for(const [n,off] of want){   // per bone: undo last frame's offsets if the mixer left the bone alone, then apply this frame's
+    let e=B.map.get(n); if(!e){const o=root.getObjectByName(n);if(!o)continue;e={o,prev:{x:0,y:0,z:0},q:null};B.map.set(n,e);}
+    if(e.q&&e.o.quaternion.equals(e.q)){e.o.rotation.x-=e.prev.x;e.o.rotation.y-=e.prev.y;e.o.rotation.z-=e.prev.z;}
+    e.o.rotation.x+=off.x;e.o.rotation.y+=off.y;e.o.rotation.z+=off.z; e.prev=off; e.q=e.o.quaternion.clone();
   }
 }
 

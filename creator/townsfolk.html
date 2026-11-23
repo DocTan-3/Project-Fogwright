@@ -1,0 +1,102 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Townsfolk</title>
+<style>
+:root{--ink:#efe9dc;--dim:#bdb5a6;--panel:rgba(27,25,33,.88);--line:rgba(239,233,220,.16);--brass:#d6a54e;--ground:#1d1c22;color-scheme:dark}
+html,body{height:100%;margin:0}
+body{background:var(--ground);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;touch-action:none}
+#stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.panel{position:fixed;z-index:5;top:12px;right:max(12px,env(safe-area-inset-right,0px));width:300px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-sizing:border-box}
+h1{font:400 22px Georgia,serif;margin:0}.sub{color:var(--dim);font-size:13px;margin:4px 0 0}
+.label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;font-size:13.5px;color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:6px 11px;min-height:34px;cursor:pointer}
+button[aria-pressed="true"]{background:rgba(214,165,78,.22);border-color:var(--brass)}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.card{position:fixed;z-index:6;left:max(16px,env(safe-area-inset-left,0px));bottom:16px;max-width:min(420px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h2{font:400 22px Georgia,serif;margin:0}.card .what{color:var(--dim);font-size:13px;margin:2px 0 8px}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0 0 8px;font-size:13.5px}.card dt{color:var(--dim)}.card dd{margin:0}
+.card q{font:italic 16px Georgia,serif}
+.tagname{position:fixed;z-index:4;transform:translate(-50%,-100%);font:13px system-ui,sans-serif;background:rgba(20,18,24,.8);border:1px solid var(--line);border-radius:6px;padding:2px 7px;pointer-events:none;white-space:nowrap}
+#status{position:fixed;inset:0;display:grid;place-items:center;color:var(--dim);font:20px Georgia,serif;pointer-events:none}
+.hidden{display:none}
+@media (max-width:700px){.panel{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:40%}.card{bottom:auto;top:12px}}
+</style>
+<canvas id="stage" aria-label="A crowd of townsfolk"></canvas>
+<div id="status">Gathering the townsfolk…</div>
+<div class="tagname hidden" id="tagname"></div>
+<aside class="panel" aria-label="Townsfolk options">
+  <h1>Townsfolk</h1>
+  <p class="sub">Every person generated from a seed: people, trade, wealth, outfit and temperament</p>
+  <div class="chips" style="margin-top:12px"><button id="again">New crowd</button></div>
+  <div class="label">Trade</div><div class="chips" id="trade"></div>
+  <div class="label">People</div><div class="chips" id="people"></div>
+  <div class="label">Detail</div><div class="chips" id="tier"></div>
+  <p class="sub" id="tierNote"></p>
+</aside>
+<div class="card hidden" id="card" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="bodypaint.js"></script>
+<script src="equip.js"></script>
+<script src="peoples.js"></script>
+<script src="npc.js"></script>
+<script>
+'use strict';
+const st={trade:null,people:null,tier:'townsfolk',seed:(Math.random()*1e9)|0,sel:null};
+const TIER_NOTE={hero:'Hero: a 1,024 px texture and every built piece, for players and named characters.',
+  townsfolk:'Townsfolk: a 512 px texture and up to four built pieces.',crowd:'Crowd: a 256 px texture and up to two built pieces, for passers-by.'};
+const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(32,1,0.05,100);
+scene.add(new THREE.HemisphereLight(0xe6ecff,0x3a3028,0.75));const sun=new THREE.DirectionalLight(0xfff2dc,0.8);sun.position.set(3,6,5);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-3});scene.add(sun);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(9,64),new THREE.MeshLambertMaterial({color:'#2e2b33'}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const G={}, folk=[], clock=new THREE.Clock(); let yaw=0, dist=8.5;
+function crowd(){
+  for(const f of folk){scene.remove(f.fig);} folk.length=0; st.sel=null; showCard(null);
+  const n=9;
+  for(let i=0;i<n;i++){
+    const p=npcGenerate(st.seed*31+i*977,{trade:st.trade||undefined,people:st.people||undefined});
+    const fig=npcSpawn(G,p,R,st.tier); fig.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+    const walker=i%3===2, a=(i/n)*Math.PI*1.1-Math.PI*0.55, r=walker?3.4:2.6+(i%2)*1.3;
+    fig.position.set(Math.sin(a)*r,0,-Math.cos(a)*r*0.6); fig.rotation.y=Math.PI*0+(Math.random()-0.5)*0.8;
+    if(walker)npcPlay(fig,'Walk');
+    const pick=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,1.9,8),new THREE.MeshBasicMaterial({visible:false}));pick.position.y=0.95;fig.add(pick);pick.userData.folk=folk.length;
+    scene.add(fig); folk.push({fig,p,walker,ang:a,rad:r,pick});
+  }
+}
+function chips(id,items,get,set){const el=document.getElementById(id);el.innerHTML='';items.forEach(([label,val])=>{const b=document.createElement('button');b.textContent=label;
+  b.setAttribute('aria-pressed',String(get()===val));b.onclick=()=>{set(val);el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));};el.appendChild(b);});}
+function build(){
+  chips('trade',[['All',null]].concat(Object.entries(NPC_TRADES).map(([k,t])=>[t.name,k])),()=>st.trade,v=>{st.trade=v;crowd();});
+  chips('people',[['All',null]].concat(Object.keys(PEOPLE).map(k=>[k,k])),()=>st.people,v=>{st.people=v;crowd();});
+  chips('tier',[['Hero','hero'],['Townsfolk','townsfolk'],['Crowd','crowd']],()=>st.tier,v=>{st.tier=v;document.getElementById('tierNote').textContent=TIER_NOTE[v];crowd();});
+  document.getElementById('tierNote').textContent=TIER_NOTE[st.tier];
+}
+document.getElementById('again').onclick=()=>{st.seed=(Math.random()*1e9)|0;crowd();};
+function showCard(f){const c=document.getElementById('card');if(!f){c.classList.add('hidden');return;}const d=npcDescribe(f.p);
+  c.innerHTML=`<h2>${d.name}</h2><div class="what">${d.what}</div><dl><dt>Temperament</dt><dd>${d.temper}</dd><dt>Means</dt><dd>${d.wealth}</dd></dl><q>${d.line}</q>`;c.classList.remove('hidden');}
+// pick a person by tapping them; drag to turn the view
+const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();let drag=null,moved=0;
+cv.addEventListener('pointerdown',e=>{drag=e.clientX;moved=0;cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointermove',e=>{if(drag!==null){yaw+=(e.clientX-drag)*0.006;moved+=Math.abs(e.clientX-drag);drag=e.clientX;}});
+cv.addEventListener('pointerup',e=>{drag=null;if(moved>6)return;const b=cv.getBoundingClientRect();ptr.set((e.clientX-b.left)/b.width*2-1,-((e.clientY-b.top)/b.height)*2+1);
+  ray.setFromCamera(ptr,cam);const hit=ray.intersectObjects(folk.map(f=>f.pick),false)[0];st.sel=hit?folk[hit.object.userData.folk]:null;showCard(st.sel);});
+cv.addEventListener('wheel',e=>{dist=Math.min(14,Math.max(3,dist+e.deltaY*0.004));},{passive:true});
+function frame(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+addEventListener('resize',frame);
+const tag=document.getElementById('tagname'),v3=new THREE.Vector3();
+Promise.all([['m','mh_m.gltf.json'],['f','mh_f.gltf.json'],['ml','mh_m_lod.gltf.json'],['fl','mh_f_lod.gltf.json']].map(([k,f])=>new Promise((res,rej)=>new THREE.GLTFLoader().load(f,g=>{preparePainted(g);G[k]=g;res();},undefined,rej)))).then(()=>{
+  document.getElementById('status').remove(); build(); frame(); crowd();
+  (function loop(){requestAnimationFrame(loop);const dt=Math.min(0.05,clock.getDelta());
+    cam.position.set(Math.sin(yaw)*dist,1.7,Math.cos(yaw)*dist);cam.lookAt(0,0.95,-0.6);
+    for(const f of folk){if(f.walker){f.ang+=dt*0.25*NPC_TEMPERAMENTS[f.p.temper].pace*f.p.energy;f.fig.position.set(Math.sin(f.ang)*f.rad,0,-Math.cos(f.ang)*f.rad*0.6-0.6);
+        f.fig.rotation.y=Math.atan2(Math.cos(f.ang)*f.rad,Math.sin(f.ang)*f.rad*0.6);}
+      npcAnimate(f.fig,dt);}
+    if(st.sel){v3.set(0,2.05*st.sel.fig.scale.y,0);st.sel.fig.localToWorld(v3);v3.project(cam);tag.style.left=((v3.x+1)/2*innerWidth)+'px';tag.style.top=((1-v3.y)/2*innerHeight)+'px';tag.textContent=st.sel.p.name;tag.classList.remove('hidden');}
+    else tag.classList.add('hidden');
+    R.render(scene,cam);})();
+}).catch(e=>{document.getElementById('status').textContent='Could not load the bodies.';console.error(e);});
+</script>
