@@ -1510,14 +1510,16 @@ function kSpan(){
 }
 function kBank(){ // the Treasury of Aldrath: the city's (and the players') vaults
   const k=new KitB(),W=26,D=20,y=-D/2,mb='marble:#ddd6c6',st='stone:#c9c0ad',cu='#b8893e';
-  k.box(W+2,D+6,0.6,0,-2,0.3,'stone:#a8a091'); for(let i=0;i<3;i++)k.box(W-6-i*2,1.2,0.3,0,y-4.3+i*1.1,0.75+i*0.3,'stone:#b5ad9c');
+  k.box(W+2,D+6,0.6,0,-2,0.3,'stone:#a8a091'); for(let i=0;i<3;i++)k.box(12-i*1.2,1.2,0.3,0,y-4.3+i*1.1,0.75+i*0.3,'stone:#b5ad9c');
   k.box(W,D,12,0,0,6,mb); k.box(W+0.6,D+0.6,0.6,0,0,12.3,st); k.prism(W,D,3,0,0,12.6,'slate:#3f4a5c');
-  for(let i=0;i<8;i++)k.cyl(0.55,0.48,10.4,10,-10.5+i*3,y-2.6,0.6,'marble:#ebe5d8');
+  for(const x of[-11.6,-8.4,-5.2,5.2,8.4,11.6])k.cyl(0.6,0.52,10.4,12,x,y-2.6,0.6,'marble:#ebe5d8');   // a 9.6 m central bay left open
+  for(const s2 of[-1,1])k.box(1.2,1.2,10.4,s2*3.6,y-0.6,5.8,'marble:#e3dccb');                            // pilasters framing the doors
   k.box(W-2,3.8,1.1,0,y-1.9,11.5,st); k.prism(3.8,W-2,3,0,y-1.9,12.05,'marble:#e3dccb',PI/2);
   k.cyl(4.2,4.2,2.2,16,0,2,15.4,st); k.dome(4.2,0,2,17.6,'#3f8f7a',14); k.cyl(0.6,0.6,1.6,8,0,2,21.6,cu);
-  k.disc(2.4,0.5,0,y-0.15,3.4,cu); k.disc(2.0,0.56,0,y-0.18,3.4,'#8a6a3a'); k.ring(1.0,0.14,0,y-0.5,3.4,cu);
-  for(let i=0;i<6;i++){const a=i/6*PI*2;k.pipe(Math.cos(a)*0.3,y-0.5,3.4+Math.sin(a)*0.3,Math.cos(a)*1.7,y-0.5,3.4+Math.sin(a)*1.7,0.08,cu);}
-  for(const x of[-9,-6,6,9])for(const z of[4.2,8.6])kWin(k,x,y,z,1.2,2,st);
+  k.box(5.4,0.4,6.4,0,y-0.1,3.8,'stone:#b5ad9c'); for(const s2 of[-1,1]){k.box(2.2,0.3,5.4,s2*1.15,y-0.32,3.3,'#6a4a2a');for(const z of[1.6,3.3,5])k.box(1.8,0.34,0.1,s2*1.15,y-0.34,z,cu);k.disc(0.12,0.38,s2*0.35,y-0.36,3.2,cu);}   // tall bronze-bound doors
+  k.disc(1.9,0.5,0,y-0.15,8.2,cu); k.disc(1.6,0.56,0,y-0.18,8.2,'#8a6a3a'); k.ring(0.8,0.14,0,y-0.5,8.2,cu);                                               // the vault wheel, an emblem over the doors
+  for(let i=0;i<6;i++){const a=i/6*PI*2;k.pipe(Math.cos(a)*0.25,y-0.5,8.2+Math.sin(a)*0.25,Math.cos(a)*1.35,y-0.5,8.2+Math.sin(a)*1.35,0.07,cu);}
+  for(const x of[-10,-6.8,6.8,10])for(const z of[4.2,8.6])kWin(k,x,y,z,1.2,2,st);
   k.disc(0.95,0.2,0,y-3.85,13.1,'#efe6d2'); k.ring(1.0,0.1,0,y-3.9,13.1,cu);
   k.sm(()=>{for(const sx of[-1,1]){k.pipe(sx*(W/2+0.3),y+3,0.5,sx*(W/2+0.3),y+3,12,0.22,cu);k.pipe(sx*(W/2+0.3),D/2-3,0.5,sx*(W/2+0.3),D/2-3,12,0.22,cu);
       for(const z of[3,6,9])k.ring(0.32,0.06,sx*(W/2+0.3),y+3,z,'#8a6a3a');}
@@ -2077,7 +2079,7 @@ const LANDMARKS=[
   {name:'Tavern',label:'The Lantern & Gear',R:196,side:1,a:1.95,s:1.5},{name:'Tavern2',label:'The Fogbound Arms',R:262,side:-1,a:1.79,s:1.5},
   {name:'Foundry',label:'The Ironway Foundry',R:196,side:-1,a:-1.0,s:1.5},{name:'Barracks',label:'Hall of the Lantern Vigil',R:262,side:1,a:1.36,s:1.5},
   {name:'Arcade',label:'The Glass Arcade',R:196,side:-1,a:1.36},
-  {name:'Bank',label:'The Treasury of Aldrath',R:118,side:1,a:1.22},{name:'Guild',label:"The Adventurers' Guildhall",R:196,side:1,a:1.74,s:1.0},
+  {name:'Bank',label:'The Treasury of Aldrath',R:118,side:1,a:1.22,s:1.35},{name:'Guild',label:"The Adventurers' Guildhall",R:196,side:1,a:1.74,s:1.0},
   {name:'Observatory',label:'The Moonwatch',R:118,side:1,a:-1.95,s:1.2},{name:'Granary',label:'The Granary',R:262,side:1,a:0.3},
   {name:'Waterworks',label:'The Waterworks',R:262,side:1,a:5.75},
   {name:'ShopArmor',label:'Ironhide Armoury',av:Math.PI/2,r:276,side:-1},{name:'ShopWeapon',label:'Blackanvil Blades',av:Math.PI/2,r:276,side:1},
@@ -3582,7 +3584,7 @@ const INT_DEFS={
   'The Ironway Foundry':{type:'forge',W:20,D:15,H:8,floor:'stone:#5e5a56',wall:'brick:#6a3a2e'},
   'Hall of the Lantern Vigil':{type:'hall',W:19,D:15,H:6.5,floor:'stone:#8f877b',wall:'stone:#a8a091'},
   "The Artificers' Laboratory":{type:'lab',W:15,D:13,H:6,floor:'planks:#4a3a30',wall:'plaster:#c9c4b8'},
-  'The Treasury of Aldrath':{type:'bank',W:21,D:16,H:8,floor:'marble:#ddd6c6',wall:'marble:#e6e0d0'},
+  'The Treasury of Aldrath':{type:'bank',W:28,D:20,H:9,floor:'marble:#ddd6c6',wall:'marble:#e6e0d0'},
   "The Adventurers' Guildhall":{type:'guild',W:17,D:14,H:6,floor:'planks:#5a3e28',wall:'plaster:#d8c8a0'},
   'Ironhide Armoury':{type:'shop',goods:'armor',W:11,D:9,H:4.2,floor:'planks:#5a4030',wall:'stone:#8a8680'},
   'Blackanvil Blades':{type:'shop',goods:'weapons',W:11,D:9,H:4.2,floor:'stone:#6e6a66',wall:'brick:#6a3a2e'},
