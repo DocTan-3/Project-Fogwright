@@ -27,6 +27,7 @@ input[type=range]{width:100%;accent-color:var(--brass)}
 .hidden{display:none}
 .sec{font:400 18px Georgia,serif;margin:20px 0 0;padding-top:12px;border-top:1px solid var(--line)}
 .lock{font-size:12px;color:var(--dim);margin:2px 0 0}
+.label.sub2{letter-spacing:.06em;text-transform:none;font-size:12px;margin-top:8px}
 button:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:700px){.panel{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:46%}.tag{top:12px;bottom:auto}}
 </style>
@@ -80,7 +81,7 @@ const HAIRS=[['None',null],['Short','Short'],['Swept','Swept'],['Ponytail','Pony
 const BEARDS=[['None',null],['Short','Short'],['Full','Full'],['Pointed','Pointed'],['Forked','Forked'],['Braided','Braided']];
 const STACHES=[['None',null],['Chevron','Chevron'],['Horseshoe','Horseshoe'],['Walrus','Walrus'],['Handlebar','Handlebar'],['Pencil','Pencil']];
 const st={sex:'m',people:'Aurelan',h:0.5,w:0.55,skin:1,eye:0,hair:'Swept',hcol:0,beard:null,stache:null,lower:0,view:'full',
-  gear:{shirt:'linen_shirt',chest:'jerkin',legs:'trousers',feet:'boots',wrists:null,hands:null,waist:'beltpouch',shoulders:null,head:null,back:null},dye:0};
+  gear:{shirt:'linen_shirt',chest:'jerkin',legs:'trousers',feet:'boots',wrists:null,hands:null,waist:'belt',shoulders:null,head:null,back:null},belt:{hipR:'pouch'},dye:0};
 // ---- scene
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(28,1,0.05,100);
@@ -90,7 +91,7 @@ let G={}, fig=null, mixer=null, yaw=0.35, spin=true, clip='Idle';
 const clock=new THREE.Clock();
 function lerp(r,t){return r[0]+(r[1]-r[0])*t;}
 function definition(){const P=PEOPLE[st.people],r=st.sex==='f'?P.f:P.m,w=lerp(r.w,st.w);return Math.max(0,Math.min(1,1+w))*(st.sex==='f'?0.4:1);}
-function outfit(){return Object.assign({dye:EQ_DYES[st.dye][1]},st.gear);}
+function outfit(){return Object.assign({dye:EQ_DYES[st.dye][1],belt:st.belt},st.gear);}
 function dress(){dressFigure(fig,look());dressOutfit(fig,look(),outfit(),R);}
 function look(){
   const P=PEOPLE[st.people], fem=st.sex==='f';
@@ -145,7 +146,13 @@ function build(){
     const box=document.createElement('div');box.className='chips';box.id='slot_'+sl.id;gear.appendChild(box);
     if(sl.locked){const b=document.createElement('button');b.textContent='Locked';b.disabled=true;box.appendChild(b);
       const n=document.createElement('p');n.className='lock';n.textContent=sl.locked;gear.appendChild(n);continue;}
-    chips('slot_'+sl.id,[['None',null]].concat((EQ_ITEMS[sl.id]||[]).map(i=>[i.name,i.id])),()=>st.gear[sl.id],v=>{st.gear[sl.id]=v;dress();});
+    chips('slot_'+sl.id,[['None',null]].concat((EQ_ITEMS[sl.id]||[]).map(i=>[i.name,i.id])),()=>st.gear[sl.id],v=>{st.gear[sl.id]=v;if(sl.id==='waist')build();dress();});
+    const belt=sl.id==='waist'&&eqItem('waist',st.gear.waist);
+    if(belt&&belt.sockets){   // what hangs from each of the belt's sockets
+      for(const sk of belt.sockets){const l=document.createElement('div');l.className='label sub2';l.textContent='On the belt: '+EQ_SOCKETS[sk].name;gear.appendChild(l);
+        const b=document.createElement('div');b.className='chips';b.id='sock_'+sk;gear.appendChild(b);
+        chips('sock_'+sk,EQ_ATTACH,()=>st.belt[sk]||null,v=>{st.belt[sk]=v;dress();});}
+      const n=document.createElement('p');n.className='lock';n.textContent='Relics will hang from these too, once you find them.';gear.appendChild(n);}
   }
   chips('dye',EQ_DYES.map(([n],i)=>[n,i]),()=>st.dye,v=>{st.dye=v;dress();});
   chips('view',[['Full','full'],['Face','face'],['Walk','walk'],['Turntable','spin']],()=>st.view==='face'?'face':clip==='Walk'?'walk':'full',v=>{
