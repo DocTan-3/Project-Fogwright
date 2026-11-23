@@ -30,6 +30,7 @@ python3 -m http.server 8000
 | `studies/base-body-viewer.html` | **The current base body:** a Sketchfab model (see CREDITS.md) rigged to our skeleton and repainted by code, with our hair, beards, moustaches, Lean and Heavy builds, idle and walk. |
 | `studies/female-body-viewer.html` | The female base body: the base model reshaped (`RACE=female` in `tools/blender/rpgbody.py`), with its arms and legs kept and a reworked torso and bust. `tools/blender/femalebody.py` is the from-scratch alternative. Work in progress. |
 | `studies/tinker-viewer.html` | Review viewer for the Tinker hero model. |
+| `docs/` | The lore, the game design document and the devlog, as Markdown anyone with access can edit. |
 | `tools/blender/` | Blender (bpy) scripts that build the characters. `tinker.py` makes the hero and the rig with its Idle, Walk and Aim animations; `races.py` makes the kitbashed peoples model; `body.py` makes the clean seamless base body; `kit.py` is the original building kit, now generated in code inside the game; `merge_peoples.py` merges the per-people bodies into one model with a morph per people and each people's joint positions; `glb2json.py` turns a `.glb` into a `.gltf.json`. |
 | `tools/test/smoke.js` | Headless smoke test: boots the game, visits a few places and reports page errors. |
 

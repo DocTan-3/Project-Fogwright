@@ -1,0 +1,564 @@
+# Fogwright — Game Design Document
+
+2026-11-22 · @Dev Tan
+
+## Overview
+
+Fogwright is a lightweight, cross-platform co-op survival game where a small group of friends resettles a fantasy world broken by its own magic, using inventions instead of spells.
+
+**Pitch:** Three centuries after the arcane empire fell, the land is wild, the ruins are full of relics, and a magical Fog creeps over everything. You and your friends build a settlement, rediscover lost crafts, and engineer your way back to the shattered capital. Every spell you cast feeds the Fog.
+
+**Design pillars**
+
+1.  **Build together, depend on each other.** Crafts are interlocking, so no player can do everything alone.
+
+2.  **Invent, don't just craft.** Machines are assembled from parts, so experimenting is the fun.
+
+3.  **The world pushes back.** The Fog, events and settlers generate stories without a script.
+
+4.  **Light enough to run anywhere.** A browser link works on PC, Mac, phone and tablet, with small downloads and modest hardware.
+
+**Influences**
+
+| Game            | What we take                                                        |
+|-----------------|---------------------------------------------------------------------|
+| Valheim         | Co-op survival, biomes that get harder with distance, base building |
+| RimWorld        | Settlers with needs and moods, events that create stories           |
+| Project Zomboid | Detailed wounds and sickness, scavenging, creeping dread            |
+| Ragnarok Online | Job classes, a persistent shared world, social progression          |
+| Skyrim          | Open exploration, a landmark on the horizon to aim for              |
+
+**Players:** 2 to 16 friends on one persistent server, which keeps running between sessions. Built for groups that play a few evenings a week, not for thousands of strangers. Co-op only for now; PvP is planned for later, and the server already decides all game state, so it can be added without a rewrite.
+
+## Setting
+
+The world is a fantasy realm 300 years after a magical collapse, being resettled by people who build machines because magic is dangerous.
+
+- **The fall.** An arcane empire ran everything on magic until a great working went wrong. Its cities fell in a single night, and the magic that was left curdled into the Fog.
+
+- **The land now.** Forests, marshes and mountains have reclaimed the empire. Its ruins (towers, aqueducts, vaults) are scattered everywhere, half-buried and full of relics.
+
+- **The survivors.** Scattered villages that rejected magic and kept the old mechanical trades alive. The players are the first generation to push out and resettle.
+
+- **The Fog.** Leftover magic that spreads, twists living things, and is drawn to spellcasting. It is the main threat and the reason the world is dangerous.
+
+- **The goal on the horizon.** The shattered capital is visible from almost anywhere, glowing inside the thickest Fog. Reaching it and finding out what happened is the long-term goal.
+
+**Tone:** high fantasy on the surface, grimdark underneath. The world first looks like a medieval high-tech high fantasy: grand cities around their gods, proud peoples, steam and brass progress, and chosen heroes guided by a kind goddess. The story then peels it back layer by layer to reveal a grimdark reality: a betrayer at the head of the Gods, gods fading and hiding, protectors devoured by the Fog. Visually the game starts bright and grand, and darkness creeps in as the story goes on. The land itself shows the gods' power: areas near the gods and their cities are colourful, tended and alive; toward the Fog at the world's boundaries, colour drains away and the land turns bleak, untamed and overgrown, more relic and ruin than civilization. As a god fades during the story, colour retreats from their lands. The world was once peaceful and is now forgotten: players piece its history together slowly from ruins, inscriptions, relics, the writings of lost peoples, and the warps nobody understands. The full history is in the lore document. The sky is a single procedural dome rather than image skyboxes: a moving sun, clouds, stars and moons, clear and blue near the gods and washed grey toward the Fog, ready for weather later (the number of moons is a lore decision still open). Mounts, from horses to larger beasts, are planned, so roads and city streets are built wide for riders. Prototypes use placeholder buildings and props; each people's architectural style is important and will be designed in a later art pass, once the systems settle.
+
+## Core loop
+
+Each session, players head out from the settlement, bring back resources and knowledge, and turn them into inventions that let them reach farther.
+
+**Session loop (30 to 90 minutes)**
+
+1.  **Check in.** See what happened while you were away: settler moods, Fog movement, events.
+
+2.  **Plan.** Decide as a group what to build or where to go.
+
+3.  **Venture out.** Gather, scavenge ruins, hunt, push into the Fog edge, or dive into a Breach before it collapses.
+
+4.  **Return.** Carry loot home before night or a storm rolls in.
+
+5.  **Build and invent.** Combine parts into new machines, upgrade the settlement, and treat wounds.
+
+6.  **Defend.** Hold off Fog surges at night with walls, turrets and traps.
+
+**Long-term loop (weeks)**
+
+- Move up through the tech eras, from rope and timber to arcane engines.
+
+- Push the Fog back and build outposts linked by roads, then rail carts.
+
+- Rediscover all six crafts and recruit settlers.
+
+- Reach the shattered capital and learn what caused the fall.
+
+The loop runs on distance: the farther from the settlement, the richer the loot and the thicker the Fog.
+
+## Crafts
+
+Players each choose a primary craft and can learn a secondary one later, so a group of four covers most needs but still has to trade.
+
+| Craft       | Role                   | Signature abilities and inventions                                        | Depends on                                          |
+|-------------|------------------------|---------------------------------------------------------------------------|-----------------------------------------------------|
+| Tinkerer    | Engineer               | Crossbow turrets, traps, gliders, grappling hooks, clockwork scout drones | Smith for parts, Millwright for power               |
+| Millwright  | Builder and automation | Waterwheels, windmills, bellows, conveyors, automatic sawmills            | Smith for gears, Warden for timber from far forests |
+| Smith       | Gear and parts         | Weapons, armor, tools, gears, springs, pipes                              | Millwright to power the forge                       |
+| Runecrafter | Magic                  | Spells, enchantments, relic cores for arcane engines (feeds the Fog)      | Herbalist for corruption cures                      |
+| Herbalist   | Support and medicine   | Bandages, splints, antidotes, food, Fog-corruption remedies               | Warden for rare plants                              |
+| Warden      | Scout and fighter      | Tracking, beast-taming, pushing back the Fog edge, escort duty            | Tinkerer for gear, Herbalist for healing            |
+
+**Progression:** crafts level up by doing the work. New techniques are unlocked by finding schematic fragments in ruins, so exploring and crafting feed each other.
+
+**Solo or small groups:** settlers can fill missing crafts at a lower skill level, so two players are still viable.
+
+### Combat
+
+Combat is tab-target, like Albion Online and World of Warcraft, with mobile controls like Albion mobile, Wild Rift and Mobile Legends.
+
+- **Targeting:** tap an enemy or press Attack to select the nearest. The character walks into range and auto-attacks while standing still; moving with the joystick pauses attacks but keeps the target.
+
+- **Skills:** skill buttons arc around a large Attack button. In Classic, skills are skillshots: on touch screens press and drag to aim with a ground indicator and release to cast (a quick tap casts at the current target); on PC the keys cast toward the mouse cursor. In Action, skills cast at the crosshair. Skills themselves are unlocked through the skill tree; the five in the prototype are placeholders for testing the controls, not designed skills. Skills cost energy and have cooldowns shown on the buttons. Gear and the skill tree decide which skills a player has.
+
+- **Enemies:** levels rise with distance from camp, more spawn at night, and elites use telegraphed attacks marked on the ground.
+
+- **Loot:** creatures drop Fog shards and gear in four rarities (common, uncommon, rare, epic), with item power and stats. Gear can be equipped or salvaged into shards.
+
+- **Quests:** quest givers at settlements offer chains that lead outward, ending in dungeons and elites.
+
+- **Layout:** landscape only on phones and tablets. Building has its own mode with its own controls.
+
+- **Two control styles on PC:** Classic (tab-target, auto-attack, skills on the target) or Action (WASD, mouse aim with a crosshair, left click attacks, right click blocks, 1 to 5 cast at the crosshair, Space jumps). Both use the same skills and balance; phones and tablets use Classic.
+
+### Skill tree, paths and gods
+
+There are no classes. Every character can fight and craft completely without the Gods; who you are comes from where you grow in the skill tree. Players start as freefolk in Aldrath's outer city at the centre of the world.
+
+| Layer       | What it gives                                                             | Where it comes from                 |
+|-------------|---------------------------------------------------------------------------|-------------------------------------|
+| Skills      | How you fight and craft: weapons, armour, inventions, trades              | The skill tree, earned by doing     |
+| Paths       | Oaths you can swear, each with striking utility that changes how you play | Regions of the skill tree           |
+| Gods' magic | A mysterious bonus that shapes both combat and crafting                   | Being claimed by a god              |
+| Relics      | Reverse-engineered devices of old that any adventurer can use             | Found, bought or crafted, like gear |
+
+**Paths.** Every character can enter every path, but progress is slow and limited: in the base game a character has enough skill points to finish one path and maybe half of another. Working names: Tinker, Technomancer, Ironclad, Fogstalker, Sapper, Lanternbearer, Beastbinder, Warpwalker. Proposed utility examples: Tinkers deploy inventions anywhere; Technomancers move their mind into a machine; Ironclads become cover; Fogstalkers endure thick Fog; Sappers blast open shortcuts; Lanternbearers push back the Fog around their group; Beastbinders bond with a creature; Warpwalkers set warp anchors.
+
+**Gods.** Being claimed by a god does not decide your role; it decides which magic you can take. Magic is mysterious and a bonus, not a tool for everyday use.
+
+**Entering a path.** Each path begins with a starter quest. Paths carry no vows.
+
+**Relics.**
+
+- **Warp bag:** the inventory. Easily reproduced, so every adventurer has one. It holds a limited amount at first and grows as it is upgraded.
+
+- **Warp bracelet:** found later; opens a personal warp space. This is where players build their homes and bases, invite friends, and later host guild members.
+
+**Building in the open world.** Some open-world areas are buildable, for camps at dungeon entrances and outposts at the frontier. These are never permanent: regular world events, such as monsters attacking settlements or dungeon entrances leaking creatures, can kill everyone there and let the monsters destroy what players built. This keeps the world from filling with clutter and gives defending a camp real stakes. Anything a player wants to keep belongs in their warp space, which events cannot reach.
+
+**Open:** none for now.
+
+- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, new abilities and armor proficiencies.
+
+- **Hybrid builds.** Walking the tree toward a neighbouring craft unlocks its abilities and armor, so a Tinkerer can path into plate, or a Smith into gadgets.
+
+- **Wear everything, eventually.** Enough points let any build use every armor tier. Balance is tuned later; this is the intent, not final numbers.
+
+- **Respecs** cost resources, not real money, so groups can rebalance roles.
+
+| Armor tier                                                               | Arrives in      | Crafts nearest to it        | Trade-offs                                              |
+|--------------------------------------------------------------------------|-----------------|-----------------------------|---------------------------------------------------------|
+| Light (cloth, leather, single mechanical pieces)                         | Rope and timber | All                         | Fast, quiet, low protection                             |
+| Medium (reinforced leather, one mechanical arm or shoulder)              | Gear and water  | Warden, Tinkerer, Herbalist | Balanced; asymmetric builds start here                  |
+| Heavy (brass and leather, powered back slot such as a jetpack or boiler) | Steam           | Smith, Warden               | Strong but needs fuel for powered parts                 |
+| Plate (full metal shell, exposed mechanical joints)                      | Steam           | Smith                       | Highest armor, slow, loud, hot                          |
+| Rig (a powered suit you climb into)                                      | Arcane engine   | Tinkerer, Millwright        | An invention, not armor: its own body, fuel and repairs |
+
+Armor tiers follow the tech eras, because brass suits and firearms need foundries and boilers the group builds first.
+
+## Inventions
+
+Inventions are assembled from four kinds of parts, so a small set of parts produces hundreds of machines without hand-made art or data for each.
+
+| Slot      | Examples                                                      | What it decides                            |
+|-----------|---------------------------------------------------------------|--------------------------------------------|
+| Frame     | Wooden stand, iron tripod, cart, wall mount, backpack harness | Where it goes and whether it moves         |
+| Mechanism | Lever, spring, gear train, crank, piston                      | How it acts: once, repeating or continuous |
+| Power     | Hand crank, water, wind, steam, relic core                    | How long it runs and what it needs         |
+| Payload   | Bolt launcher, saw blade, bellows, lantern, net, hook         | What it actually does                      |
+
+Examples: a wall mount, spring and bolt launcher make a crossbow turret. A cart, gear train, water power and saw blade make an automatic sawmill. A backpack harness, spring and hook make a grappling hook.
+
+**Discovery:** schematics found in ruins reveal some combinations. Others are found by experimenting at a workbench, and the game records each new invention with the name of the player who found it first.
+
+**Quality:** part material (wood, bronze, iron, steel) and the builder's skill set durability and strength.
+
+### Tech eras
+
+1.  **Rope and timber:** hand tools, palisades, snares, hand-cranked devices.
+
+2.  **Gear and water:** waterwheels, cranes, crossbow turrets, the first conveyors.
+
+3.  **Steam:** boilers, steam hammers, rail carts to outposts, diving suits for flooded ruins.
+
+4.  **Arcane engine:** relic cores power the strongest machines, and every one draws the Fog toward the settlement.
+
+## The Fog
+
+The Fog is the world's pressure system: it grows with distance, time and magic use, and players push it back with machines and wardens.
+
+**What feeds it**
+
+- Distance from the settlement: thicker and more dangerous toward the capital.
+
+- Night and storms: surges roll in and press against walls.
+
+- Magic: each spell and running arcane engine adds to a settlement-wide Fog pressure value, which raises surge strength and frequency.
+
+**What it does**
+
+- Corrupts animals into Fog-touched creatures, stronger and stranger the deeper you go.
+
+- Corrupts people slowly. Long exposure gives a corruption meter that needs an Herbalist's remedy, and untreated it becomes a lasting affliction.
+
+- Hides the map and blocks travel until cleared.
+
+**How players fight it**
+
+- Fog lanterns and warding pylons (inventions) hold clear zones around outposts and roads.
+
+- Wardens can push the edge back during expeditions.
+
+- Clearing a ruin's heart removes Fog from that region permanently, which is the main milestone of territory progress.
+
+**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Open: lantern fuel, and lantern upgrades.
+
+**The choice it creates:** magic is a shortcut with a cost. A group can rush with runes and arcane engines, but its home will face much harder nights.
+
+## World generation
+
+Terrain and biomes are generated from a seed, but places, regions and cities are authored to fit the game's lore. The server stores the authored places plus what players change; clients generate the rest locally.
+
+**Generated versus authored:** the generator supplies the ground: terrain shape, biomes, vegetation, rocks and minor ruins. Everything with a name is authored: regions, cities, landmarks, roads, ship routes and dungeons, placed and designed according to the lore. Authored places are laid onto the generated land, which is shaped around them (flattened for a city, carved for a river crossing, raised for a sea cliff).
+
+- **Chunks.** The world is split into 32 × 32 tile chunks generated on demand as players approach. Every client generates the same chunk from the seed and chunk coordinates.
+
+- **Terrain.** Layered noise for height, moisture and temperature produces biomes. Rivers trace downhill from mountains, which matters because waterwheels need them.
+
+- **Biomes by distance.** Rings of rising difficulty around spawn, bent by noise so they feel natural: meadows, then old forest, marsh, highlands, ashlands, and the capital.
+
+- **Ruins.** Placed by a second seeded pass, built from room templates assembled by rules (towers, vaults, aqueduct segments, villas). Loot tables depend on biome and ruin type, and ruins respawn their lesser loot over time so the world doesn't run dry.
+
+- **Settlers and encounters.** Survivor camps, traders and hostile groups are placed by seed but tracked by the server once players meet them.
+
+- **Changes.** A placed wall, a felled tree, or a cleared ruin is stored as an edit against the generated chunk. The world on disk is the seed plus a list of edits per chunk.
+
+**Determinism rule:** all generation uses a seeded random generator and integer or fixed-step math, never `Math.random()`, so every device produces exactly the same world.
+
+**World size:** about 20 km across, similar to Valheim, bounded by an impassable wall of Fog at the edge. Only the area around each player is ever built or simulated, so size does not cost performance. Because players can travel up to 10 km from the center, the client uses a floating origin, re-centring the world on the player every few kilometres, to avoid jitter from limited graphics precision.
+
+### Cities
+
+Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a village of twenty houses. Windhelm and Solitude are the references: dense, vertical, and built into dramatic geography, a fortress on a river crossing and a city on a sea arch.
+
+- **Living cities (1 to 2):** survivor strongholds such as a walled river city, the trade hub and meeting point for all players.
+
+- **Ruined cities of the old empire:** huge, Fog-filled and half-collapsed exploration zones, with persistent dungeons under their towers.
+
+- **The shattered capital:** the largest city, and the endgame.
+
+**What makes them feel big:** districts with their own character (smiths' quarter, market, docks, temple, slums), buildings of three or four floors, towers, bridges and walkable walls, a skyline visible from far away, and crowds of traders, guards and townsfolk.
+
+**How they stay light:**
+
+| Technique                                   | Purpose                                                                                          |
+|---------------------------------------------|--------------------------------------------------------------------------------------------------|
+| Generated layout with hand-placed landmarks | Roads, plots and buildings from rules and a modular kit; gates, markets and keeps placed by hand |
+| Modular buildings merged into single meshes | Hundreds of buildings at low draw cost                                                           |
+| Distance levels of detail                   | Simplified distant buildings; the skyline still reads from kilometres away                       |
+| Narrow streets and walls block the view     | Only a slice of the city is drawn at once                                                        |
+| Interiors only where they matter            | Shops, inns, guild halls and quest locations open; most houses stay closed                       |
+| Ambient crowds near the player only         | Background townsfolk are cheap; important NPCs are always simulated                              |
+
+### Geography
+
+The land must feel real at scale: mountains that feel like mountains, seas that feel like seas.
+
+**World layout:** a large island continent with a mountain spine, rivers running from the peaks to the sea, coastlines on at least two sides, and an inland sea wide enough to lose sight of land. A cliff city above the sea (Solitude-like) and a fortress on a river crossing (Windhelm-like) are the two living cities. The shattered capital lies deep in Fog-bound mountains.
+
+**Mountains**
+
+- Peaks of roughly 500 to 800 m above the sea, in ranges with ridges, passes, cliffs and valleys.
+
+- A snow line, colder nights and harsher weather with altitude.
+
+- Steep slopes that take real effort, cliff paths, and inventions such as grappling hooks for climbing.
+
+- Distant terrain drawn in simplified form so peaks stay on the horizon kilometres away.
+
+**Oceans and seas**
+
+- Rolling waves, colour shifting from shallows to deep water, shore foam and a true horizon.
+
+- Storms, deep water that can drown you, and creatures beneath.
+
+### Ships
+
+Ships travel like the boats in World of Warcraft: they really sail.
+
+- Scheduled ships sail real routes between ports in a few minutes, with the coast passing by.
+
+- Players walk the deck, talk and fight on board; jumping overboard means swimming.
+
+- The server sails the ship, so everyone aboard sees the same voyage.
+
+- Later: player-built boats from Millwrights and Tinkerers.
+
+**Tech notes:** terrain detail by distance (near terrain detailed, far terrain simplified), an ocean surface with moving waves, and ships as moving platforms that carry players with them.
+
+### Beyond the Fog (post-launch expansion)
+
+Location expansions come after launch. The first priority is a playable game with a playable world. One planned expansion: past the Fog wall at the edge of the world lie endless generated Fog realms, fractured lands each built from a seed, for deep expeditions, rare materials and the pride of reaching far-out realms. The core island stays the authored heart of the game.
+
+## Dungeons
+
+The world has two kinds of dungeon: persistent dungeons fixed in the open world and shared by everyone, and Breaches that open temporarily and are private to the group that enters.
+
+|               | Persistent dungeons                                                                                                 | Breaches                                       |
+|---------------|---------------------------------------------------------------------------------------------------------------------|------------------------------------------------|
+| Where         | Fixed places: under major ruins, the broken tower, old mines and vaults                                             | Open anywhere near heavy Fog, then vanish      |
+| Layout        | Generated once from the world seed, then hand-tuned; the same for everyone                                          | Generated fresh from room templates every time |
+| Who is inside | Shared: anyone on the server can enter, and groups can meet                                                         | Private instance for the group that entered    |
+| What persists | Opened doors, levers, shortcuts, cleared floors (enemies return on a timer), outposts players build at the entrance | Nothing after it closes                        |
+| Purpose       | Long-term goals, deep multi-floor delves, landmarks worth returning to                                              | Quick sessions, fresh loot, Fog pushback       |
+
+### Persistent dungeons
+
+- Each region has 1 to 3, placed by the world generator at its biggest ruins, so they become known landmarks for the group.
+
+- Several floors deep, getting harder with depth. Deeper floors unlock with inventions (a crank lift, a diving suit for flooded levels).
+
+- Progress is shared and permanent: a shortcut one player opens stays open for everyone, and the group can build a camp at a dungeon's mouth.
+
+- Floors are cleared, then slowly retaken by the Fog: enemies and lesser loot return over a few days, while boss relics are one-time finds.
+
+- The broken tower near camp is the first persistent dungeon and the natural tutorial.
+
+**Scope:** these reuse the Breach room pieces and enemy set, plus saving dungeon state on the server. They belong in M4 alongside Breaches.
+
+### Breaches
+
+Breaches are temporary, generated dungeons that open in the overworld when the Fog swells, inspired by Albion Online's randomized dungeons.
+
+The overworld stays persistent and shared. Breaches are private instances for the group that enters, generated fresh each time and reset afterward, so loot never runs out.
+
+| Feature  | How it works                                                                                                                                                |
+|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Spawning | Breaches open near Fog-heavy areas and stay open for a few hours of real time or until cleared. The settlement's lookout tower reveals them on the map.     |
+| Tiers    | The Fog glow shows the tier: grey, green, violet, gold. Higher tiers mean tougher Fog-touched enemies and better relics.                                    |
+| Layout   | Hand-made room templates of the old empire (archive, forge hall, flooded cistern, rune chamber, vault) stitched together by rules, ending in a boss chamber |
+| Size     | Small Breaches for 1 to 2 players, large ones for 3 to 6                                                                                                    |
+| Maps     | Schematic fragments can point to a specific vault and open it on demand                                                                                     |
+| Collapse | When the timer runs out the Breach starts to collapse. Get out in time or lose what you carry.                                                              |
+
+**Fogwright twists**
+
+- Casting magic inside a Breach raises its danger live, so the magic-versus-machines choice matters underground too.
+
+- Inventions open alternate routes: a grappling hook reaches a high ledge, and a crank lift raises a flooded gate.
+
+- Clearing a gold Breach pushes the Fog back in that region for a while, so dungeons feed overworld progress.
+
+- Co-op at launch. PvP comes later; rival groups invading a Breach is a natural first mode, and rival scavenger NPCs can fill that role until then.
+
+**Scope:** an entrance spawn system, a room-stitching generator, instance servers, groups and a starting set of 15 to 25 room templates. Room templates are small layouts of code-built pieces, so download size barely changes.
+
+## Survival and settlers
+
+Survival is detailed enough to create stories but simple enough to read at a glance on a phone.
+
+**Player needs:** hunger, warmth, rest and Fog corruption. Each has a clear meter and slows you down before it harms you.
+
+**Wounds:** injuries are tracked per body area (head, torso, arms, legs). Each wound has a type (cut, bruise, fracture, bite, burn) with its own treatment: bandage, splint, stitches or antidote. An untreated wound can turn infected. A broken leg slows you, and a hurt arm weakens attacks and crafting.
+
+**Death:** you drop your carried items where you fall and wake at the settlement. Your gear stays in the world for friends to recover. A hardcore server option makes death permanent for that character.
+
+**Settlers**
+
+- Recruited from survivor camps or rescued in ruins.
+
+- Each has 2 or 3 traits (brave, greedy, night owl, ex-runecrafter) plus needs and a mood.
+
+- They work assigned jobs such as farming, hauling or guard duty, and can fill a missing craft at a low level.
+
+- They form relationships and grudges with each other and with players, which shape their mood and loyalty.
+
+**Events** fire from a director that watches the settlement's wealth, defenses and Fog pressure:
+
+- Threats: Fog surges, raider bands, Fog-touched beasts, a sick settler starting an outbreak.
+
+- Opportunities: traders, refugees asking to join, a ruin exposed by a landslide.
+
+- Weather: storms, cold snaps, droughts that slow waterwheels.
+
+While everyone is offline, the server keeps simulating at a reduced level so there is news on return, but it never kills settlers or destroys the base without players there to respond.
+
+## Art and audio
+
+The look is simple low-poly 3D, built mostly in code, so buildings feel grand and worn gear shows on the character while the game stays light. Prototype 1 ([Fogwright Prototype](https://claude.ai/artifact/UdQogHruyFvnyrzd4UwbkK)) shows the style.
+
+**Visual style**
+
+- An angled third-person camera that players can rotate and zoom; walls fade when they block the view.
+
+- Flat-shaded low-poly models. Terrain, trees, rocks and ruins are generated from palettes and shape rules, not modeled one by one.
+
+- Characters and their equipment are our own hand-made models, rigged and animated, so gear fits and moves seamlessly (see Character pipeline). The world stays generated in code.
+
+- Inventions are drawn by assembling their parts in 3D, so a new combination needs no new art.
+
+- Buildings use grid snapping with fixed floor heights, so multi-floor halls and towers are possible without free-placement complexity.
+
+- Muted natural colors. The Fog is real distance fog that thickens and turns violet farther from camp, and is the main source of atmosphere.
+
+- Day and night lighting with warm lantern and forge light, which helps sell the settlement as a safe place.
+
+### Architecture
+
+Architecture is diverse because of each people's culture and its level of technology. The reference set shows the range: chunky, hand-painted timber houses with overhanging upper floors, curved slate or clay-tile roofs, crooked chimneys and lanterns; workshops with boilers, copper pipes, gears and cranes bolted onto their sides; tall stacked buildings that grow upward with towers, balconies and tanks; steep A-frame halls with carved, riveted beams; and, in the greatest cities, glass-and-iron arcades on dark, rain-slick streets.
+
+| People               | Style direction (proposal)                                                                                                                                                                                                                                                                              |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Wayfolk and Aurelans | Timber-framed houses, jettied upper floors, tiled roofs, flower boxes; small boilers and pipes added on                                                                                                                                                                                                 |
+| Hrimfolk             | Steep A-frame longhalls of dark timber with carved, riveted beams, horn and antler ornaments                                                                                                                                                                                                            |
+| Ferrin               | Stone and iron, heavy and squat, furnaces, chimneys, gears and pipework everywhere                                                                                                                                                                                                                      |
+| Zarhim               | Sandstone with flat roofs, arches, awnings and courtyards                                                                                                                                                                                                                                               |
+| Ruadhan              | Round timber halls and hill forts woven into the forest                                                                                                                                                                                                                                                 |
+| Ilvari               | Elegant, glass-and-brass workshops with blue accents and arcane machinery                                                                                                                                                                                                                               |
+| Aldrath's outer city | Western European castle walls, round towers and gatehouse; urban Victorian housing (brick and stone rowhouses, bay windows, steep or mansard roofs, chimneys, wrought-iron balconies); medieval cobblestone streets; very light steampunk accents such as gas lamps, clocks, the odd pipe or steam vent |
+
+Technology level shows on the buildings: frontier villages are mostly timber and stone with a few machines; great cities are layered with pipes, boilers, cranes and glass. The current prototype uses painted facades per style as placeholders; full modular building kits come in the art pass.
+
+**Your direction for the cities:** Western European castles for the walls, a more urban Victorian style for the housing, medieval stone streets, and only very light steampunk imagery. The walls read as far older than the city that grew inside them.
+
+### Character pipeline
+
+We build our own characters on one shared skeleton, so every piece of equipment is made to fit it and nothing clips or floats.
+
+- **Who and how:** Claude builds the characters from your reference images by writing Blender Python scripts that model, rig, weight and animate them, renders turnarounds for your review, and revises from your feedback. Models export as glTF, which three.js loads directly.
+
+- **One rig for everyone:** a single humanoid skeleton of about 25 to 35 bones. All bodies, gear and animations are built for it, so any item works on any character.
+
+- **Modular body:** the body is split into head, torso, arms, hands, legs and feet. Worn gear hides the body parts it covers, which prevents clipping, as many MMOs do.
+
+- **Two kinds of gear:** skinned gear (tunics, armor, capes, boots) is weighted to the same skeleton and bends with it. Rigid gear (helmets, weapons, tools, packs) attaches to bone sockets such as the head, back, right hand and hip.
+
+- **Variety without new models:** colors and materials come from palettes and tint masks, so one armor model gives bronze, iron and steel versions, and gear can show wear.
+
+- **Animations:** one shared set (idle, walk, run, jump, gather, build, swing, aim, shoot, hurt, die, emotes), later blended so you can walk while aiming.
+
+- **Budget:** about 3,000 to 6,000 triangles per fully equipped character, textures of 512 px or a shared palette texture, and under about 500 KB per gear piece. Distant players use simpler versions.
+
+- **Prototypes until then:** the code-built character in prototype 1 stands in until the first modeled character is ready.
+
+**Gear slots:** head, chest, left arm, right arm, legs, feet, back and weapon. The two arms are separate slots because asymmetric builds (one heavy mechanical arm, one bare) are a signature of the style.
+
+**Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are geometry; rivets, engraving and wear are color and simple texture. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each tier gets a clearly different silhouette, from a slim coat to a full plate shell.
+
+**References:** the armor reference set covers all five tiers. Models are original designs inspired by them, never copies of another artist's work.
+
+**First model:** the light Tinker, which also sets the base body every other tier is built on.
+
+**Audio**
+
+- Sound effects generated in code with the Web Audio API (hammering, gears, crossbow twang, footsteps).
+
+- Ambient layers by biome, plus a low drone that rises when the Fog is close.
+
+- A few short music tracks as compressed files, streamed after load so they don't slow startup.
+
+**Readability rules:** every interactable object has a distinct silhouette, and the game must be playable on a 6-inch phone screen.
+
+## Tech plan
+
+The game is a web app first, wrapped for desktop and mobile stores later, with a target under 10 MB to install and smooth on a mid-range phone.
+
+**Client**
+
+- TypeScript, rendering with three.js (WebGL, about 170 KB compressed). No game engine and no physics engine; collision uses simple shapes against the terrain height.
+
+- Runs in any modern browser. It is installable as a Progressive Web App (PWA) for an app-like icon and offline asset caching.
+
+- Wrapped with Tauri for Windows, Mac and Linux (installers of a few MB, using the system's web view) and Capacitor for iOS and Android.
+
+- Input works with mouse and keyboard, touch (virtual stick, drag to look, pinch to zoom), and gamepad.
+
+- Phone performance: low poly counts, Fog to limit draw distance, chunk streaming, and a quality setting.
+
+- Simple 3D is estimated to add about 30 to 50% development time over 2D, almost all of it in building, art and animation.
+
+**Server**
+
+- Node.js or Bun with WebSockets, one process per world, authoritative over all game state.
+
+- Breaches run as separate short-lived instances, started when a group enters and shut down after everyone leaves.
+
+- SQLite for persistence: the world seed, chunk edits, players, settlers and invention discoveries. Breaches store nothing after they close.
+
+- Shared TypeScript code between client and server for world generation and game rules.
+
+- Hosting: a \$5 to \$10 per month VPS per server for one group. Friends can also self-host.
+
+**Netcode**
+
+- The server simulates at 20 ticks per second and sends only what changed nearby.
+
+- Clients predict their own movement and smoothly interpolate everyone else.
+
+- The world itself is never sent; only chunk edits and entity state are.
+
+**Size and performance budgets**
+
+| Item                                        | Budget        |
+|---------------------------------------------|---------------|
+| First load in the browser (code + core art) | Under 3 MB    |
+| Desktop installer (Tauri)                   | Under 10 MB   |
+| Mobile app (Capacitor)                      | Under 25 MB   |
+| Network per player while playing            | Under 10 KB/s |
+| Frame rate on a mid-range phone             | 60 fps        |
+| Players per server                          | 16            |
+
+## Milestones
+
+The first playable build (M1) is two friends building a shelter together in a generated world over the internet; everything after it is layered on top.
+
+*[Diagram: roadmap · 5 milestones and their gates. It lives in the online doc and does not export to Markdown.]*
+
+Each milestone ends with a gate the group plays, and the next one only starts once that gate feels right. Prototype v0.2 now covers M0 and the single-player half of M1: harvesting, crafting, grid building and day-night survival, saved as edits on the seed. Next is the multiplayer server.
+
+**M1 first playable: in scope**
+
+- Seeded, chunked world with three biomes (meadow, forest, marsh) and rivers
+
+- 2 to 8 players connect by link, see and chat with each other
+
+- Walk, chop trees, mine rocks, carry resources
+
+- Place and remove walls, floors and a campfire
+
+- Everything saved on the server and still there next session
+
+- Mouse and keyboard only
+
+**Out of scope until later:** combat, the Fog, crafts, inventions, settlers, dungeons, hand-made characters, touch controls and store builds.
+
+## Open questions and risks
+
+**Open questions**
+
+- Is Fogwright the name, or a working title?
+
+- Does grid-based building feel good on a phone in 3D? Prototype 2 answers this.
+
+- Write the world lore: regions, cities, factions and history, which the authored places are built from.
+
+- Which PvP comes first once co-op is solid: rival groups in a Breach, or raiding other settlements?
+
+- When do firearms arrive: with steam, or only with arcane engines?
+
+- Can a character be in several worlds or servers, or is each world self-contained?
+
+- Should magic be fully playable as a main path, or mostly a risky late-game tool?
+
+- A separate private repository for the game, since this one holds Valheim files and must stay private.
+
+**Risks**
+
+| Risk               | Why it matters                                               | Mitigation                                                                |
+|--------------------|--------------------------------------------------------------|---------------------------------------------------------------------------|
+| Scope creep        | Six crafts, settlers, the Fog and inventions add up to a lot | Ship each milestone as something playable, cut features before polish     |
+| Generated sameness | Noise-based worlds get repetitive                            | Hand-authored ruin rooms and landmarks mixed into generation              |
+| Netcode feel       | Laggy movement ruins combat                                  | Client-side prediction from M1, tested over real internet early           |
+| Touch controls     | Building and inventing UIs are hard on phones                | Design UI for touch from M2, not as a late port                           |
+| Offline simulation | Players may come back to bad news                            | Offline mode never destroys or kills, only creates news and small changes |
+| Hosting and ops    | Someone has to run the server                                | One-command self-host plus a cheap VPS guide                              |
