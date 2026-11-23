@@ -414,43 +414,39 @@ vec2 cobble(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
   for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y)),o=vec2(gh(i+g),gh(i+g+17.))*.8+.1,r=g+o-f;float d=dot(r,r);if(d<d1){d2=d1;d1=d;id=gh(i+g+3.);}else if(d<d2)d2=d;}
   return vec2(sqrt(d2)-sqrt(d1),id);}
 vec2 bricks(vec2 p,vec2 s,float j){p/=s;float row=floor(p.y);p.x+=mod(row,2.)*.5;vec2 f=fract(p),e=min(f,1.-f)*s;return vec2(1.-smoothstep(j*.5,j,min(e.x,e.y)),gh(floor(p)+row*7.));}
-vec3 yardOf(float q,vec2 w,float n){
-  if(q<.5)return mix(vec3(.18,.16,.15),vec3(.29,.26,.23),n);                                 // Ferrin: cinders
-  if(q<1.5)return mix(vec3(.45,.36,.26),vec3(.56,.46,.34),n);                                // Market: packed earth
-  if(q<2.5)return mix(vec3(.40,.33,.24),vec3(.36,.46,.24),smoothstep(.45,.7,n));             // Wayfolk: dirt and weeds
-  if(q<3.5)return mix(vec3(.28,.45,.21),vec3(.40,.56,.28),n);                                // Ruadhan: grass
-  if(q<4.5)return mix(vec3(.50,.52,.55),vec3(.63,.65,.68),n);                                // Hrimfolk: grey gravel
-  if(q<5.5)return mix(vec3(.78,.76,.70),vec3(.89,.87,.81),n);                                // Temple: white gravel
-  if(q<6.5)return mix(vec3(.38,.55,.28),vec3(.52,.66,.36),n);                                // Aurelan: kept lawns and orchards
-  return mix(vec3(.74,.62,.42),vec3(.83,.71,.51),n);                                         // Zarhim: sand
-}
-vec3 palOf(float q){return q<.5?vec3(.36,.37,.40):q<1.5?vec3(.62,.30,.22):q<2.5?vec3(.49,.45,.39):q<3.5?vec3(.52,.52,.45):q<4.5?vec3(.65,.66,.70):q<5.5?vec3(.90,.88,.84):q<6.5?vec3(.70,.62,.47):vec3(.72,.42,.26);}
-vec3 paveOf(float q,vec2 w,out float id){vec3 pv;id=.5;
-  if(q<.5){vec2 b=bricks(w,vec2(1.2,.6),.05);id=b.y;pv=mix(vec3(.30,.31,.34),vec3(.41,.42,.46),b.y)*(1.-.55*b.x);pv*=1.-.35*smoothstep(.55,.85,gn(w*.5));}     // slate flags, sooty
-  else if(q<1.5){vec2 c=floor(w);vec2 lp=mod(c.x+c.y,2.)>.5?w.yx:w;vec2 b=bricks(lp,vec2(.32,.16),.025);id=b.y;pv=mix(vec3(.55,.24,.18),vec3(.69,.35,.25),b.y)*(1.-.4*b.x);}  // red brick, basket weave
-  else if(q<2.5){vec2 c=cobble(w*2.2);id=c.y;pv=mix(vec3(.42,.38,.33),vec3(.56,.51,.45),c.y)*(1.-.5*(1.-smoothstep(.02,.12,c.x)));pv=mix(pv,pv*vec3(.8,.72,.62),smoothstep(.6,.9,gn(w*.35))*.5);}  // rough cobbles, earthy in places
-  else if(q<3.5){vec2 c=cobble(w*1.6);id=c.y;pv=mix(vec3(.46,.46,.40),vec3(.59,.58,.51),c.y);pv=mix(pv,vec3(.25,.38,.18),(1.-smoothstep(.03,.14,c.x))*.85);}  // field stones, moss between
-  else if(q<4.5){vec2 b=bricks(w,vec2(1.8,1.1),.06);id=b.y;pv=mix(vec3(.58,.60,.63),vec3(.71,.73,.76),b.y)*(1.-.35*b.x);pv=mix(pv,vec3(.93,.95,.98),step(.985,gh(floor(w*14.)))*.7);}  // granite slabs, frost
-  else if(q<5.5){vec2 g=fract(w),e=min(g,1.-g);id=gh(floor(w)+3.);pv=mix(vec3(.86,.84,.79),vec3(.94,.93,.89),gh(floor(w)))*(1.+.04*gn(w*6.));pv=mix(pv,vec3(.79,.62,.27),1.-smoothstep(.015,.03,min(e.x,e.y)));}  // marble, gold joints
-  else if(q<6.5){vec2 b=bricks(w,vec2(.7,.45),.035);id=b.y;pv=mix(vec3(.64,.56,.42),vec3(.77,.69,.53),b.y)*(1.-.45*b.x);pv*=1.-.12*smoothstep(.5,.9,gn(w*.6));}  // Aurelan: honey limestone setts
-  else{vec2 b=bricks(w,vec2(.5,.5),.04);id=b.y;pv=mix(vec3(.66,.36,.22),vec3(.77,.47,.29),b.y);pv=mix(pv,vec3(.78,.66,.46),b.x);}  // terracotta, sand in the joints
-  return pv;}
+// One city, one stone: every street in Aldrath is the same weathered grey-brown stone, so the districts belong together.
+// A district shows in small things that blend smoothly across its edges: a slight tint, soot, sand or moss in the
+// joints, how much grass gets through in the yards. Wealth chooses the laying: dressed setts where there is money,
+// rough cobbles where there is none, big flags on the avenues and the plaza.
 #define CITY_SPAN 620.
+vec4 qLook(float q){ // grass in yards, soot, sand, moss
+  return q<.5?vec4(.05,.85,0.,0.):q<1.5?vec4(.15,.2,.1,0.):q<2.5?vec4(.4,.2,0.,.35):q<3.5?vec4(.75,0.,0.,.7):q<4.5?vec4(.3,.15,0.,.25):q<5.5?vec4(.25,0.,.05,0.):q<6.5?vec4(.8,0.,0.,.35):vec4(.05,0.,.85,0.);}
+vec3 qTint(float q){ // a whisper of each people's colour in the stone
+  return q<.5?vec3(.93,.95,1.):q<1.5?vec3(1.04,1.,.96):q<2.5?vec3(1.02,1.,.97):q<3.5?vec3(.99,1.02,.97):q<4.5?vec3(.96,.99,1.04):q<5.5?vec3(1.08,1.07,1.04):q<6.5?vec3(1.05,1.02,.95):vec3(1.07,1.01,.92);}
 vec3 cityGround(vec2 w,float paved,float wealth){
   vec2 d=w-uCity.xy; float r=length(d), a=atan(d.y,d.x); if(a<0.)a+=6.2831853;
   float q=0., q2=0., av=1e4, n=gn(w*.7)*.5+gn(w*3.1)*.5;
   for(int i=0;i<8;i++){float da=abs(a-uAv[i]);da=min(da,6.2831853-da);av=min(av,da*r);}
-  // the two nearest quarters and how far this spot is from the line between them: the change happens over ~40 m,
-  // yards fade from one to the other, and the paving turns into a patchwork of both (old repairs, mixed stone)
   vec2 p=d+(vec2(gn(w*.02),gn(w*.02+9.))-.5)*30.; p+=vec2(24.*sin(p.y*.019+.7)+10.*sin((p.x+p.y)*.043),24.*sin(p.x*.017+2.1)+10.*sin((p.x-p.y)*.047+1.1));
   float s1=1e18,s2=1e18; vec2 c1=vec2(0.),c2=vec2(0.);
   for(int i=0;i<8;i++){vec2 e=p-uSeed[i].xy;float s=dot(e,e)-uSeed[i].z;
     if(s<s1){s2=s1;q2=q;c2=c1;s1=s;q=float(i);c1=uSeed[i].xy;}else if(s<s2){s2=s;q2=float(i);c2=uSeed[i].xy;}}
-  float edge=(s2-s1)/(2.*max(length(c1-c2),1.)), t=.5*(1.-smoothstep(0.,20.,edge));     // t: share of the neighbour, .5 on the border
-  float sid; vec3 yard=mix(yardOf(q,w,n),yardOf(q2,w,n),smoothstep(0.,1.,t)), pv=paveOf(q,w,sid);
-  if(t>.01){float k=step(fract(sid*7.31),t*1.5); pv=mix(pv,pv/palOf(q)*palOf(q2),k*.9); pv*=1.-.08*t;}   // the neighbour's stone, set into this street's pattern
+  float edge=(s2-s1)/(2.*max(length(c1-c2),1.)), t=.5*(1.-smoothstep(0.,30.,edge));
+  vec4 lk=mix(qLook(q),qLook(q2),t); vec3 tint=mix(qTint(q),qTint(q2),t);
+  float aa=1.-smoothstep(.06,.3,length(fwidth(w)));                                       // patterns fade out with distance, no shimmer
+  // yards: trodden earth, grass where it is let grow, sand blown in, cinders where the forges are
+  float g=smoothstep(1.-lk.x-.18,1.-lk.x+.18,gn(w*.18)*.6+n*.4);
+  vec3 yard=mix(vec3(.40,.34,.27),vec3(.32,.42,.22),g); yard=mix(yard,vec3(.68,.58,.42),lk.z*.8); yard*=(.9+.12*n)*(1.-.45*lk.y);
+  // the street stone
+  float rough=smoothstep(.42,.12,wealth)+(gn(w*.15)-.5)*.25;
+  vec2 b=bricks(w,vec2(.62,.38),.035); vec2 cb=cobble(w*1.7); float useC=smoothstep(.42,.58,rough);
+  float shade=mix(b.y,cb.y,useC), joint=mix(b.x,1.-smoothstep(.02,.11,cb.x),useC);
+  vec3 stone=vec3(.50,.47,.42)*tint*(.84+.24*mix(.5,shade,aa));
+  vec3 jc=mix(vec3(.24,.22,.20),vec3(.62,.54,.40),lk.z); jc=mix(jc,vec3(.22,.32,.16),lk.w*.8); jc=mix(jc,vec3(.08,.08,.09),lk.y*.6);
+  vec3 pv=mix(stone,jc,joint*aa*.85);
+  pv*=1.-.3*lk.y*(.55+.45*gn(w*.12));                                                       // soot settles on the stone by the forges
   float grand=max(1.-smoothstep(9.,11.,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
-  if(grand>0.){vec2 b=bricks(vec2(a*r,r),vec2(1.4,.9),.05);pv=mix(pv,mix(vec3(.70,.68,.62),vec3(.81,.79,.73),b.y)*(1.-.35*b.x),grand);}
+  if(grand>0.){vec2 fb=bricks(vec2(a*r,r),vec2(1.4,.9),.05);vec3 fl=vec3(.55,.52,.47)*tint*(.88+.2*mix(.5,fb.y,aa));fl=mix(fl,jc,fb.x*aa*.7);pv=mix(pv,fl,grand);}
   vec3 c=mix(yard,pv,paved);
   // wear follows the place: dirt gathers where street meets yard and along the kerbs, stays light where feet keep the
   // middle of a street clean, frays out softly, and stains the stone darker instead of painting it brown
