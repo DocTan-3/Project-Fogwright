@@ -969,7 +969,10 @@ vec3 kitSurface(vec3 c,float m,vec3 p,vec3 n){
   vec2 t=normalize(vec2(-n.z,n.x)+1e-5); float along=dot(p.xz,t);
   bool flat_=abs(n.y)>0.92; vec2 uv=flat_?p.xz:vec2(along,p.y);
   int i=int(m+.5)-1; float sc=i==0?2.2:i==1?3.:i==2?3.5:i==3?2.:i==4?2.6:i==5?2.6:i==6?3.:i==7?2.8:i==8?2.4:i==9?3.:i==10?3.:2.2;
-  return c*clamp(atlN(i,uv/sc+vec2(kh(floor(p.xz*.1))*.37,0.)),0.,1.8);
+  vec3 tx=atlN(i,uv/sc+vec2(kh(floor(p.xz*.1))*.37,0.));
+  float curved=flat_?0.:smoothstep(.002,.02,length(fwidth(n)));                              // towers, tanks, domes: project from two sides instead
+  if(curved>0.){vec2 wb=pow(abs(n.xz),vec2(6.));wb/=wb.x+wb.y+1e-5;tx=mix(tx,atlN(i,vec2(p.z,p.y)/sc)*wb.x+atlN(i,vec2(p.x,p.y)/sc)*wb.y,curved);}
+  return c*clamp(tx,0.,1.8);
 }
 float kWin=0.;
 // Side and back walls get what the street fronts have in geometry: windows in rows by floor, sills and lintels, a few
@@ -1499,6 +1502,80 @@ function kLaneLine(){ // a line across the lane: lanterns, and washing hung out 
     for(let i=0;i<5;i++)k.box(0.55,0.04,0.6+0.2*(i%2),-2.6+i*1.2,0,4.75-0.1*(i%2),['#c9b48e','#8a5a5a','#e8e2d2','#5a6a7a','#9a8a5a'][i]);});
   k.finish('LaneLine',L,0.6);
 }
+/* --- the generator: every row house, tenement and timber house in Aldrath is built from parts by a seed, so no two
+   alike: footprint, floors, materials, bays, jetties, roof shape, dormers, chimneys, shopfronts, and the steampunk
+   add-ons bolted on afterwards (pipes, gauges, boilers, iron stairs, tanks, balconies) --- */
+const GEN={row:[],tenement:[],timber:[]};
+function genHouse(style,seed){
+  let sd=seed*7919+17;const r=()=>(sd=(sd*16807)%2147483647)/2147483647,pick=a=>a[Math.floor(r()*a.length)],k=new KitB();
+  const trim=pick(['#e3dccb','#d9cfba','#c9b48e','#efe6d2','#bfb5a0','#9a9080']),cu='#8a5a32',brass='#b8893e',ir='#26262b',door=pick(['#4a2e22','#2e3a2a','#3a2a3e','#5a2a22','#2a3440']);
+  const shut=pick(['#3f6a3e','#2f4a5e','#6a3a2e','#4a4a3a',null]);
+  let W,D,F,n,y,top,roofH,wall,lean=null;
+  const cols=(w,min)=>{const c=Math.max(min||2,Math.floor(w/2.15)),sp=w/c;return Array.from({length:c},(_,i)=>-w/2+sp/2+i*sp);};
+  const chimney=(x,yy,z0,h)=>{k.box(0.8,0.6,h,x,yy,z0+h/2,pick(['brick:#7a3c31','brick:#6a3a2e','stone:#8f877b']));k.box(0.95,0.75,0.18,x,yy,z0+h,'#4a4038');
+    for(const dx of[-0.18,0.18])k.cyl(0.11,0.09,0.4,6,x+dx,yy,z0+h+0.18,'#8a4a30');k.vent(x,yy,z0+h+0.7,0.5);};
+  const addons=(zTop,front)=>{ // bolted on after the house was built
+    if(r()<0.45){const x=(r()<0.5?-1:1)*(W/2-0.3);k.sm(()=>{k.pipe(x,front-0.18,zTop-0.4,x,front-0.18,0.3,0.09,cu);for(let z=1.5;z<zTop-1;z+=2.4)k.box(0.3,0.25,0.08,x,front-0.1,z,ir);});}
+    if(r()<0.3)k.sm(()=>{const x=(r()-0.5)*W*0.5,z=F*1.2;k.disc(0.32,0.1,x,front-0.06,z,brass);k.disc(0.24,0.11,x,front-0.07,z,'#e8e2d2');k.box(0.04,0.12,0.2,x,front-0.13,z+0.05,ir);});
+    if(r()<0.3){const sx=r()<0.5?-1:1;k.cyl(0.75,0.75,2.2,10,sx*(W/2+0.75),front+1.6,0.3,'#8a5a32');k.dome(0.75,sx*(W/2+0.75),front+1.6,2.5,'#8a5a32',10);
+      k.box(0.9,0.9,0.3,sx*(W/2+0.75),front+1.6,0.15,ir);k.cyl(0.1,0.1,zTop-2,6,sx*(W/2+0.75),front+1.6,2.9,brass);k.vent(sx*(W/2+0.75),front+1.6,zTop+1,0.6);
+      k.sm(()=>{for(const z of[0.9,1.9])k.ring(0.78,0.06,sx*(W/2+0.75),front+1.6-0.0,z,brass);});}
+    if(n>=3&&r()<0.3){const sx=r()<0.5?-1:1,X=sx*(W/2+0.6);for(let f=0;f<Math.min(n-1,4);f++){const dir=f%2?-1:1,z0=F*f,z1=F*(f+1),ya=-1.4*dir,yb=1.4*dir;   // iron stair up the side wall
+      k.box(1.2,1.1,0.12,X,yb,z1,ir); k.sm(()=>{for(let i=0;i<8;i++)k.box(0.95,0.38,0.06,X,ya+(yb-ya)*(i+0.5)/8,z0+F*(i+1)/8,ir);
+        for(const e of[-0.5,0.5])k.pipe(X+e,ya,z0+(f?0:0.05),X+e,yb,z1,0.035,ir);k.box(0.04,1.1,0.04,X+sx*0.58,yb,z1+0.9,ir);k.box(0.04,0.04,0.9,X+sx*0.58,yb,z1+0.45,ir);});}}
+  };
+  if(style==='row'){ // Aldrath's own: brick and stone terraces, bays, mansards, shopfronts
+    W=6+r()*3;D=8+r()*2.2;F=3.1+r()*0.35;n=3+Math.floor(r()*3);y=-D/2;
+    wall=pick(['brick:#9a4a36','brick:#7a3c31','brick:#8a5a40','plaster:#c9b48e','plaster:#b8a888','stone:#a8a091','brick:#6a3a2e','plaster:#d8c8a8']);
+    const base=pick(['stone:#8f877b','stone:#7a746c',wall]); top=F*n;
+    k.box(W,D,F,0,0,F/2,base); k.box(W,D,F*(n-1),0,0,F+F*(n-1)/2,wall);
+    for(let f=1;f<n;f++)if(f===1||r()<0.5)k.box(W+0.16,D+0.16,0.16,0,0,F*f,trim);
+    const xs=cols(W),bayC=r()<0.45&&xs.length>=2?Math.floor(r()*xs.length):-1,shop=r()<0.35,dc=Math.floor(r()*xs.length);
+    xs.forEach((x,i)=>{
+      if(i===dc)kDoor(k,x,y,0,1.2,2.4,door,trim);
+      else if(shop){k.glass(W/xs.length-0.5,0.3,1.9,x,y-0.03,1.4);k.box(W/xs.length-0.3,0.2,0.3,x,y-0.08,2.5,trim);}
+      else kWin(k,x,y,0.9,0.9,1.4,trim,0,r()<0.3?shut:null);
+      for(let f=1;f<n;f++){if(i===bayC)continue;const tall=f===1&&r()<0.6;kWin(k,x,y,F*f+0.7+(tall?0:0.2),0.95,tall?1.9:1.5,trim,0,r()<0.25?shut:null);}});
+    if(shop){const aw=pick(['#b5473a','#2e5a46','#3f4a5c','#7a2a24','#c9a046']);k.box(W,1.8,0.08,0,y-0.9,2.9,aw,0,-0.3);k.box(W+0.1,0.4,0.6,0,y-0.15,3.0,'#2e2a26');}
+    if(bayC>=0){const x=xs[bayC],bw=Math.min(2.4,W/xs.length+0.4),h=F*(n-1)-0.4;k.box(bw,0.9,h,x,y-0.45,F+0.1+h/2,wall);k.box(bw+0.2,1.1,0.25,x,y-0.5,F+0.1+h,trim);
+      for(let f=1;f<n;f++)kWin(k,x,y-0.9,F*f+0.8,bw-0.7,1.5,trim);}
+    k.box(W+0.4,D+0.4,0.35,0,0,top,trim);
+    if(r()<0.45){roofH=2.8;const rf=pick(['slate:#3f4a5c','slate:#2f3640','shingle:#4d4a46']);k.frustum(W+0.3,D+0.3,W-2.2,D-2.2,roofH,0,0,top+0.17,rf);k.box(W-2.2,D-2.2,0.2,0,0,top+roofH+0.2,rf);
+      for(const x of xs.filter((_,i)=>i%2===0||xs.length<3)){k.box(1.1,1.2,1.5,x,y+0.9,top+0.9,wall);k.prism(1.4,1.5,0.7,x,y+0.9,top+1.65,rf,PI/2);kWin(k,x,y+0.28,top+1.15,0.6,0.85,trim);}}
+    else{roofH=2.2+r()*1.8;k.prism(W+0.5,D+0.7,roofH,0,0,top+0.17,pick(['slate:#3f4a5c','tile:#8a4a3a','tile:#a8452f','slate:#2f3640','shingle:#5a4a3a']));}
+    for(let c=0,nc=1+Math.floor(r()*2.2);c<nc;c++)chimney((c%2?1:-1)*(W/2-0.6),(r()-0.5)*D*0.4,top,roofH*0.8+1.2);
+    if(n>=3&&r()<0.35){const f=2,z=F*f;k.box(W*0.8,0.9,0.12,0,y-0.45,z,ir);k.sm(()=>{for(let i=0;i<=Math.floor(W*0.8/0.3);i++)k.box(0.04,0.04,0.9,-W*0.4+i*0.3,y-0.88,z+0.45,ir);k.box(W*0.8,0.06,0.06,0,y-0.88,z+0.9,ir);});}
+    addons(top,y);
+  } else if(style==='tenement'){ // stacked, leaning, patched: every floor added by someone else
+    W=5.5+r()*1.5;D=7+r()*1.5;F=2.9+r()*0.2;n=4+Math.floor(r()*4);y=-D/2;
+    const mats=['stone:#8a7a62','plaster:#7d6f5a','plaster:#93846b','planks:#857560','plaster:#7a6d58','brick:#6a3a2e','planks:#6a5440','plaster:#8a7f6a'];
+    k.box(W,D,F,0,0,F/2,'stone:#6f675c'); let off=0,grow=0;
+    for(let f=1;f<n;f++){if(r()<0.6){off+=(r()-0.5)*0.35;grow+=r()*0.25;}const m=r()<0.6||f===1?pick(mats):null;k.box(W+grow,D+grow,F,off,-grow/2,F*f+F/2,m||pick(mats));k.box(W+grow+0.2,D+grow+0.2,0.14,off,-grow/2,F*f,'#4a3a2c');}
+    for(let f=0;f<n;f++){const yy=y-(f?grow*f/(n-1):0)-0.02,xs=cols(W);xs.forEach((x,i)=>{if(f===0&&i===0){kDoor(k,x,y,0,1.1,2.3,door,'#5a4a38');return;}if(r()<0.12)return;kWin(k,x,yy,F*f+F*0.55,0.85,1.3,'#5a4a38',0,r()<0.2?shut:null);});}
+    top=F*n;roofH=2.4+r()*0.8;k.prism(W+grow+1.2,D+grow+1.2,roofH,off,-grow/2,top,pick(['shingle:#4d4a46','iron:#4a4d52','slate:#3a3f48','shingle:#5a4a3a']));
+    chimney(-W/2+0.6,1.2,top,roofH+1.3); if(r()<0.6){const tx=W/2-1.4,ty=1;for(const [a,b] of[[-0.7,-0.7],[0.7,-0.7],[-0.7,0.7],[0.7,0.7]])k.box(0.12,0.12,2.2,tx+a,ty+b,top+1.1,ir);
+      k.box(1.7,1.7,0.14,tx,ty,top+2.2,'planks:#5a4a38');k.cyl(0.85,0.85,1.7,10,tx,ty,top+2.3,'planks:#6a4a2e');k.cyl(0.85,0.45,0.5,10,tx,ty,top+4,'#4d4a46');}
+    for(let f=2;f<n;f++)if(r()<0.35){const x=(r()-0.5)*W*0.5,yy=y-grow*f/(n-1)-0.55;k.box(1.7,1,0.12,x,yy,F*f+0.05,ir);
+      k.sm(()=>{for(let i=0;i<6;i++)k.box(0.04,0.04,0.85,x-0.8+i*0.32,yy-0.48,F*f+0.5,ir);k.box(1.7,0.05,0.05,x,yy-0.48,F*f+0.95,ir);if(r()<0.5)k.box(1.2,0.04,0.6,x,yy-0.5,F*f+0.6,pick(['#c9b48e','#8a5a5a','#5a6a7a']));});}
+    lean=[3,(r()-0.5)*0.07,0.015+r()*0.03]; addons(top,y);
+  } else { // timber: stone below, jettied plaster and timber above, steep roofs, often gable to the street
+    W=6+r()*2.5;D=7.5+r()*2;F=3;const up=1+Math.floor(r()*2.4);n=1+up;y=-D/2;
+    const pl=pick(['plaster:#e6dcc4','plaster:#d8c8a0','plaster:#c9b8a0','plaster:#e8d8b8','plaster:#bfb08a']),bm=pick(['timber:#4a3222','timber:#3a2618','timber:#5a3e28']);
+    k.box(W,D,F,0,0,F/2,pick(['stone:#9d958a','stone:#8f877b','brick:#7a3c31']));
+    const xs0=cols(W);kDoor(k,xs0[0],y,0,1.2,2.2,door,bm);xs0.slice(1).forEach(x=>kWin(k,x,y,1.7,1.1,1.0,bm,0,shut));
+    let j=0;for(let f=1;f<=up;f++){const jj=0.4+r()*0.3;j+=jj;const fy=y-j,Wf=W+0.3*f;k.box(Wf,D+j,F,0,-j/2,F*f+F/2,pl);k.box(Wf+0.15,0.2,0.25,0,fy-0.02,F*f,bm);k.box(Wf+0.15,0.2,0.25,0,fy-0.02,F*(f+1)-0.1,bm);
+      const xs=cols(Wf);const posts=[-Wf/2+0.12,...xs.slice(0,-1).map((x,i)=>(x+xs[i+1])/2),Wf/2-0.12];for(const x of posts)k.box(0.22,0.16,F,x,fy-0.03,F*f+F/2,bm);
+      for(let i=0;i<posts.length-1;i++)if(r()<0.5){const a=posts[i],b=posts[i+1];k.pipe(a,fy-0.04,F*f+0.15,(a+b)/2,fy-0.04,F*f+F*0.45,0.08,bm);}
+      xs.forEach(x=>{kWin(k,x,fy,F*f+1.2,0.95,1.15,bm,0,r()<0.5?shut:null);if(r()<0.35)k.sm(()=>{k.box(1.1,0.3,0.25,x,fy-0.25,F*f+0.5,'planks:#6a4a2e');for(let i=0;i<4;i++)k.box(0.18,0.18,0.18,x-0.38+i*0.25,fy-0.25,F*f+0.73,['#d0485a','#e8c040','#9a5ad0','#4f8a3a'][i]);});});}
+    top=F*n;roofH=3.6+r()*1.8;const rf=pick(['tile:#a8452f','tile:#8a4a3a','slate:#3f4a5c','shingle:#5a4a3a','thatch:#8c7a4a','tile:#b5603a']),Wt=W+0.3*up;
+    if(r()<0.45){k.prism(D+j+1.2,Wt+1.0,roofH,0,-j/2,top,rf,PI/2);const gy=y-j-0.05;   // gable to the street: a timbered triangle
+      k.poly([[-Wt/2,gy,top],[Wt/2,gy,top],[0,gy,top+roofH*0.95]],[[0,1,2]],new THREE.Matrix4(),pl,[0,-1,0]);k.pipe(-Wt/2,gy-0.03,top,0,gy-0.03,top+roofH*0.95,0.1,bm);k.pipe(Wt/2,gy-0.03,top,0,gy-0.03,top+roofH*0.95,0.1,bm);k.box(0.2,0.12,roofH*0.9,0,gy-0.04,top+roofH*0.45,bm);
+      kWin(k,0,gy,top+1.1,0.7,0.9,bm);}
+    else{k.prism(Wt+1.0,D+j+1.4,roofH,0,-j/2,top,rf);if(r()<0.5){k.box(1.3,1.2,1.6,0,y-j+1.4,top+0.9,pl);k.prism(1.5,1.6,0.8,0,y-j+1.4,top+1.7,rf,PI/2);kWin(k,0,y-j+0.78,top+1.2,0.7,0.9,bm);}}
+    chimney((r()<0.5?-1:1)*(W/2-0.7),0.8,top,roofH*0.7+1.2); addons(top,y);
+  }
+  const name='Gen_'+style+'_'+seed; k.finish(name,W+(lean?1:0.6)+1.6,D+1.6,lean); GEN[style].push(name); return name;
+}
 function kBarracks(){
   const k=new KitB(),W=20,D=12,y=-D/2,st='stone:#9a938a',watch='#3f3a6c';
   k.box(W,D,8,0,0,4,st); k.box(W+0.4,D+0.4,0.5,0,0,8.25,'stone:#7f786d'); k.box(W-1,D-1,0.2,0,0,8.4,'slate:#4a5a78');
@@ -1573,7 +1650,7 @@ function kWalls(){
 (function buildKit(){const _t0=performance.now();
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
-  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
   console.log('kit built in',Math.round(performance.now()-_t0),'ms');
 })();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
@@ -1617,7 +1694,9 @@ const angD=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
 function cityWealth(a,r){const q=quarterAR(a,r).name, gate=Math.exp(-(((angD(a,Math.PI/2)*r)/70)**2)), back=Math.max(0,-Math.sin(a))*smooth(150,285,r);
   let av=1e9;for(const v of AVENUES)av=Math.min(av,angD(a,v)*r);
   return smooth(CITY.r-20,CITY.core+30,r)*0.72+gate*0.42+smooth(40,12,av)*0.1-back*0.38+Math.max(0,Math.sin(a))*0.16+(WEALTH_Q[q]||0)+N.c(Math.cos(a)*2.2+7,Math.sin(a)*2.2)*0.18+0.04;}
-function pickHouse(a,r,rnd){ // a district builds its own people's houses; only the poorest streets fall to shacks
+function pickHouse(a,r,rnd){const v=pickHouse0(a,r,rnd);const fam=/^Row[ABC]$/.test(v)?'row':/^Tenement/.test(v)?'tenement':/^Timberframe/.test(v)?'timber':null;
+  return fam&&GEN[fam].length&&rnd()<0.85?GEN[fam][Math.floor(rnd()*GEN[fam].length)]:v;}
+function pickHouse0(a,r,rnd){ // a district builds its own people's houses; only the poorest streets fall to shacks
   const w=cityWealth(a,r), x=CITY.x+Math.cos(a)*r+(rnd()-0.5)*44, z=CITY.z+Math.sin(a)*r+(rnd()-0.5)*44, q=quarterAt(x,z).name,
     own=(CULTURE[q]||['RowA','RowB','RowC']).filter(n=>n!=='Manor'||w>0.6), u=rnd(), any=l=>l[Math.floor(rnd()*l.length)];
   if(w>0.8&&(q==='Market Ward'||q==='Temple Ward'||q==='Aurelan Quarter')&&u<0.4)return 'Manor';
@@ -1682,7 +1761,7 @@ function buildCityHouses(){
     const x=CITY.x+Math.cos(a)*157,z=CITY.z+Math.sin(a)*157,ry=-a+Math.PI/2;if(!footprintFree({x,z,hw:6.3,hd:6.3,rot:ry})||footOnLane({x,z,hw:6.3,hd:6.3,rot:ry}))continue;put('Garden',x,z,ry,[1,1,1]);colliders.push({x,z,hw:6,hd:6,rot:ry});}
   // the back lanes: houses on both sides face the lane, sized to the room between the lane and the ring-street houses;
   // along the wall only the poor build, sheds and shacks leaning on the old stones
-  const SMALL=['Shack','Shack2','Tenement4','Tenement','HutRound','HutFrame','HutAdobe','HutIron','HutTemple'];
+  const SMALL=['Shack','Shack2','Tenement4','Tenement',...GEN.tenement,'HutRound','HutFrame','HutAdobe','HutIron','HutTemple'];
   for(const ln of LANES){if(!ln.back)continue;const maxD=ln.M<200?13:ln.M<260?11:6.2,wallLane=ln.M>260;
     for(const side of(wallLane?[1]:[-1,1])){let carry=rnd()*6;
       for(let i=0;i<ln.pts.length-1;i++){const A=ln.pts[i],B=ln.pts[i+1],len=Math.hypot(B[0]-A[0],B[1]-A[1]);let t=carry;
@@ -1696,7 +1775,7 @@ function buildCityHouses(){
           if(blocked(a,rr,w/2)||!footprintFree(f)||footOnLane({x,z,hw:w/2,hd:d/2,rot:ry},LANE_HALF+0.2)){t+=3;continue;}
           put(name,x,z,ry,tintFor(a,rr,name)); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++; t+=w+(w0<0.3?0.1+rnd()*0.4:0.15+rnd()*0.5);}
         carry=t-len;}}}
-  {const TALL=/^(Row[ABC]|Tenement|Tenement4|Tenement7|Timberframe|Timberframe3|TimberframeB|Shopfront|Forge|Lodge|Longhouse)$/,H=[];
+  {const TALL=/^(Gen_\w+|Row[ABC]|Tenement|Tenement4|Tenement7|Timberframe|Timberframe3|TimberframeB|Shopfront|Forge|Lodge|Longhouse)$/,H=[];
     const height=n=>{const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();return g.boundingBox.max.y;};
     for(const n in lists){if(!TALL.test(n))continue;const [w,d]=KIT.size[n],hh=height(n);for(const p of lists[n])H.push({x:p.x,z:p.z,y:p.y,ry:p.ry,hw:w/2,hd:d/2,h:hh,n});}
     const grid=new Map(),key=(x,z)=>Math.floor(x/20)+','+Math.floor(z/20);for(const h of H){const k2=key(h.x,h.z);if(!grid.has(k2))grid.set(k2,[]);grid.get(k2).push(h);}
