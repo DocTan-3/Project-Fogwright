@@ -1817,8 +1817,17 @@ function buildCityInterior(parent){
   }
   // the market: stalls around a fountain
   const my=heightAt(mx,mz);
-  parent.add(cyl(5,5.4,1,14,cityStone,mx,my+0.5,mz),cyl(1,1.2,4,8,cityStone,mx,my+2.2,mz));colliders.push({type:'circle',x:mx,z:mz,r:5.6});
-  for(let k=0;k<14;k++){const a=k/14*Math.PI*2+0.1,rr=k%2?17:12,x=mx+Math.cos(a)*rr,z=mz+Math.sin(a)*rr;if(Math.abs(x-mx)<6)continue;
+  // a roundabout: carts and people go round the fountain island; the stalls stand back on the outside of the ring
+  {const isl=7.5,water=new THREE.MeshLambertMaterial({color:0x3f6f86,transparent:true,opacity:0.85}),grass=flat(0x4f6a35),bronze=flat(0x8a6a3a),verd=flat(0x5f8f78);
+    parent.add(cyl(isl+0.35,isl+0.45,0.25,32,cityStone,mx,my+0.12,mz),cyl(isl,isl,0.3,32,grass,mx,my+0.16,mz));        // kerb and the green island
+    for(let k=0;k<16;k++){const a=k/16*Math.PI*2;parent.add(new THREE.Mesh(new THREE.SphereGeometry(0.55,7,5),flat(0x3f5a2a)).translateX(mx+Math.cos(a+0.2)*(isl-0.7)).translateY(my+0.4).translateZ(mz+Math.sin(a+0.2)*(isl-0.7)),box(0.3,0.22,0.3,flat([0xb5473a,0xd4a017,0xe8e2d2,0x9a5ad0][k%4]),mx+Math.cos(a)*(isl-0.6),my+0.4,mz+Math.sin(a)*(isl-0.6)));}
+    parent.add(cyl(4.6,4.8,0.8,24,cityStone,mx,my+0.55,mz),cyl(4.3,4.3,0.06,24,water,mx,my+0.93,mz));                  // the lower basin
+    parent.add(cyl(0.9,1.2,2.2,10,cityStone,mx,my+1.9,mz),cyl(2.2,1.0,0.55,16,cityStone,mx,my+3.1,mz),cyl(1.95,1.95,0.08,16,water,mx,my+3.36,mz));  // pedestal, upper bowl
+    parent.add(cyl(0.35,0.45,1.6,8,bronze,mx,my+4.2,mz)); const gl=new THREE.Mesh(new THREE.TorusGeometry(0.55,0.08,6,16),verd);gl.position.set(mx,my+5.2,mz);gl.rotation.x=Math.PI/2;parent.add(gl);
+    const orb=new THREE.Mesh(new THREE.SphereGeometry(0.35,10,8),bronze);orb.position.set(mx,my+5.35,mz);parent.add(orb);
+    for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4;parent.add(cyl(0.12,0.12,0.5,6,bronze,mx+Math.cos(a)*4.4,my+1.1,mz+Math.sin(a)*4.4));}  // spouts on the rim
+    VENTS.push({x:mx,y:my+5.6,z:mz,s:0.7}); colliders.push({type:'circle',x:mx,z:mz,r:isl+0.3});}
+  for(let k=0;k<16;k++){const a=k/16*Math.PI*2+0.1,rr=k%2?20.5:16.5,x=mx+Math.cos(a)*rr,z=mz+Math.sin(a)*rr;if(Math.abs(x-mx)<9)continue;
     const st=new THREE.Group();st.position.set(x,my,z);st.rotation.y=-a+Math.PI/2;
     for(const sx of[-1,1])for(const sz of[-1,1])st.add(box(0.15,2.4,0.15,timberDark,sx*1.4,1.2,sz*0.9));
     st.add(box(3,0.9,1.8,timber,0,0.45,0));for(let j=0;j<4;j++)st.add(box(0.75,0.12,2.2,j%2?whiteMat:clothMats[(k+j)%4],-1.1+j*0.75,2.5,0,0,-0.15));
