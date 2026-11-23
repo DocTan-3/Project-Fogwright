@@ -558,7 +558,7 @@ def join(target, *others):
 fw = lambda th, w=0.6: math.exp(-(th / w) ** 2)
 chunks = lambda th, k, a: 1 + a * (tri(th * k / math.pi) - 0.5)
 beard_top = lambda th: 1.648 - 0.02 * sm(1.0, 0.3, abs(th)) - 0.026 * fw(th, 0.32)   # below the cheekbones   # sideburns, cheeks, under the lip
-beard_jaw = lambda th: 1.576 - 0.004 * fw(th)
+beard_jaw = lambda th: 1.576 - 0.004 * fw(th) + 0.034 * sm(0.45, 1.1, abs(th))   # the sides end at the jawline, not down the neck
 bthick = lambda th, z: 0.0035 + 0.009 * fw(th, 0.9) * sm(1.63, 1.59, z)   # hugs the jaw
 def beard(name, Lmax, shape, conv, depth=0.03):
     return solid(name, -1.38, 1.38, beard_top, beard_jaw, bthick, lambda th: Lmax * shape(th), conv, lambda th: depth * fw(th, 0.8) + 0.006)

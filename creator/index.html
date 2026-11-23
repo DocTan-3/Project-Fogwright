@@ -1,0 +1,533 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Character Creator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--ink:#efe9dc;--dim:#bdb5a6;--panel:rgba(27,25,33,.86);--line:rgba(239,233,220,.16);--brass:#d6a54e;--ground:#1d1c22;color-scheme:dark}
+html,body{height:100%;margin:0}
+body{background:var(--ground);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;touch-action:none}
+#stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.panel{position:fixed;z-index:5;top:12px;right:max(12px,env(safe-area-inset-right,0px));width:300px;max-height:calc(100% - 24px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+h1{font:400 22px Georgia,serif;margin:0}.sub{color:var(--dim);font-size:13px;margin:4px 0 0}
+.label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 6px;display:flex;justify-content:space-between}
+.label span{letter-spacing:0;text-transform:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;font-size:13.5px;color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:6px 11px;min-height:34px;cursor:pointer}
+button[aria-pressed="true"]{background:rgba(214,165,78,.22);border-color:var(--brass)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.sw{width:30px;height:30px;min-height:30px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.18)}
+.sw[aria-pressed="true"]{border-color:var(--brass);box-shadow:0 0 0 2px rgba(214,165,78,.4)}
+input[type=range]{width:100%;accent-color:var(--brass)}
+.desc{font-size:13px;color:var(--dim);margin-top:6px}
+.note{font-size:12.5px;color:var(--dim);margin-top:14px}
+.tag{position:fixed;z-index:4;left:max(16px,env(safe-area-inset-left,0px));bottom:14px;font:400 26px Georgia,serif;text-shadow:0 1px 3px #000}
+.tag small{display:block;font:13px system-ui,sans-serif;color:var(--dim)}
+#status{position:fixed;inset:0;display:grid;place-items:center;color:var(--dim);font:20px Georgia,serif;pointer-events:none}
+.hidden{display:none}
+@media (max-width:700px){.panel{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:46%}.tag{top:12px;bottom:auto}}
+</style>
+<canvas id="stage" aria-label="Your character, turning slowly"></canvas>
+<div id="status">Shaping the clay…</div>
+<div class="tag" id="tag"></div>
+<aside class="panel" aria-label="Character options">
+  <h1>Character creator</h1>
+  <p class="sub">One body per sex · each people a shape</p>
+  <div class="label">Body</div><div class="chips" id="sex"></div>
+  <div class="label">People</div><div class="chips" id="people"></div>
+  <p class="desc" id="pdesc"></p>
+  <div class="label">Height <span id="hv"></span></div><input id="height" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="Height, within this people's range">
+  <div class="label">Build <span id="bv"></span></div><input id="build" type="range" min="0" max="1" step="0.01" value="0.4" aria-label="Build, from slight to heavy, within this people's range">
+  <div class="label">Skin</div><div class="chips" id="skin"></div>
+  <div class="label">Eyes</div><div class="chips" id="eyes"></div>
+  <div class="label">Hair</div><div class="chips" id="hair"></div>
+  <div class="label">Hair colour</div><div class="chips" id="hcol"></div>
+  <div id="beardBox"><div class="label">Beard</div><div class="chips" id="beard"></div>
+  <div class="label">Moustache</div><div class="chips" id="stache"></div></div>
+  <div class="label">Base layer</div><div class="chips" id="lower"></div>
+  <div class="label">View</div><div class="chips" id="view"></div>
+  <div class="chips" style="margin-top:10px"><button id="rand">Randomise</button></div>
+  <p class="note" id="note"></p>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script>
+/* ---------- Painted bodies: one seamless mesh, everything else is paint, computed from where each point sits on the body ---------- */
+// rest-space coordinates (as modelled): x across, y forward is negative, z up, metres.
+const PAINT_GLSL=`
+uniform vec3 uSkin,uHair,uEye,uShirt,uVest,uPants,uBelt,uBoots,uTrim,uInk,uLip;
+uniform vec4 uF1; // vest, bare chest, ink, freckles
+uniform vec4 uF2; // hair (0 bald 1 short 2 long), gloves, stripes, tabard
+uniform float uFem; // 1 for the female body
+uniform vec4 uFace;  // heritage: eye tilt, brow weight, socket depth, eye size
+uniform vec4 uFace2; // heritage: cheekbones, jaw, warmth, lip fullness
+uniform vec4 uB;  // base layer: on, lower (0 trousers 1 boxers), chest hair, muscle definition (0 soft .. 1 defined)
+varying vec3 vRest;
+float hsh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hsh(i),hsh(i+vec2(1.,0.)),f.x),mix(hsh(i+vec2(0.,1.)),hsh(i+vec2(1.,1.)),f.x),f.y);}
+float inside(float d){float w=max(fwidth(d),1e-5);return 1.-smoothstep(-w,w,d);}  // 1 where d<0, antialiased
+float gss(vec2 p,vec2 c,vec2 w){vec2 d=(p-c)/w;return exp(-dot(d,d));}
+float hairline(float th){ // height of the hairline around the head (0 = brow, pi = nape)
+  th=abs(th);
+  return th<0.6?mix(1.745,1.748,th/0.6):th<1.15?mix(1.748,1.706,(th-0.6)/0.55):th<1.5?mix(1.706,1.655,(th-1.15)/0.35):th<2.45?mix(1.655,1.618,(th-1.5)/0.95):mix(1.618,1.604,(th-2.45)/0.7);
+}
+vec3 cloth(vec3 base,vec3 p,float k){return base*(0.94+0.06*vnoise(p.xz*vec2(260.,90.))+0.05*(vnoise(p.xz*40.)-.5)*k);}
+vec3 paintHead(vec3 p){
+  float ax=abs(p.x), th=atan(p.x,-(p.y-0.002)), front=(1.-smoothstep(-0.07,-0.03,p.y));
+  vec3 c=uSkin*(0.97+0.05*vnoise(p.xz*300.));
+  // under the jaw and the neck sit in shadow
+  c*=mix(0.86,1.,smoothstep(1.56,1.6,p.z));
+  // healthy colour: warm cheeks and nose, more for ruddy peoples
+  float warm=0.35+0.65*uFace2.z+0.45*uFem;
+  c=mix(c,c*vec3(1.07,0.91,0.89),warm*front*(0.55*gss(vec2(ax,p.z),vec2(0.05,1.65),vec2(0.02,0.016))+0.35*gss(vec2(ax,p.z),vec2(0.,1.656),vec2(0.009,0.012))));
+  if(uF1.w>0.5){float fr=step(0.9,hsh(floor(p.xz*520.)))*front*gss(vec2(ax,p.z),vec2(0.03,1.656),vec2(0.04,0.02));c=mix(c,c*vec3(0.8,0.62,0.52),fr);}
+  if(front>0.){
+    // sculpting light and shade, kept soft so faces stay pleasing
+    float deep=uFace.z;
+    c*=1.-(0.16+0.2*deep)*(1.-0.55*uFem)*front*gss(vec2(ax,p.z),vec2(0.034,1.693),vec2(0.021,0.011));    // under the brow
+    c*=1.-0.1*(1.-0.7*uFem)*front*gss(vec2(ax,p.z),vec2(0.017,1.642),vec2(0.006,0.028));                // beside the nose
+    c*=1.-0.16*(1.-0.6*uFem)*front*gss(vec2(ax,p.z),vec2(0.,1.638),vec2(0.011,0.004));                  // under the nose
+    c*=1.-(0.05+0.14*uFace2.x)*(1.-0.65*uFem)*front*gss(vec2(ax,p.z),vec2(0.053,1.63),vec2(0.011,0.016)); // hollow under the cheekbone
+    c*=1.+(0.04+0.1*uFace2.x)*front*gss(vec2(ax,p.z),vec2(0.052,1.664),vec2(0.016,0.008)); // cheekbones catch the light
+    c*=1.-0.12*uFace2.y*(1.-0.7*uFem)*gss(vec2(ax,p.z),vec2(0.066,1.585),vec2(0.012,0.02));             // a strong jaw's edge
+    c*=1.+0.1*front*gss(vec2(ax,p.z),vec2(0.,1.69),vec2(0.006,0.03));                     // light down the bridge
+    c*=1.+0.05*front*gss(vec2(ax,p.z),vec2(0.,1.735),vec2(0.03,0.02));                    // forehead
+    // lips: shaped, with the faintest upturn at the corners
+    float full=0.85+0.4*uFace2.w+0.25*uFem, cz=0.0014*smoothstep(0.012,0.02,ax);
+    float up=inside(length((vec2(ax,p.z-cz)-vec2(0.,1.6206))/vec2(0.0195,0.0040*full))-1.)*(1.-0.6*inside(length(vec2(ax,p.z-1.6232))-0.0022));  // a cupid's bow
+    float lo=inside(length((vec2(ax,p.z-cz)-vec2(0.,1.6132))/vec2(0.0175,0.005*full))-1.);
+    vec3 lipc=mix(c,uLip*(1.+0.08*uFem),0.55+0.42*uFem);
+    c=mix(c,lipc*0.92,up*front); c=mix(c,lipc,lo*front);
+    c=mix(c,c*(1.08+0.1*uFem),front*inside(length((vec2(ax,p.z)-vec2(0.,1.6118))/vec2(0.007+0.002*uFem,0.0018))-1.)*lo);
+    c=mix(c,c*1.06,uFem*front*inside(length((vec2(ax,p.z)-vec2(0.006,1.6216))/vec2(0.004,0.0011))-1.)*up);   // a touch of shine on the upper lip   // highlight on the lower lip
+    float line=inside(abs(p.z-(1.6172+cz*1.2))-0.0009)*step(ax,0.0195)*front; c=mix(c,uLip*0.4,line);
+    c=mix(c,c*(0.5+0.25*uFem),front*inside(length(vec2(ax-0.0072,p.z-1.6497))-0.0021*(1.-0.3*uFem)));            // nostrils
+    // eyes: tilt and size by heritage; bright whites, coloured iris with a dark rim, pupil, catchlight
+    float sz=uFace.w*(1.+0.22*uFem), tilt=uFace.x+0.08*uFem;
+    vec2 e=vec2(ax-0.0338,p.z-1.6872); e.y-=tilt*e.x;                    // outer corners up
+    float alm=length(e/vec2(0.0122*sz,0.0051*sz))-1.;
+    float w=inside(alm)*front; c=mix(c,vec3(0.9,0.88,0.84),w);
+    vec2 ic=e-vec2(-0.0004*sign(p.x),0.0003); float ri=length(ic);
+    float ir=inside(ri-0.0047*sz)*w; vec3 icol=mix(uEye*1.25,uEye*0.7,smoothstep(0.0025,0.0047*sz,ri)); c=mix(c,icol,ir);
+    c=mix(c,vec3(0.03),inside(ri-0.0019*sz)*w);
+    c=mix(c,vec3(1.),inside(length(e-vec2(0.0013,0.0014))-0.0008*sz)*w);
+    c*=1.-0.18*w*smoothstep(0.,0.004,e.y);
+    c=mix(c,vec3(0.06,0.045,0.045),uFem*front*inside(abs(alm-0.06)-0.1)*step(-0.0035,-e.y)*step(e.x,0.009*sz)*0.5);   // a soft lower lash line                                                // the upper lid's shadow on the eye
+    float lid=inside(abs(alm-0.1)-0.16-0.24*uFem)*step(-0.0008,e.y)*front; c=mix(c,vec3(0.08,0.06,0.05),lid*0.9);
+    float wing=inside(abs(e.y-0.0008-(e.x-0.0115*sz)*0.55)-0.0011*(1.-smoothstep(0.0115*sz,0.0165*sz,e.x)))*step(0.0105*sz,e.x)*step(e.x,0.0165*sz);
+    c=mix(c,vec3(0.06,0.045,0.045),uFem*front*wing);   // the winged lash line
+    c=mix(c,c*vec3(0.9,0.8,0.84),uFem*0.6*front*gss(e,vec2(0.002,0.0065),vec2(0.017,0.0055)));  // soft colour on the lids
+    c=mix(c,c*0.86,inside(abs(alm-0.6)-0.22)*step(0.0018,e.y)*front);                    // lid crease
+    // brows: thin and arched to heavy and straight
+    float bw=uFace.y, bx=ax-0.036;
+    float bz=1.7005+(0.0035*(1.-bw)+0.0012+0.0025*uFem)*(1.-(bx*bx/0.000361))+0.0025*tilt*bx/0.02+0.0032*uFem;
+    float thick=(0.0028+0.0034*bw)*(1.-0.4*smoothstep(0.,0.021,bx))*(1.-0.45*uFem);
+    float brow=inside(abs(p.z-bz)-thick)*step(0.0115-0.002*bw,ax)*step(ax,0.058+0.003*bw)*front;
+    c=mix(c,uHair*(0.6-0.15*bw)+vec3(0.02),brow*(0.85+0.15*bw));
+  }
+  // ink: a line down the brow, bars across the cheekbones, two lines on the chin
+  if(uF1.z>0.5){float ink=0.;
+    ink=max(ink,inside(ax-0.0032)*step(1.708,p.z)*step(p.z,1.79));
+    ink=max(ink,inside(abs(p.z-1.6535-(ax-0.03)*0.12)-0.0035)*step(0.031,ax)*step(ax,0.078));
+    ink=max(ink,inside(abs(ax-0.0105)-0.0022)*step(1.574,p.z)*step(p.z,1.598));
+    c=mix(c,uInk,ink*front*0.92+ink*(1.-front)*0.5);}
+  // hair painted on the scalp
+  if(uF2.x>0.5){float hl=hairline(th)-(uF2.x>1.5?0.04*smoothstep(1.4,2.6,abs(th)):0.); float h=smoothstep(-0.002,0.002,p.z-hl)*step(ax,0.083+step(1.68,p.z));
+    float strands=0.78+0.3*vnoise(vec2(th*90.,p.z*160.))+0.12*vnoise(vec2(th*12.,p.z*20.));
+    c=mix(c,uHair*strands,h);}
+  else c=mix(c,c*0.93,smoothstep(1.74,1.75,p.z)*0.5);
+  return c;
+}
+
+vec3 paintClothes(vec3 p,float ax,bool armR);
+vec3 linen(vec3 p,float k);
+vec4 femWrap(vec3 p){ // a linen chest wrap: colour and coverage
+  float band=inside(abs(p.z-1.3)-0.062); vec3 w=linen(p,1.)*1.04;
+  w*=1.-0.12*inside(abs(fract((p.z-1.238)*48.)-0.5)-0.06); w*=mix(0.85,1.,smoothstep(1.238,1.25,p.z))*mix(1.,0.85,smoothstep(1.35,1.362,p.z));
+  w*=1.-0.08*smoothstep(0.03,0.07,p.y);                                               // the back, in its own shade
+  return vec4(w,band);}
+// ---- the base layer: bare skin, shaded softly like a painted texture, and plain undyed underclothes
+vec3 skinTone(vec3 p){return uSkin*(0.965+0.045*vnoise(p.xz*170.)+0.02*vnoise(p.yz*55.));}
+vec3 linen(vec3 p,float k){vec3 c=uPants*(0.93+0.07*vnoise(p.xz*vec2(240.,80.))); return c*(1.-0.05*k*(vnoise(p.xy*35.)-0.5));}
+vec3 paintBase(vec3 p,float ax,bool armR){
+  float fr=1.-smoothstep(-0.06,0.0,p.y), bk=smoothstep(0.0,0.06,p.y);
+  vec3 c=skinTone(p);
+  if(armR){
+    float wrist=0.962+(ax-0.35)*0.4;
+    c*=1.+0.07*(1.-0.6*uFem)*gss(vec2(ax,p.z),vec2(0.215,1.43),vec2(0.035,0.05));                 // shoulder cap catches the light
+    c*=1.+0.05*(1.-0.7*uFem)*fr*gss(vec2(ax,p.z),vec2(0.235,1.29),vec2(0.03,0.06));               // biceps
+    c*=1.-0.06*(1.-0.6*uFem)*gss(vec2(ax,p.z),vec2(0.25,1.35),vec2(0.02,0.04))*bk;                  // back of the arm
+    c=mix(c,c*vec3(1.05,0.9,0.86),0.55*(1.-0.5*uFem)*gss(vec2(ax,p.z),vec2(0.262,1.17),vec2(0.03,0.025)));   // ruddy elbow
+    c*=1.+0.04*(1.-0.6*uFem)*gss(vec2(ax,p.z),vec2(0.28,1.07),vec2(0.03,0.06));                   // forearm
+    if(p.z<wrist){c=mix(c,c*vec3(1.05,0.9,0.86),0.35);c*=mix(0.84,1.,smoothstep(0.72,0.86,p.z));} // warmer hands, shaded fingers
+    c*=1.-0.18*gss(vec2(ax,p.z),vec2(0.19,1.37),vec2(0.02,0.05));                    // armpit
+    c*=1.-0.13*smoothstep(1.3,1.45,p.z);                                            // match the torso where the shoulder meets it
+    if(uF2.w>0.5&&ax>0.215){                                                          // Ferrin tattoos: bold geometric marks
+      float t=0.;
+      float d=p.z-1.065+p.y*0.45; t=max(t,inside(abs(d)-0.009)*step(abs(p.y),0.04)*step(1.0,p.z)*step(p.z,1.14));
+      t=max(t,inside(abs(d-0.034)-0.005)*step(abs(p.y),0.04)*step(1.0,p.z)*step(p.z,1.16));
+      float tz=(p.z-1.24)/0.065; t=max(t,inside(abs(p.y)-0.026*tz)*step(0.,tz)*step(tz,1.));
+      for(int i=0;i<2;i++){float zz=1.385-float(i)*0.022; t=max(t,inside(abs(p.z-zz-abs(p.y)*0.55)-0.0055)*step(abs(p.y),0.035));}
+      c=mix(c,uInk*0.85,t*0.85);}
+    return c;}
+  if(p.z>1.468&&ax<0.075){                                                          // neck
+    if(uFem>0.5){c*=1.-0.08*fr*smoothstep(1.5,1.556,p.z); return c;}               // her neck: smooth, only a soft shadow under the jaw
+    c*=1.-0.16*fr*smoothstep(1.5,1.556,p.z);                                       // shadow under the jaw
+    c*=1.-0.08*fr*gss(vec2(ax,p.z),vec2(0.,1.475),vec2(0.012,0.012));               // the pit of the throat
+    return c;}
+  if(p.z>1.04){                                                                      // torso
+    if(uFem>0.5){                                                                    // her torso: soft forms, no muscle lines
+      c*=1.-0.1*smoothstep(0.07,0.165,ax);                                          // rounding toward the sides
+      c*=1.-0.08*gss(vec2(ax,p.z),vec2(0.165,1.37),vec2(0.025,0.05));               // a soft armpit
+      c*=1.+0.05*fr*gss(vec2(ax,p.z),vec2(0.,1.15),vec2(0.06,0.08));               // light on the stomach
+      float ub=1.252+0.012*(1.-pow(clamp((ax-0.075)/0.062,-1.,1.),2.));
+      c*=1.-0.11*fr*exp(-pow((p.z-ub)/0.013,2.))*(1.-smoothstep(0.12,0.16,ax));    // the soft shadow beneath the bust
+      c*=1.-0.04*fr*gss(vec2(ax,p.z),vec2(0.095,1.18),vec2(0.022,0.05));           // the ribcage curving in to the waist
+      c*=1.-0.025*fr*exp(-pow(ax/0.006,2.))*smoothstep(1.1,1.13,p.z)*(1.-smoothstep(1.2,1.23,p.z));  // the faintest line above the navel
+      c*=1.-0.3*fr*inside(length(vec2(ax/0.0035,(p.z-1.09)/0.007))-1.);           // navel
+      c*=1.+0.04*fr*gss(vec2(ax,p.z),vec2(0.,1.06),vec2(0.05,0.03));               // the lower belly, softly lit
+      c*=1.+0.03*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // collarbones, gently
+      c*=1.-0.06*bk*exp(-pow(ax/0.014,2.));                                             // spine
+      c*=1.+0.03*bk*gss(vec2(ax,p.z),vec2(0.07,1.35),vec2(0.04,0.05));               // shoulder blades
+      return c*mix(0.88,1.,smoothstep(1.035,1.07,p.z));}
+    c*=1.-0.13*smoothstep(0.08,0.17,ax);                                            // rounding toward the sides
+    c*=1.-0.2*gss(vec2(ax,p.z),vec2(0.165,1.37),vec2(0.025,0.05));                  // armpits
+    vec3 soft=c;
+    float pz=1.296+0.02*(1.-clamp(abs(ax-0.075)/0.075,0.,1.));
+    c*=1.+0.07*fr*gss(vec2(ax,p.z),vec2(0.075,1.355),vec2(0.05,0.035));             // chest catches the light
+    c*=1.-0.12*fr*exp(-pow((p.z-pz)/0.017,2.))*(1.-smoothstep(0.12,0.17,ax))*smoothstep(0.,0.025,ax);  // soft shadow under the chest
+    c*=1.-0.06*fr*exp(-pow(ax/0.011,2.))*step(1.22,p.z)*step(p.z,1.43);             // breastbone
+    c*=1.+0.05*fr*exp(-pow((p.z-(1.452-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // collarbones, lit
+    c*=1.-0.05*fr*exp(-pow((p.z-(1.436-(ax-0.03)*0.15))/0.009,2.))*step(0.02,ax)*step(ax,0.14);  // and the hollow beneath
+    float rows=0.; for(int i=0;i<3;i++){rows+=gss(vec2(ax,p.z),vec2(0.03,1.235-float(i)*0.055),vec2(0.02,0.022));}
+    c*=1.+0.03*fr*rows;                                                              // the stomach: only a hint of form
+    c*=1.-0.045*fr*exp(-pow(ax/0.008,2.))*smoothstep(1.07,1.1,p.z)*(1.-smoothstep(1.24,1.27,p.z));
+    c*=1.-0.06*fr*gss(vec2(ax,p.z),vec2(0.125,1.12),vec2(0.02,0.06));               // obliques
+    if(uFem>0.5){                                                                    // a linen chest wrap
+      return c*mix(0.84,1.,smoothstep(1.035,1.07,p.z));}   // the chest wrap is laid over in paintBody, all the way round
+    c=mix(c,c*vec3(0.88,0.74,0.7),fr*(1.-smoothstep(0.004,0.0085,length(vec2(ax-0.084,p.z-1.317)))));  // nipples
+    c*=1.-0.22*fr*gss(vec2(ax,p.z),vec2(0.,1.088),vec2(0.0045,0.006));              // navel
+    c*=1.-0.1*bk*exp(-pow(ax/0.012,2.));                                              // spine
+    c*=1.+0.05*bk*gss(vec2(ax,p.z),vec2(0.07,1.35),vec2(0.04,0.05));                // shoulder blades
+    c=mix(soft,c,0.25+0.75*uB.w);                                                   // leaner people show less muscle
+    if(uB.z>0.){float m=fr*(gss(vec2(ax,p.z),vec2(0.045,1.33),vec2(0.06,0.05))+exp(-pow(ax/0.014,2.))*step(p.z,1.4)*(1.-smoothstep(1.0,1.04,p.z)*0.)*step(1.04,p.z)*0.8);
+      float sp=smoothstep(0.5,0.75,vnoise(p.xz*vec2(320.,140.))); c=mix(c,uHair*0.85,clamp(m,0.,1.)*sp*0.6*uB.z);}   // chest hair
+    c*=mix(0.84,1.,smoothstep(1.035,1.07,p.z));                                     // shade above the waistband
+    return c;}
+  if(p.z>0.985){                                                                     // drawstring waistband
+    c=linen(p,0.3)*0.86; c*=1.-0.18*inside(abs(p.z-0.99)-0.003); c*=1.-0.12*inside(abs(p.z-1.035)-0.003);
+    c*=1.-0.1*step(0.5,fract(ax*90.+0.25))*fr;                                         // gathered folds
+    float kn=fr*inside(length(vec2(ax,p.z-1.012))-0.007); c=mix(c,uPants*0.62,kn);
+    float str=fr*inside(abs(ax-0.003*sin(p.z*300.))-0.0028)*step(0.95,p.z)*(1.-step(1.008,p.z)); c=mix(c,uPants*0.6,str);
+    return c;}
+  float lx=ax-0.11, hem=uB.y>0.5?0.70:0.13;
+  if(p.z>hem){                                                                       // boxers or trousers (to the ankle)
+    c=linen(p,1.5);
+    c*=0.92+0.08*(1.-smoothstep(0.,0.05,abs(lx)));
+    c*=1.-0.1*fr*exp(-pow(ax/0.02,2.))*smoothstep(0.9,0.82,p.z);                       // the fork
+    c*=1.-0.07*vnoise(vec2(p.x*40.,p.z*25.))*smoothstep(0.9,0.75,p.z);              // soft folds
+    c*=mix(0.78,1.,smoothstep(hem,hem+0.03,p.z));                                     // turned-up hem
+    c*=1.-0.15*inside(abs(p.z-hem-0.02)-0.0015);
+    if(uB.y<0.5){c*=1.-0.08*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.05,0.03)); c*=1.-0.06*vnoise(vec2(p.x*30.,p.z*12.))*smoothstep(0.35,0.15,p.z);}  // knee, gathered ankles
+    return c;}
+  if(p.z>0.1){                                                                       // bare legs and ankles
+    c*=0.94+0.07*(1.-smoothstep(0.,0.05,abs(lx)));
+    c=mix(c,c*vec3(1.04,0.9,0.86),0.5*fr*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.04,0.03)));  // ruddy knees
+    c*=1.+0.05*(1.-0.7*uFem)*fr*gss(vec2(lx,p.z),vec2(0.,0.43),vec2(0.02,0.06));                   // shin
+    c*=1.-0.06*(1.-0.7*uFem)*bk*gss(vec2(lx,p.z),vec2(0.,0.4),vec2(0.05,0.08));                    // calf shadow
+    c*=1.-0.08*gss(vec2(ax-0.125,p.z),vec2(0.03,0.12),vec2(0.01,0.012));            // ankle bones
+    c*=1.-0.08*gss(vec2(ax-0.125,p.z),vec2(-0.03,0.12),vec2(0.01,0.012));
+    return c;}
+  // bare feet: warmer, darker underneath, toes painted at the front
+  c=mix(c,c*vec3(1.05,0.9,0.86),0.3); c*=mix(0.8,1.,smoothstep(0.0,0.05,p.z));
+  float dx=ax-0.15, toes=1.-smoothstep(-0.11,-0.13,-p.y);
+  float gap=0.; for(int i=0;i<4;i++){gap=max(gap,inside(abs(dx-(-0.016+float(i)*0.011))-0.0012));}
+  c*=1.-0.35*gap*toes*step(p.z,0.05);
+  c=mix(c,c*vec3(1.1,1.0,0.95)*1.08,0.5*toes*step(0.025,p.z)*step(p.z,0.045)*(1.-gap));  // nails catch the light
+  c*=1.-0.1*gss(vec2(dx,p.y),vec2(0.,0.03),vec2(0.02,0.03))*step(p.z,0.06);         // heel
+  return c;
+}
+vec3 paintBody(vec3 p){
+  float ax=abs(p.x); bool armR=(ax>0.168-0.25*max(0.,p.z-1.40)&&p.z>1.05)||(ax>0.25&&p.z>0.6);
+  if(p.z>1.556&&!armR)return paintHead(p);
+  if(uB.x>0.5){                                                                     // blend torso and arm paint across the armpit, no seam
+    float bd=ax-(0.168-0.25*max(0.,p.z-1.40));
+    vec3 r=(p.z>1.06&&p.z<1.47&&abs(bd)<0.035)?mix(paintBase(p,ax,false),paintBase(p,ax,true),smoothstep(-0.035,0.035,bd)):paintBase(p,ax,armR);
+    if(uFem>0.5&&abs(p.z-1.3)<0.07){vec4 w=femWrap(p); r=mix(r,w.rgb,w.a*max(smoothstep(0.08,0.3,vTorso),1.-smoothstep(0.185,0.2,ax)));}   // the wrap goes all the way round the torso, never onto the arm
+    return r;}
+  return paintClothes(p,ax,armR);
+}
+vec3 paintClothes(vec3 p,float ax,bool armR){
+  vec3 c;
+  if(armR){ // sleeves to the wrist, then hands (bare or gloved)
+    float wrist=0.962+(ax-0.35)*0.4;
+    if(p.z>wrist&&uF1.y>0.5){c=uSkin*(0.95+0.05*vnoise(p.xz*200.));c*=1.-0.12*gss(vec2(ax-0.24,p.z-1.32),vec2(0.),vec2(0.02,0.05));c*=1.+0.08*gss(vec2(ax-0.21,p.z-1.4),vec2(0.),vec2(0.03,0.03));}
+    else if(p.z>wrist){c=cloth(uShirt,p,1.);if(uF2.z>2.5)c=cloth(uVest,p,1.); c*=mix(0.82,1.,smoothstep(wrist,wrist+0.03,p.z)); c=mix(c,c*0.7,inside(abs(p.z-wrist-0.022)-0.0012)*step(0.5,fract(p.x*220.)));}
+    else if(uF2.y>0.5){c=cloth(uBelt,p,0.5);c=mix(c,c*0.7,inside(abs(p.z-wrist+0.006)-0.004));}
+    else{c=uSkin*(0.95+0.05*vnoise(p.xz*200.));c*=mix(0.85,1.,smoothstep(0.78,0.86,p.z));}
+    return c;}
+  if(p.z>1.468){ // neck, with the collar
+    c=uSkin*mix(0.86,0.97,smoothstep(1.47,1.53,p.z));
+    float collar=(1.-step(0.5,uF1.y))*step(p.z,1.505)*(1.-step(p.y,-0.02)*inside(ax-(p.z-1.468)*0.9)); c=mix(c,cloth(uShirt,p,1.)*0.95,collar);
+    return c;}
+  if(p.z>1.04&&uF1.y>0.5){ // bare torso: muscle painted in, as Valheim does
+    float fr=1.-smoothstep(-0.05,0.01,p.y);
+    c=uSkin*(0.96+0.04*vnoise(p.xz*220.));
+    float pec=1.29+0.035*(1.-pow(clamp((ax-0.075)/0.075,-1.,1.),2.));
+    c*=1.-0.3*fr*exp(-pow((p.z-pec)/0.009,2.))*step(ax,0.16);                       // under the pecs
+    c*=1.+0.08*fr*gss(vec2(ax,p.z),vec2(0.075,1.34),vec2(0.045,0.035));             // pecs catch the light
+    c*=1.-0.18*fr*inside(ax-0.0035)*step(1.08,p.z)*step(p.z,1.3);                   // the line down the middle
+    for(int i=0;i<3;i++){float zz=1.125+float(i)*0.05;c*=1.-0.14*fr*exp(-pow((p.z-zz)/0.005,2.))*step(ax,0.05);}  // abs
+    c*=1.-0.2*fr*exp(-pow((p.z-(1.448-(ax-0.03)*0.18))/0.005,2.))*step(0.02,ax)*step(ax,0.13);  // collarbones
+    c=mix(c,c*vec3(0.75,0.55,0.5),fr*inside(length(vec2(ax-0.085,p.z-1.315))-0.006));          // nipples
+    c*=1.-0.35*fr*inside(length(vec2(ax,p.z-1.085))-0.004);                        // navel
+    c*=1.-0.15*smoothstep(0.,0.06,p.y)*gss(vec2(ax,p.z),vec2(0.,1.3),vec2(0.012,0.12));  // spine
+    c*=mix(0.84,1.,smoothstep(1.04,1.075,p.z));
+    return c;}
+  if(p.z>1.04){ // torso: shirt, perhaps a waistcoat over it
+    c=cloth(uShirt,p,1.);
+    if(uF2.z>0.5&&uF2.z<1.5){float s=step(0.5,fract(p.z*38.));c=mix(c,c*vec3(0.75,0.78,0.92),s*0.5);} // striped linen
+    float vee=step(p.y,-0.02)*inside(ax-(p.z-1.39)*0.55)*step(1.39,p.z); c=mix(c,uSkin*0.9,vee);
+    c=mix(c,c*0.65,step(p.y,-0.02)*inside(ax-0.0011)*step(p.z,1.39)*step(1.25,p.z)); // placket
+    if(uF1.x>0.5){float open=step(p.y,-0.02)*inside(ax-0.018-(p.z-1.2)*0.12);
+      float top=1.47-0.75*max(0.,ax-0.055); float arm=max(inside(length(vec2((ax-0.168)/0.072,(p.z-1.452)/0.13))-1.),1.-inside(p.z-top));
+      float v=(1.-open)*(1.-arm);
+      vec3 vc=cloth(uVest,p,1.); vc=mix(vc,vc*0.72,inside(abs(ax-0.018-(p.z-1.2)*0.12-0.006)-0.0009)*step(0.5,fract(p.z*120.))*step(p.y,-0.02));
+      vc=mix(vc,uTrim,step(p.y,-0.02)*inside(length(vec2(ax-0.03-(p.z-1.2)*0.12,mod(p.z-1.06,0.045)-0.022))-0.0042));
+      c=mix(c,vc,v);}
+    if(uF2.w>0.5){float tb=inside(ax-0.115)*step(1.06,p.z)*step(p.z,1.43); vec3 t=cloth(uTrim,p,0.6); t=mix(t,t*0.7,inside(abs(ax-0.105)-0.003)); c=mix(c,t,tb);}
+    c*=mix(0.82,1.,smoothstep(1.04,1.075,p.z));
+    return c;}
+  if(p.z>0.985){ // belt and buckle
+    c=cloth(uBelt,p,0.3); c=mix(c,c*0.6,inside(abs(p.z-1.0125)-0.024)*inside(-(abs(p.z-1.0125)-0.021)));
+    float bk=step(p.y,-0.02)*inside(max(ax-0.02,abs(p.z-1.0125)-0.02)); c=mix(c,uTrim,bk); c=mix(c,uTrim*0.5,bk*inside(max(ax-0.011,abs(p.z-1.0125)-0.011)));
+    return c;}
+  if(p.z>0.335){ // trousers
+    c=cloth(uPants,p,1.5);
+    float lx=ax-0.11; c*=0.92+0.08*(1.-smoothstep(0.,0.05,abs(lx))); // rounder down the middle of each leg
+    c=mix(c,c*0.75,inside(abs(lx-0.055)-0.0011)*step(0.5,fract(p.z*110.)));                 // outer seam
+    c*=1.-0.1*gss(vec2(lx,p.z),vec2(0.,0.52),vec2(0.05,0.03));                               // knee
+    c*=mix(0.8,1.,smoothstep(0.335,0.37,p.z));
+    return c;}
+  // boots
+  c=cloth(uBoots,p,0.4)*mix(1.08,0.9,1.-smoothstep(0.05,0.33,p.z));
+  c=mix(c,c*1.25,inside(abs(p.z-0.315)-0.018)); c=mix(c,vec3(0.08,0.06,0.05),inside(p.z-0.028));
+  c=mix(c,c*0.6,inside(abs(p.z-0.296)-0.0012));
+  return c;
+}`;
+function preparePainted(gltf){
+  gltf.scene.traverse(o=>{if(!o.isMesh||o.geometry.userData.rest)return;const ca=o.geometry.attributes.color;o.geometry.userData.rest=true;
+    const sz=ca.itemSize,src=ca.array,div=!ca.normalized?1:src instanceof Uint8Array?255:src instanceof Uint16Array?65535:1,out=new Float32Array(ca.count*3);
+    const tm=new Float32Array(ca.count);
+    for(let i=0;i<ca.count;i++){out[i*3]=src[i*sz]/div-0.5;out[i*3+1]=src[i*sz+1]/div-0.5;out[i*3+2]=src[i*sz+2]/div*2;tm[i]=sz>3?src[i*sz+3]/div:1.;}
+    o.geometry.setAttribute('rest',new THREE.BufferAttribute(out,3)); o.geometry.setAttribute('torso',new THREE.BufferAttribute(tm,1)); o.geometry.deleteAttribute('color');});
+}
+// heritage in the face: eye tilt, brow weight, socket depth, eye size | cheekbones, jaw, warmth, lip fullness
+const FACES={
+  Aurelan:  [0.0, 0.45,0.35,1.0,  0.45,0.4, 0.3,0.5],
+  Wayfolk:  [0.0, 0.5, 0.35,1.0,  0.35,0.4, 0.4,0.5],
+  Hrimfolk: [-0.05,0.95,0.8,0.95, 0.55,0.9, 0.85,0.35],
+  Ilvari:   [0.32,0.1, 0.25,1.08, 0.95,0.15,0.1,0.55],
+  Ferrin:   [-0.08,1.0,0.7,0.95,  0.35,0.85,0.9,0.4],
+  Zarhim:   [0.12,0.7, 0.5,1.02,  0.9,0.55, 0.15,0.6],
+  Ruadhan:  [0.05,0.4, 0.3,1.04,  0.6,0.45, 0.75,0.5],
+  Penitent: [0.0, 0.5, 0.75,0.98, 0.8,0.5, 0.0,0.4],
+  'City watch':[0.0,0.65,0.5,1.0, 0.5,0.65, 0.4,0.45]};
+const PAINT_KEYS=['uSkin','uHair','uEye','uShirt','uVest','uPants','uBelt','uBoots','uTrim','uInk','uLip'];
+function paintedMaterial(look){
+  const U={}; PAINT_KEYS.forEach(k=>U[k]={value:new THREE.Color(look[k]||'#888888')}); U.uF1={value:new THREE.Vector4(...look.f1)}; U.uF2={value:new THREE.Vector4(...look.f2)}; U.uFem={value:look.fem?1:0}; const F=look.face||FACES[look.people||look.name]||FACES.Aurelan; U.uFace={value:new THREE.Vector4(F[0],F[1],F[2],F[3])}; U.uFace2={value:new THREE.Vector4(F[4],F[5],F[6],F[7])}; U.uB={value:new THREE.Vector4(...(look.base||[0,0,0,1]))};
+  const m=new THREE.MeshLambertMaterial({skinning:true,morphTargets:true,morphNormals:true}); m.extensions={derivatives:true};
+  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 rest;\nattribute float torso;\nvarying vec3 vRest;\nvarying float vTorso;').replace('#include <begin_vertex>','#include <begin_vertex>\nvRest=rest;vTorso=torso;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vTorso;\n'+PAINT_GLSL).replace('vec4 diffuseColor = vec4( diffuse, opacity );','vec4 diffuseColor = vec4( paintBody(vRest), opacity );');};
+  m.customProgramCacheKey=()=>'painted-body'; m.userData.U=U; return m;
+}
+// hair and beards: their own meshes, shaded with strands that run with the locks
+function hairMaterial(hex){
+  const U={uHair:{value:new THREE.Color(hex)}};
+  const m=new THREE.MeshLambertMaterial({skinning:true}); m.extensions={derivatives:true};
+  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 rest;\nvarying vec3 vRest;').replace('#include <begin_vertex>','#include <begin_vertex>\nvRest=rest;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+uniform vec3 uHair; varying vec3 vRest;
+float hh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float hn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hh(i),hh(i+vec2(1.,0.)),f.x),mix(hh(i+vec2(0.,1.)),hh(i+vec2(1.,1.)),f.x),f.y);}`)
+      .replace('vec4 diffuseColor = vec4( diffuse, opacity );',`float th=atan(vRest.x,-(vRest.y-0.002));
+  // painted strands: broad clumps, fine streaks, and dark grooves between clumps
+  float w=hn(vec2(th*9.,vRest.z*14.))*0.9;
+  float clump=fract(th*5.+w*1.3+hn(vec2(th*3.,vRest.z*40.))*0.25);
+  float groove=smoothstep(0.84,0.98,clump)+(1.-smoothstep(0.0,0.05,clump))*0.5;
+  float s=0.55*hn(vec2(th*60.+w*3.,vRest.z*6.))+0.45*hn(vec2(th*170.,vRest.z*20.));
+  float shade=mix(0.74,1.06,s)*(1.-0.28*groove);
+  shade*=mix(0.78,1.,smoothstep(1.5,1.6,vRest.z));                 // beard tips and the underside go darker
+  vec4 diffuseColor=vec4(uHair*shade,opacity);`);};
+  m.customProgramCacheKey=()=>'painted-hair'; return m;
+}
+const HAIR_MESHES=['Hair_Short','Hair_Swept','Hair_Ponytail','Hair_Long','Hair_Topknot','Beard_Full','Beard_Short','Beard_Pointed','Beard_Braided','Beard_Forked','Moustache_Chevron','Moustache_Horseshoe','Moustache_Walrus','Moustache_Handlebar','Moustache_Pencil'];
+function dressFigure(root,look){ // body gets the paint, chosen hair and beard get hair, the rest hide
+  const want=new Set([look.hair&&'Hair_'+look.hair,look.beard&&'Beard_'+look.beard,look.moustache&&'Moustache_'+look.moustache].filter(Boolean));
+  root.traverse(o=>{if(!o.isMesh)return;o.frustumCulled=false;o.castShadow=true;
+    const n=HAIR_MESHES.find(h=>o.name.startsWith(h));
+    if(!n){o.material=paintedMaterial(look);o.visible=true;}else if(want.has(n)){o.material=hairMaterial(look.uHair);o.visible=true;}else o.visible=false;});
+}
+
+// body type: Lean and Heavy blend shapes on the one body, and a posture that goes with them
+function setBuild(root,lean,heavy){
+  root.userData.build=[lean,heavy];
+  root.traverse(o=>{if(o.isMesh&&o.morphTargetDictionary&&'Lean' in o.morphTargetDictionary){o.morphTargetInfluences[o.morphTargetDictionary.Lean]=lean;o.morphTargetInfluences[o.morphTargetDictionary.Heavy]=heavy;}});
+}
+function buildPosture(root){ // call after the animation mixer each frame; offsets are applied once, never accumulated
+  const [lean,heavy]=root.userData.build||[0,0];
+  const B=root.userData.bones||(root.userData.bones={list:[['spine','x',0.1,0],['neck','x',0.16,0],['head','x',-0.12,0],['upper_armL','z',0,0.2],['upper_armR','z',0,-0.2]]
+    .map(([n,ax,kl,kh])=>({o:root.getObjectByName(n),ax,kl,kh,prev:0,q:null})).filter(e=>e.o)});
+  for(const e of B.list){
+    if(e.q&&e.o.quaternion.equals(e.q))e.o.rotation[e.ax]-=e.prev;   // the mixer left it alone: undo last frame's offset first
+    const off=e.kl*lean+e.kh*heavy; e.o.rotation[e.ax]+=off; e.prev=off; e.q=e.o.quaternion.clone();
+  }
+}
+
+function setDefinition(root,d){root.traverse(o=>{if(o.material&&o.material.userData&&o.material.userData.U&&o.material.userData.U.uB)o.material.userData.U.uB.value.w=d;});}
+
+/* ---------- One body per sex, peoples as built-in shapes: the morph changes the mesh, the skeleton follows ---------- */
+const SANE=n=>n.replace(/\s/g,'_').replace(/[\[\]\.:\/]/g,'');
+function rigPeople(root,gltf){ // once per figure, straight after cloning (at rest, before any animation)
+  const meshes=[]; root.traverse(o=>{if(o.isSkinnedMesh)meshes.push(o);});
+  const body=meshes.find(o=>o.morphTargetDictionary&&'Lean' in o.morphTargetDictionary); if(!body)return;
+  const bones=body.skeleton.bones, P=root.parent; root.parent=null;
+  const s0=root.position.clone(),q0=root.quaternion.clone(),k0=root.scale.clone(); root.position.set(0,0,0);root.quaternion.identity();root.scale.set(1,1,1); root.updateMatrixWorld(true);
+  const rest=new Map(); for(const b of bones)rest.set(b,{pos:b.position.clone(),quat:b.quaternion.clone(),scl:b.scale.clone()});
+  const top=bones.find(b=>!b.parent||!b.parent.isBone), anchor=top.parent?top.parent.matrixWorld.clone():new THREE.Matrix4();
+  root.position.copy(s0);root.quaternion.copy(q0);root.scale.copy(k0); root.parent=P;
+  root.userData.rig={body,bones,rest,anchor,joints:(gltf.scene.userData||{}).peopleJoints||null,clips:gltf.animations,people:'Human',cache:{}};
+}
+function peopleClip(rig,clip){ // positions in the clips are the human skeleton's: rebase them on this people's joints
+  const key=rig.people+'/'+clip.name; if(rig.cache[key])return rig.cache[key];
+  const c=clip.clone();
+  c.tracks=c.tracks.filter(t=>{
+    if(!t.name.endsWith('.position'))return true;
+    const b=rig.bones.find(x=>t.name.startsWith(x.name+'.')); if(!b)return true;
+    const r=rig.rest.get(b), n=rig.local&&rig.local.get(b); if(!n)return true;
+    if(b===rig.bones.find(x=>!x.parent||!x.parent.isBone)){ // the hips keep their motion, moved to the new rest
+      t.values=t.values.slice(); for(let i=0;i<t.values.length;i+=3){t.values[i]+=n.x-r.pos.x;t.values[i+1]+=n.y-r.pos.y;t.values[i+2]+=n.z-r.pos.z;} return true;}
+    return false;});   // other bones only rotate: their positions come from the people's skeleton
+  rig.cache[key]=c; return c;
+}
+function setPeople(root,name){
+  const rig=root.userData.rig; if(!rig)return;
+  const body=rig.body, d=body.morphTargetDictionary;
+  for(const k of ['Ferrin','Ilvari','Zarhim'])if(k in d)body.morphTargetInfluences[d[k]]=(k===name)?1:0;
+  const J=rig.joints&&(rig.joints[name]||rig.joints.Human); rig.people=(rig.joints&&rig.joints[name])?name:'Human';
+  if(!J){rig.local=null;return;}
+  const byName={}; for(const k in J)byName[SANE(k)]=new THREE.Vector3(...J[k]);
+  const world=new Map(), local=new Map(), inv=[], m=new THREE.Matrix4(), one=new THREE.Vector3(1,1,1);
+  const depth=b=>{let n=0;for(let p=b.parent;p&&p.isBone;p=p.parent)n++;return n;};
+  for(const b of rig.bones.slice().sort((a,c)=>depth(a)-depth(c))){
+    const r=rig.rest.get(b), pw=b.parent&&b.parent.isBone?world.get(b.parent):rig.anchor;
+    const target=byName[b.name]; let lp=r.pos.clone();
+    if(target){const pi=pw.clone().invert(); lp=target.clone().applyMatrix4(pi);}
+    const wm=pw.clone().multiply(m.compose(lp,r.quat,one)); world.set(b,wm); local.set(b,lp);
+  }
+  rig.local=local;
+  for(const b of rig.bones){b.position.copy(local.get(b));}
+  body.skeleton.boneInverses=rig.bones.map(b=>world.get(b).clone().invert());   // the body binds to the people's skeleton;
+  // hair and beards keep their human binding, so they ride along with the head wherever it moved
+}
+function playPeople(root,mixer,clipName){
+  const rig=root.userData.rig, src=(rig?rig.clips:[]).find(c=>c.name===clipName); if(!src)return null;
+  mixer.stopAllAction(); const a=mixer.clipAction(rig?peopleClip(rig,src):src); a.play(); return a;
+}
+
+// ---- the peoples: shape, and the range each slider may move within (height is a scale, build runs -1 slight .. 0 muscular .. 1 heavy)
+const PEOPLE={
+ Aurelan:{shape:'Human',desc:'Ingenious islanders; balanced and handsome.',m:{h:[0.97,1.03],w:[-0.85,0.1]},f:{h:[0.95,0.99],w:[-0.85,-0.25]},
+   skin:['#efceb4','#e8c2a2','#d9ab88','#c9966e'],hair:['#4a3426','#2e2420','#6a4a30','#8a5a3a','#c7a66b'],eyes:['#4a6a8a','#5a7a4a','#5a3a26','#6e7a86']},
+ Hrimfolk:{shape:'Human',desc:'The sturdiest of all: tall, broad northerners.',m:{h:[1.05,1.12],w:[-0.4,0.95]},f:{h:[1.0,1.05],w:[-0.6,0.15]},
+   skin:['#f3d9c4','#f0cfb4','#e5bd9e','#dcae8c'],hair:['#e0c690','#c7a66b','#e6dcc0','#a8916c','#9a5a34'],eyes:['#5a8aa8','#7a9aae','#4a6a5a','#6e7a86']},
+ Ilvari:{shape:'Ilvari',desc:'Tall and slender, marked in blue ink.',ink:1,m:{h:[0.98,1.02],w:[-1,-0.6]},f:{h:[0.98,1.02],w:[-1,-0.7]},
+   skin:['#ecdacb','#e2cbb8','#f2e2d6','#d8c4b4'],hair:['#1c1c26','#d8d8e0','#2a2a3a','#b8b8c8'],eyes:['#7a8aa0','#5a7ab0','#8a9a9a','#6a5a7a']},
+ Ferrin:{shape:'Ferrin',desc:'Short, broad and tattooed; centuries of mining.',tattoo:1,m:{h:[0.96,1.0],w:[-0.3,1]},f:{h:[0.82,0.87],w:[-0.3,0.5]},
+   skin:['#dca88c','#d9946e','#c48466','#b87a5e'],hair:['#6e2c1e','#2a201c','#5a3a28','#8a4a2a','#6e6a66'],eyes:['#3a4a5a','#4a3a2a','#5a6a4a','#6e7a86']},
+ Zarhim:{shape:'Zarhim',desc:'Lean, wiry desert nomads.',m:{h:[0.97,1.03],w:[-1,-0.2]},f:{h:[0.95,1.0],w:[-1,-0.45]},
+   skin:['#9c6a48','#8a5a3c','#7a4e34','#6e4630','#5a3a28'],hair:['#14100e','#1e1814','#2a2018'],eyes:['#3a2a1a','#5a3a1a','#2a2018','#6a5a3a']},
+ Ruadhan:{shape:'Human',desc:'Tall, red-haired people of the hills and forests.',freckles:1,m:{h:[1.03,1.09],w:[-0.85,0.3]},f:{h:[1.0,1.04],w:[-0.85,-0.2]},
+   skin:['#f6dac6','#f4d2b6','#f2cdb0','#eabd9c'],hair:['#c85a24','#b8441c','#e07a3a','#9a3a1a'],eyes:['#5a7a4a','#4a6a8a','#6a8a5a','#7a6a4a']},
+ Wayfolk:{shape:'Human',desc:'The mixed peoples, found everywhere.',m:{h:[0.94,1.04],w:[-0.85,0.6]},f:{h:[0.93,1.0],w:[-0.85,0.1]},
+   skin:['#efceb4','#d9ab88','#c9966e','#a8724e','#8a5a3c'],hair:['#4a3426','#2e2420','#8a5a3a','#c7a66b','#1e1a18','#9a3a1a'],eyes:['#4a3a2a','#4a6a8a','#5a7a4a','#6e7a86']}};
+const HAIRS=[['None',null],['Short','Short'],['Swept','Swept'],['Ponytail','Ponytail'],['Long','Long'],['Topknot','Topknot']];
+const BEARDS=[['None',null],['Short','Short'],['Full','Full'],['Pointed','Pointed'],['Forked','Forked'],['Braided','Braided']];
+const STACHES=[['None',null],['Chevron','Chevron'],['Horseshoe','Horseshoe'],['Walrus','Walrus'],['Handlebar','Handlebar'],['Pencil','Pencil']];
+const st={sex:'m',people:'Aurelan',h:0.5,w:0.4,skin:1,eye:0,hair:'Swept',hcol:0,beard:'Short',stache:null,lower:0,view:'full'};
+// ---- scene
+const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(28,1,0.05,100);
+scene.add(new THREE.HemisphereLight(0xe6ecff,0x3a3028,0.72));const sun=new THREE.DirectionalLight(0xfff2dc,0.8);sun.position.set(2,5,6);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-2,right:2,top:3,bottom:-1});scene.add(sun);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(6,48),new THREE.MeshLambertMaterial({color:'#2a2830'}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+let G={}, fig=null, mixer=null, yaw=0.35, spin=true, clip='Idle';
+const clock=new THREE.Clock();
+function lerp(r,t){return r[0]+(r[1]-r[0])*t;}
+function look(){
+  const P=PEOPLE[st.people], fem=st.sex==='f';
+  return {name:st.people,people:st.people,fem:fem?1:0,hair:st.hair,beard:fem?null:st.beard,moustache:fem?null:st.stache,
+    base:[1,st.lower,fem?0:(st.people==='Hrimfolk'||st.people==='Ruadhan'?0.6:0.2),1],
+    uSkin:P.skin[st.skin%P.skin.length],uHair:P.hair[st.hcol%P.hair.length],uEye:P.eyes[st.eye%P.eyes.length],
+    uPants:['#cbbd9f','#a89c86','#b9bbc0','#8e8676','#d8c9a8','#b8ab8c','#9c9488'][Object.keys(PEOPLE).indexOf(st.people)],uBoots:'#4a3a2c',
+    uLip:fem?'#b8605a':'#a8665a',uInk:st.people==='Ferrin'?'#4a3430':'#2f5fd0',uShirt:'#ddd4c2',uVest:'#6c2e2a',uBelt:'#5a3a26',uTrim:'#c9a046',
+    f1:[0,fem?0:1,P.ink?1:0,P.freckles?1:0],f2:[st.hair?1:0,0,0,P.tattoo&&!fem?1:0]};
+}
+function body(){
+  const g=G[st.sex]; const P=PEOPLE[st.people], r=st.sex==='f'?P.f:P.m;
+  if(fig){scene.remove(fig);}
+  fig=THREE.SkeletonUtils.clone(g.scene); rigPeople(fig,g); dressFigure(fig,look()); scene.add(fig);
+  setPeople(fig,P.shape); mixer=new THREE.AnimationMixer(fig); playPeople(fig,mixer,clip);
+  shape();
+}
+function shape(){
+  const P=PEOPLE[st.people], r=st.sex==='f'?P.f:P.m, h=lerp(r.h,st.h), w=lerp(r.w,st.w);
+  fig.scale.setScalar(h); setBuild(fig,Math.max(0,-w),Math.max(0,w)); setDefinition(fig,Math.max(0,Math.min(1,1+w))*(st.sex==='f'?0.4:1));
+  const tall=(fig.userData.rig&&fig.userData.rig.joints?1:0);
+  document.getElementById('hv').textContent=Math.round(h*(st.sex==='f'?174:181)*(P.shape==='Ferrin'&&st.sex==='m'?0.83:1))+' cm';
+  document.getElementById('bv').textContent=w<-0.6?'slight':w<-0.25?'slim':w<0.2?'fit':w<0.6?'sturdy':'heavy';
+  document.getElementById('tag').innerHTML=st.people+'<small>'+(st.sex==='f'?'Woman':'Man')+' · '+P.desc+'</small>';
+  frame();
+}
+function frame(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;const s=fig?fig.scale.y:1;
+  if(st.view==='face'){cam.fov=16;cam.position.set(0,1.62*s,1.25);cam.lookAt(0,1.58*s,0);}
+  else{cam.fov=28;const d=Math.max(4.6,2.2/Math.tan(14*Math.PI/180)/Math.max(0.6,cam.aspect)*0.55);cam.position.set(0,1.0,d);cam.lookAt(0,0.92,0);}
+  if(innerWidth>700&&st.view!=='face'){cam.setViewOffset(w,h,w*0.12,0,w,h);}else cam.clearViewOffset();
+  cam.updateProjectionMatrix();}
+addEventListener('resize',frame);
+// ---- controls
+function chips(id,items,get,set,swatch){const el=document.getElementById(id);el.innerHTML='';items.forEach(([label,val],i)=>{const b=document.createElement('button');
+  if(swatch){b.className='sw';b.style.background=label;b.setAttribute('aria-label',id+' colour '+(i+1));}else b.textContent=label;
+  b.setAttribute('aria-pressed',String(get()===val));b.onclick=()=>{set(val);el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));};el.appendChild(b);});}
+function build(){
+  const P=PEOPLE[st.people];
+  chips('sex',[['Man','m'],['Woman','f']],()=>st.sex,v=>{st.sex=v;if(v==='f'&&!['Long','Ponytail','Topknot','Swept'].includes(st.hair))st.hair='Long';build();body();});
+  chips('people',Object.keys(PEOPLE).map(k=>[k,k]),()=>st.people,v=>{st.people=v;st.skin=1;st.hcol=0;st.eye=0;build();body();});
+  document.getElementById('pdesc').textContent=P.desc;
+  chips('skin',P.skin.map((c,i)=>[c,i]),()=>st.skin,v=>{st.skin=v;dressFigure(fig,look());shape();},true);
+  chips('eyes',P.eyes.map((c,i)=>[c,i]),()=>st.eye,v=>{st.eye=v;dressFigure(fig,look());},true);
+  chips('hair',HAIRS,()=>st.hair,v=>{st.hair=v;dressFigure(fig,look());});
+  chips('hcol',P.hair.map((c,i)=>[c,i]),()=>st.hcol,v=>{st.hcol=v;dressFigure(fig,look());},true);
+  document.getElementById('beardBox').classList.toggle('hidden',st.sex==='f');
+  chips('beard',BEARDS,()=>st.beard,v=>{st.beard=v;dressFigure(fig,look());});
+  chips('stache',STACHES,()=>st.stache,v=>{st.stache=v;dressFigure(fig,look());});
+  chips('lower',[['Trousers',0],['Boxers',1]],()=>st.lower,v=>{st.lower=v;dressFigure(fig,look());shape();});
+  chips('view',[['Full','full'],['Face','face'],['Walk','walk'],['Turntable','spin']],()=>st.view==='face'?'face':clip==='Walk'?'walk':'full',v=>{
+    if(v==='spin'){spin=!spin;return;} if(v==='walk'){clip=clip==='Walk'?'Idle':'Walk';playPeople(fig,mixer,clip);return;} st.view=v;frame();});
+  document.getElementById('note').textContent=st.sex==='f'&&P.shape!=='Human'?'Women share one body for now: the '+st.people+' women\'s own shape is still to come, so only height and build change here.':'Every people is one body with a built-in shape; the skeleton moves to match it, so the same animations, hair and clothing fit everyone.';
+}
+document.getElementById('height').oninput=e=>{st.h=+e.target.value;shape();};
+document.getElementById('build').oninput=e=>{st.w=+e.target.value;shape();};
+document.getElementById('rand').onclick=()=>{const ks=Object.keys(PEOPLE),P=PEOPLE[st.people=ks[Math.floor(Math.random()*ks.length)]];
+  st.h=Math.random();st.w=Math.random();st.skin=Math.floor(Math.random()*P.skin.length);st.hcol=Math.floor(Math.random()*P.hair.length);st.eye=Math.floor(Math.random()*4);
+  const hs=st.sex==='f'?['Long','Ponytail','Topknot','Swept']:['Short','Swept','Ponytail','Long','Topknot',null];st.hair=hs[Math.floor(Math.random()*hs.length)];
+  st.beard=BEARDS[Math.floor(Math.random()*BEARDS.length)][1];st.stache=Math.random()<0.4?STACHES[1+Math.floor(Math.random()*5)][1]:null;
+  document.getElementById('height').value=st.h;document.getElementById('build').value=st.w;build();body();};
+let drag=null;cv.addEventListener('pointerdown',e=>{drag=e.clientX;spin=false;cv.setPointerCapture(e.pointerId);});cv.addEventListener('pointermove',e=>{if(drag!==null){yaw+=(e.clientX-drag)*0.01;drag=e.clientX;}});cv.addEventListener('pointerup',()=>drag=null);
+Promise.all([['m','male.gltf.json'],['f','female_cc.gltf.json']].map(([k,f])=>new Promise((res,rej)=>new THREE.GLTFLoader().load(f,g=>{preparePainted(g);G[k]=g;res();},undefined,rej)))).then(()=>{
+  document.getElementById('status').remove(); build(); body();
+  (function loop(){requestAnimationFrame(loop);const dt=Math.min(0.05,clock.getDelta());if(spin)yaw+=dt*0.35;if(fig){fig.rotation.y=yaw;mixer.update(dt);buildPosture(fig);}R.render(scene,cam);})();
+}).catch(()=>{document.getElementById('status').textContent='Could not load the bodies.';});
+</script>
