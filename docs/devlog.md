@@ -4,6 +4,25 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 51 · The townsfolk
+
+*Characters · 24 November 2026*
+
+Your notes: NPCs first, armour and clothes low-poly but good-looking (maybe with a texture sheet), and the arms hung too wide, like a halfway T-pose.
+
+**The townsfolk.** Every NPC is generated from a seed:
+- **Who they are:** a people, a body, colouring and a name in their people's own sound.
+- **Trade:** one of twelve, from the city watch to beggars, setting what they wear and carry and how worn and dirty it is.
+- **Style:** their people's own pieces and colours.
+- **Signature item:** a hat, a scarf, an earring or a walking stick.
+- **Temperament:** sets their posture, how they look about, their pace and what they say.
+
+They come in three detail tiers, so the crowd in the background is cheap. A new page shows a crowd of them; tap anyone to read their card.
+
+**Lighter and better-looking gear.** Built pieces are now cut from the 1,500-triangle distance body, with fewer segments and flat rivets. A full suit of armour dropped from 10,000 triangles to 3,000, and a townsperson's outfit is 500 to 1,600. The detail comes from a texture sheet of sixteen CC0 surfaces from Poly Haven, from linen and leather to velvet, fur and brushed steel, plus drawn mail, as greyscale detail the dyes colour.
+
+**Arms.** They now hang by the thighs. Along the way, posture offsets on one bone were piling up frame after frame whenever more than one axis moved, which bent a few NPCs double. Fixed.
+
 ## Devlog 50 · Fur, robes and each people's style
 
 *Characters · 24 November 2026*

@@ -484,6 +484,17 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 
 Clothes carry personality: wealth shows in fabric, trim and jewellery; tidiness in wear, dirt and patches; trade in aprons, tools and uniforms; and each people has its own style palette (Hrimfolk furs and lacing, Aurelan tabards and doublets, Ferrin leather aprons and brass, Zarhim layered wraps, Ilvari fitted coats over blue ink, Ruadhan cloaks and woven patterns, Wayfolk a mix of everything). A signature item, such as a red scarf, a pipe or a mended hat, keeps faces in the crowd memorable.
 
+**The NPC system.** Every townsperson is generated from a seed, so a crowd costs nothing to store and the same person returns the same way:
+
+- **Who:** a people, a sex, a height and build within that people's range, their colouring, and a name in their people's own sound (Norse for the Hrimfolk, Persian for the Zarhim, Gaelic for the Ruadhan, and so on).
+- **Trade:** one of twelve so far (city watch, smith, merchant, farmer, porter, sailor, noble, priest, scholar, innkeeper, beggar, hunter). A trade sets the outfit choices for each slot, the belt and what hangs from it, and a range of wealth, wear and dirt.
+- **Their people's style:** each people swaps in its own pieces and colours (Ferrin aprons, Zarhim wraps and head wraps, Hrimfolk fur, Ilvari coats, Ruadhan plaid). The city watch wears Aldrath's red and gold.
+- **Wealth:** poorer folk wear hessian and worn linen with patches, frayed hems and dirt; the rich wear velvet and jacquard.
+- **A signature item:** a hat (sometimes feathered), a scarf, an earring or a walking stick, so faces in a crowd stay memorable.
+- **Temperament:** cheerful, gruff, nervous, proud, weary, curious, stern or dreamy. It sets their posture, how often and how far they glance about, the tilt of their head, how they sway and how fast they walk, and the lines they say.
+
+**Textures.** Clothing and armour stay low-poly and get their surface from one shared texture sheet: sixteen CC0 surfaces (linen, wool, herringbone, leathers, suede, fur, hessian, velvet, jacquards, knit, brushed steel, rust, mail, plaid) as greyscale detail that the dyes colour. Built pieces are cut from the 1,500-triangle distance body: a typical townsperson's outfit is 500 to 1,600 triangles, a full suit of armour about 3,000.
+
 **References:** the armour reference set covers all five tiers. Designs are original, inspired by the references, never copies of another artist's work.
 
 **Audio**
