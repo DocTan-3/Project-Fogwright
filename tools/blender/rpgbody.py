@@ -226,7 +226,7 @@ if RACE in RACES:
         out = Vector((x * wx, 0.004 + (y - 0.004) * wy - P_['belly'] * math.exp(-((z - 1.1) / 0.1) ** 2) * (y < 0.02) * math.exp(-(x / 0.12) ** 2), zmap(z)))
         return out
     for v in body.data.vertices:
-        d, nm, q = seg_of(v.co, RACE != 'female' or v.index in ARMV); v.co = F(v.co.copy(), nm, q)
+        d, nm, q = seg_of(v.co, v.index in ARMV); v.co = F(v.co.copy(), nm, q)
     if RACE in ('ferrin', 'female'):   # each part is reshaped differently; blend the change across the joins so they don't form spikes
         nb = [[] for _ in body.data.vertices]
         for e in body.data.edges: a_, b_ = e.vertices; nb[a_].append(b_); nb[b_].append(a_)
@@ -361,7 +361,7 @@ for kname, lean in (('Lean', True), ('Heavy', False)):
     for v in body.data.vertices:
         co = v.co.copy()
         if co.z > 1.535 and abs(co.x) < 0.12: kb.data[v.index].co = co; continue      # the head stays as it is
-        dist, nm, q, u = nearest_seg(co, RACE != 'female' or v.index in ARMV)
+        dist, nm, q, u = nearest_seg(co, v.index in ARMV)   # torso points never follow the arms
         sx_, sy_ = region_scale(nm, u, co.z, co, lean)
         off = co - q
         if nm in TORSO: off = Vector((co.x - 0.0, co.y - 0.004, 0)); q = Vector((0, 0.004, co.z))
