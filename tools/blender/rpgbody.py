@@ -502,10 +502,13 @@ def scalp(name, lower=0.004):  # a thin cap under the locks, so no skin shows be
     return shell(name + '_cap', -math.pi, math.pi, lambda th: hairline(th) - lower, TOP, lambda th, f, p: 0.003 + 0.004 * f, NT=28, NR=8, wrap=True)
 HAIRS = []
 # ---------- Valheim's way: each beard and hairstyle is ONE solid sculpted mass; strands are only painted grooves
-def solid(name, th0, th1, z_top, z_bot, thick, L, conv=0.5, depth=lambda th: 0.02, NT=24, NF=6, NS=8, fwd=0.006):
+def solid(name, th0, th1, z_top, z_bot, thick, L, conv=0.5, depth=lambda th: 0.02, NT=24, NF=6, NS=8, fwd=0.006, tilt=0.0, cone=None):
     """A closed volume built from slices across the face. Each slice hugs the head from z_top(th) down to z_bot(th),
     offset by thick(th, z), then hangs L(th) further down, narrowing toward the middle by conv and thinning to its tip."""
     bm = bmesh.new(); loops = []
+    if cone:   # the whole beard gathers toward one point below and ahead of the chin
+        p0 = head_point(0.0, ph_at(0.0, z_bot(0.0))); n0 = Vector((p0.x, p0.y - 0.004, (p0.z - C.z) * 0.25)).normalized()
+        chin_o, chin_i = p0 + n0 * thick(0.0, z_bot(0.0)), p0 + n0 * 0.0008
     for i in range(NT + 1):
         th = th0 + (th1 - th0) * i / NT
         outer, inner = [], []
@@ -514,12 +517,22 @@ def solid(name, th0, th1, z_top, z_bot, thick, L, conv=0.5, depth=lambda th: 0.0
             p = head_point(th, ph_at(th, z)); n = Vector((p.x, p.y - 0.004, (p.z - C.z) * 0.25)).normalized()
             outer.append(p + n * thick(th, z)); inner.append(p + n * 0.0008)
         Lh = L(th); base_o, base_i = outer[-1], inner[-1]
+        if cone:
+            Lc, wend, fork, d0 = cone['L'], cone['wend'], cone.get('fork', 0.0), cone['depth']
+            jit = (1 + 0.12 * (tri(th * cone.get('chunks', 3) / math.pi) - 0.5)) * (1 - cone.get('notch', 0.0) * math.exp(-(th / 0.16) ** 2))
+            for k in range(1, NS + 1):
+                s = k / NS; w = 1 - (1 - wend) * s ** cone.get('shape', 0.8)
+                A = chin_o + Vector((math.copysign(fork * s, th) if abs(th) > 1e-3 else 0.0, -tilt * Lc * s, -Lc * s * jit))
+                outer.append(A + (base_o - chin_o) * w)
+                Ai = A + Vector((0, d0 * (1 - s) ** 1.2 + 0.003, 0.004 * (1 - s)))
+                inner.append(Ai + (base_i - chin_i) * w * 0.98)
+            Lh = 0.0
         if Lh > 0.002:
             for k in range(1, NS + 1):
                 s = k / NS; z = base_o.z - Lh * s
-                x = base_o.x * (1 - conv * s ** 1.2); y = base_o.y - fwd * math.sin(math.pi * s * 0.8)
+                x = base_o.x * (1 - conv * s ** 1.2); y = base_o.y - fwd * math.sin(math.pi * s * 0.8) - tilt * Lh * s ** 0.9   # hang forward, off the throat
                 o = Vector((x, y, z)); outer.append(o)
-                d = depth(th) * (1 - s) ** 0.8 + 0.0015
+                d = depth(th) * (1 - s ** 1.6) * (0.85 if tilt else 1.0) + 0.002   # keeps its bulk most of the way down
                 inner.append(Vector((x * 0.97, y + d, z + 0.002 * (1 - s))))
         loops.append([bm.verts.new(v) for v in outer + inner[::-1]])
     m = min(len(l) for l in loops)
@@ -560,14 +573,15 @@ chunks = lambda th, k, a: 1 + a * (tri(th * k / math.pi) - 0.5)
 beard_top = lambda th: 1.648 - 0.02 * sm(1.0, 0.3, abs(th)) - 0.026 * fw(th, 0.32)   # below the cheekbones   # sideburns, cheeks, under the lip
 beard_jaw = lambda th: 1.576 - 0.004 * fw(th) + 0.034 * sm(0.45, 1.1, abs(th))   # the sides end at the jawline, not down the neck
 bthick = lambda th, z: 0.0035 + 0.009 * fw(th, 0.9) * sm(1.63, 1.59, z)   # hugs the jaw
-def beard(name, Lmax, shape, conv, depth=0.03):
-    return solid(name, -1.38, 1.38, beard_top, beard_jaw, bthick, lambda th: Lmax * shape(th), conv, lambda th: depth * fw(th, 0.8) + 0.006)
-HAIRS.append(beard('Beard_Short', 0.022, lambda th: fw(th, 0.9) * chunks(th, 5, 0.3), 0.2, 0.012))
-HAIRS.append(beard('Beard_Full', 0.085, lambda th: (0.08 + 0.92 * fw(th, 0.55) ** 1.3) * chunks(th, 4, 0.4), 0.6))
-HAIRS.append(beard('Beard_Pointed', 0.12, lambda th: (0.05 + 0.95 * fw(th, 0.32) ** 1.5) * chunks(th, 3, 0.25), 0.9))
-HAIRS.append(beard('Beard_Forked', 0.11, lambda th: (0.06 + 0.94 * max(fw(th - 0.24, 0.17), fw(th + 0.24, 0.17)) ** 1.3), 0.3))
-bb = beard('Beard_Braided', 0.045, lambda th: (0.3 + 0.7 * fw(th, 0.7)) * chunks(th, 4, 0.3), 0.55)
-bm = bmesh.new(); top = head_point(0, ph_at(0, 1.576)) + Vector((0, -0.012, -0.04))
+def beard(name, L, wend, fork=0.0, depth=0.03, shape=0.8, chunks=3, notch=0.0):
+    return solid(name, -1.15, 1.15, beard_top, beard_jaw, bthick, lambda th: 0.0, 0.0, lambda th: 0.0, NS=9, tilt=0.55,
+                 cone=dict(L=L, wend=wend, fork=fork, depth=depth, shape=shape, chunks=chunks, notch=notch))
+HAIRS.append(beard('Beard_Short', 0.018, 0.75, depth=0.012, chunks=5))
+HAIRS.append(beard('Beard_Full', 0.07, 0.38, depth=0.03, shape=1.2, chunks=4))
+HAIRS.append(beard('Beard_Pointed', 0.1, 0.06, depth=0.026, shape=0.9, chunks=3))
+HAIRS.append(beard('Beard_Forked', 0.095, 0.04, fork=0.03, depth=0.026, shape=0.9, chunks=4, notch=0.45))
+bb = beard('Beard_Braided', 0.045, 0.45, depth=0.024, shape=1.1, chunks=4)
+bm = bmesh.new(); top = head_point(0, ph_at(0, 1.576)) + Vector((0, -0.034, -0.04))
 pts = [top + Vector((0.003 * math.sin(k * 1.9), -0.004 * math.sin(k * 0.5), -k * 0.022)) for k in range(7)]
 tube(bm, pts, 0.016, 0.008, 8, 0.8)
 for k in range(1, 6): r = bmesh.ops.create_icosphere(bm, subdivisions=1, radius=0.013 - k * 0.0012); bmesh.ops.transform(bm, verts=r['verts'], matrix=Matrix.Translation(pts[k] + Vector((0.004 * (-1) ** k, 0, 0))) @ Matrix.Diagonal((1, 0.75, 1.1, 1)))
