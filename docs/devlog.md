@@ -4,6 +4,20 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 48 · Gear that fits everyone
+
+*Characters · 23 November 2026*
+
+You asked for equipment like World of Warcraft's: every piece shows on the character, some armour painted on and some built around the body, with the special slots unlocking as you progress. It's built on your MakeHuman bodies, on the `characters` branch, and the design doc's new Equipment section describes the whole system.
+
+**Slots.** Shirt, chest, legs, feet, wrists, hands, waist, shoulders, head, back and weapons are open from the start. The tabard unlocks when a god claims you, the face slot with Tinkerer crafts, the mechanical arm in the gear and water era, and the back device in the steam era.
+
+**Painted armour.** Each slot is a paint layer, laid on in a fixed order (shirt, legs, feet, chest, wrists, hands, waist, tabard), so gloves sit over sleeves and boots over trousers. Layers come in linen, wool, leather, studded leather, mail, plate, quilted cloth and fur, with trims, stitching and a soft shadow at each layer's edge. Like WoW, everything is baked into one texture per character, so a crowd costs about the same as one person. For that the bodies needed a texture layout: seams cut at the neck, wrists, hips and ankles, down the back and along the inner limbs, with the face given extra room.
+
+**Built armour.** Pieces are cut out of the body's own surface and pushed outward, so they carry its skin weights and every people and build shape: one piece fits an Ilvari woman and a Ferrin man without being modelled twice. So far: boot and gauntlet cuffs, bracers, belts with buckles and pouches, lacing, collars, layered pauldrons, a fur mantle, a hood and a cloak. MakeHuman models individual toes, so shoes and boots get a toe box built round the forefoot.
+
+**Dyes.** A dye set colours the main garments (chest, cloak, hood), gives trousers a darker second shade, tints leather lightly, and leaves metal and fur alone.
+
 ## Devlog 47 · Open armpits, fresh paint
 
 *Character study · 23 November 2026*
