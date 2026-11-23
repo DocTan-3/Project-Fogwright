@@ -8,3 +8,4 @@ node_modules/
 
 # third-party source models (check their licenses before committing)
 tools/blender/source/
+__pycache__/
