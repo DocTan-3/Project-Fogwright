@@ -393,7 +393,7 @@ The look is simple low-poly 3D, built mostly in code, so buildings feel grand an
 
 - Flat-shaded low-poly models. Terrain, trees, rocks and ruins are generated from palettes and shape rules, not modeled one by one.
 
-- Characters and their equipment are our own hand-made models, rigged and animated, so gear fits and moves seamlessly (see Character pipeline). The world stays generated in code.
+- Characters are shaped from two shared base bodies and dressed by the equipment system, so gear fits and moves seamlessly on every people (see Character pipeline and Equipment). The world stays generated in code.
 
 - Inventions are drawn by assembling their parts in 3D, so a new combination needs no new art.
 
@@ -423,31 +423,68 @@ Technology level shows on the buildings: frontier villages are mostly timber and
 
 ### Character pipeline
 
-We build our own characters on one shared skeleton, so every piece of equipment is made to fit it and nothing clips or floats.
+Every character, player or NPC, is one of two base bodies (a man and a woman), shaped by code into each people and dressed by the equipment system below, so any item fits any character and nothing clips or floats.
 
-- **Who and how:** Claude builds the characters from your reference images by writing Blender Python scripts that model, rig, weight and animate them, renders turnarounds for your review, and revises from your feedback. Models export as glTF, which three.js loads directly.
+- **Base bodies:** built from MakeHuman's base mesh, shapes, joints and skin weights (CC0) by a Blender Python script, then brought down to about 6,000 triangles with most of them in the face. A 1,500-triangle version is used past about 22 m.
 
-- **One rig for everyone:** a single humanoid skeleton of about 25 to 35 bones. All bodies, gear and animations are built for it, so any item works on any character.
+- **Peoples as shapes:** each people is a set of MakeHuman shape changes on the same mesh (Ferrin short and broad, Ilvari tall and slender, and so on), stored as morph targets. The skeleton moves to that people's joints at runtime.
 
-- **Modular body:** the body is split into head, torso, arms, hands, legs and feet. Worn gear hides the body parts it covers, which prevents clipping, as many MMOs do.
+- **Sliders, limited per people:** height and build (slim to heavy) are sliders, each limited to a range that keeps the people recognisable.
 
-- **Two kinds of gear:** skinned gear (tunics, armor, capes, boots) is weighted to the same skeleton and bends with it. Rigid gear (helmets, weapons, tools, packs) attaches to bone sockets such as the head, back, right hand and hip.
+- **One rig for everyone:** a single 19-bone skeleton. All bodies, gear and animations are built for it.
 
-- **Variety without new models:** colors and materials come from palettes and tint masks, so one armor model gives bronze, iron and steel versions, and gear can show wear.
+- **Painted by code:** skin, faces, underclothes, tattoos and ink are drawn by a shader from each point's place on a fixed template, so the paint lands on every people's anatomy. Hair, beards and moustaches are their own meshes, riding on the head.
 
 - **Animations:** one shared set (idle, walk, run, jump, gather, build, swing, aim, shoot, hurt, die, emotes), later blended so you can walk while aiming.
 
-- **Budget:** about 3,000 to 6,000 triangles per fully equipped character, textures of 512 px or a shared palette texture, and under about 500 KB per gear piece. Distant players use simpler versions.
+- **Budget:** about 3,000 to 6,000 triangles per fully equipped character and about three draw calls (body, outfit, hair). Distant characters use simpler versions.
 
-- **Prototypes until then:** the code-built character in prototype 1 stands in until the first modeled character is ready.
+### Equipment
 
-**Gear slots:** head, chest, left arm, right arm, legs, feet, back and weapon. The two arms are separate slots because asymmetric builds (one heavy mechanical arm, one bare) are a signature of the style.
+Equipment works like World of Warcraft's: every piece shows on the character, some armour is painted onto the body and some is built around it, and a fixed layering order makes pieces from different sets combine cleanly. The more special slots unlock as you progress.
 
-**Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are geometry; rivets, engraving and wear are color and simple texture. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each tier gets a clearly different silhouette, from a slim coat to a full plate shell.
+**Slots**
 
-**References:** the armor reference set covers all five tiers. Models are original designs inspired by them, never copies of another artist's work.
+| Slot | How it shows | Available |
+| --- | --- | --- |
+| Shirt | Painted, under everything | From the start |
+| Chest | Painted on torso and upper arms; built collars and breastplate edges; long coats and robes add a built skirt | From the start |
+| Legs | Painted | From the start |
+| Feet | Painted, with built cuffs and soles for boots | From the start |
+| Wrists | Painted bracers, with a small built cuff | From the start |
+| Hands | Painted gloves, with built cuffs for gauntlets | From the start |
+| Waist | Painted belt, with a built buckle and pouches | From the start |
+| Shoulders | Built: pauldrons, mantles, fur | From the start |
+| Head | Built: helmets, hats, hoods; trims the hair underneath | From the start |
+| Back | A built cloak that hangs and swings | From the start |
+| Main and off hand | Built, held or sheathed at the hip or back | From the start |
+| Tabard | Painted over the chest, with a built hanging panel | When a god claims you; it shows your god's colours |
+| Face | Built: goggles, masks, monocles | Tinkerer crafts, the gear and water era |
+| Mechanical arm (left or right) | A built device encasing one arm | Gear and water era; asymmetric builds start here |
+| Back device | A built boiler, tank or jetpack, worn with the cloak | Steam era |
+| Rig | A powered suit you climb into | Arcane engine era |
 
-**First model:** the light Tinker, which also sets the base body every other tier is built on.
+**Layering.** Paint goes on in a fixed order: skin, underclothes, shirt, legs, feet, chest, wrists, hands, waist, tabard. Gloves go over sleeves, boots over trousers, the belt over the chest piece and the tabard over everything. Items carry options, such as trousers tucked into boots or worn over them, and sleeve length; a chest piece flagged as a robe covers the legs and adds a built skirt. Built pieces hide what they cover: a helmet trims the hair, a robe hides the boot cuffs.
+
+**How it's made**
+
+- **Painted armour is baked, as in WoW.** Each character's paint layers are drawn once into a single texture whenever their gear changes, so the game only reads a texture: a crowd costs about the same as one person. The layers can be rich: linen, wool and leather; studs, mail rings, scale and plate edges; seams, trims and rivets; three dye channels and wear.
+- **Built armour is pinned to the body.** Every point of a built piece is pinned to the body surface beneath it, so it follows every people, both sexes and the build slider with no per-people modelling. Shells hug the body (cuffs, collars, breastplates), drapes hang from it (skirts, tabard panels, cloaks) and rigid pieces ride a bone (helmets, pauldrons, buckles, weapons). A character's built pieces merge into one mesh.
+- **Items are recipes, not models.** An item is a material, a cut, trims, dyes and a few built parts, so a small kit gives a large range of looks, the way WoW repaints shared models. Each people gets its own cuts and patterns.
+
+**Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are built; rivets, engraving and wear are paint. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each armour tier gets a clearly different silhouette, from a slim coat to a full plate shell.
+
+**NPCs.** Not every NPC needs full detail, but every one needs personality.
+
+| Tier | Who | Detail |
+| --- | --- | --- |
+| Hero | Players, named and quest NPCs | The full system, unique pieces, detailed faces |
+| Townsfolk | Guards, merchants, smiths, innkeepers | Outfits generated from their people, trade and wealth, plus one signature item |
+| Crowd | Background passers-by | Painted outfits, at most one built piece, a cheaper body at a distance |
+
+Clothes carry personality: wealth shows in fabric, trim and jewellery; tidiness in wear, dirt and patches; trade in aprons, tools and uniforms; and each people has its own style palette (Hrimfolk furs and lacing, Aurelan tabards and doublets, Ferrin leather aprons and brass, Zarhim layered wraps, Ilvari fitted coats over blue ink, Ruadhan cloaks and woven patterns, Wayfolk a mix of everything). A signature item, such as a red scarf, a pipe or a mended hat, keeps faces in the crowd memorable.
+
+**References:** the armour reference set covers all five tiers. Designs are original, inspired by the references, never copies of another artist's work.
 
 **Audio**
 
