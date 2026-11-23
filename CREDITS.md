@@ -25,3 +25,9 @@ CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 4x4 s
 leafy_grass, forest_leaves_02, coast_land_rocks_01, coast_sand_01, brown_mud, grass_path_2, bark_brown_02, forest_leaves_04,
 wood_table_worn, quatrefoil_jacquard_fabric (greyscale), brown_leather, rusty_metal_02, green_metal_rust, dirty_carpet,
 terry_cloth (greyscale), aerial_rocks_02.
+
+## Gear textures (creator/tex/gear.jpg)
+
+CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, turned into greyscale detail and packed into one 4x4 sheet at 256 px each by `tools/textures/gearsheet.py`:
+rough_linen, caban, poly_wool_herringbone, brown_leather, leather_red_02, scuba_suede, curly_teddy_natural, hessian_230,
+velour_velvet, floral_jacquard, quatrefoil_jacquard_fabric, knitted_fleece, wool_boucle. Brushed steel and mail are drawn by the script.
