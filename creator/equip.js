@@ -69,8 +69,9 @@ vec3 layerColour(float kind,float pat,vec3 p,vec2 s,float d,vec3 c1,vec3 c2,vec3
     c*=0.88+0.1*vnoise(s*70.)+0.04*n; c*=mix(0.76,1.,smoothstep(0.,0.018,d));                          // darker towards its edges
     c=mix(c,c2*1.1,0.7*inside(abs(d-0.007)-0.0012)*step(0.45,fract((s.x+s.y)*90.)));                   // stitching along the edge
     if(kind>2.5){vec2 g=(fract(s/0.032)-0.5)*0.032;float st=inside(length(g)-0.0045);c=mix(c,metal(c3,s)*(1.15-0.5*smoothstep(0.,0.0045,length(g+0.0015))),st);}}
-  else if(kind<4.5){vec2 g=fract(vec2(s.x/0.0075+0.5*floor(s.y/0.0055),s.y/0.0055))-0.5;             // mail rings
-    float r=abs(length(g)-0.3); c=mix(metal(c1,s)*0.32,metal(c1,s)*(1.1-0.5*length(g)),1.-smoothstep(0.1,0.17,r));}
+  else if(kind<4.5){vec2 q=vec2(s.x/0.012+0.5*floor(s.y/0.009),s.y/0.009),g=fract(q)-0.5;           // mail rings, softened to the texture's resolution
+    float r=abs(length(g)-0.3),aa=max(fwidth(q.x),fwidth(q.y))*0.7,ring=1.-smoothstep(0.1-aa,0.17+aa,r);
+    c=mix(metal(c1,s)*0.42,metal(c1,s)*(1.12-0.45*length(g)),mix(ring,0.6,smoothstep(0.25,0.6,aa)));}
   else if(kind<5.5){float band=fract(s.y/0.075),e=min(band,1.-band)*0.075;                            // plate: lames with rivets
     c=metal(c1,s)*(0.9+0.25*smoothstep(0.012,0.,abs(band-0.85)*0.075))*mix(0.55,1.,smoothstep(0.,0.004,e));
     vec2 g=vec2(fract(s.x/0.045)-0.5,band-0.82);c=mix(c,metal(c3,s)*1.2,inside(length(g*vec2(0.045,0.075))-0.0035));
@@ -105,6 +106,20 @@ const EQ_ITEMS={
     {id:'gambeson',dye:'main',name:'Quilted gambeson',paint:{kind:'quilted',trim:0.014,a:[0.8,1.72,0,0.0],dyes:['#a89a7e','#8a7c62','#6a4e34']},
       built:[{type:'collar',colour:0}]},
     {id:'mail',dye:'trim',name:'Mail shirt',paint:{kind:'mail',trim:0.008,a:[0.84,1.25,0,0.02],dyes:['#9ea4aa','#6a6e72','#7a5a3a']}},
+    {id:'robe',dye:'main',name:'Wool robe',paint:{kind:'wool',pattern:'hemband',trim:0.012,a:[0.12,1.9,0,0.02],dyes:['#6a5a48','#a8844e','#4a3e30']},
+      built:[{type:'skirt',top:0.97,hem:0.12,flare:0.35,kind:0},{type:'collar',colour:0}]},
+    {id:'longcoat',dye:'leather',name:'Long coat',paint:{kind:'leather',trim:0.01,a:[0.5,1.86,1,0.07],b:[0.03],dyes:['#4a3424','#c8b48a','#2e2016']},
+      built:[{type:'skirt',top:0.95,hem:0.5,flare:0.28,open:0.42,kind:1},{type:'collar',colour:0}]},
+    {id:'doublet',people:'Aurelan',dye:'main',name:'Aurelan doublet',paint:{kind:'wool',pattern:'stripes',trim:0.01,a:[0.9,1.9,0,0.0],dyes:['#2e4a6a','#c9a046','#c9a046']},
+      built:[{type:'collar',colour:0},{type:'buttons'}]},
+    {id:'furjerkin',people:'Hrimfolk',dye:'leather',name:'Hrimfolk fur-collared jerkin',paint:{kind:'leather',trim:0.012,a:[0.86,-1,0,0.0],dyes:['#5a4030','#c8b48a','#3a2a1c']},
+      built:[{type:'furcollar'}]},
+    {id:'apron',people:'Ferrin',name:"Ferrin smith's apron",paint:{kind:'linen',a:[0.9,1.1,0,0.03],dyes:['#b8a888','#8a3a26','#c9a046']},
+      built:[{type:'apron'}]},
+    {id:'wraps',people:'Zarhim',dye:'main',name:'Zarhim desert wraps',paint:{kind:'linen',pattern:'hemband',trim:0.01,a:[0.86,1.95,1,0.06],dyes:['#d8c8a8','#a8783a','#7a5426']},
+      built:[{type:'belt',thick:0.008,cloth:1,z:1.0,w:0.09,colour:1}]},
+    {id:'ilvaricoat',people:'Ilvari',dye:'main',name:'Ilvari long coat',paint:{kind:'wool',trim:0.012,a:[0.5,1.9,0,0.0],b:[0.025],dyes:['#2a3040','#1a2030','#3a6ad0']},
+      built:[{type:'skirt',top:0.95,hem:0.42,flare:0.22,open:0.3,kind:0,trim:1},{type:'collar',colour:0,high:1}]},
     {id:'brigandine',dye:'main',name:'Studded brigandine',paint:{kind:'studded',trim:0.012,a:[0.88,-1,0,0.0],dyes:['#5a2e24','#c9a046','#c9a046']},
       built:[{type:'collar',colour:0}]}],
   legs:[
@@ -129,11 +144,13 @@ const EQ_ITEMS={
     {id:'plates',name:'Steel pauldrons',built:[{type:'pauldron',lames:3,metal:1,rivets:1,ridge:1,size:1.08}],dyes:['#9aa0a6','#6a6e72','#c9a046'],dye:'trim'},
     {id:'brass',name:'Brass pauldrons',built:[{type:'pauldron',lames:3,metal:1,rivets:1,ridge:1}],dyes:['#b08a42','#7a5a26','#e0c070'],dye:'trim'},
     {id:'furplates',name:'Fur-trimmed pauldrons',built:[{type:'pauldron',lames:3,metal:1,rivets:1,fur:1,size:1.1}],dyes:['#7e868c','#8a7458','#c9a046'],dye:'trim'},
-    {id:'mantle',name:'Fur mantle',built:[{type:'mantle'}],dyes:['#8a7458','#5a4a38','#3a2a1c']}],
+    {id:'mantle',name:'Fur mantle',built:[{type:'mantle'}],dyes:['#6e5640','#3e3024','#2a2018']}],
   head:[
-    {id:'hood',dye:'main',name:'Hood',built:[{type:'hood'}],dyes:['#4a5a3a','#3a4a2e','#2a2a20']}],
+    {id:'hood',dye:'main',name:'Hood',hidesHair:1,built:[{type:'hood'}],dyes:['#4a5a3a','#3a4a2e','#2a2a20']},
+    {id:'headwrap',people:'Zarhim',dye:'main',name:'Zarhim head wrap',hidesHair:1,built:[{type:'headwrap'}],dyes:['#d8c8a8','#a8783a','#7a5426']}],
   back:[
-    {id:'cloak',dye:'main',name:'Cloak',built:[{type:'cloak'}],dyes:['#5a2a26','#3e1c18','#c9a046']}],
+    {id:'cloak',dye:'main',name:'Cloak',built:[{type:'cloak'}],dyes:['#5a2a26','#3e1c18','#c9a046']},
+    {id:'wovencloak',people:'Ruadhan',dye:'main',name:'Ruadhan woven cloak',built:[{type:'cloak',woven:1}],dyes:['#3e5a3a','#8a3a26','#c9a046']}],
 };
 // what can hang from a belt's sockets (relics will join these)
 const EQ_ATTACH=[['None',null],['Pouch','pouch'],['Flask','flask'],['Scroll case','scroll']];
@@ -241,10 +258,10 @@ function eqCut(D,fs){
   return out;
 }
 // a piece under construction: plain arrays, merged into one mesh at the end
-function eqPiece(){return {P:[],N:[],C:[],DL:[],SK:[],I:[]};}
+function eqPiece(){return {P:[],N:[],C:[],DL:[],SK:[],I:[],RS:[],K:[],kind:1};}   // kind: 0 cloth 1 leather 2 metal 3 fur
 function eqVert(pc,e,off,col){ // add one point (an evaluated body blend), pushed out along its normal
   const i=pc.P.length/3; for(let k=0;k<3;k++){pc.P.push(e.p[k]+e.n[k]*off);pc.N.push(e.n[k]);} pc.C.push(...col);
-  pc.DL.push(e.dl); pc.SK.push(e.bones); return i;}
+  pc.DL.push(e.dl); pc.SK.push(e.bones); pc.RS.push(...e.r); pc.K.push(pc.kind); return i;}
 const eqKey=p=>p.map(v=>Math.round(v*2000)).join(',');
 // a shell: the cut region pushed out by thick(point), with a wall round its edge so it reads as a solid piece
 function eqShell(pc,D,fs,thick,colour,smooth,minH){   // smooth: passes; minH: how close to the body smoothing may bring it
@@ -285,7 +302,7 @@ function eqBlock(pc,D,rec,w,h,d,off,colour,shade,drop){
     [[-1,-1,0],[1,-1,0],[1,-1,1],[-1,-1,1],y.map(v=>-v),0.8],[[-1,1,1],[1,1,1],[1,1,0],[-1,1,0],y,0.95],
     [[1,-1,0],[1,1,0],[1,1,1],[1,-1,1],x,0.88],[[-1,1,0],[-1,-1,0],[-1,-1,1],[-1,1,1],x.map(v=>-v),0.88]];
   for(const [a,b,c,dd,fn,sh] of faces){const i0=pc.P.length/3;
-    for(const q of [a,b,c,dd]){const p=P(...q);pc.P.push(...p);pc.N.push(...fn);pc.C.push(...colour.map(v=>v*sh*(shade||1)));pc.DL.push(e.dl);pc.SK.push(e.bones);}
+    for(const q of [a,b,c,dd]){const p=P(...q);pc.P.push(...p);pc.N.push(...fn);pc.C.push(...colour.map(v=>v*sh*(shade||1)));pc.DL.push(e.dl);pc.SK.push(e.bones);pc.RS.push(...e.r);pc.K.push(pc.kind);}
     pc.I.push(i0,i0+1,i0+2,i0,i0+2,i0+3);}
 }
 // an upright cylinder pinned to the body (flasks, scroll cases): its side touching the body at off, hanging drop below the pin
@@ -293,9 +310,9 @@ function eqCyl(pc,D,rec,r,h,off,drop,colour,shade,segs){
   segs=segs||12; const e=eqEval(D,rec),n=e.n,up=[0,1,0]; let x=[up[1]*n[2]-up[2]*n[1],up[2]*n[0]-up[0]*n[2],up[0]*n[1]-up[1]*n[0]];const lx=Math.hypot(...x)||1;x=x.map(v=>v/lx);
   const y=[n[1]*x[2]-n[2]*x[1],n[2]*x[0]-n[0]*x[2],n[0]*x[1]-n[1]*x[0]], c=[0,1,2].map(k=>e.p[k]+n[k]*(off+r)-y[k]*drop);
   const ring=sy=>{const ids=[];for(let s_=0;s_<segs;s_++){const a=s_/segs*Math.PI*2,dir=[0,1,2].map(k=>n[k]*Math.cos(a)+x[k]*Math.sin(a));
-    ids.push(pc.P.length/3);pc.P.push(...[0,1,2].map(k=>c[k]+dir[k]*r+y[k]*sy*h/2));pc.N.push(...dir);pc.C.push(...colour.map(v=>v*(shade||1)*(0.85+0.2*Math.cos(a-0.6))));pc.DL.push(e.dl);pc.SK.push(e.bones);}return ids;};
+    ids.push(pc.P.length/3);pc.P.push(...[0,1,2].map(k=>c[k]+dir[k]*r+y[k]*sy*h/2));pc.N.push(...dir);pc.C.push(...colour.map(v=>v*(shade||1)*(0.85+0.2*Math.cos(a-0.6))));pc.DL.push(e.dl);pc.SK.push(e.bones);pc.RS.push(...e.r);pc.K.push(pc.kind);}return ids;};
   const lo=ring(-1),hi=ring(1);for(let s_=0;s_<segs;s_++){const a=lo[s_],b=lo[(s_+1)%segs],c2=hi[(s_+1)%segs],d=hi[s_];pc.I.push(a,b,c2,a,c2,d);}
-  for(const [rg,sg] of [[hi,1],[lo,-1]]){const ci=pc.P.length/3;pc.P.push(...[0,1,2].map(k=>c[k]+y[k]*sg*h/2));pc.N.push(...y.map(v=>v*sg));pc.C.push(...colour.map(v=>v*(shade||1)*(sg>0?1.05:0.7)));pc.DL.push(e.dl);pc.SK.push(e.bones);
+  for(const [rg,sg] of [[hi,1],[lo,-1]]){const ci=pc.P.length/3;pc.P.push(...[0,1,2].map(k=>c[k]+y[k]*sg*h/2));pc.N.push(...y.map(v=>v*sg));pc.C.push(...colour.map(v=>v*(shade||1)*(sg>0?1.05:0.7)));pc.DL.push(e.dl);pc.SK.push(e.bones);pc.RS.push(...e.r);pc.K.push(pc.kind);
     for(let s_=0;s_<segs;s_++){const a=rg[s_],b=rg[(s_+1)%segs];if(sg>0)pc.I.push(a,b,ci);else pc.I.push(b,a,ci);}}
 }
 // a point on the belt at an angle round the waist (0 the front, positive towards the left hip)
@@ -309,11 +326,17 @@ function eqNear(D,x,y,z,k,filter){
   const ws=best.map(([i,d])=>[i,1/(Math.sqrt(d)+0.004)]),s=ws.reduce((a,b)=>a+b[1],0);return ws.map(([i,w])=>[i,w/s]);
 }
 const eqRGB=h=>{const c=new THREE.Color(h);return [c.r,c.g,c.b];};
+// smooth value noise in 3D (for fur clumps and tufted edges); eqNoise below is per-point
+const eqHash=(x,y,z)=>{const v=Math.sin(x*127.1+y*311.7+z*74.7)*43758.5453;return v-Math.floor(v);};
+function eqSmooth(p,s){const x=p[0]*s,y=p[1]*s,z=p[2]*s,ix=Math.floor(x),iy=Math.floor(y),iz=Math.floor(z),fx=x-ix,fy=y-iy,fz=z-iz,u=t=>t*t*(3-2*t);
+  const a=u(fx),b=u(fy),c=u(fz),H=eqHash,l=(q,w,t)=>q+(w-q)*t;
+  return l(l(l(H(ix,iy,iz),H(ix+1,iy,iz),a),l(H(ix,iy+1,iz),H(ix+1,iy+1,iz),a),b),l(l(H(ix,iy,iz+1),H(ix+1,iy,iz+1),a),l(H(ix,iy+1,iz+1),H(ix+1,iy+1,iz+1),a),b),c);}
+const eqFur=(p)=>0.6*eqSmooth(p,38)+0.4*eqSmooth(p,95);
 const eqNoise=(p,s)=>{const v=Math.sin(p[0]*s*12.9898+p[1]*s*78.233+p[2]*s*37.719)*43758.5453;return v-Math.floor(v);};
 
 // the pieces
 const EQ_BUILD={
-  cuff(pc,D,item,dy,spec){                       // boot tops, gauntlet cuffs, bracers
+  cuff(pc,D,item,dy,spec){pc.kind=1;                       // boot tops, gauntlet cuffs, bracers
     const main=eqRGB(dy[0]),trim=eqRGB(dy[2]),z=D.rest,P=item.paint;
     let fs,thick;
     if(spec.slot==='feet'){const top=P.a[0];
@@ -325,7 +348,7 @@ const EQ_BUILD={
       thick=()=>0.0045;}
     eqShell(pc,D,fs,thick,(e,f,rim)=>rim?trim.map(v=>v*0.85):main.map(v=>v*(0.92+0.1*eqNoise(e.p,40))));
   },
-  foot(pc,D,item,dy){const z=D.rest,main=eqRGB(dy[0]),sole=eqRGB(dy[2]),top=Math.min(item.paint.a[0],0.11);
+  foot(pc,D,item,dy){pc.kind=1;const z=D.rest,main=eqRGB(dy[0]),sole=eqRGB(dy[2]),top=Math.min(item.paint.a[0],0.11);
     const col=(e,f,rim)=>e.r[2]<0.018?sole.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,30)));
     for(const side of [1,-1]){
       const F=[];for(let i=0;i<D.n;i++)if(z[i*3+2]<0.13&&D.arm[i]<0.5&&Math.sign(z[i*3])===side)F.push(i);
@@ -359,20 +382,64 @@ const EQ_BUILD={
           n=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],out=pc.N.slice(a*3,a*3+3);
         if(n[0]*out[0]+n[1]*out[1]+n[2]*out[2]>0)pc.I.push(a,b,c,a,c,d);else pc.I.push(a,d,c,a,c,b);}   // facing out
       const tip=ring[K],cx=[0,1,2].map(j=>tip.reduce((a_,id)=>a_+pc.P[id*3+j],0)/M),ci=pc.P.length/3;   // close the tip
-      pc.P.push(...cx);pc.N.push(fx,0,fz);pc.C.push(...main);pc.DL.push(pc.DL[tip[0]]);pc.SK.push(pc.SK[tip[0]]);
+      pc.P.push(...cx);pc.N.push(fx,0,fz);pc.C.push(...main);pc.DL.push(pc.DL[tip[0]]);pc.SK.push(pc.SK[tip[0]]);pc.RS.push(...pc.RS.slice(tip[0]*3,tip[0]*3+3));pc.K.push(pc.kind);
       for(let m=0;m<M;m++){const a=tip[m],b=tip[(m+1)%M],A=pc.P.slice(a*3,a*3+3),B=pc.P.slice(b*3,b*3+3),u=B.map((v,q)=>v-A[q]),w=cx.map((v,q)=>v-A[q]),n=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]];
         if(n[0]*fx+n[2]*fz>0)pc.I.push(a,b,ci);else pc.I.push(a,ci,b);}
     }
   },
-  belt(pc,D,item,dy,spec){const z=D.rest,c=item.paint.a[0],w=item.paint.a[1]/2,main=eqRGB(dy[0]),th=spec.thick||0.006;
+  belt(pc,D,item,dy,spec){pc.kind=spec.cloth?0:1;const z=D.rest,c=spec.z||item.paint.a[0],w=(spec.w||item.paint.a[1])/2,main=eqRGB(dy[spec.colour||0]),th=spec.thick||0.006;
     eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>D.arm[i]<0.5?w-Math.abs(z[i*3+2]-c):-1)],e=>spec.cloth?th+0.004*eqNoise(e.p,15):th,
       (e,f,rim)=>main.map(v=>v*(rim?0.7:spec.cloth?0.85+0.15*eqNoise(e.p,40):0.95)),spec.cloth?3:0);},
-  knot(pc,D,item,dy){const c=item.paint.a[0],main=eqRGB(dy[0]),rec=eqBeltPoint(D,c,-0.5);   // a sash's knot and its hanging ends
+  knot(pc,D,item,dy){pc.kind=0;const c=item.paint.a[0],main=eqRGB(dy[0]),rec=eqBeltPoint(D,c,-0.5);   // a sash's knot and its hanging ends
     eqBlock(pc,D,rec,0.04,0.035,0.016,0.006,main,0.9); eqBlock(pc,D,rec,0.03,0.13,0.008,0.012,main,0.8,0.08); eqBlock(pc,D,rec,0.026,0.1,0.008,0.016,main,0.7,0.07);},
-  buckle(pc,D,item,dy,spec){const c=item.paint.a[0],rec=eqBeltPoint(D,c,0),brass=eqRGB(dy[2]),k=spec.big?1.3:1;
+  buckle(pc,D,item,dy,spec){pc.kind=2;const c=item.paint.a[0],rec=eqBeltPoint(D,c,0),brass=eqRGB(dy[2]),k=spec.big?1.3:1;
     eqBlock(pc,D,rec,0.05*k,0.04*k,0.006,0.007,brass,1.15); eqBlock(pc,D,rec,0.03*k,0.022*k,0.004,0.0125,eqRGB(dy[0]),0.8);},
+  // a skirt for robes and coats: rings from the hips to the hem, measured round the legs so it clears them, flaring towards
+  // the hem; lower down it follows the thighs, so it moves when walking. open: a gap at the front (half-angle, radians)
+  skirt(pc,D,item,dy,spec,ctx){pc.kind=spec.kind||0;const main=eqRGB(dy[0]),trim=eqRGB(dy[2]),z=D.rest,P=D.pos,legs=[];
+    for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&z[i*3+2]<spec.top+0.03)legs.push(i);
+    const med=a=>{a=a.slice().sort((x,y)=>x-y);return a[a.length>>1];};
+    const topI=legs.filter(i=>Math.abs(z[i*3+2]-spec.top)<0.015),hemI=legs.filter(i=>Math.abs(z[i*3+2]-spec.hem)<0.015);
+    const cx=topI.reduce((a,i)=>a+P[i*3],0)/topI.length,cz=topI.reduce((a,i)=>a+P[i*3+2],0)/topI.length;
+    const yT=med(topI.map(i=>P[i*3+1])),yH=hemI.length?med(hemI.map(i=>P[i*3+1])):yT*spec.hem/spec.top;
+    const M=32,K=11,open=spec.open||0,hips=ctx.bone('hips'),tl=ctx.bone('thigh.L'),tr=ctx.bone('thigh.R');
+    const radius=(y,band)=>{const r=new Float32Array(M);for(const i of legs){const dy_=P[i*3+1]-y;if(Math.abs(dy_)>band)continue;
+      const x=P[i*3]-cx,zz=P[i*3+2]-cz,b=((Math.round(Math.atan2(x,zz)/(Math.PI*2)*M)%M)+M)%M;r[b]=Math.max(r[b],Math.hypot(x,zz));}
+      const o=new Float32Array(M);for(let b=0;b<M;b++){let m=0;for(let k=-2;k<=2;k++)m=Math.max(m,r[(b+k+M)%M]);o[b]=m;}return o;};
+    const r0=radius(yT,0.02),rows=[];
+    for(let k=0;k<=K;k++){const t=k/K,y=yT+(yH-yT)*t,rb=radius(y,0.03),ids=[];
+      for(let b=0;b<=M;b++){const th=(b/M)*Math.PI*2-Math.PI;if(open&&Math.abs(th)<open)continue;   // front is th = 0 (+z)
+        const bb=((Math.round(th/(Math.PI*2)*M)%M)+M)%M,r=Math.max(r0[bb]*(1+spec.flare*Math.pow(t,1.3)),rb[bb]+0.02+0.03*t)+0.006,x=cx+Math.sin(th)*r,zz=cz+Math.cos(th)*r;
+        let best=-1,bd=1e9;for(const i of legs){const d=(P[i*3]-x)**2+(P[i*3+1]-y)**2+(P[i*3+2]-zz)**2;if(d<bd){bd=d;best=i;}}
+        const e=eqEval(D,[[best,1]]);e.p=[x,y,zz];e.n=[Math.sin(th),-0.15,Math.cos(th)];
+        if(t>0){const kk=Math.min(0.6,t*0.75),side=eqSm(-0.05,0.05,x-cx),b_=new Map();b_.set(hips,1-kk);b_.set(tl,kk*side);b_.set(tr,kk*(1-side));e.bones=b_;}
+        const fold=0.88+0.12*Math.cos(th*9+t*2), col=(k===K||spec.trim&&k>=K-1)?trim:main;
+        ids.push(eqVert(pc,e,0,col.map(v=>v*fold*(k===K?0.85:1))));}
+      rows.push(ids);}
+    for(let k=0;k<K;k++)for(let b=0;b+1<rows[k].length;b++){const a=rows[k][b],c=rows[k][b+1],d=rows[k+1][b+1],f=rows[k+1][b];pc.I.push(a,f,d,a,d,c);}
+    if(!open){const a=rows[0].length-1;}
+  },
+  buttons(pc,D,item,dy){pc.kind=2;const brass=eqRGB(dy[2]);for(let z=0.98;z<1.44;z+=0.055)eqBlock(pc,D,eqNear(D,0,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.011,0.011,0.005,0.003,brass,1.2);},
+  furcollar(pc,D,item,dy){pc.kind=3;const fur=eqRGB('#7a6248');
+    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,ax=Math.abs(r[i*3]),z_=r[i*3+2];if(D.arm[i]>0.5||z_>1.535)return -1;
+      return Math.min(z_-1.43-0.02*eqSmooth([D.pos[i*3],D.pos[i*3+1],D.pos[i*3+2]],50),0.17-ax);})],
+      e=>0.03+0.02*eqFur(e.p),(e,f,rim)=>fur.map(v=>v*(0.55+0.6*eqFur(e.p))),4,0.015);},
+  apron(pc,D,item,dy,spec,ctx){pc.kind=1;const ctx_hips=ctx.bone('hips');const lea=eqRGB('#5a3a22'),strap=eqRGB('#3a2618'),NU=9,NV=12,top=1.36,bot=0.46,ids=[];   // a leather apron hanging in front
+    const front=i=>D.arm[i]<0.5&&D.rest[i*3+1]<0.0;
+    for(let v=0;v<NV;v++){const z=top-(top-bot)*v/(NV-1),hang=(top-z)/(top-bot),w=0.1+0.07*eqSm(0,0.4,hang);
+      for(let u=0;u<NU;u++){const x=(u/(NU-1)*2-1)*w,e=eqEval(D,eqNear(D,x*(z<0.95?0.8:1),-0.2,z,4,front)),off=0.012+0.07*Math.pow(eqSm(0.25,1,hang),1.3);
+        e.p=[e.p[0]+e.n[0]*0.3*off,e.p[1],e.p[2]+off];e.n=[0,0,1];
+        if(z<1.0){const b=new Map();b.set(ctx_hips,1);e.bones=b;}
+        ids.push(eqVert(pc,e,0,lea.map(c=>c*(0.9+0.12*Math.cos(u*1.3+v)))));}}
+    for(let v=0;v+1<NV;v++)for(let u=0;u+1<NU;u++){const a=ids[v*NU+u],b=ids[v*NU+u+1],c=ids[(v+1)*NU+u+1],d=ids[(v+1)*NU+u];pc.I.push(a,d,c,a,c,b);}
+    for(const sx of [-1,1])eqBlock(pc,D,eqNear(D,0.09*sx,-0.2,1.4,2,front),0.018,0.07,0.004,0.004,strap,1);},
+  headwrap(pc,D,item,dy){pc.kind=0;const main=eqRGB(dy[0]),dark=eqRGB(dy[1]);   // wound cloth over the crown and brow, the face left open
+    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,x=r[i*3],y=r[i*3+1],z_=r[i*3+2];if(D.arm[i]>0.5||z_<1.55)return -1;
+      return Math.min(z_-(y<-0.02?1.705:1.62),1)})],
+      e=>0.016+0.01*eqSm(1.7,1.82,e.r[2])+0.006*Math.sin(e.r[2]*180+Math.atan2(e.r[0],-e.r[1])*2),(e,f,rim)=>(rim?dark:main).map(v=>v*(0.86+0.14*Math.sin(e.r[2]*180+Math.atan2(e.r[0],-e.r[1])*2))),3);
+    const tail=eqNear(D,0.02,0.2,1.64,3,i=>D.arm[i]<0.5&&D.rest[i*3+1]>0.0);eqBlock(pc,D,tail,0.05,0.16,0.012,0.02,main,0.9,0.09);},
   // what hangs from a belt socket; an empty socket shows its brass ring
-  attach(pc,D,item,dy,spec){const c=item.paint.a[0],w=item.paint.a[1]/2,rec=eqBeltPoint(D,c,EQ_SOCKETS[spec.socket].a),brass=eqRGB(item.paint.dyes[2]),th=0.007;
+  attach(pc,D,item,dy,spec){pc.kind=1;const c=item.paint.a[0],w=item.paint.a[1]/2,rec=eqBeltPoint(D,c,EQ_SOCKETS[spec.socket].a),brass=eqRGB(item.paint.dyes[2]),th=0.007;
     const leather=eqRGB('#4a3020'),drop=w;
     if(!spec.what){eqBlock(pc,D,rec,0.016,0.02,0.004,th,brass,1.1,drop+0.004);return;}
     eqBlock(pc,D,rec,0.012,0.03,0.004,th,leather,0.8,drop);                                    // the strap from the belt
@@ -382,17 +449,17 @@ const EQ_BUILD={
       eqCyl(pc,D,rec,0.009,0.02,th+0.017,drop+0.012,eqRGB('#6a6e72'),1.1);eqCyl(pc,D,rec,0.007,0.012,th+0.019,drop+0.0,eqRGB('#a88458'),1.0);}
     else if(spec.what==='scroll'){eqCyl(pc,D,rec,0.019,0.12,th,drop+0.075,eqRGB('#5a3a22'),1.0);eqCyl(pc,D,rec,0.021,0.014,th-0.002,drop+0.022,brass,1.15);eqCyl(pc,D,rec,0.021,0.014,th-0.002,drop+0.128,brass,1.05);}
   },
-  pouch(pc,D,item,dy){const rec=eqNear(D,-0.15,-0.05,0.955,3,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0.02),main=eqRGB(dy[0]);
+  pouch(pc,D,item,dy){pc.kind=1;const rec=eqNear(D,-0.15,-0.05,0.955,3,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0.02),main=eqRGB(dy[0]);
     eqBlock(pc,D,rec,0.075,0.085,0.04,0.006,main,1.05); eqBlock(pc,D,rec,0.079,0.04,0.006,0.046,main,0.85);},
-  laces(pc,D,item,dy){const open=item.paint.b[0],lace=eqRGB(dy[1]);
+  laces(pc,D,item,dy){pc.kind=0;const open=item.paint.b[0],lace=eqRGB(dy[1]);
     for(let z=1.06;z<1.4;z+=0.045){const rec=eqNear(D,0,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0);eqBlock(pc,D,rec,open*2*(0.4+0.6*eqSm(1.0,1.42,z))+0.012,0.005,0.004,0.003,lace,1);}},
-  collar(pc,D,item,dy,spec){const z=D.rest,main=eqRGB(dy[spec.colour||0]);
+  collar(pc,D,item,dy,spec){pc.kind=0;const z=D.rest,main=eqRGB(dy[spec.colour||0]);
     // a ring round the neck, from its base up, standing a little off it
     eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>D.arm[i]<0.5&&Math.abs(z[i*3])<0.1?Math.min(z[i*3+2]-1.488,1.527-z[i*3+2]):-1)],
       e=>0.005+0.009*eqSm(1.49,1.527,e.r[2]),(e,f,rim)=>main.map(v=>v*(rim?0.75:0.95)));},
   // pauldrons: stacked lames down the shoulder, each lighter at its crown and darker at its rim, with rivets along the lower
   // rims, an optional raised guard by the neck and an optional roll of fur over the top
-  pauldron(pc,D,item,dy,spec){const metal=spec.metal,main=eqRGB(dy[0]),dark=eqRGB(dy[1]),trim=eqRGB(dy[2]),k=spec.size||1,N=spec.lames||2,r=D.rest;
+  pauldron(pc,D,item,dy,spec){pc.kind=spec.metal?2:1;const metal=spec.metal,main=eqRGB(dy[0]),dark=eqRGB(dy[1]),trim=eqRGB(dy[2]),k=spec.size||1,N=spec.lames||2,r=D.rest;
     const cap=(L)=>({cx:0.205+0.02*L*k,cz:1.468-0.046*L*k,R:(0.122-0.016*L)*k,th:(metal?0.024:0.018)-0.004*L});   // each lame tucks under the one above
     const dist=(i,C)=>{const dx=Math.abs(r[i*3])-C.cx,dy_=(r[i*3+1]-0.02)*1.1,dz=r[i*3+2]-C.cz;return Math.sqrt(dx*dx+dy_*dy_+dz*dz);};
     const keep=i=>r[i*3+2]<1.53&&Math.abs(r[i*3])>0.125&&Math.abs(r[i*3+1]-0.02)<0.115;   // the outer shoulder only: not the chest, back or neck
@@ -405,14 +472,15 @@ const EQ_BUILD={
         const cnt=Math.min(5,ring.length);for(let q=0;q<cnt;q++){const i=ring[Math.floor((q+0.5)/cnt*ring.length)];eqBlock(pc,D,[[i,1]],0.008,0.008,0.004,C.th+0.006,trim,1.2);}}}
     if(spec.ridge){const C=cap(0),f=Float32Array.from({length:D.n},(_,i)=>keep(i)&&Math.abs(r[i*3])<C.cx+0.01?0.008-Math.abs(dist(i,C)-(C.R-0.014)):-1);
       eqShell(pc,D,[f],()=>C.th+0.012,(e,fv,rim)=>(rim?dark:main).map(v=>v*(rim?0.8:1.12)));}
-    if(spec.fur){const C=cap(0),fur=eqRGB('#8a7458'),f=Float32Array.from({length:D.n},(_,i)=>keep(i)&&r[i*3+2]>C.cz+0.005?0.03-Math.abs(dist(i,C)-C.R*0.45):-1);   // a roll of fur along the top
-      eqShell(pc,D,[f],e=>C.th+0.04+0.01*eqNoise(e.p,30),(e,fv,rim)=>fur.map(v=>v*(0.65+0.5*eqNoise(e.p,70))),3);}
+    if(spec.fur){pc.kind=3;const C=cap(0),fur=eqRGB('#7a6248'),f=Float32Array.from({length:D.n},(_,i)=>{const z_=r[i*3+2];if(z_>1.53||z_<C.cz-0.01||Math.abs(r[i*3+1]-0.02)>0.12)return -1;return 0.024-Math.abs(dist(i,C)-(C.R-0.012));});   // a roll of fur along the top edge
+      eqShell(pc,D,[f],e=>C.th+0.022+0.012*eqFur(e.p),(e,fv,rim)=>fur.map(v=>v*(0.55+0.6*eqFur(e.p))),6,C.th);}
   },
-  mantle(pc,D,item,dy){const main=eqRGB(dy[0]),dark=eqRGB(dy[1]);
-    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,ax=Math.abs(r[i*3]),z=r[i*3+2];if(z>1.5&&ax<0.09)return -1;
-      return D.arm[i]>0.5?(0.42-D.t[i])*0.25:Math.min(z-(1.32-0.06*Math.min(1,ax/0.2)),0.26-ax);})],
-      e=>0.022+0.006*eqNoise(e.p,25),(e,f,rim)=>{const k=eqNoise(e.p,60);return (rim?dark:main).map((v,j)=>v*(0.75+0.45*k));},4);},
-  hood(pc,D,item,dy){const main=eqRGB(dy[0]),lin=eqRGB(dy[1]);
+  mantle(pc,D,item,dy){pc.kind=3;const main=eqRGB(dy[0]),dark=eqRGB(dy[1]),pos=D.pos;
+    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,ax=Math.abs(r[i*3]),z=r[i*3+2];if(z>1.505&&ax<0.1)return -1;
+      const tuft=0.03*(eqSmooth([pos[i*3],pos[i*3+1],pos[i*3+2]],60)-0.5);                 // a ragged, tufted hem
+      return D.arm[i]>0.5?(0.38-D.t[i])*0.25+tuft:Math.min(z-(1.385-0.05*eqSm(0.0,0.06,r[i*3+1]))+tuft,0.25-ax);})],
+      e=>0.026+0.022*eqFur(e.p),(e,f,rim)=>{const k=eqFur(e.p),tip=eqSm(0,0.03,f[0]);return (rim?dark:main).map(v=>v*(0.55+0.55*k)*(0.8+0.25*tip));},3,0.02);},
+  hood(pc,D,item,dy){pc.kind=0;const main=eqRGB(dy[0]),lin=eqRGB(dy[1]);
     eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,x=r[i*3],y=r[i*3+1],z=r[i*3+2];if(D.arm[i]>0.5)return -1;
       const face=1-((x/0.07)**2+((z-1.665)/0.105)**2), open=y<0.0?face:-1;                    // the opening for the face
       return Math.min(-open*0.05, z-1.36, 0.24-Math.abs(x));})],
@@ -420,21 +488,21 @@ const EQ_BUILD={
         const back=eqSm(-0.02,0.06,r[1]), top=eqSm(1.66,1.8,r[2]);
         return 0.032+0.018*back+0.012*top+0.05*back*top*eqSm(0.04,0.0,Math.abs(r[0]));},   // roomy over the head, a peak behind
       (e,f,rim)=>rim?lin.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,20))));},
-  cloak(pc,D,item,dy,spec,ctx){const main=eqRGB(dy[0]),lin=eqRGB(dy[1]),hips=ctx.bone('hips'),spine=ctx.bone('spine');
+  cloak(pc,D,item,dy,spec,ctx){pc.kind=spec.woven?4:0;const main=eqRGB(dy[0]),lin=eqRGB(dy[1]),hips=ctx.bone('hips'),spine=ctx.bone('spine');
     const NU=13,NV=16,top=1.43,bot=0.3,back=i=>D.arm[i]<0.5&&D.rest[i*3+1]>0.0, ids=[];
     for(let v=0;v<NV;v++){const z=top-(top-bot)*v/(NV-1),hang=(top-z)/(top-bot),w=0.17+0.11*hang;
       for(let u=0;u<NU;u++){const x=(u/(NU-1)*2-1)*w,rec=eqNear(D,x*(z<0.95?0.75:1),0.2,z,4,back),e=eqEval(D,rec);
         const off=0.02+0.03*eqSm(0,0.25,hang)+0.17*Math.pow(hang,1.4), dir=[e.n[0]*0.4,e.n[1]*0.3,e.n[2]*0.6-0.6]; const L=Math.hypot(...dir);
         const p=[0,1,2].map(k=>e.p[k]+dir[k]/L*off);
         let bones=e.bones; if(z<1.08){const k=eqSm(1.08,0.92,z),b=new Map();for(const [bi,ww] of e.bones)b.set(bi,ww*(1-k));b.set(hips,(b.get(hips)||0)+k*0.8);b.set(spine,(b.get(spine)||0)+k*0.2);bones=b;}
-        const i=pc.P.length/3;pc.P.push(...p);pc.N.push(0,0,-1);pc.DL.push(e.dl);pc.SK.push(bones);
+        const i=pc.P.length/3;pc.P.push(...p);pc.N.push(0,0,-1);pc.DL.push(e.dl);pc.SK.push(bones);pc.RS.push(x,0.2+hang*0.1,z);pc.K.push(pc.kind);
         const fold=0.86+0.14*Math.cos((u/(NU-1))*Math.PI*5+hang*1.5);pc.C.push(...main.map(c=>c*fold*(v===NV-1?0.8:1)));ids.push(i);}}
     for(let v=0;v+1<NV;v++)for(let u=0;u+1<NU;u++){const a=ids[v*NU+u],b=ids[v*NU+u+1],c=ids[(v+1)*NU+u+1],d=ids[(v+1)*NU+u];pc.I.push(a,b,c,a,c,d);}
     for(const sx of [-1,1])eqBlock(pc,D,eqNear(D,0.155*sx,-0.2,1.425,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.026,0.026,0.008,0.006,eqRGB(dy[2]),1.2);},
 };
 // a character's whole set of built pieces, merged into one skinned mesh on the body's skeleton
 function eqBuiltMesh(body,outfit){
-  const D=eqBodyData(body),pc=eqPiece(),bones=body.skeleton.bones,ctx={bone:n=>Math.max(0,bones.findIndex(b=>b.name===n))};
+  const D=eqBodyData(body),pc=eqPiece(),bones=body.skeleton.bones,san=n=>n.replace(/[\s\.\[\]:\/]/g,''),ctx={bone:n=>Math.max(0,bones.findIndex(b=>san(b.name)===san(n)))};
   for(const slot of Object.keys(EQ_ITEMS)){const it=eqItem(slot,outfit[slot]);if(!it||!it.built)continue;const dy=eqDyes(it,outfit.dye);
     for(const spec of it.built)EQ_BUILD[spec.type](pc,D,it,dy,spec,ctx);}
   const belt=eqItem('waist',outfit.waist);
@@ -448,10 +516,35 @@ function eqBuiltMesh(body,outfit){
   g.setAttribute('skinIndex',new THREE.BufferAttribute(si,4));g.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4));
   g.morphAttributes.position=D.morph.map((_,j)=>{const a=new Float32Array(n*3);pc.DL.forEach((dl,i)=>{a[i*3]=dl[j][0];a[i*3+1]=dl[j][1];a[i*3+2]=dl[j][2];});return new THREE.BufferAttribute(a,3);});
   g.morphTargetsRelative=true; g.setIndex(pc.I); g.computeBoundingSphere();
-  const m=new THREE.SkinnedMesh(g,new THREE.MeshPhongMaterial({vertexColors:true,skinning:true,morphTargets:true,shininess:18,specular:0x1c1c1c,side:THREE.DoubleSide}));
+  g.setAttribute('rest',new THREE.Float32BufferAttribute(pc.RS,3)); g.setAttribute('kind',new THREE.Float32BufferAttribute(pc.K,1));
+  const m=new THREE.SkinnedMesh(g,eqOutfitMaterial());
   m.name='Outfit'; m.frustumCulled=false; m.castShadow=true; m.bind(body.skeleton,body.bindMatrix);
   m.morphTargetInfluences=body.morphTargetInfluences;   // the body's people and build shapes drive the outfit too
   return m;
+}
+// Built pieces are coloured per point; this adds the fine surface per fragment: fur strands, leather grain and creases, brushed
+// metal with a stronger highlight, cloth weave.
+function eqOutfitMaterial(){
+  const m=new THREE.MeshPhongMaterial({vertexColors:true,skinning:true,morphTargets:true,shininess:24,specular:0x2a2a2a,side:THREE.DoubleSide});
+  m.onBeforeCompile=sh=>{
+    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 rest;attribute float kind;varying vec3 vRs;varying float vK;')
+      .replace('#include <begin_vertex>','#include <begin_vertex>\nvRs=rest;vK=kind;');
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+varying vec3 vRs;varying float vK;
+float oh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float on(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(oh(i),oh(i+vec2(1.,0.)),f.x),mix(oh(i+vec2(0.,1.)),oh(i+vec2(1.,1.)),f.x),f.y);}`)
+      .replace('#include <color_fragment>',`#include <color_fragment>
+  { vec2 a=vec2(atan(vRs.x,-vRs.y),vRs.z); float d=1.;
+    if(vK<0.5) d=0.93+0.07*on(a*vec2(260.,700.))-0.05*on(a*vec2(9.,30.));                                          // cloth
+    else if(vK<1.5) d=(0.9+0.12*on(a*vec2(140.,400.)))*(1.-0.1*smoothstep(0.6,0.9,on(a*vec2(14.,60.))));           // leather: grain and creases
+    else if(vK<2.5) d=0.9+0.14*on(vec2(a.x*30.,a.y*900.));                                                        // brushed metal
+    else if(vK<3.5){ float st=on(vec2(a.x*260.+on(a*vec2(20.,40.))*6.,a.y*30.)); d=0.62+0.6*st*st; }                // fur: strands running down
+    else { vec2 q=vec2(vRs.x,vRs.z)*vec2(14.,14.); float u=step(0.62,fract(q.x)),v=step(0.62,fract(q.y)),fu=step(0.9,fract(q.x*2.)),fv=step(0.9,fract(q.y*2.));
+      d=(0.95+0.05*on(a*vec2(300.,300.)))*(1.-0.28*u-0.28*v+0.12*u*v)*(1.+0.25*max(fu,fv)); }                 // woven check
+    diffuseColor.rgb*=d; }`)
+      .replace('#include <specularmap_fragment>','#include <specularmap_fragment>\n  specularStrength=vK>1.5&&vK<2.5?2.0:vK>2.5?0.15:0.55;');
+  };
+  m.customProgramCacheKey=()=>'eq-outfit'; return m;
 }
 // dress a figure: bake its paint and painted armour, and build its built armour
 function dressOutfit(root,look,outfit,renderer,bakeOnly){
@@ -461,6 +554,6 @@ function dressOutfit(root,look,outfit,renderer,bakeOnly){
   if(bakeOnly)return;
   if(rig.outfit){rig.outfit.parent.remove(rig.outfit);rig.outfit.geometry.dispose();rig.outfit=null;}
   const m=eqBuiltMesh(body,outfit); if(m){body.parent.add(m);rig.outfit=m;}
-  const hood=outfit.head==='hood';    // a hood hides the hair
-  root.traverse(o=>{if(o.isMesh&&HAIR_MESHES.some(h=>o.name.startsWith(h))&&hood)o.visible=false;});
+  const head=eqItem('head',outfit.head), hide=head&&head.hidesHair;    // hoods and wraps hide the hair (beards and moustaches stay)
+  root.traverse(o=>{if(o.isMesh&&hide&&o.name.startsWith('Hair_'))o.visible=false;});
 }
