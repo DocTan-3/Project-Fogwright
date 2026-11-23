@@ -331,9 +331,12 @@ function heightAt(x,z){
   const t=warpDist(x,z), m=biomeMix(t), A=BIOMES[m[0]], B=BIOMES[m[1]];
   const amp=lerp(A.amp,B.amp,m[2]), off=lerp(A.off,B.off,m[2]);
   let h=(fbm(N.h,x*0.0065,z*0.0065,4)*15+fbm(N.h,x*0.04+31,z*0.04-17,2)*1.6)*amp+off;
-  // rivers: narrow channels along the zero line of a slow noise field
-  const r=Math.abs(N.r(x*0.0022,z*0.0022)), rw=0.022;
-  if(r<rw&&t>140){const k=smooth(0,rw,r);h=lerp(-1.9,h,k);}
+  // rivers, as Valheim cuts them: wide channels along the zero line of a slow noise field, 4-5 m deep in the middle,
+  // a steep drop from a sandy shelf at the water's edge, and banks that rise back to the land; they fade in away from roads
+  const r=Math.abs(N.r(x*0.0018,z*0.0018)), rw=0.036, reach=smooth(110,170,t);
+  if(r<rw&&reach>0){const u=r/rw, bed=-4.4-0.7*N.c(x*0.021,z*0.021);
+    const cut=u<0.6?lerp(bed,-0.35,smooth(0.28,0.6,u)):lerp(-0.35,h,smooth(0.62,1,u));
+    h=lerp(h,Math.min(h,cut),reach);}
   // the island's coast
   h=lerp(h,-6,smooth(0.9,1.02,islandE(x,z)));
   // flat ground for the village, the outer city and the port
@@ -395,7 +398,7 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   else yard=mix(vec3(.74,.62,.42),vec3(.83,.71,.51),n);                                      // Zarhim: sand
   if(q<.5){vec2 b=bricks(w,vec2(1.2,.6),.05);pv=mix(vec3(.30,.31,.34),vec3(.41,.42,.46),b.y)*(1.-.55*b.x);pv*=1.-.35*smoothstep(.55,.85,gn(w*.5));}     // slate flags, sooty
   else if(q<1.5){vec2 c=floor(w);vec2 lp=mod(c.x+c.y,2.)>.5?w.yx:w;vec2 b=bricks(lp,vec2(.32,.16),.025);pv=mix(vec3(.55,.24,.18),vec3(.69,.35,.25),b.y)*(1.-.4*b.x);}  // red brick, basket weave
-  else if(q<2.5){vec2 c=cobble(w*2.2);pv=mix(vec3(.42,.38,.33),vec3(.56,.51,.45),c.y)*(1.-.5*(1.-smoothstep(.02,.12,c.x)));pv=mix(pv,vec3(.38,.30,.22),smoothstep(.55,.75,gn(w*.35))*.8);}  // rough cobbles and mud
+  else if(q<2.5){vec2 c=cobble(w*2.2);pv=mix(vec3(.42,.38,.33),vec3(.56,.51,.45),c.y)*(1.-.5*(1.-smoothstep(.02,.12,c.x)));pv=mix(pv,pv*vec3(.8,.72,.62),smoothstep(.6,.9,gn(w*.35))*.5);}  // rough cobbles, earthy in places
   else if(q<3.5){vec2 c=cobble(w*1.6);pv=mix(vec3(.46,.46,.40),vec3(.59,.58,.51),c.y);pv=mix(pv,vec3(.25,.38,.18),(1.-smoothstep(.03,.14,c.x))*.85);}  // field stones, moss between
   else if(q<4.5){vec2 b=bricks(w,vec2(1.8,1.1),.06);pv=mix(vec3(.58,.60,.63),vec3(.71,.73,.76),b.y)*(1.-.35*b.x);pv=mix(pv,vec3(.93,.95,.98),step(.985,gh(floor(w*14.)))*.7);}  // granite slabs, frost
   else if(q<5.5){vec2 g=fract(w),e=min(g,1.-g);pv=mix(vec3(.86,.84,.79),vec3(.94,.93,.89),gh(floor(w)))*(1.+.04*gn(w*6.));pv=mix(pv,vec3(.79,.62,.27),1.-smoothstep(.015,.03,min(e.x,e.y)));}  // marble, gold joints
@@ -404,9 +407,13 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   float grand=max(1.-smoothstep(9.,11.,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
   if(grand>0.){vec2 b=bricks(vec2(a*r,r),vec2(1.4,.9),.05);pv=mix(pv,mix(vec3(.70,.68,.62),vec3(.81,.79,.73),b.y)*(1.-.35*b.x),grand);}
   vec3 c=mix(yard,pv,paved);
-  float poor=1.-smoothstep(.15,.45,wealth), m=gn(w*.4)+.5*gn(w*1.7);
-  c=mix(c,c*.72,poor*.6); c=mix(c,vec3(.30,.25,.19),poor*smoothstep(.75,1.,m));
-  c=mix(c,vec3(.20,.22,.25),smoothstep(.93,.97,gn(w*.25+13.))*poor*paved*.85);             // puddles
+  // wear follows the place: dirt gathers where street meets yard and along the kerbs, stays light where feet keep the
+  // middle of a street clean, frays out softly, and stains the stone darker instead of painting it brown
+  float poor=1.-smoothstep(.15,.45,wealth), kerb=1.-abs(paved*2.-1.), g1=gn(w*.07), g2=gn(w*.42), g3=gn(w*2.3);
+  c*=1.-.2*poor*(.35+.65*g1);                                                               // broad, soft grime
+  float mud=smoothstep(.62,.98,g2*.65+g3*.25+kerb*.45-.15)*poor*(.25+.75*max(kerb,1.-paved)); // mud by the kerbs and in the yards
+  c=mix(c,c*vec3(.66,.58,.5),mud*.75);
+  c=mix(c,vec3(.22,.24,.27),smoothstep(.955,.985,gn(w*.3+13.))*poor*paved*(1.-kerb)*.7);    // the odd puddle on the stones
   return c*(1.+.06*smoothstep(.65,.9,wealth));
 }`).replace('#include <color_fragment>',`#include <color_fragment>
   {vec2 w=vWP.xz; diffuseColor.rgb*=.9+.13*gn(w*.9)+.06*gn(w*4.3);                       // ground grain everywhere
@@ -478,6 +485,7 @@ function terrainColor(x,z,y,ny,out){ // every change of ground blends over a met
   const bi=biomeIndex(t);
   if(bi===2)mix(0.33,0.30,0.21,smooth(0.7,0.3,y)); else mix(0.72,0.65,0.47,smooth(0.7,0.3,y));   // shore and riverbank
   mix(0.36,0.31,0.24,smooth(-0.2,-0.6,y));                                                        // under water
+  mix(0.08,0.15,0.17,smooth(-0.9,-4.2,y)*0.9);                                                   // and darker as it deepens
   {const s=bi===3?0.36:0.5; mix(s,s*0.97,s*0.93,smooth(0.82,0.7,ny)*smooth(0.2,0.6,y));}         // steep ground shows rock
   if(bi===3)mix(0.55,0.53,0.5,smooth(8.5,9.5,y)*smooth(0.7,0.82,ny));
   if(y>0.3&&inField(x,z)){const st=0.5+0.5*Math.sin(x*0.4),q=smooth(0.3,0.7,st);mix(lerp(0.52,0.8,q),lerp(0.66,0.7,q),lerp(0.27,0.3,q),0.9);}
@@ -547,24 +555,29 @@ function buildChunk(cx,cz){
   return group;
 }
 
+// what grows at one 4 m cell of the world: the same answer for the detailed ground and for the far trees
+function vegSpot(gx,gz){
+  const x=gx*4+hash(gx,gz,2)*4, z=gz*4+hash(gx,gz,3)*4;
+  if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<50||Math.hypot(x-CITY.x,z-CITY.z)<CITY.r+22||Math.hypot(x-PORT.x,z-PORT.z)<PORT.r+6||roadDist(x,z)<9||inField(x,z)||inOutskirts(x,z)||Math.hypot(x-TOWER.x,z-TOWER.z)<15||Math.hypot(x+72,z-34)<8)return null;
+  const h=heightAt(x,z); if(h<0.2)return null;
+  const steep=Math.abs(heightAt(x+1.5,z)-h)+Math.abs(heightAt(x,z+1.5)-h)>2.2;
+  const t=warpDist(x,z), b=biomeIndex(t), r=hash(gx,gz,1);
+  let kind=null;
+  const forest=N.w(x*0.012,z*0.012)*0.8+N.w(x*0.05+7,z*0.05)*0.2, r2=hash(gx,gz,9);
+  if(b===0){ if(forest>0.42){ if(r<0.55)kind=r2<0.45?'birch':'round'; else if(r<0.7)kind='bush'; }
+    else { if(r<0.025)kind='round'; else if(r<0.05)kind='rock'; else if(r<0.13)kind='bush'; else if(r<0.32)kind='flower'; } }
+  else if(b===1){ if(forest>-0.15){ if(r<0.72)kind=r2<0.55?'pine':r2<0.8?'round':'birch'; else if(r<0.8)kind='bush'; else if(r<0.84)kind='rock'; }
+    else { if(r<0.08)kind='rock'; else if(r<0.2)kind='bush'; else if(r<0.3)kind='flower'; } }
+  else if(b===2){ if(r<0.18)kind='dead'; else if(r<0.42)kind='bush'; else if(r<0.5)kind='pine'; else if(r<0.55)kind='rock'; else if(h<1.3&&r<0.7)kind='reed'; }
+  else { if(r<0.2)kind='rock'; else if(r<0.25)kind='dead'; else if(r<0.31)kind='pine'; }
+  return {x,z,h,steep,b,kind};
+}
 function populate(cx,cz,group){
   const L={pine:[],round:[],birch:[],dead:[],rock:[],bush:[],reed:[],pillar:[],flower:[],tuft:[]};
   const cells=CS/4;
   for(let gi=0;gi<cells;gi++)for(let gj=0;gj<cells;gj++){
     const gx=cx*cells+gi, gz=cz*cells+gj;
-    const x=gx*4+hash(gx,gz,2)*4, z=gz*4+hash(gx,gz,3)*4;
-    if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<50||Math.hypot(x-CITY.x,z-CITY.z)<CITY.r+22||Math.hypot(x-PORT.x,z-PORT.z)<PORT.r+6||roadDist(x,z)<9||inField(x,z)||inOutskirts(x,z)||Math.hypot(x-TOWER.x,z-TOWER.z)<15||Math.hypot(x+72,z-34)<8)continue;
-    const h=heightAt(x,z); if(h<0.2)continue;
-    const steep=Math.abs(heightAt(x+1.5,z)-h)+Math.abs(heightAt(x,z+1.5)-h)>2.2;
-    const t=warpDist(x,z), b=biomeIndex(t), r=hash(gx,gz,1);
-    let kind=null;
-    const forest=N.w(x*0.012,z*0.012)*0.8+N.w(x*0.05+7,z*0.05)*0.2, r2=hash(gx,gz,9);
-    if(b===0){ if(forest>0.42){ if(r<0.55)kind=r2<0.45?'birch':'round'; else if(r<0.7)kind='bush'; }
-      else { if(r<0.025)kind='round'; else if(r<0.05)kind='rock'; else if(r<0.13)kind='bush'; else if(r<0.32)kind='flower'; } }
-    else if(b===1){ if(forest>-0.15){ if(r<0.72)kind=r2<0.55?'pine':r2<0.8?'round':'birch'; else if(r<0.8)kind='bush'; else if(r<0.84)kind='rock'; }
-      else { if(r<0.08)kind='rock'; else if(r<0.2)kind='bush'; else if(r<0.3)kind='flower'; } }
-    else if(b===2){ if(r<0.18)kind='dead'; else if(r<0.42)kind='bush'; else if(r<0.5)kind='pine'; else if(r<0.55)kind='rock'; else if(h<1.3&&r<0.7)kind='reed'; }
-    else { if(r<0.2)kind='rock'; else if(r<0.25)kind='dead'; else if(r<0.31)kind='pine'; }
+    const V=vegSpot(gx,gz); if(!V)continue; const {x,z,h,steep,b,kind}=V;
     if(b<=2&&h>0.4&&!steep){for(let k=0;k<(b===2?2:3);k++){const tx=x+hash(gx,gz,140+k)*3.6-1.8,tz=z+hash(gx,gz,150+k)*3.6-1.8;L.tuft.push({x:tx,y:surfaceAt(tx,tz)-0.05,z:tz,sx:1.1,sy:0.8+hash(gx,gz,160+k)*0.7,sz:1.1,rot:hash(gx,gz,170+k)*6.28,c:hash(gx,gz,180+k)});}}
     if(!kind||(steep&&kind!=='rock'))continue;
     const s=0.7+hash(gx,gz,4)*0.65;
@@ -608,6 +621,47 @@ function populate(cx,cz,group){
   registerRes(cx,cz,group,L,layers);
 }
 
+/* ---------- Far trees: a cheap ring of tree shapes past the detailed ground, so forests never pop in ---------- */
+// They stand exactly where the detailed trees will (vegSpot), are built a few cells per frame into 96 m blocks, and fade
+// with a dither: in from the detailed ground's edge (~120 m) and out at the far edge (~290 m), so nothing appears at once.
+const FCS=96, FAR_OUT=290, farBlocks=new Map(); let farWork=null;
+const farTreeMat=new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,shininess:0,specular:0});
+farTreeMat.onBeforeCompile=sh=>{
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vFW;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\n{vec4 fw=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\nfw=instanceMatrix*fw;\n#endif\nvFW=(modelMatrix*fw).xyz;}');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vFW;')
+    .replace('void main() {','void main() {\n{float d=distance(vFW.xz,cameraPosition.xz), a=smoothstep(112.0,130.0,d)*(1.0-smoothstep(240.0,285.0,d));\n float n=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715))));\n if(a<=n)discard;}');};
+farTreeMat.customProgramCacheKey=()=>'far-trees';
+const FARG={
+  pine:[[shade(new THREE.ConeGeometry(1.75,6.6,6).translate(0,4.5,0),0.55,1.08),C('#3b6538')]],
+  round:[[shade(new THREE.CylinderGeometry(0.16,0.28,2.6,4).translate(0,1.3,0),0.7,1),C('#5f4632')],[shade(new THREE.IcosahedronGeometry(2.1,0).translate(0,3.5,0),0.55,1.08),C('#5d8a3e')]],
+  birch:[[shade(new THREE.CylinderGeometry(0.1,0.16,4.2,4).translate(0,2.1,0),0.85,1),C('#e4e0d4')],[shade(new THREE.IcosahedronGeometry(1,0).scale(0.85,1.6,0.85).translate(0,4.6,0),0.6,1.1),C('#8fb04e')]],
+  dead:[[shade(new THREE.CylinderGeometry(0.08,0.26,3.6,3).translate(0,1.8,0),0.85,1.05),C('#6e6153')]],
+};
+function updateFar(){
+  const bx=Math.floor(player.x/FCS), bz=Math.floor(player.z/FCS), R=Math.ceil(FAR_OUT/FCS);
+  for(const [key,blk] of farBlocks){const [x,z]=key.split(',').map(Number);if(Math.hypot((x+0.5)*FCS-player.x,(z+0.5)*FCS-player.z)>FAR_OUT+FCS){scene.remove(blk.group);farBlocks.delete(key);if(farWork&&farWork.key===key)farWork=null;}}
+  if(farWork)return;
+  let best=null,bd=1e9;
+  for(let dz=-R;dz<=R;dz++)for(let dx=-R;dx<=R;dx++){const x=bx+dx,z=bz+dz,key=x+','+z;if(farBlocks.has(key))continue;
+    const d=Math.hypot((x+0.5)*FCS-player.x,(z+0.5)*FCS-player.z);if(d<FAR_OUT+FCS*0.7&&d<bd){bd=d;best=[x,z,key];}}
+  if(best)farWork={key:best[2],x:best[0],z:best[1],gi:0,L:{pine:[],round:[],birch:[],dead:[]}};
+}
+function stepFar(n){ // a few 4 m cells of the block in work, then the block's meshes when it is done
+  if(!farWork)return; const W=farWork, cells=FCS/4;
+  for(let k=0;k<n&&W.gi<cells*cells;k++,W.gi++){const gx=W.x*cells+(W.gi%cells), gz=W.z*cells+Math.floor(W.gi/cells), V=vegSpot(gx,gz);
+    if(!V||!FARG[V.kind]||V.steep)continue; const s=0.7+hash(gx,gz,4)*0.65;
+    W.L[V.kind].push({x:V.x,y:V.h-0.1,z:V.z,sx:s,sy:s*(0.85+hash(gx,gz,11)*0.4),rot:hash(gx,gz,5)*6.283,c:hash(gx,gz,6)});}
+  if(W.gi<cells*cells)return;
+  const group=new THREE.Group();
+  for(const kind in W.L){const items=W.L[kind]; if(!items.length)continue;
+    for(const [geo,base] of FARG[kind]){const m=new THREE.InstancedMesh(geo,farTreeMat,items.length);
+      items.forEach((it,i)=>{tmpObj.position.set(it.x,it.y,it.z);tmpObj.rotation.set(0,it.rot,0);tmpObj.scale.set(it.sx,it.sy,it.sx);tmpObj.updateMatrix();m.setMatrixAt(i,tmpObj.matrix);
+        tmpCol.copy(base).multiplyScalar(0.82+it.c*0.36); if(kind!=='dead')tmpCol.lerp(C('#6d6a5c'),smooth(220,460,warpDist(it.x,it.z))*0.6); m.setColorAt(i,tmpCol);});
+      m.instanceMatrix.needsUpdate=true; if(m.instanceColor)m.instanceColor.needsUpdate=true; m.frustumCulled=false; group.add(m);}}
+  scene.add(group); farBlocks.set(W.key,{group}); farWork=null;
+}
+function clearFar(){for(const [,b] of farBlocks)scene.remove(b.group);farBlocks.clear();farWork=null;}
 function disposeChunk(group){
   scene.remove(group);
   group.children.forEach(ch=>{ if(ch.isInstancedMesh){ if(ch.dispose)ch.dispose(); } else ch.geometry.dispose(); });
@@ -632,7 +686,7 @@ function drainQueue(n){
 }
 
 /* ---------- Water ---------- */
-const waterMat=new THREE.MeshPhongMaterial({color:0x3d7a92,flatShading:true,shininess:90,specular:0x8fb6c8,transparent:true,opacity:0.86});
+const waterMat=new THREE.MeshPhongMaterial({color:0x2f6c80,flatShading:true,shininess:90,specular:0x8fb6c8,transparent:true,opacity:0.8});
 waterMat.onBeforeCompile=sh=>{sh.uniforms.uTime={value:0};waterMat.userData.time=sh.uniforms.uTime;
   sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n vec4 wp=modelMatrix*vec4(transformed,1.);\n transformed.y+=sin(wp.x*0.16+uTime*1.1)*0.16+sin(wp.z*0.22+uTime*0.8)*0.13+sin((wp.x+wp.z)*0.41+uTime*1.9)*0.05;');};
 const water=new THREE.Mesh(new THREE.PlaneGeometry(420,420,140,140).rotateX(-Math.PI/2),waterMat);
@@ -2921,7 +2975,9 @@ const SPOTS=[
   ['Rich ring',()=>{let b=0,bw=-9;for(let a=0;a<6.28;a+=0.04){if(nearAvenue(a,118,30))continue;const w=cityWealth(a,118);if(w>bw){bw=w;b=a;}}return [CITY.x+Math.cos(b)*118,CITY.z+Math.sin(b)*118,0];}],
   ['Broken tower',()=>[TOWER.x-20,TOWER.z+20,0]],['Old woods',()=>[-260,120,0]],['Overgrown wilds',()=>[-600,300,0]],['Fog-worn edge',()=>[-1000,-200,0]],
 ];
-function teleport(i){const [x,z,yaw]=SPOTS[i][1]();player.x=x;player.z=z;cam.yaw=yaw;setTarget(null);P.dash=null;updateChunks(x,z);drainQueue(12);toast('Teleported: '+SPOTS[i][0]);}
+function teleport(i){let [x,z,yaw]=SPOTS[i][1]();
+  for(let r=0;r<80&&heightAt(x,z)<0.4;r+=2){let ok=false;for(let k=0;k<16;k++){const a=k/16*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(heightAt(nx,nz)>=0.4){x=nx;z=nz;ok=true;break;}}if(ok)break;}   // step out of any water
+  player.x=x;player.z=z;cam.yaw=yaw;setTarget(null);P.dash=null;updateChunks(x,z);drainQueue(12);toast('Teleported: '+SPOTS[i][0]);}
 function buildAdmin(){
   const list=$('adminSpots'); SPOTS.forEach(([n],i)=>{const b=document.createElement('button');b.textContent=n;b.addEventListener('click',()=>teleport(i));list.appendChild(b);});
   $('adminTime').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b){game.time=+b.dataset.t;}});
@@ -2938,7 +2994,7 @@ function newWorld(seed,pos,coreData){
   if(state.seed&&chunks.size)save();
   state.seed=seed; setSeed(seed);
   const d=loadCore(seed,coreData);
-  for(const [,g] of chunks)disposeChunk(g); chunks.clear(); queue=[];
+  for(const [,g] of chunks)disposeChunk(g); chunks.clear(); queue=[]; clearFar();
   buildLandmarks();
   if(d&&d.pieces)d.pieces.forEach(addPiece);
   for(const e of enemies.slice())removeEnemy(e); for(const b of bags)scene.remove(b.mesh); bags.length=0; buildQuestGiver();
@@ -3002,7 +3058,7 @@ function frame(now){
   // chunks
   const ccx=Math.floor(player.x/CS), ccz=Math.floor(player.z/CS);
   if(ccx!==lastCX||ccz!==lastCZ){updateChunks(player.x,player.z);lastCX=ccx;lastCZ=ccz;}
-  drainQueue(2);
+  drainQueue(2); updateFar(); stepFar(queue.length?12:48);
   water.position.x=Math.round(player.x/3)*3; water.position.z=Math.round(player.z/3)*3;
 
   // camera
