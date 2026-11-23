@@ -879,26 +879,59 @@ function buildPort(){
 }
 /* ---------- Building kit, generated in code: every house is a recipe, nothing to download ---------- */
 // Recipes are written in "plan" coordinates: x along the frontage, -y is the street side, z is up.
-const KIT={done:true,geo:{},size:{},waiters:[]};
+const KIT={done:true,geo:{},far:{},size:{},waiters:[]};
+const KMAT={brick:1,stone:2,plaster:3,timber:4,tile:5,slate:6,thatch:7,shingle:8,iron:9,adobe:10,marble:11,planks:12};
 const kitUniforms={uNight:{value:0}};
 const kitMat=new THREE.MeshLambertMaterial({vertexColors:true});
+// building materials, painted per pixel: walls take courses and joints on the wall's own plane, roofs run their rows level
+// (a roof's courses are lines of equal height, whatever its slope), so no texture files and no extra triangles
+const KIT_GLSL=`
+float kh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float kn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(kh(i),kh(i+vec2(1.,0.)),f.x),mix(kh(i+vec2(0.,1.)),kh(i+vec2(1.,1.)),f.x),f.y);}
+vec3 kcourse(vec2 p,vec2 s,float j,float stag){p/=s;float row=floor(p.y);p.x+=mod(row,2.)*stag;vec2 f=fract(p),e=min(f,1.-f)*s;return vec3(1.-smoothstep(j*.5,j,min(e.x,e.y)),kh(floor(p)+row*7.13),f.y);}
+vec3 kitSurface(vec3 c,float m,vec3 p,vec3 n){
+  if(m<0.5)return c;
+  vec2 t=normalize(vec2(-n.z,n.x)+1e-5); float along=dot(p.xz,t);
+  bool flat_=abs(n.y)>0.92; vec2 uv=flat_?p.xz:vec2(along,p.y);
+  float g=kn(uv*1.7)*.6+kn(uv*7.)*.4;
+  if(m<1.5){vec3 b=kcourse(uv,vec2(.24,.075),.014,.5);c=mix(c*(.82+.34*b.y)*(.94+.1*g),vec3(.74,.7,.63),b.x*.85);}                       // brick in running bond
+  else if(m<2.5){vec3 b=kcourse(uv,vec2(.62+.3*kh(vec2(floor(uv.y/.34))),.34),.035,.37);c=mix(c*(.84+.3*b.y)*(.92+.14*g),c*.55,b.x*.8);}  // coursed stone
+  else if(m<3.5){c*=.93+.1*g; c*=1.-.08*smoothstep(.55,.8,kn(uv*.6+9.));}                                                                // plaster, softly weathered
+  else if(m<4.5){float gr=kn(vec2(uv.x*28.,uv.y*1.6))*.6+kn(vec2(uv.x*80.,uv.y*4.))*.4;c*=.8+.32*gr;}                                     // timber grain
+  else if(m<5.5){float y=p.y/.2; float row=floor(y); float x=along/.28+mod(row,2.)*.5; float fx=fract(x), fy=fract(y);
+    c*=(.84+.26*kh(vec2(floor(x),row)))*(.72+.28*smoothstep(0.,.75,fy))*(1.-.35*(1.-smoothstep(0.,.07,min(fx,1.-fx))));}                 // clay tiles, row upon row
+  else if(m<6.5){float y=p.y/.14; float row=floor(y); float x=along/.3+mod(row,2.)*.5; float fx=fract(x);
+    c*=(.82+.3*kh(vec2(floor(x),row)))*(.8+.2*smoothstep(0.,.6,fract(y)))*(1.-.4*(1.-smoothstep(0.,.05,min(fx,1.-fx))));}               // slate
+  else if(m<7.5){float st=kn(vec2(along*34.,p.y*2.5))*.6+kn(vec2(along*90.,p.y*6.))*.4;c*=(.72+.42*st)*(.82+.18*smoothstep(0.,.5,fract(p.y/.38)));}  // thatch in bundles
+  else if(m<8.5){float y=p.y/.17; float row=floor(y); float x=along/(.16+.1*kh(vec2(row,3.)))+mod(row,2.)*.4;
+    c*=(.78+.36*kh(vec2(floor(x),row)))*(.78+.22*smoothstep(0.,.7,fract(y)));}                                                          // wooden shingles
+  else if(m<9.5){float rib=abs(fract(along*4.)-.5);c*=.86+.16*smoothstep(.0,.12,rib);c=mix(c,vec3(.42,.24,.14),smoothstep(.62,.86,kn(uv*1.3))*.55);}   // iron sheet, rib and rust
+  else if(m<10.5){c*=.9+.16*g; c*=1.-.18*smoothstep(.985,1.,kn(uv*vec2(3.,9.)+kn(uv*2.)));}                                              // adobe, hand-smoothed
+  else if(m<11.5){c*=.96+.05*g; c*=1.-.08*smoothstep(.48,.5,abs(kn(uv*1.2)-.5)+.47);}                                                    // marble with faint veins
+  else{float pl=fract(along/.19); c*=(.84+.24*kh(vec2(floor(along/.19),3.)))*(.86+.18*kn(vec2(along*40.,p.y*2.)))*(1.-.4*(1.-smoothstep(0.,.06,min(pl,1.-pl))));}  // planks
+  return c;
+}`;
 kitMat.onBeforeCompile=sh=>{
   sh.uniforms.uNight=kitUniforms.uNight;
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float glow;\nvarying float vGlow;\nvarying float vSeed;')
-    .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;\n#ifdef USE_INSTANCING\nvec4 o4=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);\n#else\nvec4 o4=modelMatrix*vec4(0.0,0.0,0.0,1.0);\n#endif\nvSeed=fract(sin(dot(floor(o4.xz),vec2(12.9898,78.233)))*43758.5453);');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;')
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float glow;\nattribute float kmat;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;vKM=kmat;\n{mat4 mm=modelMatrix;\n#ifdef USE_INSTANCING\nmm=modelMatrix*instanceMatrix;\n#endif\nvKP=(mm*vec4(transformed,1.0)).xyz;vKN=normalize(mat3(mm)*objectNormal);}\n#ifdef USE_INSTANCING\nvec4 o4=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);\n#else\nvec4 o4=modelMatrix*vec4(0.0,0.0,0.0,1.0);\n#endif\nvSeed=fract(sin(dot(floor(o4.xz),vec2(12.9898,78.233)))*43758.5453);');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\n'+KIT_GLSL)
+    .replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=kitSurface(diffuseColor.rgb,vKM,vKP,normalize(vKN));')
     .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nif(vGlow>0.0){float lit=step(0.38,fract(vGlow*7.13+vSeed*3.7));totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*lit*0.8;}');
 };
 const _unitBox=new THREE.BoxGeometry(1,1,1).toNonIndexed();
 let _winSeed=1;
 class KitB{
   constructor(){this.parts=[];}
-  _add(g,m,col,glow){
-    g.applyMatrix4(m); const n=g.attributes.position.count,c=new THREE.Color(col),ca=new Float32Array(n*3),ga=new Float32Array(n);
+  _add(g,m,col,glow){ // col is '#hex' or 'material:#hex' (brick, stone, plaster, timber, tile, slate, thatch, shingle, iron, adobe, marble, planks)
+    g.applyMatrix4(m); let mt=0; if(typeof col==='string'&&col.includes(':')){const [k2,h]=col.split(':');mt=KMAT[k2]||0;col=h;}
+    const n=g.attributes.position.count,c=new THREE.Color(col),ca=new Float32Array(n*3),ga=new Float32Array(n),ma=new Float32Array(n);
     const gv=glow?((_winSeed=(_winSeed*16807)%2147483647)/2147483647)*0.98+0.02:0;
-    for(let i=0;i<n;i++){ca[i*3]=c.r;ca[i*3+1]=c.g;ca[i*3+2]=c.b;ga[i]=gv;}
-    g.setAttribute('color',new THREE.BufferAttribute(ca,3)); g.setAttribute('glow',new THREE.BufferAttribute(ga,1)); this.parts.push(g);
+    for(let i=0;i<n;i++){ca[i*3]=c.r;ca[i*3+1]=c.g;ca[i*3+2]=c.b;ga[i]=gv;ma[i]=mt;}
+    g.setAttribute('color',new THREE.BufferAttribute(ca,3)); g.setAttribute('glow',new THREE.BufferAttribute(ga,1)); g.setAttribute('kmat',new THREE.BufferAttribute(ma,1));
+    g.userData.small=!!this.small; this.parts.push(g);
   }
+  sm(fn){this.small=true;fn();this.small=false;}   // small parts: drawn near, left out of the far version
   M(x,y,z,rz,rx,sx,sy,sz){const m=new THREE.Matrix4().makeTranslation(x,y,z);if(rz)m.multiply(new THREE.Matrix4().makeRotationZ(rz));if(rx)m.multiply(new THREE.Matrix4().makeRotationX(rx));if(sx!==undefined)m.multiply(new THREE.Matrix4().makeScale(sx,sy,sz));return m;}
   box(sx,sy,sz,x,y,z,col,rz,rx){this._add(_unitBox.clone(),this.M(x,y,z,rz,rx,sx,sy,sz),col);}
   glass(sx,sy,sz,x,y,z,rz){this._add(_unitBox.clone(),this.M(x,y,z,rz,0,sx,sy,sz),'#2a2a33',true);}
@@ -920,18 +953,31 @@ class KitB{
     this.poly([[-w0/2,-d0/2,0],[w0/2,-d0/2,0],[w0/2,d0/2,0],[-w0/2,d0/2,0],[-w1/2,-d1/2,h],[w1/2,-d1/2,h],[w1/2,d1/2,h],[-w1/2,d1/2,h]],
       [[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7],[3,2,1,0]],this.M(x,y,z),col);}
   finish(name,w,d){
-    let n=0;this.parts.forEach(g=>n+=g.attributes.position.count);
-    const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),gl=new Float32Array(n);let k=0;
-    for(const g of this.parts){pos.set(g.attributes.position.array,k*3);nor.set(g.attributes.normal.array,k*3);col.set(g.attributes.color.array,k*3);gl.set(g.attributes.glow.array,k);k+=g.attributes.position.count;g.dispose();}
-    const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(pos,3));bg.setAttribute('normal',new THREE.BufferAttribute(nor,3));
-    bg.setAttribute('color',new THREE.BufferAttribute(col,3));bg.setAttribute('glow',new THREE.BufferAttribute(gl,1));
-    bg.rotateX(-Math.PI/2); // plan (z up, street at -y) to world (y up, street at +z)
-    bg.computeBoundingSphere(); KIT.geo[name]=bg; KIT.size[name]=[w,d]; return bg;
+    const merge=list=>{let n=0;list.forEach(g=>n+=g.attributes.position.count);
+      const pos=new Float32Array(n*3),nor=new Float32Array(n*3),col=new Float32Array(n*3),gl=new Float32Array(n),km=new Float32Array(n);let k=0;
+      for(const g of list){pos.set(g.attributes.position.array,k*3);nor.set(g.attributes.normal.array,k*3);col.set(g.attributes.color.array,k*3);gl.set(g.attributes.glow.array,k);km.set(g.attributes.kmat.array,k);k+=g.attributes.position.count;}
+      const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(pos,3));bg.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+      bg.setAttribute('color',new THREE.BufferAttribute(col,3));bg.setAttribute('glow',new THREE.BufferAttribute(gl,1));bg.setAttribute('kmat',new THREE.BufferAttribute(km,1));
+      bg.rotateX(-Math.PI/2); // plan (z up, street at -y) to world (y up, street at +z)
+      bg.computeBoundingSphere(); return bg;};
+    const bg=merge(this.parts), far=merge(this.parts.filter(g=>!g.userData.small)); this.parts.forEach(g=>g.dispose());
+    KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; return bg;
   }
 }
 const PI=Math.PI; // plan-space helpers below
 // a window with lintel and sill on a front wall at y
-function kWin(k,x,y,z,w,h,trim,rz){k.glass(w,0.2,h,x,y-0.02,z,rz);k.box(w+0.3,0.14,0.18,x,y-0.06,z+h/2+0.1,trim,rz);k.box(w+0.3,0.3,0.14,x,y-0.12,z-h/2-0.05,trim,rz);}
+function kWin(k,x,y,z,w,h,trim,rz,shut){ // glass in a frame, with a lintel and a sill; panes and shutters are small parts
+  k.glass(w,0.2,h,x,y-0.02,z,rz);
+  k.box(w+0.3,0.16,0.2,x,y-0.06,z+h/2+0.1,trim,rz); k.box(w+0.36,0.32,0.12,x,y-0.14,z-h/2-0.06,trim,rz);
+  k.sm(()=>{for(const s of[-1,1])k.box(0.08,0.1,h,x+s*(w/2+0.02),y-0.07,z,trim,rz);
+    k.box(0.05,0.08,h,x,y-0.08,z,trim,rz); k.box(w,0.08,0.05,x,y-0.08,z+h*0.12,trim,rz);
+    if(shut)for(const s of[-1,1]){k.box(w*0.52,0.08,h*1.02,x+s*(w*0.78),y-0.1,z,shut,rz);for(let i=0;i<3;i++)k.box(w*0.44,0.04,0.035,x+s*(w*0.78),y-0.15,z-h*0.35+i*h*0.35,trim,rz);}});
+}
+function kDoor(k,x,y,z0,w,h,col,trim){ // a panelled door in a frame, standing on z0, with a step below
+  k.box(w+0.36,0.16,h+0.2,x,y-0.03,z0+h/2,trim); k.box(w,0.22,h,x,y-0.04,z0+h/2,'planks:'+col);
+  k.sm(()=>{for(const f of[0.28,0.7])k.box(w*0.7,0.05,h*0.3,x,y-0.16,z0+h*f,col);k.box(0.08,0.08,0.08,x+w*0.32,y-0.2,z0+h*0.48,'#c9a046');});
+  if(z0>0.15)k.box(w+0.7,0.5,z0,x,y-0.3,z0/2,'stone:#8f877b');
+}
 
 /* --- Aldrath: Victorian rowhouses (the city's own style) --- */
 function kRow(name,brick,trim,roof,floors,bay,mansard,door){
@@ -942,7 +988,7 @@ function kRow(name,brick,trim,roof,floors,bay,mansard,door){
   for(const sx of[-1,1])k.box(0.35,D+0.1,floors*F,sx*(W/2-0.05),0,0.8+floors*F/2,trim);
   const dx=door<0?-2.6:2.6;
   for(let f=0;f<floors;f++){const zc=0.8+f*F+F*0.55;for(const x of(f===0?[-2.6,2.6]:[-2.6,0,2.6])){if(f===0&&Math.abs(x-dx)<0.1)continue;kWin(k,x,y,zc,1.05,1.75,trim);k.box(0.07,0.24,1.7,x,y-0.05,zc,trim);}}
-  k.box(1.4,0.2,2.5,dx,y-0.02,2.05,'#4a2e22'); k.box(1.9,0.2,0.4,dx,y-0.08,3.5,trim);
+  kDoor(k,dx,y,0.8,1.3,2.4,'#4a2e22',trim); k.box(1.9,0.2,0.4,dx,y-0.08,3.5,trim);
   for(let i=0;i<3;i++)k.box(2,0.45,0.27,dx,y-0.3-i*0.42,0.13+(2-i)*0.27,'#9d958a');
   if(bay){const bw=3,bd=1;k.box(bw,bd,F*2-0.4,0,y-bd/2,0.8+F-0.2,brick);for(let f=0;f<2;f++)k.glass(bw-0.6,0.12,1.8,0,y-bd-0.04,0.8+f*F+F*0.55);
     k.box(bw+0.3,bd+0.3,0.3,0,y-bd/2,0.8+F*2-0.4,trim);k.prism(bw+0.2,bd+0.2,0.8,0,y-bd/2,0.8+F*2-0.25,roof);}
@@ -955,7 +1001,7 @@ function kRow(name,brick,trim,roof,floors,bay,mansard,door){
 }
 /* --- the rich: a pale stone manor with a columned portico and hipped roof --- */
 function kManor(){
-  const k=new KitB(),W=14,D=11,F=3.6,fl=3,H=1+fl*F,y=-D/2,st='#ddd5c3',tr='#f4efe4',rf='#3d4656';
+  const k=new KitB(),W=14,D=11,F=3.6,fl=3,H=1+fl*F,y=-D/2,st='stone:#ddd5c3',tr='#f4efe4',rf='slate:#3d4656';
   k.box(W+0.6,D+0.6,1,0,0,0.5,'#a49c8e'); k.box(W,D,fl*F,0,0,1+fl*F/2,st);
   for(let f=1;f<fl;f++)k.box(W+0.15,D+0.15,0.22,0,0,1+f*F,tr);
   k.box(W+0.7,D+0.7,0.5,0,0,H+0.25,tr); k.frustum(W+0.5,D+0.5,W-7,D-7,4.2,0,0,H+0.5,rf);
@@ -970,12 +1016,12 @@ function kManor(){
 }
 /* --- the poor: a crooked jettied tenement --- */
 function kTenement(){
-  const k=new KitB(),W=6,D=8,F=3,fl=5,y=-D/2,wall=['#8a7a62','#7d6f5a','#93846b','#857560','#7a6d58'];
+  const k=new KitB(),W=6,D=8,F=3,fl=5,y=-D/2,wall=['stone:#8a7a62','plaster:#7d6f5a','plaster:#93846b','planks:#857560','plaster:#7a6d58'];
   k.box(W,D,F,0,0,F/2,'#6f675c');
   for(let f=1;f<fl;f++){const j=f*0.18;k.box(W+j,D+j,F,(f%2?0.12:-0.1),-j/2,F*f+F/2,wall[f]);k.box(W+j+0.2,D+j+0.2,0.16,(f%2?0.12:-0.1),-j/2,F*f,'#4a3a2c');}
   for(let f=0;f<fl;f++){const yy=y-f*0.09-0.02;for(const x of(f===0?[1.6]:[-1.5,1.5]))kWin(k,x,yy,F*f+F*0.55,0.9,1.4,'#5a4a38');}
   k.box(1.2,0.2,2.3,-1.5,y-0.02,1.15,'#3a2a20');
-  k.prism(W+1.4,D+1.4,2.8,0,-0.36,F*fl,'#4d4a46'); k.box(2.2,1.4,0.1,1.2,-1.2,F*fl+1.05,'#6a5848',0,-0.62);
+  k.prism(W+1.4,D+1.4,2.8,0,-0.36,F*fl,'shingle:#4d4a46'); k.box(2.2,1.4,0.1,1.2,-1.2,F*fl+1.05,'#6a5848',0,-0.62);
   k.cyl(0.22,0.18,3.5,6,-2,1.8,F*fl+0.6,'#5c5f63');
   k.box(0.05,0.05,W+3,0,y-1.4,F*2+2.3,'#26262b',PI/2); for(let i=0;i<4;i++)k.box(0.7,0.06,0.9,-2+i*1.3,y-1.4,F*2+1.8,['#c0392b','#e8e2d2','#2e6db4','#d4a017'][i]);
   k.finish('Tenement',W+1,D);
@@ -983,29 +1029,43 @@ function kTenement(){
 /* --- slum shacks: planks, patches and a stovepipe --- */
 function kShack(name,two){
   const k=new KitB(),W=4.6,D=5,H=2.6,y=-D/2;
-  k.box(W,D,H,0,0,H/2,'#6b5440'); k.box(1.2,0.8,0.9,-1.1,y-0.02,1.6,'#8a6c4a'); k.box(0.9,0.06,1.3,1.2,y-0.04,1.4,'#7a5a3e');
+  k.box(W,D,H,0,0,H/2,'planks:#6b5440'); k.box(1.2,0.8,0.9,-1.1,y-0.02,1.6,'#8a6c4a'); k.box(0.9,0.06,1.3,1.2,y-0.04,1.4,'#7a5a3e');
   k.box(1,0.1,2,-0.9,y-0.05,1,'#8a3b2a'); k.glass(0.8,0.12,0.6,1.3,y-0.05,1.75);
-  k.shed(W+0.8,D+0.8,H+0.2,H-0.5,0,0,0,'#5e5a52'); k.box(1.6,1.2,0.06,-0.9,0.6,H+0.15,'#7c6248',0,0.2); k.box(1.2,1.4,0.06,1.2,-1,H+0.4,'#4f5c5a',0,0.2);
+  k.shed(W+0.8,D+0.8,H+0.2,H-0.5,0,0,0,'iron:#5e5a52'); k.box(1.6,1.2,0.06,-0.9,0.6,H+0.15,'#7c6248',0,0.2); k.box(1.2,1.4,0.06,1.2,-1,H+0.4,'#4f5c5a',0,0.2);
   k.cyl(0.12,0.12,1.6,6,1.6,1.4,H-0.2,'#3e3f42');
   k.box(0.8,0.8,0.8,W/2+0.5,y+0.6,0.4,'#7a5a3e'); k.cyl(0.35,0.32,0.9,8,W/2+0.6,y+1.7,0,'#5e4632');
   if(two){k.box(3.2,3.4,2.2,-0.5,0.5,H+1.3,'#7a6048');k.glass(0.7,0.12,0.6,-0.5,0.5-1.72,H+1.5);k.shed(3.8,4,H+2.6,H+2.1,-0.5,0.5,0,'#565a5c');
     for(let i=0;i<5;i++)k.box(0.9,0.12,0.08,W/2-0.3,y-0.3,0.4+i*0.55,'#8a6c4a');for(const s of[-0.45,0.45])k.box(0.08,0.12,3,W/2-0.3+s,y-0.3,1.5,'#6b5440');}
   k.finish(name,W+1.2,D);
 }
+/* --- the poor of each people: a small hut in their own manner, for the alleys and the wall's edge --- */
+function kHut(name,kind){
+  const k=new KitB(),W=4.4,D=4.8,y=-D/2;
+  if(kind==='round'){k.cyl(2.2,2.2,2.2,10,0,0,0,'planks:#8a6a46');k.cyl(2.7,0.2,2.8,10,0,0,2.1,'thatch:#9c8048');kDoor(k,0,-2.25,0,1,1.9,'#3e2c20','timber:#5a4030');}
+  else if(kind==='aframe'){k.box(W-0.6,D,0.6,0,0,0.3,'stone:#8a8680');k.prism(D+0.4,W+0.8,4.2,0,0,0.5,'shingle:#5a4a3a',PI/2);
+    k.poly([[-W/2+0.3,0,0],[W/2-0.3,0,0],[0,0,3.6]],[[0,1,2]],k.M(0,y+0.15,0.5),'planks:#7a5a3e',[0,-1,0]);kDoor(k,0,y+0.1,0.5,1,1.8,'#3e2c20','timber:#4a3626');}
+  else if(kind==='adobe'){k.box(W,D,2.8,0,0,1.4,'adobe:#d4b07e');k.box(W+0.2,D+0.2,0.3,0,0,2.95,'adobe:#b8895a');for(let i=0;i<3;i++)k.cyl(0.1,0.1,0.5,6,-1.4+i*1.4,y-0.25,2.4,'#6a4a30',PI/2);
+    k.box(2.2,1.2,0.07,0.6,y-0.6,2.1,'#b5473a',0,-0.4);kDoor(k,-1,y,0,0.9,1.9,'#5a3a24','adobe:#b8895a');}
+  else if(kind==='white'){k.cyl(2,2,2.6,10,0,0,0,'plaster:#e6eaee');k.cyl(2.2,0.15,2.2,10,0,0,2.6,'slate:#2f5fa8');k.cyl(2.05,2.05,0.2,10,0,0,1.6,'#2f5fa8');kDoor(k,0,-2.05,0,0.9,1.8,'#2f5fa8','#e6eaee');}
+  else if(kind==='temple'){k.box(W,D,2.8,0,0,1.4,'plaster:#e8e2d4');k.shed(W+0.6,D+0.6,3.1,2.6,0,0,0,'tile:#b8604a');kDoor(k,0.8,y,0,1,2,'#6a4a2a','#d9cfba');kWin(k,-1.1,y,1.6,0.7,0.8,'#d9cfba');}
+  else if(kind==='iron'){k.box(W,D,2.6,0,0,1.3,'stone:#6e6a66');k.shed(W+0.8,D+0.8,2.9,2.3,0,0,0,'iron:#4a4d52');k.cyl(0.15,0.15,1.6,6,1.4,1.2,2.4,'#3e3f42');kDoor(k,-0.8,y,0,1,1.9,'#2a2c30','iron:#4a4d52');}
+  k.finish(name,W+0.8,D+0.6);
+}
+const HUT={'Ferrin Quarter':'HutIron','Market Ward':'Shack','Wayfolk Quarter':'Shack2','Ruadhan Quarter':'HutRound','Hrimfolk Quarter':'HutFrame','Temple Ward':'HutTemple','Ilvari Enclave':'HutWhite','Zarhim Quarter':'HutAdobe'};
 /* --- Hrimfolk: steep A-frame halls on stone footings --- */
 function kLonghouse(name,roof){
   const k=new KitB(),W=7.5,D=12,y=-D/2;
-  k.box(W+0.6,D+0.4,1.2,0,0,0.6,'#8a8680'); k.box(W-1.2,D,2.2,0,0,2.3,'#6a5038');
+  k.box(W+0.6,D+0.4,1.2,0,0,0.6,'stone:#8a8680'); k.box(W-1.2,D,2.2,0,0,2.3,'timber:#6a5038');
   k.prism(D+0.8,W+1.6,7.4,0,0,1.2,roof,PI/2); // ridge runs front to back, gable on the street
-  k.poly([[-W/2+0.5,0,0],[W/2-0.5,0,0],[0,0,6.4]],[[0,1,2]],k.M(0,y+0.15,1.2),'#7a5a3e',[0,-1,0]);
-  k.box(1.5,0.3,2.6,0,y+0.05,2.5,'#3e2c20'); k.glass(0.7,0.2,0.9,-1.9,y+0.06,2.8); k.glass(0.7,0.2,0.9,1.9,y+0.06,2.8); k.glass(0.6,0.2,0.8,0,y+0.06,5.2);
+  k.poly([[-W/2+0.5,0,0],[W/2-0.5,0,0],[0,0,6.4]],[[0,1,2]],k.M(0,y+0.15,1.2),'planks:#7a5a3e',[0,-1,0]);
+  kDoor(k,0,y+0.15,1.2,1.4,2.4,'#3e2c20','timber:#4a3626'); kWin(k,-1.9,y+0.16,2.8,0.7,0.9,'timber:#4a3626'); kWin(k,1.9,y+0.16,2.8,0.7,0.9,'timber:#4a3626'); k.glass(0.6,0.2,0.8,0,y+0.06,5.2);
   for(const s of[-1,1]){const m=new THREE.Matrix4().makeTranslation(s*0.45,y-0.4,8.2).multiply(new THREE.Matrix4().makeRotationY(-s*0.55)).multiply(new THREE.Matrix4().makeScale(0.28,0.28,2.8));k._add(_unitBox.clone(),m,'#4a3626');}
   k.box(1.2,1,4.2,W/2-1.6,2.5,6.5,'#8a8680'); k.box(1.4,1.2,0.3,W/2-1.6,2.5,8.7,'#6e6a66');
   k.finish(name,W+1.6,D+0.8);
 }
 /* --- Zarhim: sun-baked flat roofs, parapets, awnings and domes --- */
 function kAdobe(name,dome){
-  const k=new KitB(),W=8,D=8,y=-D/2,wall='#dcb987',dk='#b8895a';
+  const k=new KitB(),W=8,D=8,y=-D/2,wall='adobe:#dcb987',dk='adobe:#b8895a';
   k.box(W,D,4.4,0,0,2.2,wall); k.box(W+0.2,D+0.2,0.5,0,0,4.6,dk);
   for(let i=0;i<5;i++)for(const s of[-1,1])k.box(0.9,0.3,0.6,-3.2+i*1.6,s*(D/2-0.05),5.1,wall);
   for(let i=0;i<4;i++)k.cyl(0.13,0.13,0.6,6,-3+i*2,y-0.3,3.6,'#6a4a30',PI/2);
@@ -1020,22 +1080,22 @@ function kAdobe(name,dome){
 /* --- Ilvari: white round towers banded in blue, with tall caps --- */
 function kSpire(){
   const k=new KitB(),y=-4.5;
-  k.cyl(3.4,3.2,10,12,0,0,0,'#eef1f3'); for(const z of[3.2,6.6])k.cyl(3.3,3.3,0.35,12,0,0,z,'#2f5fa8');
-  k.cyl(3.6,3.6,0.4,12,0,0,10,'#7ab0d8'); k.cyl(3.4,0.2,7,12,0,0,10.4,'#2f5fa8'); k.cyl(0.06,0.06,1.4,5,0,0,17.3,'#c9a046');
+  k.cyl(3.4,3.2,10,12,0,0,0,'plaster:#eef1f3'); for(const z of[3.2,6.6])k.cyl(3.3,3.3,0.35,12,0,0,z,'#2f5fa8');
+  k.cyl(3.6,3.6,0.4,12,0,0,10,'#7ab0d8'); k.cyl(3.4,0.2,7,12,0,0,10.4,'slate:#2f5fa8'); k.cyl(0.06,0.06,1.4,5,0,0,17.3,'#c9a046');
   for(const [a,z] of[[-0.5,4.8],[0.4,8.2],[0,1.6]])k.glass(0.7,0.2,1.4,Math.sin(a)*3.25,-Math.cos(a)*3.25,z,a);
-  k.box(4.6,4.2,3.6,3.4,1.2,1.8,'#e6eaee'); k.prism(4.9,4.6,1.6,3.4,1.2,3.6,'#2f5fa8');
+  k.box(4.6,4.2,3.6,3.4,1.2,1.8,'plaster:#e6eaee'); k.prism(4.9,4.6,1.6,3.4,1.2,3.6,'slate:#2f5fa8');
   k.box(1.3,0.4,2.3,0,-3.25,1.15,'#2f5fa8'); k.glass(0.9,0.2,1,3.4,1.2-2.12,2);
   k.finish('Spire',8.2,8.4);
 }
 /* --- Ferrin: squat stone forge-houses, iron roofs, a boiler at the side --- */
 function kForge(){
-  const k=new KitB(),W=9,D=9,y=-D/2,st='#6e6a66',ir='#3b3f45';
+  const k=new KitB(),W=9,D=9,y=-D/2,st='stone:#6e6a66',ir='iron:#3b3f45';
   k.box(W,D,6.4,0,0,3.2,st); for(const z of[0.3,3.3,6.3])k.box(W+0.25,D+0.25,0.3,0,0,z,'#4a4d52');
   k.prism(W+0.8,D+0.8,2,0,0,6.4,ir); for(let i=0;i<5;i++)k.box(0.12,D+0.9,0.12,-3.6+i*1.8,0,7.05,'#2a2c30',0,0);
   k.box(2.6,0.3,3,-2.4,y-0.02,1.5,'#2a2c30'); k.box(2.2,0.32,2.6,-2.4,y-0.03,1.3,'#4a2e22');
   k.glass(1.4,0.2,1,2.4,y-0.02,1.9); k.glass(1,0.2,0.9,-2.4,y-0.02,4.6); k.glass(1,0.2,0.9,2.4,y-0.02,4.6);
   k.box(1.6,0.25,0.8,2.4,y-0.04,0.6,'#2a2c30'); k.glass(1.1,0.27,0.4,2.4,y-0.05,0.65);
-  k.box(2,2,11,W/2-1.2,2.4,5.5,'#7a3c31'); k.box(2.3,2.3,0.4,W/2-1.2,2.4,11,'#4a4d52');
+  k.box(2,2,11,W/2-1.2,2.4,5.5,'brick:#7a3c31'); k.box(2.3,2.3,0.4,W/2-1.2,2.4,11,'#4a4d52');
   k.cyl(1.3,1.3,4.4,12,W/2+1.4,-0.5,1.6,'#8a5a32',PI/2); k.cyl(1.35,1.35,0.15,12,W/2+1.4,-2.6,1.6,'#b8893e',PI/2);
   k.cyl(0.2,0.2,5.6,6,W/2+1.4,1.4,1.6,'#b8893e'); k.box(0.4,0.4,2.4,W/2+1.4,-0.5,0.5,'#2a2c30');
   k.finish('Forge',W+3,D);
@@ -1043,8 +1103,8 @@ function kForge(){
 /* --- Ruadhan: roundhouses of wattle under deep thatch --- */
 function kRound(){
   const k=new KitB();
-  k.cyl(4.2,4.2,2.8,12,0,0,0,'#8f6e4a'); for(let i=0;i<12;i++){const a=i/12*PI*2;k.box(0.25,0.25,2.9,Math.cos(a)*4.2,Math.sin(a)*4.2,1.45,'#5a4030',a);}
-  k.cyl(5.2,0.3,5.6,12,0,0,2.4,'#a3874e'); k.cyl(5.25,4.9,0.4,12,0,0,2.4,'#8c7340');
+  k.cyl(4.2,4.2,2.8,12,0,0,0,'planks:#8f6e4a'); for(let i=0;i<12;i++){const a=i/12*PI*2;k.box(0.25,0.25,2.9,Math.cos(a)*4.2,Math.sin(a)*4.2,1.45,'#5a4030',a);}
+  k.cyl(5.2,0.3,5.6,12,0,0,2.4,'thatch:#a3874e'); k.cyl(5.25,4.9,0.4,12,0,0,2.4,'thatch:#8c7340');
   k.box(1.8,1.8,2.4,0,-4.4,1.2,'#7a5a3e'); k.prism(2.2,2.4,1.1,0,-4.4,2.4,'#a3874e',PI/2); k.box(1.2,0.2,2,0,-5.3,1,'#3e2c20');
   for(const a of[-0.9,0.9])k.glass(0.6,0.2,0.6,Math.sin(a)*4.2,-Math.cos(a)*4.2,1.7,a);
   k.cyl(0.2,0.25,1.4,6,1.6,1.2,6.2,'#6a5848');
@@ -1052,13 +1112,13 @@ function kRound(){
 }
 /* --- Wayfolk: timber-framed houses with a copper boiler on the side --- */
 function kTimber(){
-  const k=new KitB(),W=7,D=8,y=-D/2,pl='#e6dcc4',bm='#4a3222';
-  k.box(W,D,3,0,0,1.5,'#9d958a'); k.box(W+0.8,D+0.8,3.2,0,-0.2,4.6,pl);
+  const k=new KitB(),W=7,D=8,y=-D/2,pl='plaster:#e6dcc4',bm='timber:#4a3222';
+  k.box(W,D,3,0,0,1.5,'stone:#9d958a'); k.box(W+0.8,D+0.8,3.2,0,-0.2,4.6,pl);
   const fy=-D/2-0.62;
   for(const x of[-3.6,-1.2,1.2,3.6])k.box(0.25,0.15,3.2,x,fy,4.6,bm); k.box(W+0.9,0.16,0.25,0,fy,3.1,bm); k.box(W+0.9,0.16,0.25,0,fy,6.1,bm);
   for(const s of[-1,1])k.box(0.2,0.14,3.9,s*2.4,fy-0.01,4.6,bm,0,s*0.68);
-  k.prism(W+1.4,D+2.2,4,0,-0.2,6.2,'#a8452f'); k.box(1.3,0.2,2.3,1.6,y-0.02,1.15,'#4a2e22'); k.glass(1.4,0.2,1.1,-1.6,y-0.02,1.7);
-  k.glass(1,0.2,1.2,-2.4,fy-0.03,4.8); k.glass(1,0.2,1.2,0,fy-0.03,4.8); k.glass(1,0.2,1.2,2.4,fy-0.03,4.8);
+  k.prism(W+1.4,D+2.2,4,0,-0.2,6.2,'tile:#a8452f'); kDoor(k,1.6,y,0,1.2,2.2,'#4a2e22','timber:#4a3222'); kWin(k,-1.6,y,1.7,1.3,1.0,'timber:#4a3222',0,'#3f6a3e');
+  for(const x of[-2.4,0,2.4])kWin(k,x,fy-0.01,4.8,0.9,1.1,'timber:#4a3222',0,'#3f6a3e');
   k.cyl(0.95,0.95,3.2,10,W/2+1,1,0,'#b06a3a'); k.dome(0.95,W/2+1,1,3.2,'#b06a3a',10); for(const z of[0.8,2.4])k.cyl(1,1,0.12,10,W/2+1,1,z,'#c9a046');
   k.cyl(0.13,0.13,5.2,6,W/2+1.3,1.4,3.6,'#c9a046'); k.cyl(0.3,0.3,0.12,10,W/2+1,0.05,2,'#e8e2d2',PI/2);
   k.box(1,0.8,3,-1.8,1.6,9.6,'#7a3c31');
@@ -1066,7 +1126,7 @@ function kTimber(){
 }
 /* --- Temple Ward: white stone houses of the faithful, gilded domes --- */
 function kChapel(){
-  const k=new KitB(),W=9,D=10,y=-D/2,wh='#f1ede3',gd='#c9a046';
+  const k=new KitB(),W=9,D=10,y=-D/2,wh='marble:#f1ede3',gd='#c9a046';
   k.box(W+0.4,D+0.4,0.8,0,0,0.4,'#cfc8b8'); k.box(W,D,7.5,0,0,4.55,wh); k.box(W+0.4,D+0.4,0.4,0,0,8.4,gd);
   for(const x of[-2.8,0,2.8]){k.glass(1,0.2,3.2,x,y-0.02,4.6);k.dome(0.52,x,y-0.02,6.2,wh,8);}
   k.box(1.6,0.2,2.6,0,y-0.03,2.1,'#6a4a2a'); k.cyl(3,3,1.6,14,0,0.5,8.6,wh); k.dome(3,0,0.5,10.2,gd,14); k.cyl(0.1,0.04,1.4,6,0,0.5,13.2,gd);
@@ -1075,12 +1135,12 @@ function kChapel(){
 }
 /* --- Market Ward: shopfronts with big glass and striped awnings --- */
 function kShop(){
-  const k=new KitB(),W=8,D=9,F=3.3,y=-D/2,br='#a85a3e',tr='#efe6d2';
+  const k=new KitB(),W=8,D=9,F=3.3,y=-D/2,br='brick:#a85a3e',tr='#efe6d2';
   k.box(W,D,3*F+0.6,0,0,(3*F+0.6)/2,br); k.box(W+0.2,0.4,3.6,0,y+0.1,1.8,'#2e5a46');
   k.glass(5,0.5,2.2,-0.8,y-0.05,1.6); k.box(1.2,0.5,2.6,3.1,y-0.05,1.3,'#3a2a20'); k.box(W+0.3,0.6,0.7,0,y-0.1,3.5,tr);
   k.box(W,2.2,0.08,0,y-1.2,3.3,'#e8e2d2',0,-0.32); for(let i=0;i<4;i++)k.box(0.9,2.22,0.09,-3+i*2,y-1.2,3.31,'#b5473a',0,-0.32);
   for(let f=1;f<3;f++)for(const x of[-2.6,0,2.6])kWin(k,x,y,0.6+f*F+F*0.5,1,1.7,tr);
-  k.box(W+0.5,D+0.5,0.45,0,0,3*F+0.8,tr); k.prism(W+0.6,D+0.8,3.4,0,0,3*F+1,'#4a3f3a');
+  k.box(W+0.5,D+0.5,0.45,0,0,3*F+0.8,tr); k.prism(W+0.6,D+0.8,3.4,0,0,3*F+1,'slate:#4a3f3a');
   k.box(1.3,0.8,4,-W/2+1,1.5,3*F+2.8,br);
   k.finish('Shopfront',W,D+2);
 }
@@ -1095,28 +1155,28 @@ function kGarden(){
 /* --- castle wall, round tower, gatehouse --- */
 function kWalls(){
   let k=new KitB();const L=24,T=6,Hh=22;
-  k.box(L,T,Hh,0,0,Hh/2,'#a8a091'); k.box(L+0.2,T+1,1.4,0,0,0.7,'#8f877b');
-  for(const sy of[-1,1]){k.box(L,0.9,1.6,0,sy*(T/2-0.2),Hh+0.8,'#a8a091');for(let i=0;i<8;i++)k.box(1.6,0.9,1.4,-L/2+1.5+i*3,sy*(T/2-0.2),Hh+2.3,'#a8a091');}
+  k.box(L,T,Hh,0,0,Hh/2,'stone:#a8a091'); k.box(L+0.2,T+1,1.4,0,0,0.7,'#8f877b');
+  for(const sy of[-1,1]){k.box(L,0.9,1.6,0,sy*(T/2-0.2),Hh+0.8,'stone:#a8a091');for(let i=0;i<8;i++)k.box(1.6,0.9,1.4,-L/2+1.5+i*3,sy*(T/2-0.2),Hh+2.3,'stone:#a8a091');}
   for(let i=0;i<6;i++)k.box(0.5,0.2,1.6,-L/2+2+i*4,T/2+0.05,12,'#3a3632'); k.box(L,0.4,0.4,0,T/2+0.3,Hh-0.5,'#8f877b');
   k.finish('WallSeg',L,T);
-  k=new KitB(); k.cyl(8.6,7.6,2,12,0,0,0,'#8f877b'); k.cyl(7.4,7,30,12,0,0,2,'#a8a091'); k.cyl(8.2,8.2,1.6,12,0,0,32,'#8f877b');
-  for(let i=0;i<12;i++){const a=i/12*PI*2;k.box(1.8,1.2,1.6,Math.cos(a)*7.8,Math.sin(a)*7.8,34.4,'#a8a091',a+PI/2);}
+  k=new KitB(); k.cyl(8.6,7.6,2,12,0,0,0,'#8f877b'); k.cyl(7.4,7,30,12,0,0,2,'stone:#a8a091'); k.cyl(8.2,8.2,1.6,12,0,0,32,'#8f877b');
+  for(let i=0;i<12;i++){const a=i/12*PI*2;k.box(1.8,1.2,1.6,Math.cos(a)*7.8,Math.sin(a)*7.8,34.4,'stone:#a8a091',a+PI/2);}
   k.cyl(7.6,0.4,9,12,0,0,33.6,'#3f4a5c'); for(let i=0;i<4;i++){const a=i/4*PI*2+0.4;k.glass(0.6,0.3,1.8,Math.cos(a)*7.2,Math.sin(a)*7.2,18,a+PI/2);}
   k.finish('Tower',16,16);
-  k=new KitB(); for(const sx of[-1,1]){k.cyl(7.4,7,36,12,sx*16.5,0,0,'#a8a091');k.cyl(7.6,0.4,10,12,sx*16.5,0,36,'#3f4a5c');}
-  k.box(26,7,8,0,0,25,'#a8a091'); k.box(26.4,7.6,1.2,0,0,29.6,'#8f877b'); for(let i=0;i<7;i++)k.box(1.8,1,1.6,-10.5+i*3.5,3.4,31,'#a8a091');
+  k=new KitB(); for(const sx of[-1,1]){k.cyl(7.4,7,36,12,sx*16.5,0,0,'stone:#a8a091');k.cyl(7.6,0.4,10,12,sx*16.5,0,36,'#3f4a5c');}
+  k.box(26,7,8,0,0,25,'stone:#a8a091'); k.box(26.4,7.6,1.2,0,0,29.6,'#8f877b'); for(let i=0;i<7;i++)k.box(1.8,1,1.6,-10.5+i*3.5,3.4,31,'stone:#a8a091');
   k.box(2.6,1.2,5.2,0,3.6,22,'#d9cfba'); k.cyl(1,1,0.3,14,0,4.3,22.3,'#c9a046',PI/2);
   k.finish('Gatehouse',47,15);
 }
 (function buildKit(){
-  kRow('RowA','#9a4a36','#e3dccb','#3f4a5c',3,true,true,-1); kRow('RowB','#c9b48e','#f1ecdf','#4a3f3a',3,false,false,1); kRow('RowC','#7a3c31','#d9cfba','#2f3640',4,true,true,1);
-  kManor(); kTenement(); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','#4c5560'); kLonghouse('Lodge','#5c6b3e');
-  kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber(); kChapel(); kShop(); kGarden(); kWalls();
+  kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
+  kManor(); kTenement(); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber(); kChapel(); kShop(); kGarden(); kWalls();
 })();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
 // and only blocks near the player cast shadows. One batch per house type for the whole city drew all of it from anywhere.
 const CELLS=[], CELL=64, SHADOW_NEAR=70;
-function cellInstances(geo,mat,list,far,big,tinted){ // list of {x,y,z,ry,sx,tint}
+function cellInstances(geo,mat,list,far,big,tinted,farGeo){ // list of {x,y,z,ry,sx,tint}; farGeo: the version without small parts
   if(!geo||!list.length)return; if(!geo.boundingSphere)geo.computeBoundingSphere();
   const groups=new Map();
   for(const p of list){const k=big?'all':Math.floor(p.x/CELL)+','+Math.floor(p.z/CELL);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(p);}
@@ -1126,33 +1186,42 @@ function cellInstances(geo,mat,list,far,big,tinted){ // list of {x,y,z,ry,sx,tin
       if(tinted){const t=p.tint||[1,1,1];m.setColorAt(i,c.setRGB(t[0],t[1],t[2]));} ctr.x+=p.x/sub.length;ctr.y+=p.y/sub.length;ctr.z+=p.z/sub.length;});
     let r=0; for(const p of sub)r=Math.max(r,Math.hypot(p.x-ctr.x,p.y-ctr.y,p.z-ctr.z)); r+=geo.boundingSphere.radius*Math.max(1,...sub.map(p=>p.sx||1))+Math.hypot(...geo.boundingSphere.center.toArray());
     m.instanceMatrix.needsUpdate=true; if(m.instanceColor)m.instanceColor.needsUpdate=true; m.frustumCulled=false; m.receiveShadow=true;
-    landmarks.add(m); CELLS.push({m,sphere:new THREE.Sphere(ctr,r),far,shadow:true});
+    let mf=null; if(farGeo){mf=new THREE.InstancedMesh(farGeo,mat,sub.length);mf.instanceMatrix.copy(m.instanceMatrix);if(m.instanceColor)mf.instanceColor=m.instanceColor;mf.frustumCulled=false;mf.receiveShadow=true;landmarks.add(mf);}
+    landmarks.add(m); CELLS.push({m,mf,sphere:new THREE.Sphere(ctr,r),far,shadow:true});
   }
 }
-function kitInstances(name,list){cellInstances(KIT.geo[name],kitMat,list,/WallSeg|Tower|Gatehouse/.test(name)?1e9:360,/WallSeg|Tower|Gatehouse/.test(name),true);}
+function kitInstances(name,list){const big=/WallSeg|Tower|Gatehouse/.test(name);cellInstances(KIT.geo[name],kitMat,list,big?1e9:360,big,true,big?null:KIT.far[name]);}
 const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
 function cullCells(){
   camera.updateMatrixWorld(); _pm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse); _frustum.setFromProjectionMatrix(_pm);
   for(const c of CELLS){const d=Math.hypot(c.sphere.center.x-player.x,c.sphere.center.z-player.z)-c.sphere.radius;
-    c.m.visible=d<c.far&&(d<SHADOW_NEAR||_frustum.intersectsSphere(c.sphere)); c.m.castShadow=c.shadow&&d<SHADOW_NEAR;}
+    const vis=d<c.far&&(d<SHADOW_NEAR||_frustum.intersectsSphere(c.sphere)); c.m.castShadow=c.shadow&&d<SHADOW_NEAR;
+    if(c.mf){const near=d<110;c.m.visible=vis&&near;c.mf.visible=vis&&!near;}else c.m.visible=vis;}
 }
 const kitReady=()=>!!KIT.geo.RowA;
 
 /* ---------- Aldrath's districts: every people in one city, rich by the plaza, poor by the walls ---------- */
-const CULTURE={'Hrimfolk Quarter':['Longhouse','Lodge'],'Zarhim Quarter':['Adobe','AdobeDome'],'Ilvari Enclave':['Spire','Adobe'],'Ferrin Quarter':['Forge','Tenement'],
-  'Ruadhan Quarter':['Roundhouse','Timberframe'],'Wayfolk Quarter':['Timberframe','Shack2'],'Temple Ward':['Chapel','Manor'],'Market Ward':['Shopfront','RowA','RowB']};
+const CULTURE={'Hrimfolk Quarter':['Longhouse','Lodge'],'Zarhim Quarter':['Adobe','AdobeDome'],'Ilvari Enclave':['Spire'],'Ferrin Quarter':['Forge','Tenement'],
+  'Ruadhan Quarter':['Roundhouse'],'Wayfolk Quarter':['Timberframe'],'Temple Ward':['Chapel','Manor'],'Market Ward':['Shopfront','RowA','RowB','RowC']};
 const ALL_CULT=['Longhouse','Lodge','Adobe','AdobeDome','Spire','Forge','Roundhouse','Timberframe','Shopfront'];
 const WEALTH_Q={'Temple Ward':0.15,'Ilvari Enclave':0.06,'Market Ward':0.06,'Ferrin Quarter':-0.06,'Wayfolk Quarter':-0.12,'Zarhim Quarter':-0.05};
 const QTINT={'Ferrin Quarter':[0.86,0.88,0.96],'Hrimfolk Quarter':[0.92,0.94,1],'Zarhim Quarter':[1.06,1,0.9],'Temple Ward':[1.06,1.05,1.02],'Ilvari Enclave':[0.94,0.98,1.06],'Ruadhan Quarter':[0.97,1.03,0.93]};
 function cityWealth(a,r){const q=quarterOf(a).name;return smooth(CITY.r-20,CITY.core+30,r)*0.95+(WEALTH_Q[q]||0)+N.c(Math.cos(a)*2.2+7,Math.sin(a)*2.2)*0.22-0.05;}
-function pickHouse(a,r,rnd){
-  const w=cityWealth(a,r), q=quarterOf(a).name, own=CULTURE[q]||['RowA','RowB','RowC'], u=rnd();
-  const any=l=>l[Math.floor(rnd()*l.length)], row=()=>any(['RowA','RowB','RowC']);
-  if(w>0.78)return u<0.45?'Manor':u<0.75?any(own):row();
-  if(w>0.42)return u<0.5?any(own):u<0.8?row():any(ALL_CULT);
-  if(w>0.22)return u<0.45?any(own):u<0.7?'Tenement':u<0.85?any(ALL_CULT):'Shack2';
-  return u<0.5?any(['Shack','Shack2']):u<0.72?'Tenement':any(own);
+function pickHouse(a,r,rnd){ // a district builds its own people's houses; only the poorest streets fall to shacks
+  const w=cityWealth(a,r), q=quarterOf(a).name, own=CULTURE[q]||['RowA','RowB','RowC'], u=rnd(), any=l=>l[Math.floor(rnd()*l.length)];
+  if(w>0.78&&(q==='Market Ward'||q==='Temple Ward')&&u<0.45)return 'Manor';
+  if(w>0.2)return any(own);
+  return u<0.4?(HUT[q]||'Shack'):any(own);
 }
+// two placed footprints overlap? (rotated rectangles, as the colliders store them)
+function rectHit(a,b){
+  if(Math.abs(a.x-b.x)>a.hw+a.hd+b.hw+b.hd||Math.abs(a.z-b.z)>a.hw+a.hd+b.hw+b.hd)return false;
+  const ax=[[Math.cos(a.rot),-Math.sin(a.rot)],[Math.sin(a.rot),Math.cos(a.rot)],[Math.cos(b.rot),-Math.sin(b.rot)],[Math.sin(b.rot),Math.cos(b.rot)]];
+  const proj=(r,u)=>Math.abs(Math.cos(r.rot)*u[0]-Math.sin(r.rot)*u[1])*r.hw+Math.abs(Math.sin(r.rot)*u[0]+Math.cos(r.rot)*u[1])*r.hd;
+  for(const u of ax){const d=Math.abs((b.x-a.x)*u[0]+(b.z-a.z)*u[1]);if(d>proj(a,u)+proj(b,u))return false;}
+  return true;
+}
+function footprintFree(f){for(const c of colliders)if(c.type!=='circle'&&rectHit(f,c))return false;return true;}
 function buildCityHouses(){
   const [mx,mz]=marketPos(), lists={}, put=(name,x,z,ry,tint,y)=>{(lists[name]=lists[name]||[]).push({x,y:y!==undefined?y:heightAt(x,z)-0.3,z,ry,tint});};
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
@@ -1167,6 +1236,7 @@ function buildCityHouses(){
       const gap=name==='Manor'?3:poor?0.8+rnd()*1.6:0.4+rnd()*0.6;
       const r=rr+side*(10+d/2)+(poor?(rnd()-0.5)*1.4:0), a=(arc+w/2)/r;
       if(blocked(a,r,w/2)||(side<0&&r-d/2<CITY.core+25)){arc+=4;continue;}
+      {const x0=CITY.x+Math.cos(a)*r,z0=CITY.z+Math.sin(a)*r,r0=-a+Math.PI/2+(side>0?Math.PI:0);if(!footprintFree({x:x0,z:z0,hw:w/2+0.5,hd:d/2+0.5,rot:r0})){arc+=2;continue;}}
       const x=CITY.x+Math.cos(a)*r, z=CITY.z+Math.sin(a)*r, ry=-a+Math.PI/2+(side>0?Math.PI:0)+(poor?(rnd()-0.5)*0.16:0);
       put(name,x,z,ry,tintFor(a,r,name)); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++;
       arc+=(w+gap)*rr/r;
@@ -1174,12 +1244,13 @@ function buildCityHouses(){
   }
   // gardens behind the grand houses near the plaza
   for(let k=0,n=Math.floor(2*Math.PI*157/17);k<n;k++){const a=k/n*Math.PI*2;if(cityWealth(a,157)<0.62||blocked(a,157,6))continue;
-    const x=CITY.x+Math.cos(a)*157,z=CITY.z+Math.sin(a)*157,ry=-a+Math.PI/2;put('Garden',x,z,ry,[1,1,1]);colliders.push({x,z,hw:6,hd:6,rot:ry});}
+    const x=CITY.x+Math.cos(a)*157,z=CITY.z+Math.sin(a)*157,ry=-a+Math.PI/2;if(!footprintFree({x,z,hw:6.3,hd:6.3,rot:ry}))continue;put('Garden',x,z,ry,[1,1,1]);colliders.push({x,z,hw:6,hd:6,rot:ry});}
   // shanty towns: back alleys between the middle rings, and against the inside of the wall
   for(const [r0,r1] of[[223,237],[287,292]])for(let r=r0;r<=r1;r+=5.4){
     let arc=rnd()*5; const L=2*Math.PI*r;
     while(arc<L){const a=arc/r;arc+=5.6+rnd()*2.4;if(cityWealth(a,r)>(r0>250?0.0:0.1)||blocked(a,r,3)||rnd()<0.3)continue;
-      const name=rnd()<0.35?'Shack2':'Shack',rj=r+(rnd()-0.5)*1.5,x=CITY.x+Math.cos(a)*rj,z=CITY.z+Math.sin(a)*rj,ry=-a+Math.PI/2+(rnd()<0.5?0:Math.PI)+(rnd()-0.5)*0.5;
+      const name=HUT[quarterOf(a).name]||(rnd()<0.35?'Shack2':'Shack'),rj=r+(rnd()-0.5)*1.5,x=CITY.x+Math.cos(a)*rj,z=CITY.z+Math.sin(a)*rj,ry=-a+Math.PI/2+(rnd()<0.5?0:Math.PI)+(rnd()-0.5)*0.5;
+      if(!footprintFree({x,z,hw:3.2,hd:2.8,rot:ry}))continue;
       put(name,x,z,ry,tintFor(a,rj,name)); colliders.push({x,z,hw:3,hd:2.6,rot:ry}); count++;}
   }
   for(const n in lists)kitInstances(n,lists[n]);
@@ -1298,12 +1369,13 @@ function streetPointNear(){
 }
 function crowdUpdate(dt,now,night){
   const inCity=Math.hypot(player.x-CITY.x,player.z-CITY.z)<CITY.r+40, want=inCity?Math.round(34*(1-0.75*night)):0;
-  while(crowd.length<want){const sp=streetPointNear();crowd.push({...sp,off:(Math.random()-0.5)*16,dir:Math.random()<0.5?1:-1,speed:1+Math.random()*0.7,mesh:makePerson(false),phase:Math.random()*6});}
+  while(crowd.length<want){const sp=streetPointNear(),off=(Math.random()-0.5)*16,sx=CITY.x+Math.cos(sp.a)*sp.r,sz=CITY.z+Math.sin(sp.a)*sp.r;
+    crowd.push({...sp,off,dir:Math.random()<0.5?1:-1,speed:1+Math.random()*0.7,mesh:folk?makeFolk(false,raceAt(sx,sz)):makePerson(false),phase:Math.random()*6});}
   while(crowd.length>want){const p=crowd.pop();scene.remove(p.mesh);}
   for(const p of crowd){
     if(p.ring)p.a+=p.dir*p.speed*dt/p.r; else {p.r+=p.dir*p.speed*dt; if(p.r>CITY.r-6||p.r<CITY.core+24)p.dir*=-1;}
     const a=p.a, x=CITY.x+Math.cos(a)*p.r+(p.ring?0:-Math.sin(a)*p.off), z=CITY.z+Math.sin(a)*p.r+(p.ring?0:Math.cos(a)*p.off);
-    if(Math.hypot(x-player.x,z-player.z)>95){Object.assign(p,streetPointNear());continue;}
+    if(Math.hypot(x-player.x,z-player.z)>95){Object.assign(p,streetPointNear());if(folk){scene.remove(p.mesh);p.mesh=makeFolk(false,raceAt(CITY.x+Math.cos(p.a)*p.r,CITY.z+Math.sin(p.a)*p.r));}continue;}
     const dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz),px=d<1.1?x+dx/d*(1.1-d):x,pz=d<1.1?z+dz/d*(1.1-d):z;
     folkShadow(p.mesh,d); p.phase+=dt*p.speed*5; p.mesh.position.set(px,surfaceAt(px,pz)+Math.abs(Math.sin(p.phase))*0.05,pz);
     p.mesh.rotation.y=p.ring?Math.atan2(-Math.sin(a)*p.dir,Math.cos(a)*p.dir):Math.atan2(Math.cos(a)*p.dir,Math.sin(a)*p.dir);
@@ -2592,7 +2664,7 @@ function kPen(){const k=new KitB(),S=9;for(const [x,y,w,d] of[[0,-S/2,S,0.1],[0,
   for(let i=0;i<=4;i++)for(const s of[-1,1])k.box(0.16,0.16,1.3,-S/2+i*S/4,s*S/2,0.65,'#4a3626'),k.box(0.16,0.16,1.3,s*S/2,-S/2+i*S/4,0.65,'#4a3626');
   k.box(2.4,0.7,0.5,2.5,2.8,0.25,'#5a4030');for(const [x,y,c] of[[-1.5,-1,'#e8e2d2'],[0.8,-2,'#4a3a2e'],[-2.4,1.6,'#e8e2d2'],[1.6,0.8,'#8a5a32']]){k.box(1.5,0.7,0.7,x,y,0.75,c);k.box(0.45,0.4,0.45,x+0.9,y,1,c);for(const s of[-0.5,0.5])for(const t of[-0.2,0.2])k.box(0.14,0.14,0.45,x+s,y+t,0.22,'#3a2e26');}
   k.finish('Pen',S,S);}
-function kBooth(){const k=new KitB();k.box(3.4,3,3.2,0,0,1.6,'#a8a091');k.prism(4,3.6,1.6,0,0,3.2,'#3f4a5c');k.glass(1.4,0.2,0.9,0,-1.52,1.9);k.box(1.8,0.3,0.1,0,-1.7,1.42,'#d9cfba');
+function kBooth(){const k=new KitB();k.box(3.4,3,3.2,0,0,1.6,'stone:#a8a091');k.prism(4,3.6,1.6,0,0,3.2,'#3f4a5c');k.glass(1.4,0.2,0.9,0,-1.52,1.9);k.box(1.8,0.3,0.1,0,-1.7,1.42,'#d9cfba');
   k.box(1,0.2,2.2,1.1,1.52,1.1,'#4a2e22');k.box(1.6,0.8,0.8,-0.4,-2.6,0.4,'#6b4a30');k.box(0.4,0.3,0.05,-0.3,-2.6,0.83,'#e8e2d2');k.cyl(0.18,0.2,0.5,8,-1.8,-2.6,0,'#5a4030');
   k.cyl(0.05,0.05,3,5,1.6,-1.4,3.2,'#5a4030');k.box(0.06,1.2,0.8,1.6,-0.8,5.6,'#2f5fa8');k.finish('Booth',4,5);}
 function kBoom(){const k=new KitB();k.box(0.4,0.4,1.4,0,0,0.7,'#6e6a66');k.box(0.5,0.5,0.3,0,0,1.4,'#4a4d52');
@@ -2877,10 +2949,10 @@ function makeLooked(gltf,look){
 }
 // who you meet where
 const RACE_MIX={
-  'Hrimfolk Quarter':{Hrimfolk:0.6,Wayfolk:0.2,Aurelan:0.1,Ruadhan:0.05,Ferrin:0.05},'Ferrin Quarter':{Ferrin:0.6,Wayfolk:0.2,Hrimfolk:0.1,Aurelan:0.1},
-  'Zarhim Quarter':{Zarhim:0.65,Wayfolk:0.2,Aurelan:0.1,Ruadhan:0.05},'Ilvari Enclave':{Ilvari:0.5,Wayfolk:0.2,Aurelan:0.2,Penitent:0.1},
-  'Ruadhan Quarter':{Ruadhan:0.6,Wayfolk:0.25,Hrimfolk:0.1,Aurelan:0.05},'Temple Ward':{Aurelan:0.35,Penitent:0.25,Wayfolk:0.25,Ilvari:0.05,Hrimfolk:0.05,Ruadhan:0.05},
-  'Market Ward':{Wayfolk:0.35,Aurelan:0.2,Zarhim:0.1,Ruadhan:0.1,Hrimfolk:0.1,Ferrin:0.1,Ilvari:0.03,Penitent:0.02},'Wayfolk Quarter':{Wayfolk:0.7,Aurelan:0.1,Ruadhan:0.1,Zarhim:0.05,Hrimfolk:0.05},
+  'Hrimfolk Quarter':{Hrimfolk:0.85,Wayfolk:0.08,Aurelan:0.04,Ruadhan:0.03},'Ferrin Quarter':{Ferrin:0.85,Wayfolk:0.08,Hrimfolk:0.04,Aurelan:0.03},
+  'Zarhim Quarter':{Zarhim:0.85,Wayfolk:0.08,Aurelan:0.04,Ruadhan:0.03},'Ilvari Enclave':{Ilvari:0.8,Penitent:0.08,Wayfolk:0.07,Aurelan:0.05},
+  'Ruadhan Quarter':{Ruadhan:0.85,Wayfolk:0.08,Hrimfolk:0.04,Aurelan:0.03},'Temple Ward':{Aurelan:0.5,Penitent:0.4,Wayfolk:0.1},
+  'Market Ward':{Aurelan:0.4,Wayfolk:0.25,Zarhim:0.07,Ruadhan:0.07,Hrimfolk:0.07,Ferrin:0.07,Ilvari:0.04,Penitent:0.03},'Wayfolk Quarter':{Wayfolk:0.85,Aurelan:0.06,Ruadhan:0.05,Zarhim:0.04},
   city:{Wayfolk:0.35,Aurelan:0.25,Hrimfolk:0.08,Ferrin:0.08,Zarhim:0.08,Ruadhan:0.08,Ilvari:0.04,Penitent:0.04},
   outskirts:{Wayfolk:0.35,Zarhim:0.2,Ruadhan:0.2,Hrimfolk:0.1,Ferrin:0.1,Aurelan:0.05},
   village:{Wayfolk:0.5,Aurelan:0.3,Ruadhan:0.1,Hrimfolk:0.1},port:{Wayfolk:0.4,Hrimfolk:0.3,Aurelan:0.2,Ferrin:0.1},
