@@ -312,11 +312,21 @@ const BIOMES=[
 ];
 // Aldrath's districts, east first and turning toward the gate (south): each sized by its people's share of the city
 // (the same shares as the crowds below). The gate avenue stays due south, between the Market Ward and the Wayfolk Quarter.
+const AVENUES=[0.12,0.86,1.5708,2.4,3.12,3.9,4.72,5.5];   // the old roads from the plaza to the wall; the gate road runs due south
 const Q_WEIGHT=[0.08,0.15,0.23,0.08,0.08,0.10,0.12,0.08];   // Ferrin, Market, Wayfolk, Ruadhan, Hrimfolk, Temple, Aurelan, Zarhim
 // (the Ilvari have no quarter: the lore makes them rare travellers with no city; in Aldrath they keep only the Laboratory)
-const Q_EDGE=(()=>{const e=[0],a=Q_WEIGHT.slice(0,2),b=Q_WEIGHT.slice(2),sa=a[0]+a[1],sb=b.reduce((x,y)=>x+y);let t=0;
-  for(const w of a){t+=w/sa*Math.PI/2;e.push(t);} for(const w of b){t+=w/sb*Math.PI*1.5;e.push(t);} e[8]=Math.PI*2; return e;})();
 const CITY={x:0,z:-1400,r:300,core:72}, VILLAGE={x:0,z:2,r:46}, PORT={x:20,z:1000,r:38};
+// Aldrath grew from its gate (south, angle PI/2) inward: traders and travellers by the gate road, the old faithful and the
+// lords by the sealed core, the smoke and the cold peoples pushed to the back walls. Each quarter grows from a seed
+// [angle, radius]; the borders are warped so the districts are blobs, and they bleed into each other house by house.
+const QSEED_AR=[[-1.0,238],[1.5708,212],[2.25,226],[0.25,244],[-2.25,240],[-1.5708,122],[0.8,148],[3.0,232]];
+const QSEED=QSEED_AR.map(([a,r])=>[Math.cos(a)*r,Math.sin(a)*r,0]);
+const qWarp=(x,z)=>[x+24*Math.sin(z*0.019+0.7)+10*Math.sin((x+z)*0.043),z+24*Math.sin(x*0.017+2.1)+10*Math.sin((x-z)*0.047+1.1)];
+function qIndex(x,z){const [wx,wz]=qWarp(x-CITY.x,z-CITY.z);let b=0,bs=1e18;for(let i=0;i<8;i++){const S=QSEED[i],d=(wx-S[0])**2+(wz-S[1])**2-S[2];if(d<bs){bs=d;b=i;}}return b;}
+(function fitQuarters(){ // grow or shrink each seed's pull until its share of the city matches its people's share
+  const pts=[];for(let x=-CITY.r;x<=CITY.r;x+=8)for(let z=-CITY.r;z<=CITY.r;z+=8){const r=Math.hypot(x,z);if(r>CITY.core+25&&r<CITY.r)pts.push([x+CITY.x,z+CITY.z]);}
+  for(let it=0;it<60;it++){const n=new Array(8).fill(0);for(const [x,z] of pts)n[qIndex(x,z)]++;
+    for(let i=0;i<8;i++){const f=n[i]/pts.length;QSEED[i][2]+=(Q_WEIGHT[i]-f)*14000;}}})();
 const ROADS=[[[0,24],[30,180],[-20,380],[45,600],[-10,820],[20,988]],[[0,-22],[-40,-250],[35,-520],[-30,-800],[0,-1040],[0,-1095]]];
 function segDist(x,z,a,b){const dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz)));return Math.hypot(x-a[0]-dx*t,z-a[1]-dz*t);}
 function roadDist(x,z){let d=1e9;for(const r of ROADS)for(let i=0;i<r.length-1;i++)d=Math.min(d,segDist(x,z,r[i],r[i+1]));return d;}
@@ -392,11 +402,11 @@ const terrainMat=new THREE.MeshLambertMaterial({vertexColors:true});
 // own paving and yards (slate, brick, cobbles, mossy stones, granite, marble, blue tiles, terracotta), worn and muddied where
 // the city is poor. The chunk carries one extra attribute per point: surf = (road, paved, wealth).
 terrainMat.onBeforeCompile=sh=>{
-  sh.uniforms.uCity={value:new THREE.Vector4(CITY.x,CITY.z,CITY.r,CITY.core)}; sh.uniforms.uEdge={value:Q_EDGE};
+  sh.uniforms.uCity={value:new THREE.Vector4(CITY.x,CITY.z,CITY.r,CITY.core)}; sh.uniforms.uSeed={value:QSEED.map(S=>new THREE.Vector3(S[0],S[1],S[2]))}; sh.uniforms.uAv={value:AVENUES};
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 surf;\nvarying vec3 vSurf;\nvarying vec3 vWP;')
     .replace('#include <begin_vertex>','#include <begin_vertex>\nvSurf=surf;\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
-uniform vec4 uCity; uniform float uEdge[9]; varying vec3 vSurf; varying vec3 vWP;
+uniform vec4 uCity; uniform vec3 uSeed[8]; uniform float uAv[8]; varying vec3 vSurf; varying vec3 vWP;
 float gh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float gn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(gh(i),gh(i+vec2(1.,0.)),f.x),mix(gh(i+vec2(0.,1.)),gh(i+vec2(1.,1.)),f.x),f.y);}
 vec2 cobble(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
@@ -405,8 +415,11 @@ vec2 cobble(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.,d2=8.,id=0.;
 vec2 bricks(vec2 p,vec2 s,float j){p/=s;float row=floor(p.y);p.x+=mod(row,2.)*.5;vec2 f=fract(p),e=min(f,1.-f)*s;return vec2(1.-smoothstep(j*.5,j,min(e.x,e.y)),gh(floor(p)+row*7.));}
 vec3 cityGround(vec2 w,float paved,float wealth){
   vec2 d=w-uCity.xy; float r=length(d), a=atan(d.y,d.x); if(a<0.)a+=6.2831853;
-  float q=7., av=(6.2831853-a)*r, n=gn(w*.7)*.5+gn(w*3.1)*.5;
-  for(int i=0;i<8;i++){if(a>=uEdge[i]&&a<uEdge[i+1])q=float(i);av=min(av,abs(a-uEdge[i])*r);}
+  float q=0., av=1e4, n=gn(w*.7)*.5+gn(w*3.1)*.5;
+  for(int i=0;i<8;i++){float da=abs(a-uAv[i]);da=min(da,6.2831853-da);av=min(av,da*r);}
+  { vec2 p=d+(vec2(gn(w*.13),gn(w*.13+9.))-.5)*16.+(vec2(gn(w*.5+3.),gn(w*.5+5.))-.5)*4.;   // borders wander and fray
+    p+=vec2(24.*sin(p.y*.019+.7)+10.*sin((p.x+p.y)*.043),24.*sin(p.x*.017+2.1)+10.*sin((p.x-p.y)*.047+1.1));
+    float bs=1e18; for(int i=0;i<8;i++){vec2 e=p-uSeed[i].xy;float s=dot(e,e)-uSeed[i].z;if(s<bs){bs=s;q=float(i);}} }
   vec3 yard, pv;
   if(q<.5)yard=mix(vec3(.18,.16,.15),vec3(.29,.26,.23),n);                                   // Ferrin: cinders
   else if(q<1.5)yard=mix(vec3(.45,.36,.26),vec3(.56,.46,.34),n);                             // Market: packed earth
@@ -1068,8 +1081,8 @@ function kManor(){
   k.finish('Manor',W,D+4.6);
 }
 /* --- the poor: a crooked jettied tenement --- */
-function kTenement(){
-  const k=new KitB(),W=6,D=8,F=3,fl=5,y=-D/2,wall=['stone:#8a7a62','plaster:#7d6f5a','plaster:#93846b','planks:#857560','plaster:#7a6d58'];
+function kTenement(name,fl){
+  const k=new KitB(),W=6,D=8,F=3,y=-D/2,wall=['stone:#8a7a62','plaster:#7d6f5a','plaster:#93846b','planks:#857560','plaster:#7a6d58'];
   k.box(W,D,F,0,0,F/2,'#6f675c');
   for(let f=1;f<fl;f++){const j=f*0.18;k.box(W+j,D+j,F,(f%2?0.12:-0.1),-j/2,F*f+F/2,wall[f]);k.box(W+j+0.2,D+j+0.2,0.16,(f%2?0.12:-0.1),-j/2,F*f,'#4a3a2c');}
   for(let f=0;f<fl;f++){const yy=y-f*0.09-0.02;for(const x of(f===0?[1.6]:[-1.5,1.5]))kWin(k,x,yy,F*f+F*0.55,0.9,1.4,'#5a4a38');}
@@ -1080,9 +1093,9 @@ function kTenement(){
   k.cyl(0.12,0.12,2.2,6,1.6,1.2,F*fl+0.6,'#2a2c30'); for(const [tx,ty] of[[0.9,0.5],[2.3,0.5],[0.9,1.9],[2.3,1.9]])k.box(0.14,0.14,2.4,tx,ty,F*fl+1.4,'#2a2c30');
   k.box(1.9,1.9,0.16,1.6,1.2,F*fl+2.6,'planks:#5a4a38'); k.cyl(1.0,1.0,1.9,10,1.6,1.2,F*fl+2.7,'planks:#6a4a2e'); k.cyl(0.95,0.5,0.6,10,1.6,1.2,F*fl+4.6,'#4d4a46');
   for(const z of[0.5,1.4])k.cyl(1.04,1.04,0.1,10,1.6,1.2,F*fl+2.7+z,'#2a2c30');
-  for(const f of[2,3])for(const x of[-1.5,1.5]){const yy=y-f*0.09-0.55;k.box(1.7,1.0,0.12,x,yy,F*f+0.05,'#26262b');k.box(1.7,0.05,0.06,x,yy-0.48,F*f+0.95,'#26262b');
+  for(const f of(fl>6?[2,3,5]:[2,3]))for(const x of[-1.5,1.5]){const yy=y-f*0.09-0.55;k.box(1.7,1.0,0.12,x,yy,F*f+0.05,'#26262b');k.box(1.7,0.05,0.06,x,yy-0.48,F*f+0.95,'#26262b');
     k.sm(()=>{for(let i=0;i<6;i++)k.box(0.04,0.04,0.85,x-0.8+i*0.32,yy-0.48,F*f+0.5,'#26262b');for(const sx of[-1,1])k.box(0.04,1,0.04,x+sx*0.84,yy,F*f+0.5,'#26262b');});}
-  k.finish('Tenement',W+1,D,[3,0.035,0.03]);
+  k.finish(name,W+1,D,[3,fl>6?0.022:0.035,0.03]);
 }
 /* --- slum shacks: planks, patches and a stovepipe --- */
 function kShack(name,two){
@@ -1191,20 +1204,21 @@ function kRound(){
   k.finish('Roundhouse',10.4,10.6);
 }
 /* --- Wayfolk: timber-framed houses with a copper boiler on the side --- */
-function kTimber(){
-  const k=new KitB(),W=7,D=8,y=-D/2,pl='plaster:#e6dcc4',bm='timber:#4a3222';
+function kTimber(name,up,pl,roof){
+  const k=new KitB(),W=7,D=8,y=-D/2,bm='timber:#4a3222',T=6.2+3*up;
+  if(up){k.box(W+1.5,D+1.5,3,0,-0.45,7.7,pl);k.box(W+1.7,0.16,0.25,0,-D/2-0.95,7.6,bm);k.box(W+1.7,0.16,0.25,0,-D/2-0.95,9.1,bm);for(const x of[-3.7,-1.2,1.2,3.7])k.box(0.25,0.15,3,x,-D/2-0.96,7.7,bm);for(const x of[-2.4,2.4])kWin(k,x,-D/2-0.97,7.9,0.9,1.1,'timber:#4a3222',0,'#3f6a3e');}
   k.box(W,D,3,0,0,1.5,'stone:#9d958a'); k.box(W+0.8,D+0.8,3.2,0,-0.2,4.6,pl);
   const fy=-D/2-0.62;
   for(const x of[-3.6,-1.2,1.2,3.6])k.box(0.25,0.15,3.2,x,fy,4.6,bm); k.box(W+0.9,0.16,0.25,0,fy,3.1,bm); k.box(W+0.9,0.16,0.25,0,fy,6.1,bm);
   for(const s of[-1,1])k.box(0.2,0.14,3.9,s*2.4,fy-0.01,4.6,bm,0,s*0.68);
-  k.prism(W+1.4,D+2.2,4,0,-0.2,6.2,'tile:#a8452f'); kDoor(k,1.6,y,0,1.2,2.2,'#4a2e22','timber:#4a3222'); kWin(k,-1.6,y,1.7,1.3,1.0,'timber:#4a3222',0,'#3f6a3e');
+  k.prism(W+1.4+up*0.6,D+2.2+up*0.6,4,0,-0.2-up*0.25,T,roof); kDoor(k,1.6,y,0,1.2,2.2,'#4a2e22','timber:#4a3222'); kWin(k,-1.6,y,1.7,1.3,1.0,'timber:#4a3222',0,'#3f6a3e');
   for(const x of[-2.4,0,2.4])kWin(k,x,fy-0.01,4.8,0.9,1.1,'timber:#4a3222',0,'#3f6a3e');
   k.cyl(0.95,0.95,3.2,10,W/2+1,1,0,'#b06a3a'); k.dome(0.95,W/2+1,1,3.2,'#b06a3a',10); for(const z of[0.8,2.4])k.cyl(1,1,0.12,10,W/2+1,1,z,'#c9a046');
   k.cyl(0.13,0.13,5.2,6,W/2+1.3,1.4,3.6,'#c9a046'); k.vent(W/2+1.3,1.4,9,0.5); k.cyl(0.3,0.3,0.12,10,W/2+1,0.05,2,'#e8e2d2',PI/2);
-  k.box(1,0.8,3,-1.8,1.6,9.6,'#7a3c31');
+  k.box(1,0.8,3,-1.8,1.6,T+3.4,'#7a3c31');
   k.sm(()=>{for(const x of[-2.4,0,2.4]){k.box(1.1,0.3,0.25,x,fy-0.25,4.1,'planks:#6a4a2e');for(let i=0;i<4;i++)k.box(0.18,0.18,0.18,x-0.38+i*0.25,fy-0.25,4.33,['#d0485a','#e8c040','#9a5ad0','#4f8a3a'][i]);}
     k.box(0.08,1.2,0.08,-W/2-0.1,fy-0.5,3.4,'#2a2420');k.box(0.06,0.85,0.6,-W/2-0.1,fy-0.95,2.9,'planks:#7a5a3e');k.pipe(W/2+0.5,fy+0.2,6.1,W/2+0.5,fy+0.2,0.2,0.07,'#b06a3a');});
-  k.finish('Timberframe',W+2.4,D+1.4,[3,-0.03,0.025]);
+  k.finish(name,W+2.4,D+1.4+up*0.6,[3,-0.03,0.025]);
 }
 /* --- Temple Ward: white stone houses of the faithful, gilded domes --- */
 function kChapel(){
@@ -1290,6 +1304,17 @@ function kArcade(){
     for(let x=-W/2+1.75;x<W/2-1;x+=3.5)k.ring(0.35,0.06,x,y-0.05,H-0.6,'#b8893e');});
   k.finish('Arcade',W+1,D+1);
 }
+function kSpan(){
+  const k=new KitB(),L=21,ir='#2a2c30',cu='#8a5a32';
+  for(const sx of[-1,1]){k.box(0.4,0.4,11.5,sx*L/2,0,5.75,ir);k.box(0.8,0.8,0.3,sx*L/2,0,0.15,ir);}
+  k._add(new THREE.CylinderGeometry(0.32,0.32,L,8).toNonIndexed().rotateZ(PI/2),k.M(0,0,10.2),cu);
+  k._add(new THREE.CylinderGeometry(0.2,0.2,L,6).toNonIndexed().rotateZ(PI/2),k.M(0,0.6,10.9),ir);
+  for(const x of[-6,0,6])k.ring(0.38,0.08,x,0,10.2,'#b8893e');
+  k.sm(()=>{for(let i=0;i<8;i++){const x0=-L/2+i*L/8,x1=x0+L/8,sag=t=>9.3-2.2*(1-((t/(L/2))**2));k.pipe(x0,-0.5,sag(x0),x1,-0.5,sag(x1),0.03,'#1e1f24');}
+    k.box(0.05,0.05,1,0,-0.5,6.6,'#1e1f24');k.glass(0.5,0.5,0.6,0,-0.5,5.9);k.vent(-L/2+0.5,0,11.2,0.5);
+    k.box(1.6,0.08,0.9,3.5,0,8.9,'#2e5a46');k.box(0.04,0.04,1,3.5,0,9.7,ir);});
+  k.finish('Span',L,1.4);
+}
 function kBarracks(){
   const k=new KitB(),W=20,D=12,y=-D/2,st='stone:#9a938a',watch='#3f3a6c';
   k.box(W,D,8,0,0,4,st); k.box(W+0.4,D+0.4,0.5,0,0,8.25,'stone:#7f786d'); k.box(W-1,D-1,0.2,0,0,8.4,'slate:#4a5a78');
@@ -1363,8 +1388,8 @@ function kWalls(){
 }
 (function buildKit(){
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
-  kManor(); kTenement(); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
-  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber(); kChapel(); kShop(); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kLab(); kClock(); kPortal();
+  kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop(); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kLab(); kClock(); kPortal();
 })();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
 // and only blocks near the player cast shadows. One batch per house type for the whole city drew all of it from anywhere.
@@ -1398,17 +1423,22 @@ function cullCells(){
 const kitReady=()=>!!KIT.geo.RowA;
 
 /* ---------- Aldrath's districts: every people in one city, rich by the plaza, poor by the walls ---------- */
-const CULTURE={'Hrimfolk Quarter':['Longhouse','Lodge'],'Zarhim Quarter':['Adobe','AdobeDome'],'Aurelan Quarter':['Timberframe','Manor','RowB'],'Ferrin Quarter':['Forge','Tenement'],
-  'Ruadhan Quarter':['Roundhouse'],'Wayfolk Quarter':['Timberframe'],'Temple Ward':['Chapel','Manor'],'Market Ward':['Shopfront','RowA','RowB','RowC']};
-const ALL_CULT=['Longhouse','Lodge','Adobe','AdobeDome','Forge','Roundhouse','Timberframe','Shopfront'];
-const WEALTH_Q={'Temple Ward':0.15,'Aurelan Quarter':0.1,'Market Ward':0.06,'Ferrin Quarter':-0.06,'Wayfolk Quarter':-0.12,'Zarhim Quarter':-0.05};
+const CULTURE={'Hrimfolk Quarter':['Longhouse','Lodge','Lodge'],'Zarhim Quarter':['Adobe','AdobeDome','Adobe'],'Aurelan Quarter':['Timberframe3','Manor','RowB','TimberframeB'],'Ferrin Quarter':['Forge','Forge','Tenement7','Tenement'],
+  'Ruadhan Quarter':['Roundhouse','Roundhouse','TimberframeB'],'Wayfolk Quarter':['Timberframe','Timberframe3','TimberframeB','Tenement4'],'Temple Ward':['Chapel','Manor'],'Market Ward':['Shopfront','RowA','RowB','RowC']};
+const ALL_CULT=['Longhouse','Lodge','Adobe','AdobeDome','Timberframe3','TimberframeB','Tenement4','Tenement7','Forge','Roundhouse','Timberframe','Shopfront'];
+const WEALTH_Q={'Temple Ward':0.15,'Aurelan Quarter':0.12,'Market Ward':0.08,'Ferrin Quarter':-0.14,'Hrimfolk Quarter':-0.06,'Wayfolk Quarter':-0.06,'Zarhim Quarter':-0.04};
 const QTINT={'Ferrin Quarter':[0.86,0.88,0.96],'Hrimfolk Quarter':[0.92,0.94,1],'Zarhim Quarter':[1.06,1,0.9],'Temple Ward':[1.06,1.05,1.02],'Aurelan Quarter':[1.04,1.0,0.94],'Ruadhan Quarter':[0.97,1.03,0.93]};
-function cityWealth(a,r){const q=quarterOf(a).name;return smooth(CITY.r-20,CITY.core+30,r)*0.95+(WEALTH_Q[q]||0)+N.c(Math.cos(a)*2.2+7,Math.sin(a)*2.2)*0.22-0.05;}
+const angD=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
+function cityWealth(a,r){const q=quarterAR(a,r).name, gate=Math.exp(-(((angD(a,Math.PI/2)*r)/70)**2)), back=Math.max(0,-Math.sin(a))*smooth(150,285,r);
+  let av=1e9;for(const v of AVENUES)av=Math.min(av,angD(a,v)*r);
+  return smooth(CITY.r-20,CITY.core+30,r)*0.72+gate*0.42+smooth(40,12,av)*0.1-back*0.38+Math.max(0,Math.sin(a))*0.16+(WEALTH_Q[q]||0)+N.c(Math.cos(a)*2.2+7,Math.sin(a)*2.2)*0.18+0.04;}
 function pickHouse(a,r,rnd){ // a district builds its own people's houses; only the poorest streets fall to shacks
-  const w=cityWealth(a,r), q=quarterOf(a).name, own=CULTURE[q]||['RowA','RowB','RowC'], u=rnd(), any=l=>l[Math.floor(rnd()*l.length)];
-  if(w>0.78&&(q==='Market Ward'||q==='Temple Ward')&&u<0.45)return 'Manor';
-  if(w>0.2)return any(own);
-  return u<0.4?(HUT[q]||'Shack'):any(own);
+  const w=cityWealth(a,r), x=CITY.x+Math.cos(a)*r+(rnd()-0.5)*44, z=CITY.z+Math.sin(a)*r+(rnd()-0.5)*44, q=quarterAt(x,z).name,
+    own=(CULTURE[q]||['RowA','RowB','RowC']).filter(n=>n!=='Manor'||w>0.6), u=rnd(), any=l=>l[Math.floor(rnd()*l.length)];
+  if(w>0.8&&(q==='Market Ward'||q==='Temple Ward'||q==='Aurelan Quarter')&&u<0.4)return 'Manor';
+  if(w>0.25)return u<0.18?any(w>0.55?['RowA','RowB','RowC','Shopfront']:['RowB','Tenement4','Tenement']):any(own);
+  if(w>0.08)return u<0.35?any(['Tenement','Tenement4','Tenement7']):any(own);
+  return u<0.45?(HUT[q]||'Shack'):u<0.75?any(['Tenement7','Tenement','Shack2']):any(own);
 }
 // two placed footprints overlap? (rotated rectangles, as the colliders store them)
 function rectHit(a,b){
@@ -1420,10 +1450,10 @@ function rectHit(a,b){
 }
 function footprintFree(f){for(const c of colliders)if(c.type!=='circle'&&rectHit(f,c))return false;return true;}
 const LANDMARKS=[
-  {name:'Tavern',label:'The Lantern & Gear',R:196,side:1,a:1.12,s:1.5},{name:'Tavern2',label:'The Fogbound Arms',R:262,side:-1,a:1.79,s:1.5},
-  {name:'Foundry',label:'The Ironway Foundry',R:196,side:-1,a:0.25,s:1.5},{name:'Barracks',label:'Hall of the Lantern Vigil',R:262,side:1,a:1.36,s:1.5},
+  {name:'Tavern',label:'The Lantern & Gear',R:196,side:1,a:1.95,s:1.5},{name:'Tavern2',label:'The Fogbound Arms',R:262,side:-1,a:1.79,s:1.5},
+  {name:'Foundry',label:'The Ironway Foundry',R:196,side:-1,a:-1.0,s:1.5},{name:'Barracks',label:'Hall of the Lantern Vigil',R:262,side:1,a:1.36,s:1.5},
   {name:'Arcade',label:'The Glass Arcade',R:196,side:-1,a:1.36},
-  {name:'Laboratory',label:"The Artificers' Laboratory",R:118,side:1,a:0.95,s:1.5},{name:'Clocktower',label:'The Great Clock',plaza:88,a:2.09,s:1.3},
+  {name:'Laboratory',label:"The Artificers' Laboratory",R:118,side:1,a:0.5,s:1.5},{name:'Clocktower',label:'The Great Clock',plaza:88,a:2.09,s:1.3},
   {name:'Portal',label:'The Sealed Portal',plaza:84,a:Math.PI/2}];
 const LANDMARK_AT=[];
 const portalLight=new THREE.PointLight(0xb48cff,0,22,2); scene.add(portalLight);
@@ -1435,7 +1465,7 @@ function buildCityHouses(){
     const ry=L.plaza?Math.PI/2-L.a:-L.a+Math.PI/2+(L.side>0?Math.PI:0);
     (lists[L.name]=lists[L.name]||[]).push({x,y:heightAt(x,z)-0.3,z,ry,tint:[1,1,1],s:u}); colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d});}
   const blocked=(a,r,half)=>nearAvenue(a,r,10.5+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
-  const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterOf(a).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
+  const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterAR(a,r).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   // houses face the ring streets, on both kerbs of each ring
   for(const rr of RINGS)for(const side of[-1,1]){
     if(rr===RINGS[0]&&side<0&&rr-10<CITY.core+30)continue;
@@ -1451,6 +1481,8 @@ function buildCityHouses(){
       arc+=(w+gap)*rr/r;
     }
   }
+  for(const rr of RINGS){let arc=rnd()*20;const L=2*Math.PI*rr;while(arc<L){const a=arc/rr;arc+=34+rnd()*30;const q=quarterAR(a,rr).name;
+    if((cityWealth(a,rr)>0.42&&q!=='Ferrin Quarter')||blocked(a,rr,16))continue;const x=CITY.x+Math.cos(a)*rr,z=CITY.z+Math.sin(a)*rr;put('Span',x,z,-a,[1,1,1]);}}
   // gardens behind the grand houses near the plaza
   for(let k=0,n=Math.floor(2*Math.PI*157/17);k<n;k++){const a=k/n*Math.PI*2;if(cityWealth(a,157)<0.62||blocked(a,157,6))continue;
     const x=CITY.x+Math.cos(a)*157,z=CITY.z+Math.sin(a)*157,ry=-a+Math.PI/2;if(!footprintFree({x,z,hw:6.3,hd:6.3,rot:ry}))continue;put('Garden',x,z,ry,[1,1,1]);colliders.push({x,z,hw:6,hd:6,rot:ry});}
@@ -1458,7 +1490,7 @@ function buildCityHouses(){
   for(const [r0,r1] of[[223,237],[287,292]])for(let r=r0;r<=r1;r+=5.4){
     let arc=rnd()*5; const L=2*Math.PI*r;
     while(arc<L){const a=arc/r;arc+=5.6+rnd()*2.4;if(cityWealth(a,r)>(r0>250?0.0:0.1)||blocked(a,r,3)||rnd()<0.3)continue;
-      const name=HUT[quarterOf(a).name]||(rnd()<0.35?'Shack2':'Shack'),rj=r+(rnd()-0.5)*1.5,x=CITY.x+Math.cos(a)*rj,z=CITY.z+Math.sin(a)*rj,ry=-a+Math.PI/2+(rnd()<0.5?0:Math.PI)+(rnd()-0.5)*0.5;
+      const name=HUT[quarterAR(a,r).name]||(rnd()<0.35?'Shack2':'Shack'),rj=r+(rnd()-0.5)*1.5,x=CITY.x+Math.cos(a)*rj,z=CITY.z+Math.sin(a)*rj,ry=-a+Math.PI/2+(rnd()<0.5?0:Math.PI)+(rnd()-0.5)*0.5;
       if(!footprintFree({x,z,hw:3.2,hd:2.8,rot:ry}))continue;
       put(name,x,z,ry,tintFor(a,rj,name)); colliders.push({x,z,hw:3,hd:2.6,rot:ry}); count++;}
   }
@@ -1495,13 +1527,13 @@ function buildCity(){
 }
 // low-detail terrain for the whole island, so distant land and the city sit on solid ground
 // ---- inside the outer city: quarters, streets, houses, market, crowds
-const RINGS=[118,196,262], AVENUES=Q_EDGE.slice(0,8), MARKET={r:232,rad:24};   // the avenues run along the districts' edges
+const RINGS=[118,196,262], MARKET={r:232,rad:24};
 const QUARTERS=[ // by angle sector, starting east and turning toward the gate (south, +z)
   {name:'Ferrin Quarter',roof:[0x5b5f66,0x8a3b2a]},{name:'Market Ward',roof:[0xb5473a,0xc98f2e]},
   {name:'Wayfolk Quarter',roof:[0xb5473a,0x4f8a4a,0x3f6fa8,0xc98f2e]},{name:'Ruadhan Quarter',roof:[0x4f8a4a,0x7a4a2a]},
   {name:'Hrimfolk Quarter',roof:[0x6f7c86,0x3d4a58]},{name:'Temple Ward',roof:[0xe6e0d0,0xc9a046]},
   {name:'Aurelan Quarter',roof:[0xa8452f,0x3f4a5c,0x8a4a3a]},{name:'Zarhim Quarter',roof:[0xd9b06a,0xb5703a]}];
-const quarterOf=a=>{a=((a%(2*Math.PI))+2*Math.PI)%(2*Math.PI);for(let i=0;i<8;i++)if(a<Q_EDGE[i+1])return QUARTERS[i];return QUARTERS[7];};
+const quarterAt=(x,z)=>QUARTERS[qIndex(x,z)], quarterAR=(a,r)=>quarterAt(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r);
 const roofCache=new Map(); const roofMat=c=>{if(!roofCache.has(c))roofCache.set(c,flat(c));return roofCache.get(c);};
 function nearAvenue(a,r,w){for(const av of AVENUES){let d=a-av;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)*r<w)return true;}return false;}
 const marketPos=()=>[CITY.x,CITY.z+MARKET.r];
@@ -1528,7 +1560,7 @@ function buildCityInterior(parent){
     for(let k=0;k<n;k++){
       const a=k/n*Math.PI*2, x=CITY.x+Math.cos(a)*R, z=CITY.z+Math.sin(a)*R;
       if(nearAvenue(a,R,17)||Math.hypot(x-mx,z-mz)<MARKET.rad+9)continue;
-      const Qd=quarterOf(a), roofs=Qd.roof, wall={'Ferrin Quarter':'slate','Hrimfolk Quarter':'stone','Zarhim Quarter':'sand','Temple Ward':'white'}[Qd.name]||(hash(k,R,4)<0.5?'timber':'timberRed');
+      const Qd=quarterAR(a,R), roofs=Qd.roof, wall={'Ferrin Quarter':'slate','Hrimfolk Quarter':'stone','Zarhim Quarter':'sand','Temple Ward':'white'}[Qd.name]||(hash(k,R,4)<0.5?'timber':'timberRed');
       const facing=-a+Math.PI/2+(RINGS.some(rr=>R<rr&&rr-R<20)?0:Math.PI);
       if(kitReady()){const v=fl>=4?'RowC':['RowA','RowB','RowC'][Math.floor(hash(k,R,5)*3)],j=0.94+hash(k,R,6)*0.12,t=QTINT[Qd.name]||[1,1,1];
         kitRows[v].push({x,y:heightAt(x,z)-0.3,z,ry:facing,tint:[t[0]*j,t[1]*j,t[2]*j]});colliders.push({x,z,hw:4.2,hd:4.8,rot:facing});count++;continue;}
@@ -1606,8 +1638,9 @@ function seeded(n){let s=n*7919+13;return ()=>((s=(s*16807)%2147483647)/21474836
 function buildPeople(){
   for(const p of RESIDENTS.concat(PATROLS,HUBFOLK))if(p.mesh)scene.remove(p.mesh);
   RESIDENTS.length=0; PATROLS.length=0; HUBFOLK.length=0; let id=1;
-  QUARTERS.forEach((Q,qi)=>{const n=Math.round(70*Q_WEIGHT[qi])+3, a0=Q_EDGE[qi], a1=Q_EDGE[qi+1];
-    for(let k=0;k<n;k++){const r=seeded(id*31),R=RINGS[Math.floor(r()*3)],pad=10/R,lo=a0+pad,hi=Math.max(lo+0.01,a1-pad),aa=lo+r()*(hi-lo),span=Math.min(hi-lo,(14+r()*40)/R);
+  const spans=QUARTERS.map(()=>[]); for(const R of RINGS)for(let a=0;a<6.283;a+=0.02){const qi=qIndex(CITY.x+Math.cos(a)*R,CITY.z+Math.sin(a)*R);const L=spans[qi];const last=L[L.length-1];if(last&&last.R===R&&Math.abs(last.a1-a)<0.03)last.a1=a+0.02;else L.push({R,a0:a,a1:a+0.02});}
+  QUARTERS.forEach((Q,qi)=>{const n=Math.round(70*Q_WEIGHT[qi])+3, sp=spans[qi].filter(t=>(t.a1-t.a0)*t.R>30); if(!sp.length)return;
+    for(let k=0;k<n;k++){const r=seeded(id*31),t=sp[Math.floor(r()*sp.length)],R=t.R,a0=t.a0,a1=t.a1,pad=10/R,lo=a0+pad,hi=Math.max(lo+0.01,a1-pad),aa=lo+r()*(hi-lo),span=Math.min(hi-lo,(14+r()*40)/R);
       const race=(()=>{const mix=RACE_MIX[Q.name]||RACE_MIX.city;let u=r();for(const k2 in mix){u-=mix[k2];if(u<=0)return k2;}return 'Wayfolk';})();
       RESIDENTS.push({id:id++,R,off:(r()-0.5)*12,a0:Math.max(lo,aa-span/2),a1:Math.min(hi,aa+span/2),a:aa,dir:r()<0.5?1:-1,speed:0.9+r()*0.5,wait:r()*5,race,owl:r()<0.25,mesh:null,walking:true});}});
   const routes=[{ring:118},{ring:196},{ring:262},{ring:196,back:true},{avenue:Math.PI/2}];
@@ -1681,7 +1714,7 @@ function placeName(x,z){
   const dc=Math.hypot(x-CITY.x,z-CITY.z);
   if(dc<CITY.core+26)return 'The grand plaza';
   const [mx,mz]=marketPos(); if(Math.hypot(x-mx,z-mz)<MARKET.rad+6)return 'The market square';
-  if(dc<CITY.r)return quarterOf(Math.atan2(z-CITY.z,x-CITY.x)).name;
+  if(dc<CITY.r)return quarterAt(x,z).name;
   if(dc<CITY.r+55&&Math.abs(x-CITY.x)<30)return 'The gate checkpoint';
   if(inOutskirts(x,z))return 'The outskirts';
   if(dc<CITY.r+55)return 'Outside the city walls';
@@ -3259,7 +3292,7 @@ const RACE_MIX={
 function raceAt(x,z){
   let mix=RACE_MIX.city; const dc=Math.hypot(x-CITY.x,z-CITY.z);
   if(Math.hypot(x-VILLAGE.x,z-VILLAGE.z)<200)mix=RACE_MIX.village; else if(Math.hypot(x-PORT.x,z-PORT.z)<200)mix=RACE_MIX.port;
-  else if(dc<CITY.r)mix=RACE_MIX[quarterOf(Math.atan2(z-CITY.z,x-CITY.x)).name]||RACE_MIX.city; else if(dc<CITY.r+260)mix=RACE_MIX.outskirts;
+  else if(dc<CITY.r)mix=RACE_MIX[quarterAt(x,z).name]||RACE_MIX.city; else if(dc<CITY.r+260)mix=RACE_MIX.outskirts;
   let u=Math.random(); for(const k in mix){u-=mix[k];if(u<=0)return k;} return 'Wayfolk';
 }
 
@@ -3329,7 +3362,7 @@ function villageUpdate(dt){
 
 /* ---------- Admin tools: teleport, time, god mode, speed ---------- */
 const ADMIN={god:false,fast:false};
-function qSpot(name){const i=QUARTERS.findIndex(q=>q.name===name),a=(Q_EDGE[i]+Q_EDGE[i+1])/2;return [CITY.x+Math.cos(a)*196,CITY.z+Math.sin(a)*196,-a-Math.PI/2];}
+function qSpot(name){const i=QUARTERS.findIndex(q=>q.name===name),[a,r0]=QSEED_AR[i],R=RINGS.reduce((b,v)=>Math.abs(v-r0)<Math.abs(b-r0)?v:b);return [CITY.x+Math.cos(a)*R,CITY.z+Math.sin(a)*R,-a-Math.PI/2];}
 const SPOTS=[
   ['The village',()=>[VILLAGE.x+4,VILLAGE.z+18,Math.PI]],['South road',()=>[-20,380,0]],["Hollin's Cross pier",()=>[PORT.x,PORT.z+20,0]],
   ['Outside the city gate',()=>[CITY.x,CITY.z+CITY.r+40,0]],['The outskirts',()=>[CITY.x+70,CITY.z+CITY.r+80,0]],['Market square',()=>{const [x,z]=marketPos();return [x,z+14,0];}],
