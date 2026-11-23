@@ -1147,6 +1147,7 @@ class KitB{
     this.poly([[-w0/2,-d0/2,0],[w0/2,-d0/2,0],[w0/2,d0/2,0],[-w0/2,d0/2,0],[-w1/2,-d1/2,h],[w1/2,-d1/2,h],[w1/2,d1/2,h],[-w1/2,d1/2,h]],
       [[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7],[3,2,1,0]],this.M(x,y,z),col);}
   finish(name,w,d,lean){
+    if(typeof HUB_DRESS!=='undefined'&&HUB_DRESS[name])dressHub(this,name);
     this.unfight(); this.bakeAO();
     if(lean){const [z0,kx,ky]=lean,sh=(x,y,z)=>z>z0?[x+kx*(z-z0)*(z-z0)/6,y-ky*(z-z0)*(z-z0)/6]:[x,y];
       for(const g of this.parts){const p=g.attributes.position;for(let i=0;i<p.count;i++){const [x,y]=sh(p.getX(i),p.getY(i),p.getZ(i));p.setX(i,x);p.setY(i,y);}}
@@ -1937,10 +1938,75 @@ function kWalls(){
   k.box(2.6,1.2,5.2,0,3.6,22,'#d9cfba'); k.cyl(1,1,0.3,14,0,4.3,22.3,'#c9a046',PI/2);
   k.finish('Gatehouse',47,15);
 }
+
+/* ---------- the hubs' dressing: what makes a building read as a place people use. Shared: door lanterns on brackets, a
+   gutter with downpipes that reach the ground, gas lamps on the facade, steps, benches, planters, banners, barrels and crates;
+   then each hub's own trade spills onto the street. Front face at plan y=f, width W, eave e, door at x=dx. ---------- */
+const HUB_DRESS={
+  Tavern:{W:12.6,f:-5.3,e:6.9,dx:0,ban:'#2e5a46',extra:'tavern'}, Tavern2:{W:12.6,f:-5.3,e:6.9,dx:0,ban:'#7a2a24',extra:'tavern'},
+  Foundry:{W:16,f:-7,e:7,dx:0,ban:'#5a2e24',extra:'foundry',nodoor:1}, Barracks:{W:20,f:-6,e:6,dx:0,ban:'#3f3a6c',extra:'barracks'},
+  Laboratory:{W:12,f:-6,e:7,dx:0,ban:'#2f5fa8',extra:'lab'}, Bank:{W:26,f:-10,e:11.6,dx:0,ban:'#7a2a24',extra:'bank',nogutter:1},
+  Guild:{W:22,f:-8.3,e:9.6,dx:0,ban:'#7a2a24',extra:'guild'}, Arcade:{W:28,f:-6,e:6.2,dx:0,ban:'#2e5a46',extra:'arcade',nogutter:1},
+  Waterworks:{W:14,f:-5,e:8,dx:-2,ban:'#2f4a5e',extra:'water'}, Granary:{W:14,f:-7,e:7,dx:-4,ban:'#8a6a3a',extra:'granary',cx:-4},
+  ShopArmor:{W:8,f:-4.5,e:10,dx:3.1,ban:'#3f4a5c',extra:'shop'}, ShopWeapon:{W:8,f:-4.5,e:10,dx:3.1,ban:'#7a2a24',extra:'shop'},
+  ShopAlchemy:{W:8,f:-4.5,e:10,dx:3.1,ban:'#3c8d4f',extra:'shop'}, ShopTailor:{W:8,f:-4.5,e:10,dx:3.1,ban:'#9a5ad0',extra:'shop'}};
+function dressHub(k,name){
+  const S=HUB_DRESS[name],W=S.W,f=S.f,e=S.e,dx=S.dx,cx=S.cx||0,ir='#26262b',cu='#8a5a32',br='#b8893e',L=cx-W/2,R=cx+W/2;
+  let sd=name.length*977+11;const r=()=>(sd=(sd*16807)%2147483647)/2147483647;
+  const lamp=(x,z)=>{k.box(0.08,0.5,0.08,x,f-0.25,z+0.3,ir);k.box(0.08,0.08,0.4,x,f-0.5,z+0.1,ir);k.glass(0.3,0.3,0.42,x,f-0.5,z-0.25);k.box(0.4,0.4,0.08,x,f-0.5,z+0.02,br);k.cyl(0.05,0.1,0.18,6,x,f-0.5,z+0.06,ir);};
+  const barrel=(x,y)=>{k.cyl(0.38,0.34,0.95,10,x,y,0,'wood:#6a4a2e');for(const z of[0.15,0.8])k.cyl(0.39,0.39,0.05,10,x,y,z,ir);};
+  const crate=(x,y,s0)=>k.box(s0,s0,s0,x,y,s0/2,'wood:#8a6a48');
+  k.sm(()=>{
+    if(!S.nodoor){for(const s2 of[-1,1])lamp(dx+s2*1.6,2.7);                                                         // lanterns either side of the door
+      k.box(3.0,0.6,0.16,dx,f-0.3,0.08,'stone:#9d958a');k.box(2.6,0.35,0.16,dx,f-0.17,0.24,'stone:#a8a091');}              // two steps
+    for(let x=L+2.2;x<R-1.5;x+=4.6)if(Math.abs(x-dx)>2.6)lamp(x,3.6);                                                 // lamps along the front
+    if(!S.nogutter){k.box(W+0.3,0.22,0.16,cx,f-0.2,e-0.1,cu);for(const x of[L+0.25,R-0.25]){k.pipe(x,f-0.2,e-0.15,x,f-0.2,0.25,0.07,cu);k.box(0.22,0.4,0.12,x,f-0.38,0.14,cu);
+      for(let z=1.2;z<e-0.6;z+=1.8)k.box(0.18,0.12,0.06,x,f-0.08,z,ir);}}                                              // gutter, downpipes on brackets, shoes
+    for(const s2 of[-1,1]){const x=dx+s2*(S.W>14?4.2:2.9);if(x<L+0.6||x>R-0.6)continue;k.box(0.06,0.06,1.1,x,f-0.3,e-1.2,br);k.box(0.04,0.9,0.06,x,f-0.75,e-0.7,br);
+      k.box(0.86,0.05,2.2,x,f-1.2,e-2.0,'cloth:'+S.ban);k.box(0.9,0.06,0.25,x,f-1.2,e-0.95,br);}                       // banners on brass arms
+    if(!S.nodoor){const bx=dx+(dx>cx?-3.4:3.4);if(bx>L+1&&bx<R-1){k.box(1.8,0.45,0.08,bx,f-0.55,0.48,'wood:#6a4a30');for(const s2 of[-0.75,0.75])k.box(0.1,0.45,0.48,bx+s2,f-0.55,0.24,'wood:#4a3222');k.box(1.8,0.08,0.5,bx,f-0.8,0.85,'wood:#6a4a30');}}  // a bench
+    const px=R-0.9;k.box(1.1,0.6,0.5,px,f-0.35,0.25,'stone:#8f877b');for(let i=0;i<3;i++)k._add(new THREE.SphereGeometry(0.22,6,4).toNonIndexed(),k.M(px-0.35+i*0.35,f-0.35,0.62),'#3f5a2a');   // a planter
+    barrel(L+0.7,f-0.7);barrel(L+1.5,f-0.55);crate(L+0.9,f-1.5,0.7);
+  });
+  const X=S.extra;
+  if(X==='tavern'){k.sm(()=>{for(const [x,y] of[[-3.8,f-3.2],[3.8,f-3.4]]){k.cyl(0.7,0.7,0.08,10,x,y,0.82,'wood:#7a5232');k.cyl(0.08,0.14,0.82,6,x,y,0,'wood:#4a3222');for(let i=0;i<3;i++){const a=i/3*PI*2+0.4;k.cyl(0.2,0.2,0.06,8,x+Math.cos(a)*1.0,y+Math.sin(a)*1.0,0.46,'wood:#6a4a30');k.cyl(0.04,0.04,0.46,5,x+Math.cos(a)*1.0,y+Math.sin(a)*1.0,0,'wood:#4a3222');}k.cyl(0.07,0.07,0.16,6,x+0.2,y,0.88,'#c9a046');}
+      k.cyl(0.04,0.04,2.6,5,-3.8,f-3.2,0.9,'wood:#4a3222');k._add(new THREE.ConeGeometry(1.5,0.8,8).toNonIndexed(),k.M(-3.8,f-3.2,3.6,0,PI/2),'cloth:#c9b48e');   // a parasol
+      for(let i=0;i<3;i++)for(let j=0;j<2-i%2;j++)k._add(new THREE.CylinderGeometry(0.42,0.42,0.9,10).toNonIndexed().rotateZ(PI/2),k.M(-W/2+1.5+j*0.95+i*0.45,f-2.3,0.42+i*0.78),'wood:#6a4a2e');   // a stack of kegs
+      k.box(2.4,1.2,0.9,W/2-1.6,f-2.6,0.9,'wood:#6b4a30');for(const s2 of[-1,1])k._add(new THREE.CylinderGeometry(0.45,0.45,0.1,10).toNonIndexed().rotateZ(PI/2),k.M(W/2-1.6+s2*1.25,f-2.6,0.45),'wood:#3e2c20');   // a dray cart
+      k.box(0.1,1.6,0.1,W/2-1.6,f-3.9,0.65,'wood:#4a3222');});}
+  if(X==='foundry'){k.sm(()=>{for(let i=-3;i<=3;i++)for(const s2 of[-0.45,0.45])k.box(0.1,1.6,0.08,i*1.6,f-2.4+s2*0,0.04,'#3a3c40');k.box(0.08,5,0.08,-0.45,f-2.5,0.05,'#3a3c40');k.box(0.08,5,0.08,0.45,f-2.5,0.05,'#3a3c40');   // rails out of the yard
+      for(const y of[f-2,f-4.2]){k.box(1.2,1.0,0.7,0,y,0.6,'metal:#4a4e54');for(const sx of[-0.45,0.45])for(const sy of[-0.35,0.35])k._add(new THREE.CylinderGeometry(0.22,0.22,0.08,8).toNonIndexed().rotateZ(PI/2),k.M(sx*1.2,y+sy,0.22),'#2a2c30');k.box(1.0,0.8,0.2,0,y,1.0,'#2a2420');}   // ore carts
+      k._add(new THREE.ConeGeometry(1.6,1.4,8).toNonIndexed(),k.M(-W/2+2,f-3,0.7,0,PI/2),'#1a1614');                                                      // coal heap
+      for(let i=0;i<4;i++)for(let j=0;j<3-i%2;j++)k.box(0.9,0.3,0.2,W/2-2.2+j*0.3*0,f-2.2+j*0.32,0.1+i*0.2,i%2?'#c9a046':'#8a8f96');});}               // ingots
+  if(X==='barracks'){k.sm(()=>{for(const x of[-6,6]){k.cyl(0.08,0.08,1.6,6,x,f-3,0,'wood:#4a3222');k.box(0.5,0.35,0.7,x,f-3,1.6,'linen:#c9b48e');k.box(1.1,0.1,0.1,x,f-3,1.5,'wood:#4a3222');k._add(new THREE.SphereGeometry(0.2,6,4).toNonIndexed(),k.M(x,f-3,2.15),'linen:#c9b48e');}   // training dummies
+      k.box(2.6,0.5,1.6,3,f-1.2,0.8,'wood:#4a3626');for(let j=0;j<5;j++)k.box(0.05,0.05,1.8,1.9+j*0.55,f-1.45,1.3,'#c0c6cc');                                    // weapon rack
+      for(const x of[-W/2+1.2,W/2-1.2]){k.cyl(0.08,0.1,9,6,x,f-2,0,ir);k.box(0.05,1.8,1.2,x,f-2.9,8.2,'cloth:#3f3a6c');}                                            // flagpoles
+      k.box(1.8,1.6,0.12,-3,f-1.0,2.8,'wood:#4a3222');k.cyl(0.35,0.5,0.6,10,-3,f-1.6,2.0,'#b8893e');});}                                                        // the watch bell
+  if(X==='lab'){k.cyl(0.25,0.3,4,8,W/2-1.5,0,7,'#8a5a32');for(let z=7.6;z<11;z+=0.45)k.cyl(0.55,0.55,0.1,10,W/2-1.5,0,z,'#b8893e');k.fire(0.35,0.35,0.35,W/2-1.5,0,11.2);   // a coil on the roof, crackling
+    for(const x of[-W/2+1.8,-W/2+3.6]){k.cyl(0.6,0.6,1.8,12,x,1.5,7,'#5f8f78');k.dome(0.6,x,1.5,8.8,'#5f8f78',10);k.pipe(x,1.5,8.2,W/2-1.5,0,9,0.07,'#8a5a32');}     // tanks feeding it
+    k.sm(()=>{for(let i=0;i<4;i++){k.box(0.8,0.8,0.6,W/2-1.4-i*0.3,f-1.4,0.3+i%2*0.6,'wood:#8a6a48');}for(let i=0;i<5;i++)k.glass(0.18,0.18,0.35,W/2-2+i*0.22,f-1.4,1.25);});}
+  if(X==='bank'){k.sm(()=>{for(let x=-W/2+1;x<=W/2-1;x+=0.5)if(Math.abs(x)>3)k.box(0.05,0.05,1.1,x,f-5.4,0.55,ir);k.box(W-2,0.06,0.06,0,f-5.4,1.1,ir);for(const x of[-W/2+1,W/2-1]){k.box(0.4,0.4,1.4,x,f-5.4,0.7,'stone:#b5ad9c');k._add(new THREE.SphereGeometry(0.22,8,6).toNonIndexed(),k.M(x,f-5.4,1.6),'#b8893e');}   // railing and gateposts
+      for(const s2 of[-1,1]){k.box(1.6,1.6,2.6,s2*6,f-4.2,1.3,'stone:#b5ad9c');k.prism(1.9,1.9,0.8,s2*6,f-4.2,2.6,'slate:#3f4a5c');k.box(0.8,0.1,1.0,s2*6,f-5.0,1.4,'#1a1612');}   // guard boxes
+      k.pipe(W/2-2,f-0.3,10,W/2-2,f-0.3,0.4,0.18,'#b8893e');k.box(0.7,0.7,1.0,W/2-2,f-0.7,0.5,'#b8893e');k.disc(0.2,0.08,W/2-2,f-1.06,0.7,'#2a2c30');});}   // the pneumatic post tube
+  if(X==='guild'){k.sm(()=>{for(const x of[-5,5]){k.box(2.2,0.2,1.6,x,f-1.8,1.6,'wood:#5a3e28');for(const s2 of[-1,1])k.box(0.12,0.12,2.4,x+s2*1.0,f-1.8,1.2,'wood:#4a3222');k.prism(2.6,0.9,0.5,x,f-1.8,2.45,'shingle:#4a4038');
+        for(let i=0;i<6;i++)k.box(0.42,0.03,0.5,x-0.75+(i%3)*0.75,f-1.92,1.25+Math.floor(i/3)*0.6,'linen:#e8e2d2');}                                                     // notice boards in the street
+      k.box(1.4,0.3,1.0,0,f-0.2,e-2.2,'wood:#5a3e28');k.box(0.8,0.9,0.7,0,f-0.7,e-2.2,'#4a3a2a');for(const s2 of[-1,1])k.pipe(s2*0.3,f-0.9,e-1.8,s2*0.9,f-1.1,e-1.0,0.06,'#d8cfb8');});}   // a mounted trophy
+  if(X==='arcade'){k.sm(()=>{for(let i=0;i<5;i++){const x=-W/2+3+i*5.5;k.box(1.6,0.9,0.8,x,f-1.6,0.4,'wood:#6a4a30');k.box(1.8,1.1,0.06,x,f-1.6,2.4,'cloth:'+['#b5473a','#2e5a46','#c9a046','#3f6fa8','#7a2a24'][i]);for(const s2 of[-0.85,0.85])k.box(0.06,0.06,2.4,x+s2,f-2.1,1.2,'wood:#3a2a1e');
+        for(let j=0;j<3;j++)k.box(0.4,0.4,0.3,x-0.5+j*0.5,f-1.6,0.95,['#c0392b','#d4a017','#3c8d4f','#8a5a32'][(i+j)%4]);}});}
+  if(X==='water'){k.sm(()=>{k.box(1.2,0.8,1.0,dx+3,f-1.2,0.5,'stone:#8f877b');k.pipe(dx+3,f-1.2,1.0,dx+3,f-1.2,1.8,0.08,'#8a5a32');k.pipe(dx+3,f-1.2,1.8,dx+3,f-1.7,1.6,0.06,'#8a5a32');k.cyl(0.5,0.45,0.4,10,dx+3,f-2.0,0,'stone:#8f877b');   // a public tap and trough
+      for(let i=0;i<3;i++)k.cyl(0.32,0.32,0.5,8,dx+4.4+i*0.7,f-1.2,0,'wood:#6a4a2e');});}
+  if(X==='granary'){k.sm(()=>{for(let i=0;i<2;i++){k.box(2,3.4,0.9,-12.5+i*2.6,f-3.2,0.8,'wood:#6b4a30');for(const s2 of[-1,1])k._add(new THREE.CylinderGeometry(0.5,0.5,0.1,10).toNonIndexed().rotateZ(PI/2),k.M(-12.5+i*2.6+s2*1.05,f-3.2,0.5),'wood:#3e2c20');
+      for(let j=0;j<4;j++)k.box(0.8,0.5,0.4,-12.5+i*2.6+(j%2-0.5)*0.8,f-3.2+(j<2?-0.7:0.7),1.45,'linen:#c8b48a');}
+      k.box(1.6,1.6,0.3,4,f-3,0.15,'metal:#5a5e64');k.box(0.2,0.2,1.6,4.6,f-3,1.0,'metal:#5a5e64');k.disc(0.3,0.08,4.6,f-3.12,1.6,'#e8e2d2');});}   // a weighing platform
+  if(X==='shop'){k.sm(()=>{k.box(2.4,0.6,0.9,-1.0,f-1.0,0.45,'wood:#6a4a30');for(let j=0;j<4;j++)k.box(0.45,0.45,0.35,-1.9+j*0.6,f-1.0,1.08,['#c0392b','#d4a017','#3c8d4f','#8a8f96'][(j+name.length)%4]);
+      k.box(1.0,0.06,1.3,1.6,f-1.3,0.65,'wood:#4a3222');k.box(0.9,0.04,1.1,1.6,f-1.33,0.7,'linen:#e8e2d2');});}   // a display table and a chalk board
+}
 (function buildKit(){const _t0=performance.now();
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
   kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); (()=>{const k=new KitB();k.box(1,1,1,0,0,-0.5,'stone:#8f877b');k.finish('Plinth',1,1);})(); kQuay(); kWaterGate(); kPier(); kBoat(); kHarpoon(); for(let i=0;i<4;i++)kYardForge('YardForge'+i,i+1); kTerrace('Terrace',false); kTerrace('TerraceStair',true); kLongship('Longship',22,true); kLongship('LongshipS',17,false); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); GEN.shack=[]; for(let i=0;i<14;i++)genShack(i+801); for(let i=0;i<8;i++){genCulture('ferrin',i+301);genCulture('hrim',i+401);genCulture('zarhim',i+501);genCulture('ruadhan',i+601);genCulture('temple',i+701);} kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
+  for(const n in KIT.geo){if(/WallSeg|^Tower$|Gatehouse|Terrace|Quay|WaterGate|Span|LaneLine|Walkway|BridgeRoom|Plinth|Aqueduct|^Int_|RoofShack|Harpoon|Longship/.test(n))continue;
+    const g=KIT.geo[n];g.computeBoundingBox();const b=g.boundingBox;KIT.size[n]=[2*Math.max(-b.min.x,b.max.x),2*Math.max(-b.min.z,b.max.z)];}   // placement uses the true outline: bays, awnings, steps, boilers
   console.log('kit built in',Math.round(performance.now()-_t0),'ms');
 })();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
@@ -2031,10 +2097,14 @@ function buildCityHouses(){
         plinths.push({x:x+cx*c+cz*sn,z:z-cx*sn+cz*c,ry,y:y+0.05,sx:(b.max.x-b.min.x)*0.9,sy:hi-lo+0.6,sz:(b.max.z-b.min.z)*0.9,tint:[0.82,0.8,0.76]});}else y=lo-0.12;}
     const e={x,y,z,ry,tint};(lists[name]=lists[name]||[]).push(e);return e;};
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
-  LANDMARK_AT.length=0;
+  LANDMARK_AT.length=0; LM_RECTS.length=0;
   for(const L of LANDMARKS){const u=L.s||1,[w0,d0]=KIT.size[L.name],w=w0*u,d=d0*u; let x,z,ry;
-    if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(8.6+d/2)*L.side;x=CITY.x+Math.cos(L.av)*L.r+px*off;z=CITY.z+Math.sin(L.av)*L.r+pz*off;ry=Math.atan2(-px*L.side,-pz*L.side);}
-    else{const r=L.plaza||L.R+L.side*(6.8+d/2);x=CITY.x+Math.cos(L.a)*r;z=CITY.z+Math.sin(L.a)*r;ry=L.plaza?Math.PI/2-L.a:-L.a+Math.PI/2+(L.side>0?Math.PI:0);}
+    for(let push=0;push<=20;push+=0.5){
+    if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(8.6+d/2+push)*L.side;x=CITY.x+Math.cos(L.av)*L.r+px*off;z=CITY.z+Math.sin(L.av)*L.r+pz*off;ry=Math.atan2(-px*L.side,-pz*L.side);}
+    else{const r=L.plaza||L.R+L.side*(6.8+d/2+push);x=CITY.x+Math.cos(L.a)*r;z=CITY.z+Math.sin(L.a)*r;ry=L.plaza?Math.PI/2-L.a:-L.a+Math.PI/2+(L.side>0?Math.PI:0);}
+    if(L.plaza)break;let onRoad=false;PAVE_NOLANE=true;const c0=Math.cos(ry),s0=Math.sin(ry);for(let u=-1;u<=1&&!onRoad;u+=0.25)for(let v=-1;v<=1&&!onRoad;v+=0.25){const lx=u*(w/2-0.2),lz=v*(d/2-0.2);if(cityPaved(x+lx*c0+lz*s0,z-lx*s0+lz*c0)>0.5)onRoad=true;}
+    PAVE_NOLANE=false;if(!onRoad)break;}
+    PAVE_NOLANE=false;LM_RECTS.push({x,z,hw:w/2+1.2,hd:d/2+1.2,rot:ry});
     {const c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;for(const [p,q] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=p*w*0.48,lz=q*d*0.48,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}
      const y=hi>lo+0.3?hi-0.05:lo-0.15; if(hi>lo+0.3)plinths.push({x,z,ry,y:y+0.05,sx:w+0.4,sy:hi-lo+0.7,sz:d+0.4,tint:[0.82,0.8,0.76]});
      (lists[L.name]=lists[L.name]||[]).push({x,y,z,ry,tint:[1,1,1],s:u});} colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d});}
@@ -2114,6 +2184,8 @@ function buildCityHouses(){
     all.sort((A,B)=>A.pri-B.pri);const grid=new Map(),dead=new Set();
     for(const A of all){let hit=false;const gx=Math.floor(A.f.x/24),gz=Math.floor(A.f.z/24);
       for(let i=-1;i<=1&&!hit;i++)for(let j=-1;j<=1&&!hit;j++){const l=grid.get((gx+i)+','+(gz+j));if(l)for(const B of l)if(rectHit(A.f,B.f)){hit=true;break;}}
+      if(!hit&&A.pri===1){const c=Math.cos(A.e.ry||0),sn=Math.sin(A.e.ry||0),hw=A.f.hw-0.05,hd=A.f.hd-0.05;
+        for(let u=-1;u<=1&&!hit;u+=0.25)for(let v=-1;v<=1&&!hit;v+=0.25){const lx=u*hw,lz=v*hd;if(cityPaved(A.e.x+lx*c+lz*sn,A.e.z-lx*sn+lz*c)>0.5)hit=true;}}   // nothing stands on a street
       if(hit){dead.add(A.e);continue;}const k2=gx+','+gz;if(!grid.has(k2))grid.set(k2,[]);grid.get(k2).push(A);}
     const dk=new Set([...dead].map(e=>e.x+','+e.z));
     for(const n in lists)lists[n]=lists[n].filter(e=>!dead.has(e));
@@ -2138,7 +2210,13 @@ function buildCityHouses(){
         const kind=lo>8.5&&u<0.16+0.12*(w0<0.35)?(rnd()<0.5?'BridgeRoom':'BridgeRoomB'):lo>6.5&&u<0.4?'Walkway':u<0.85?'LaneLine':null;if(!kind)continue;
         put(kind,px,pz,ry,[1,1,1],y);}
       acc-=len;}}}
+  {const SK=/Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
+    for(const n in lists){if(SK.test(n)||LM.has(n)||!KIT.geo[n])continue;const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
+      lists[n]=lists[n].filter(e=>{const c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);for(let u=0;u<=1;u+=0.2)for(let v=0;v<=1;v+=0.2){const lx=(bb.min.x+(bb.max.x-bb.min.x)*u)*0.98,lz=(bb.min.z+(bb.max.z-bb.min.z)*v)*0.98;
+        if(cityPaved(e.x+lx*c+lz*sn,e.z-lx*sn+lz*c)>0.5){gone.add(e.x+','+e.z);return false;}}return true;});}   // last sweep: nothing on a street
+    if(gone.size){lists.Plinth=(lists.Plinth||[]);for(let i=colliders.length-1;i>=0;i--){const c=colliders[i];if(c.type!=='circle'&&gone.has(c.x+','+c.z))colliders.splice(i,1);}}}
   for(const n in lists)kitInstances(n,lists[n]);
+  if(LM_RECTS.length)fillCityMap(CITY_MAP);
   return count;
 }
 
@@ -2235,7 +2313,7 @@ function cityLevel(x,z,r){
     lv+=TERR_STEP*(1-smooth(c-w/2,c+w/2,r));}
   return lv;}
 function laneDist(x,z){const l=LANE_GRID.get(Math.floor(x/16)+','+Math.floor(z/16));if(!l)return 99;let d=99;for(const [A,B] of l)d=Math.min(d,segDist(x,z,A,B));return d;}
-function footOnLane(f,m){const c=Math.cos(f.rot),sn=Math.sin(f.rot);for(const [u,v] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1],[0.5,1],[-0.5,1],[0.5,-1],[-0.5,-1]]){
+function footOnLane(f,m){if(inLM(f.x,f.z))return false;const c=Math.cos(f.rot),sn=Math.sin(f.rot);for(const [u,v] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1],[0.5,1],[-0.5,1],[0.5,-1],[-0.5,-1]]){
   const lx=u*f.hw,lz=v*f.hd,x=f.x+lx*c+lz*sn,z=f.z-lx*sn+lz*c;if(laneDist(x,z)<(m||LANE_HALF+0.3))return true;}return false;}
 const GATES=[{a:Math.PI/2,s:1,label:'The Great Gate'},{a:0,s:0.72,label:'The East Gate'},{a:Math.PI,s:0.72,label:'The West Gate'},{a:Math.PI*1.5,s:0.72,label:'The Sea Gate'}];
 const QUARTERS=[ // by angle sector, starting east and turning toward the gate (south, +z)
@@ -2251,9 +2329,13 @@ function cityPaved(x,z){ // 0 in yards, 1 on streets, the avenues, the plaza and
   const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return 0;
   let k=smooth(CITY.core+25,CITY.core+23,r); for(const R of RINGS)k=Math.max(k,smooth(6.4,5.6,Math.abs(r-R)));
   const a=Math.atan2(dz,dx); k=Math.max(k,smooth(8.4,7.6,avDist(a,r)));
-  k=Math.max(k,smooth(LANE_HALF+0.5,LANE_HALF-0.4,laneDist(x,z)));
+  if(!PAVE_NOLANE&&!inLM(x,z))k=Math.max(k,smooth(LANE_HALF+0.5,LANE_HALF-0.4,laneDist(x,z)));
   const [mx,mz]=marketPos(); return Math.max(k,smooth(MARKET.rad+0.6,MARKET.rad-0.6,Math.hypot(x-mx,z-mz)));
 }
+// lanes are cut where a hub stands (they go round it); the map is drawn again once the hubs are placed
+let PAVE_NOLANE=false; const LM_RECTS=[];
+function inLM(x,z){for(const R of LM_RECTS){const dx=x-R.x,dz=z-R.z,c=Math.cos(R.rot),sn=Math.sin(R.rot);if(Math.abs(dx*c-dz*sn)<R.hw&&Math.abs(dx*sn+dz*c)<R.hd)return true;}return false;}
+function fillCityMap(t){const N=768,span=620,d=t.image.data;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=CITY.x+((i+0.5)/N-0.5)*span,z=CITY.z+((j+0.5)/N-0.5)*span;d[j*N+i]=Math.round(cityPaved(x,z)*255);}t.needsUpdate=true;}
 const CITY_MAP=(()=>{const N=768,span=620,d=new Uint8Array(N*N);let t0=performance.now();
   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=CITY.x+((i+0.5)/N-0.5)*span,z=CITY.z+((j+0.5)/N-0.5)*span;d[j*N+i]=Math.round(cityPaved(x,z)*255);}
   const t=new THREE.DataTexture(d,N,N,THREE.RedFormat,THREE.UnsignedByteType);t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
