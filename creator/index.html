@@ -25,6 +25,9 @@ input[type=range]{width:100%;accent-color:var(--brass)}
 .tag small{display:block;font:13px system-ui,sans-serif;color:var(--dim)}
 #status{position:fixed;inset:0;display:grid;place-items:center;color:var(--dim);font:20px Georgia,serif;pointer-events:none}
 .hidden{display:none}
+.sec{font:400 18px Georgia,serif;margin:20px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.lock{font-size:12px;color:var(--dim);margin:2px 0 0}
+button:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:700px){.panel{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:46%}.tag{top:12px;bottom:auto}}
 </style>
 <canvas id="stage" aria-label="Your character, turning slowly"></canvas>
@@ -44,6 +47,9 @@ input[type=range]{width:100%;accent-color:var(--brass)}
   <div class="label">Hair colour</div><div class="chips" id="hcol"></div>
   <div id="beardBox"><div class="label">Moustache</div><div class="chips" id="stache"></div></div>
   <div class="label">Base layer</div><div class="chips" id="lower"></div>
+  <h2 class="sec">Equipment</h2>
+  <div id="gear"></div>
+  <div class="label">Dye</div><div class="chips" id="dye"></div>
   <div class="label">View</div><div class="chips" id="view"></div>
   <div class="chips" style="margin-top:10px"><button id="rand">Randomise</button></div>
   <p class="note" id="note"></p>
@@ -52,6 +58,7 @@ input[type=range]{width:100%;accent-color:var(--brass)}
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 <script src="bodypaint.js"></script>
+<script src="equip.js"></script>
 <script>
 // ---- the peoples: shape, and the range each slider may move within (height is a scale, build runs -1 slight .. 0 muscular .. 1 heavy)
 const PEOPLE={
@@ -72,7 +79,8 @@ const PEOPLE={
 const HAIRS=[['None',null],['Short','Short'],['Swept','Swept'],['Ponytail','Ponytail'],['Long','Long'],['Topknot','Topknot']];
 const BEARDS=[['None',null],['Short','Short'],['Full','Full'],['Pointed','Pointed'],['Forked','Forked'],['Braided','Braided']];
 const STACHES=[['None',null],['Chevron','Chevron'],['Horseshoe','Horseshoe'],['Walrus','Walrus'],['Handlebar','Handlebar'],['Pencil','Pencil']];
-const st={sex:'m',people:'Aurelan',h:0.5,w:0.55,skin:1,eye:0,hair:'Swept',hcol:0,beard:null,stache:null,lower:0,view:'full'};
+const st={sex:'m',people:'Aurelan',h:0.5,w:0.55,skin:1,eye:0,hair:'Swept',hcol:0,beard:null,stache:null,lower:0,view:'full',
+  gear:{shirt:'linen_shirt',chest:'jerkin',legs:'trousers',feet:'boots',wrists:null,hands:null,waist:'beltpouch',shoulders:null,head:null,back:null},dye:0};
 // ---- scene
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(28,1,0.05,100);
@@ -81,10 +89,13 @@ const ground=new THREE.Mesh(new THREE.CircleGeometry(6,48),new THREE.MeshLambert
 let G={}, fig=null, mixer=null, yaw=0.35, spin=true, clip='Idle';
 const clock=new THREE.Clock();
 function lerp(r,t){return r[0]+(r[1]-r[0])*t;}
+function definition(){const P=PEOPLE[st.people],r=st.sex==='f'?P.f:P.m,w=lerp(r.w,st.w);return Math.max(0,Math.min(1,1+w))*(st.sex==='f'?0.4:1);}
+function outfit(){return Object.assign({dye:EQ_DYES[st.dye][1]},st.gear);}
+function dress(){dressFigure(fig,look());dressOutfit(fig,look(),outfit(),R);}
 function look(){
   const P=PEOPLE[st.people], fem=st.sex==='f';
   return {name:st.people,people:st.people,fem:fem?1:0,hair:st.hair,beard:fem?null:st.beard,moustache:fem?null:st.stache,
-    base:[1,st.lower,fem?0:(st.people==='Hrimfolk'||st.people==='Ruadhan'?0.6:0.2),1],
+    base:[1,st.lower,fem?0:(st.people==='Hrimfolk'||st.people==='Ruadhan'?0.6:0.2),definition()],
     uSkin:P.skin[st.skin%P.skin.length],uHair:P.hair[st.hcol%P.hair.length],uEye:P.eyes[st.eye%P.eyes.length],
     uPants:['#cbbd9f','#a89c86','#b9bbc0','#8e8676','#d8c9a8','#b8ab8c','#9c9488'][Object.keys(PEOPLE).indexOf(st.people)],uBoots:'#4a3a2c',
     uLip:fem?'#b8605a':'#a8665a',uInk:st.people==='Ferrin'?'#4a3430':'#2f5fd0',uShirt:'#ddd4c2',uVest:'#6c2e2a',uBelt:'#5a3a26',uTrim:'#c9a046',
@@ -93,13 +104,13 @@ function look(){
 function body(){
   const g=G[st.sex]; const P=PEOPLE[st.people], r=st.sex==='f'?P.f:P.m;
   if(fig){scene.remove(fig);}
-  fig=THREE.SkeletonUtils.clone(g.scene); rigPeople(fig,g); dressFigure(fig,look()); scene.add(fig);
+  fig=THREE.SkeletonUtils.clone(g.scene); rigPeople(fig,g); scene.add(fig);
   setPeople(fig,P.shape); mixer=new THREE.AnimationMixer(fig); playPeople(fig,mixer,clip);
-  shape();
+  shape(); dress();
 }
 function shape(){
   const P=PEOPLE[st.people], r=st.sex==='f'?P.f:P.m, h=lerp(r.h,st.h), w=lerp(r.w,st.w);
-  fig.scale.setScalar(h); setBuild(fig,Math.max(0,-w),Math.max(0,w)); setDefinition(fig,Math.max(0,Math.min(1,1+w))*(st.sex==='f'?0.4:1));
+  fig.scale.setScalar(h); setBuild(fig,Math.max(0,-w),Math.max(0,w)); if(fig.userData.rig&&fig.userData.rig.body.userData.baked)dressOutfit(fig,look(),outfit(),R,true);
   const tall=(fig.userData.rig&&fig.userData.rig.joints?1:0);
   document.getElementById('hv').textContent=Math.round(h*(st.sex==='f'?174:181)*(P.shape==='Ferrin'&&st.sex==='m'?0.83:1))+' cm';
   document.getElementById('bv').textContent=w<-0.6?'slight':w<-0.25?'slim':w<0.2?'fit':w<0.6?'sturdy':'heavy';
@@ -121,13 +132,22 @@ function build(){
   chips('sex',[['Man','m'],['Woman','f']],()=>st.sex,v=>{st.sex=v;if(v==='f'&&!['Long','Ponytail','Topknot','Swept'].includes(st.hair))st.hair='Long';build();body();});
   chips('people',Object.keys(PEOPLE).map(k=>[k,k]),()=>st.people,v=>{st.people=v;st.skin=1;st.hcol=0;st.eye=0;build();body();});
   document.getElementById('pdesc').textContent=P.desc;
-  chips('skin',P.skin.map((c,i)=>[c,i]),()=>st.skin,v=>{st.skin=v;dressFigure(fig,look());shape();},true);
-  chips('eyes',P.eyes.map((c,i)=>[c,i]),()=>st.eye,v=>{st.eye=v;dressFigure(fig,look());},true);
-  chips('hair',HAIRS,()=>st.hair,v=>{st.hair=v;dressFigure(fig,look());});
-  chips('hcol',P.hair.map((c,i)=>[c,i]),()=>st.hcol,v=>{st.hcol=v;dressFigure(fig,look());},true);
+  chips('skin',P.skin.map((c,i)=>[c,i]),()=>st.skin,v=>{st.skin=v;dress();shape();},true);
+  chips('eyes',P.eyes.map((c,i)=>[c,i]),()=>st.eye,v=>{st.eye=v;dress();},true);
+  chips('hair',HAIRS,()=>st.hair,v=>{st.hair=v;dress();});
+  chips('hcol',P.hair.map((c,i)=>[c,i]),()=>st.hcol,v=>{st.hcol=v;dress();},true);
   document.getElementById('beardBox').classList.toggle('hidden',st.sex==='f');
-  chips('stache',STACHES,()=>st.stache,v=>{st.stache=v;dressFigure(fig,look());});
-  chips('lower',[['Trousers',0],['Boxers',1]],()=>st.lower,v=>{st.lower=v;dressFigure(fig,look());shape();});
+  chips('stache',STACHES,()=>st.stache,v=>{st.stache=v;dress();});
+  chips('lower',[['Trousers',0],['Boxers',1]],()=>st.lower,v=>{st.lower=v;dress();shape();});
+  const gear=document.getElementById('gear'); gear.innerHTML='';
+  for(const sl of EQ_SLOTS){
+    const lab=document.createElement('div');lab.className='label';lab.textContent=sl.name;gear.appendChild(lab);
+    const box=document.createElement('div');box.className='chips';box.id='slot_'+sl.id;gear.appendChild(box);
+    if(sl.locked){const b=document.createElement('button');b.textContent='Locked';b.disabled=true;box.appendChild(b);
+      const n=document.createElement('p');n.className='lock';n.textContent=sl.locked;gear.appendChild(n);continue;}
+    chips('slot_'+sl.id,[['None',null]].concat((EQ_ITEMS[sl.id]||[]).map(i=>[i.name,i.id])),()=>st.gear[sl.id],v=>{st.gear[sl.id]=v;dress();});
+  }
+  chips('dye',EQ_DYES.map(([n],i)=>[n,i]),()=>st.dye,v=>{st.dye=v;dress();});
   chips('view',[['Full','full'],['Face','face'],['Walk','walk'],['Turntable','spin']],()=>st.view==='face'?'face':clip==='Walk'?'walk':'full',v=>{
     if(v==='spin'){spin=!spin;return;} if(v==='walk'){clip=clip==='Walk'?'Idle':'Walk';playPeople(fig,mixer,clip);return;} st.view=v;frame();});
   let hasShape=P.shape==='Human'; if(G[st.sex])G[st.sex].scene.traverse(o=>{if(o.morphTargetDictionary&&P.shape in o.morphTargetDictionary)hasShape=true;});
