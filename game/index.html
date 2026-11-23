@@ -406,10 +406,11 @@ const terrainMat=new THREE.MeshLambertMaterial({vertexColors:true});
 // own paving and yards (slate, brick, cobbles, mossy stones, granite, marble, blue tiles, terracotta), worn and muddied where
 // the city is poor. The chunk carries one extra attribute per point: surf = (road, paved, wealth).
 terrainMat.onBeforeCompile=sh=>{
-  sh.uniforms.uCity={value:new THREE.Vector4(CITY.x,CITY.z,CITY.r,CITY.core)}; sh.uniforms.uSeed={value:QSEED.map(S=>new THREE.Vector3(S[0],S[1],S[2]))}; sh.uniforms.uAv={value:AVENUES}; sh.uniforms.uCityMap={value:CITY_MAP};
+  sh.uniforms.uCity={value:new THREE.Vector4(CITY.x,CITY.z,CITY.r,CITY.core)}; sh.uniforms.uSeed={value:QSEED.map(S=>new THREE.Vector3(S[0],S[1],S[2]))}; sh.uniforms.uAv={value:AVENUES}; sh.uniforms.uCityMap={value:CITY_MAP}; sh.uniforms.uAtlas={value:ATLAS.tex}; sh.uniforms.uAvg={value:ATLAS.avg};
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 surf;\nvarying vec3 vSurf;\nvarying vec3 vWP;')
     .replace('#include <begin_vertex>','#include <begin_vertex>\nvSurf=surf;\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+`+ATLAS_GLSL+`
 uniform vec4 uCity; uniform vec3 uSeed[8]; uniform float uAv[8]; uniform sampler2D uCityMap; varying vec3 vSurf; varying vec3 vWP;
 float gh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float gn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(gh(i),gh(i+vec2(1.,0.)),f.x),mix(gh(i+vec2(0.,1.)),gh(i+vec2(1.,1.)),f.x),f.y);}
@@ -439,24 +440,26 @@ vec3 cityGround(vec2 w,float paved,float wealth){
   float aa=1.-smoothstep(.06,.3,length(fwidth(w)));                                       // patterns fade out with distance, no shimmer
   // yards: trodden earth, grass where it is let grow, sand blown in, cinders where the forges are
   float g=smoothstep(1.-lk.x-.18,1.-lk.x+.18,gn(w*.18)*.6+n*.4);
-  vec3 yard=mix(vec3(.33,.29,.24),vec3(.30,.38,.21),g); yard=mix(yard,vec3(.42,.40,.36)*(.85+.3*gh(floor(w*1.3))),.35*smoothstep(.5,.8,gn(w*.4+2.)));   // trodden earth, broken stone, a little grass yard=mix(yard,vec3(.68,.58,.42),lk.z*.8); yard*=(.9+.12*n)*(1.-.45*lk.y);
+  vec3 yard=mix(vec3(.33,.29,.24),vec3(.30,.38,.21),g); yard=mix(yard,vec3(.42,.40,.36)*(.85+.3*gh(floor(w*1.3))),.35*smoothstep(.5,.8,gn(w*.4+2.)));
+  yard=mix(yard,vec3(.68,.58,.42),lk.z*.8); yard*=(.9+.12*n)*(1.-.45*lk.y);   // trodden earth, broken stone, a little grass, sand, cinders
+  yard*=mix(vec3(1.),atlN(15,w/4.),.8);
   // the street stone
-  float rough=smoothstep(.42,.12,wealth)+(gn(w*.15)-.5)*.25;
-  vec2 b=bricks(w,vec2(.62,.38),.035); vec2 cb=cobble(w*1.7); float useC=smoothstep(.42,.58,rough);
-  float shade=mix(b.y,cb.y,useC), joint=mix(b.x,1.-smoothstep(.02,.11,cb.x),useC);
-  vec3 stone=vec3(.50,.47,.42)*tint*(.84+.24*mix(.5,shade,aa));
+  float rough=smoothstep(.42,.12,wealth)+(gh(floor(w/6.))-.5)*.3;
+  vec3 tS=atlN(12,w/2.6), tC=atlN(13,w/3.), tx=rough>.5?tC:tS;
+  float joint=clamp(1.-dot(tx,vec3(.33)),0.,1.);
+  vec3 stone=vec3(.50,.47,.42)*tint*tx;
   vec3 jc=mix(vec3(.24,.22,.20),vec3(.62,.54,.40),lk.z); jc=mix(jc,vec3(.22,.32,.16),lk.w*.8); jc=mix(jc,vec3(.08,.08,.09),lk.y*.6);
-  vec3 pv=mix(stone,jc,joint*aa*.85);
+  vec3 pv=mix(stone,jc*tx,smoothstep(.25,.6,joint)*.5);
   pv*=1.-.3*lk.y*(.55+.45*gn(w*.12));                                                       // soot settles on the stone by the forges
-  float grand=max(1.-smoothstep(7.,8.5,av),1.-smoothstep(uCity.w+22.,uCity.w+24.,r));      // avenues and the grand plaza: pale flags in rings
-  if(grand>0.){vec2 fb=bricks(vec2(a*r,r),vec2(1.4,.9),.05);vec3 fl=vec3(.55,.52,.47)*tint*(.88+.2*mix(.5,fb.y,aa));fl=mix(fl,jc,fb.x*aa*.7);pv=mix(pv,fl,grand);}
+  float ge=min(av-7.6,r-uCity.w-23.); float aw=fwidth(ge)+.01;                                // avenues and the grand plaza: big flags, a kerb where they end
+  if(ge<.4){vec3 fl=vec3(.55,.52,.47)*tint*atlN(14,w/7.);pv=mix(fl,pv,smoothstep(-aw,aw,ge));pv*=1.-.35*(1.-smoothstep(.0,.12+aw,abs(ge-.2)));}
   vec3 c=mix(yard,pv,paved);
   // wear follows the place: dirt gathers where street meets yard and along the kerbs, stays light where feet keep the
   // middle of a street clean, frays out softly, and stains the stone darker instead of painting it brown
   float poor=1.-smoothstep(.15,.45,wealth), kerb=1.-abs(paved*2.-1.), g1=gn(w*.07), g2=gn(w*.42), g3=gn(w*2.3);
   c*=1.-.2*poor*(.35+.65*g1);                                                               // broad, soft grime
   float mud=smoothstep(.62,.98,g2*.65+g3*.25+kerb*.45-.15)*poor*(.25+.75*max(kerb,1.-paved)); // mud by the kerbs and in the yards
-  c=mix(c,c*vec3(.66,.58,.5),mud*.75);
+  c=mix(c,c*vec3(.66,.58,.5),mud*.75*mix(1.,.25+.75*smoothstep(.3,.6,joint),paved));
   c=mix(c,vec3(.22,.24,.27),smoothstep(.955,.985,gn(w*.3+13.))*poor*paved*(1.-kerb)*.7);    // the odd puddle on the stones
   return c*(1.+.06*smoothstep(.65,.9,wealth));
 }`).replace('#include <color_fragment>',`#include <color_fragment>
@@ -943,6 +946,15 @@ function buildPort(){
 // Recipes are written in "plan" coordinates: x along the frontage, -y is the street side, z is up.
 const KIT={done:true,geo:{},far:{},size:{},vents:{},waiters:[]};
 const VENTS=[];
+// CC0 surface textures (Poly Haven, see CREDITS.md), packed 4x4 into one 2048 px sheet. Each is divided by its own average
+// colour, so the parts keep the colours the recipes give them and the photo brings only the detail and the wear.
+const ATLAS={tex:new THREE.TextureLoader().load('tex/city.jpg',()=>{if(typeof SHADOW!=='undefined')SHADOW.dirty=true;}),avg:[[0.392,0.29,0.235],[0.529,0.467,0.388],[0.58,0.51,0.443],[0.451,0.408,0.361],[0.569,0.314,0.169],[0.565,0.525,0.459],[0.329,0.314,0.286],[0.341,0.337,0.322],[0.341,0.161,0.094],[0.447,0.353,0.235],[0.702,0.643,0.565],[0.604,0.58,0.533],[0.51,0.475,0.404],[0.573,0.498,0.384],[0.373,0.361,0.322],[0.278,0.208,0.137]].map(a=>new THREE.Vector3(...a))};
+ATLAS.tex.wrapS=ATLAS.tex.wrapT=THREE.ClampToEdgeWrapping; ATLAS.tex.anisotropy=4;
+const ATLAS_GLSL=`
+uniform sampler2D uAtlas; uniform vec3 uAvg[16];
+vec3 atl(int i,vec2 uv){vec2 g=fract(uv),cell=vec2(float(i%4),float(i/4)),a=vec2((cell.x+.006+g.x*.988)/4.,1.-(cell.y+1.-(.006+g.y*.988))/4.);
+  return textureGrad(uAtlas,a,dFdx(uv)*.247,dFdy(uv)*.247).rgb;}
+vec3 atlN(int i,vec2 uv){return atl(i,uv)/max(uAvg[i],vec3(.05));}`;
 const KMAT={brick:1,stone:2,plaster:3,timber:4,tile:5,slate:6,thatch:7,shingle:8,iron:9,adobe:10,marble:11,planks:12};
 const kitUniforms={uNight:{value:0}};
 const kitMat=new THREE.MeshLambertMaterial({vertexColors:true});
@@ -955,24 +967,9 @@ vec3 kcourse(vec2 p,vec2 s,float j,float stag){p/=s;float row=floor(p.y);p.x+=mo
 vec3 kitSurface(vec3 c,float m,vec3 p,vec3 n){
   if(m<0.5)return c;
   vec2 t=normalize(vec2(-n.z,n.x)+1e-5); float along=dot(p.xz,t);
-  bool flat_=abs(n.y)>0.92; vec2 uv=flat_?p.xz:vec2(along,p.y); vec3 c0=c; float fwk=length(fwidth(uv));
-  float g=kn(uv*1.7)*.6+kn(uv*7.)*.4;
-  if(m<1.5){vec3 b=kcourse(uv,vec2(.24,.075),.014,.5);c=mix(c*(.82+.34*b.y)*(.94+.1*g),vec3(.74,.7,.63),b.x*.85);}                       // brick in running bond
-  else if(m<2.5){vec3 b=kcourse(uv,vec2(.62+.3*kh(vec2(floor(uv.y/.34))),.34),.035,.37);c=mix(c*(.84+.3*b.y)*(.92+.14*g),c*.55,b.x*.8);}  // coursed stone
-  else if(m<3.5){c*=.93+.1*g; c*=1.-.08*smoothstep(.55,.8,kn(uv*.6+9.));}                                                                // plaster, softly weathered
-  else if(m<4.5){float gr=kn(vec2(uv.x*28.,uv.y*1.6))*.6+kn(vec2(uv.x*80.,uv.y*4.))*.4;c*=.8+.32*gr;}                                     // timber grain
-  else if(m<5.5){float y=p.y/.2; float row=floor(y); float x=along/.28+mod(row,2.)*.5; float fx=fract(x), fy=fract(y);
-    c*=(.84+.26*kh(vec2(floor(x),row)))*(.72+.28*smoothstep(0.,.75,fy))*(1.-.35*(1.-smoothstep(0.,.07,min(fx,1.-fx))));}                 // clay tiles, row upon row
-  else if(m<6.5){float y=p.y/.14; float row=floor(y); float x=along/.3+mod(row,2.)*.5; float fx=fract(x);
-    c*=(.82+.3*kh(vec2(floor(x),row)))*(.8+.2*smoothstep(0.,.6,fract(y)))*(1.-.4*(1.-smoothstep(0.,.05,min(fx,1.-fx))));}               // slate
-  else if(m<7.5){float st=kn(vec2(along*34.,p.y*2.5))*.6+kn(vec2(along*90.,p.y*6.))*.4;c*=(.72+.42*st)*(.82+.18*smoothstep(0.,.5,fract(p.y/.38)));}  // thatch in bundles
-  else if(m<8.5){float y=p.y/.17; float row=floor(y); float x=along/(.16+.1*kh(vec2(row,3.)))+mod(row,2.)*.4;
-    c*=(.78+.36*kh(vec2(floor(x),row)))*(.78+.22*smoothstep(0.,.7,fract(y)));}                                                          // wooden shingles
-  else if(m<9.5){float rib=abs(fract(along*4.)-.5);c*=.86+.16*smoothstep(.0,.12,rib);c=mix(c,vec3(.42,.24,.14),smoothstep(.62,.86,kn(uv*1.3))*.55);}   // iron sheet, rib and rust
-  else if(m<10.5){c*=.9+.16*g; c*=1.-.18*smoothstep(.985,1.,kn(uv*vec2(3.,9.)+kn(uv*2.)));}                                              // adobe, hand-smoothed
-  else if(m<11.5){c*=.96+.05*g; c*=1.-.08*smoothstep(.48,.5,abs(kn(uv*1.2)-.5)+.47);}                                                    // marble with faint veins
-  else{float pl=fract(along/.19); c*=(.84+.24*kh(vec2(floor(along/.19),3.)))*(.86+.18*kn(vec2(along*40.,p.y*2.)))*(1.-.4*(1.-smoothstep(0.,.06,min(pl,1.-pl))));}  // planks
-  return mix(c0*(m<1.5?.92:m<2.5?.86:.9),c,1.-smoothstep(.03,.1,fwk));
+  bool flat_=abs(n.y)>0.92; vec2 uv=flat_?p.xz:vec2(along,p.y);
+  int i=int(m+.5)-1; float sc=i==0?2.2:i==1?3.:i==2?3.5:i==3?2.:i==4?2.6:i==5?2.6:i==6?3.:i==7?2.8:i==8?2.4:i==9?3.:i==10?3.:2.2;
+  return c*clamp(atlN(i,uv/sc+vec2(kh(floor(p.xz*.1))*.37,0.)),0.,1.8);
 }
 float kWin=0.;
 // Side and back walls get what the street fronts have in geometry: windows in rows by floor, sills and lintels, a few
@@ -1001,10 +998,10 @@ vec3 kitWalls(vec3 c,float km,vec3 lp,vec3 ln,float seed){
   return mix(mix(gl,vec3(.2,.17,.14),mull),c*.55,wf*.7);
 }`;
 kitMat.onBeforeCompile=sh=>{
-  sh.uniforms.uNight=kitUniforms.uNight;
+  sh.uniforms.uNight=kitUniforms.uNight; sh.uniforms.uAtlas={value:ATLAS.tex}; sh.uniforms.uAvg={value:ATLAS.avg};
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float glow;\nattribute float kmat;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\nvarying vec3 vLP;\nvarying vec3 vLN;')
     .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;vKM=kmat;vLP=transformed;vLN=objectNormal;\n{mat4 mm=modelMatrix;\n#ifdef USE_INSTANCING\nmm=modelMatrix*instanceMatrix;\n#endif\nvKP=(mm*vec4(transformed,1.0)).xyz;vKN=normalize(mat3(mm)*objectNormal);}\n#ifdef USE_INSTANCING\nvec4 o4=modelMatrix*instanceMatrix*vec4(0.0,0.0,0.0,1.0);\n#else\nvec4 o4=modelMatrix*vec4(0.0,0.0,0.0,1.0);\n#endif\nvSeed=fract(sin(dot(floor(o4.xz),vec2(12.9898,78.233)))*43758.5453);');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\nvarying vec3 vLP;\nvarying vec3 vLN;\n'+KIT_GLSL)
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+ATLAS_GLSL+'\nuniform float uNight;\nvarying float vGlow;\nvarying float vSeed;\nvarying float vKM;\nvarying vec3 vKP;\nvarying vec3 vKN;\nvarying vec3 vLP;\nvarying vec3 vLN;\n'+KIT_GLSL)
     .replace('#include <color_fragment>','#include <color_fragment>\n{float kmr=floor(vKM+.5);diffuseColor.rgb=kitWalls(kitSurface(diffuseColor.rgb,mod(kmr,50.),vKP,normalize(vKN)),kmr,vLP,normalize(vLN),vSeed);}')
     .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\nif(vGlow>1.5){totalEmissiveRadiance+=vec3(0.62,0.42,1.0)*(0.3+1.1*uNight);}if(kWin>0.){totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*kWin*0.7;}\nif(vGlow>1.5){}else if(vGlow>0.0){float lit=step(0.38,fract(floor(vGlow*997.+.5)/997.*7.13+floor(vSeed*997.+.5)/997.*3.7));totalEmissiveRadiance+=vec3(1.0,0.64,0.3)*uNight*lit*0.8;}');
 };
@@ -1091,6 +1088,13 @@ class KitB{
 }
 const PI=Math.PI; // plan-space helpers below
 // a window with lintel and sill on a front wall at y
+function kSign(k,x,yW,yB,zB,bw,bh,col){ // a hanging sign: plate on the wall, an iron arm with a brace, two chains, the board
+  const ir='#1e1f24',zA=zB+bh/2+0.38,yEnd=yB-bw/2-0.12;
+  k.box(0.12,0.1,1.0,x,yW-0.05,zA-0.35,ir); k.box(0.07,yW-yEnd,0.07,x,(yW+yEnd)/2,zA,ir); k.pipe(x,yW-0.05,zA-0.8,x,yW-(yW-yEnd)*0.55,zA,0.03,ir);
+  k.disc(0.07,0.06,x,yEnd+0.02,zA,ir);
+  for(const s of[-1,1]){const cy=yB+s*bw*0.36;k.pipe(x,cy,zA,x,cy,zB+bh/2,0.012,ir);k.box(0.05,0.05,0.05,x,cy,zA-0.02,ir);}
+  k.box(0.07,bw,bh,x,yB,zB,col);
+}
 function kWin(k,x,y,z,w,h,trim,rz,shut){ // glass in a frame, with a lintel and a sill; panes and shutters are small parts
   k.glass(w,0.2,h,x,y-0.02,z,rz);
   k.box(w+0.3,0.16,0.2,x,y-0.06,z+h/2+0.1,trim,rz); k.box(w+0.36,0.32,0.12,x,y-0.14,z-h/2-0.06,trim,rz);
@@ -1280,7 +1284,7 @@ function kTimber(name,up,pl,roof){
   k.cyl(0.13,0.13,5.2,6,W/2+1.3,1.4,3.6,'#c9a046'); k.vent(W/2+1.3,1.4,9,0.5); k.cyl(0.3,0.3,0.12,10,W/2+1,0.05,2,'#e8e2d2',PI/2);
   k.box(1,0.8,3,-1.8,1.6,T+3.4,'#7a3c31');
   k.sm(()=>{for(const x of[-2.4,0,2.4]){k.box(1.1,0.3,0.25,x,fy-0.25,4.1,'planks:#6a4a2e');for(let i=0;i<4;i++)k.box(0.18,0.18,0.18,x-0.38+i*0.25,fy-0.25,4.33,['#d0485a','#e8c040','#9a5ad0','#4f8a3a'][i]);}
-    k.box(0.08,1.2,0.08,-W/2+0.5,fy-0.6,3.4,'#2a2420');k.box(0.06,0.7,0.62,-W/2+0.5,fy-1.0,3.02,'planks:#7a5a3e');k.pipe(W/2+0.5,fy+0.2,6.1,W/2+0.5,fy+0.2,0.2,0.07,'#b06a3a');});
+    kSign(k,-W/2+0.5,fy,fy-0.95,2.95,0.7,0.6,'planks:#7a5a3e');k.pipe(W/2+0.5,fy+0.2,6.1,W/2+0.5,fy+0.2,0.2,0.07,'#b06a3a');});
   k.finish(name,W+2.4,D+1.4+up*0.6,[3,-0.03,0.025]);
 }
 /* --- Temple Ward: white stone houses of the faithful, gilded domes --- */
@@ -1308,7 +1312,7 @@ function kShop(name,awn,sign){
   k.sm(()=>{k.box(0.08,1.4,0.08,W/2-0.6,y-0.7,4.4,'#1e1f24');k.box(0.06,0.9,0.6,W/2-0.6,y-1.1,3.95,'planks:#2e5a46');k.box(0.07,0.6,0.08,W/2-0.6,y-1.1,3.95,'#c9a046');
     for(let i=0;i<3;i++)k.box(0.7,0.6,0.5,-2.6+i*0.8,y-1.2,0.25,['#c0392b','#d4a017','#3c8d4f'][i]);k.cyl(0.3,0.28,0.7,8,-3.3,y-1.6,0,'#8a5a32');
     k.box(0.25,0.25,0.4,2.1,y-0.35,2.7,'#c9a046');});
-  if(sign){const sx=-W/2+0.5,sy=y-1.5,sz=6.2,ir='#1e1f24',g='#c9a046';k.box(0.08,2.2,0.08,sx,y-1.0,7.0,ir);k.box(0.12,1.5,1.5,sx,sy,sz,'planks:#3a2a20');k.box(0.14,1.6,0.1,sx,sy,sz+0.8,g);
+  if(sign){const sx=-W/2+0.5,sy=y-1.5,sz=6.2,ir='#1e1f24',g='#c9a046';kSign(k,sx,y,sy,sz,1.5,1.5,'planks:#3a2a20');k.box(0.14,1.6,0.1,sx,sy,sz+0.8,g);
     for(const fx of[-1,1]){const X=sx+fx*0.09;
       if(sign==='sword'){k.box(0.04,0.16,1.05,X,sy,sz+0.05,'#d8dde2');k.box(0.05,0.6,0.1,X,sy,sz-0.35,g);k.box(0.05,0.12,0.3,X,sy,sz-0.55,'#5a3a24');}
       if(sign==='shield'){k._add(new THREE.CylinderGeometry(0.48,0.48,0.05,14).toNonIndexed().rotateZ(PI/2),k.M(X,sy,sz),'#8a8f96');k._add(new THREE.CylinderGeometry(0.16,0.16,0.07,10).toNonIndexed().rotateZ(PI/2),k.M(X,sy,sz),g);}
@@ -1333,7 +1337,7 @@ function kTavern(name,wall,roof,sign){
   for(const x of[-3.2,3.2]){k.box(1.8,1.6,1.6,x,y+1.3,8.1,'plaster:'+wall);k.prism(2.1,2.1,0.9,x,y+1.3,8.9,'tile:'+roof,PI/2);kWin(k,x,y+0.48,8.1,0.8,0.9,tm);}
   kDoor(k,0,y,0,2,2.6,'#4a2e22',tm); for(const x of[-4,4])kWin(k,x,y,1.8,1.8,1.4,tm,0,sign); for(const x of[-4.3,-1.4,1.4,4.3])kWin(k,x,y-0.32,5.4,1,1.3,tm);
   k.box(1.2,1,6,W/2-1.2,1.5,8,'brick:#7a3c31'); k.cyl(0.32,0.32,0.45,8,W/2-1.2,1.5,11,'#b8893e'); k.vent(W/2-1.2,1.5,11.7,1);
-  k.sm(()=>{k.box(0.08,1.6,0.08,-W/2+0.4,y-0.8,4.4,'#1e1f24'); k.box(0.08,1.1,0.8,-W/2+0.4,y-1.35,3.85,'planks:'+sign); k.disc(0.28,0.1,-W/2+0.34,y-1.35,3.85,'#c9a046');
+  k.sm(()=>{kSign(k,-W/2+0.4,y,y-1.35,3.85,1.1,0.8,'planks:'+sign); k.disc(0.28,0.1,-W/2+0.34,y-1.35,3.85,'#c9a046');
     k.box(5.4,1.1,0.18,0,y-0.9,3.55,'planks:#6a4a2e'); for(let x=-2.6;x<=2.6;x+=0.4)k.box(0.05,0.05,0.8,x,y-1.4,3.95,'#3e2a1c'); k.box(5.4,0.06,0.06,0,y-1.4,4.35,'#3e2a1c');
     for(const x of[3,3.9,4.8])k.cyl(0.42,0.38,1,8,x,y-1.3,0,'#7a5232'); k.box(2.4,0.5,0.12,-3.6,y-1.2,0.5,'planks:#6a4a2e');for(const sx of[-1,1])k.box(0.12,0.4,0.46,-3.6+sx*1.05,y-1.2,0.23,'planks:#5a3a22');
     for(const x of[-1.4,1.4]){k.box(0.08,0.35,0.08,x,y-0.25,2.9,'#b8893e');k.box(0.24,0.24,0.36,x,y-0.45,2.75,'#e8d08a');}
