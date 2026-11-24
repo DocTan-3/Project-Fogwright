@@ -441,42 +441,68 @@ Every character, player or NPC, is one of two base bodies (a man and a woman), s
 
 ### Equipment
 
-Equipment works like World of Warcraft's: every piece shows on the character, some armour is painted onto the body and some is built around it, and a fixed layering order makes pieces from different sets combine cleanly. The more special slots unlock as you progress.
+Equipment works like World of Warcraft's: every piece shows on the character, some is painted onto the body and some is built around it, and a fixed layering order makes pieces from different sets combine cleanly. A character wears two layers: a **wardrobe** of everyday clothes that is only for looks, and **gear** over it that carries the stats. The more special slots unlock as you progress.
 
-**Slots**
+**Wardrobe (looks only).** Shirt, lower (trousers, breeches, skirts and layered skirts), socks (stockings, leg warmers) and shoes. Wardrobe pieces are collected: crafted, bought, found and given as quest rewards. A character with no gear still looks dressed in their own everyday clothes, and an NPC's wardrobe gives them character while their gear shows their job. Earrings are wardrobe too.
 
-| Slot | How it shows | Available |
+**Gear slots (stats)**
+
+| Slot | Item types | Available |
 | --- | --- | --- |
-| Shirt | Painted, under everything | From the start |
-| Chest | Painted on torso and upper arms; built collars and breastplate edges; long coats and robes add a built skirt | From the start |
-| Legs | Painted | From the start |
-| Feet | Painted, with built cuffs and soles for boots | From the start |
-| Wrists | Painted bracers, with a small built cuff | From the start |
-| Hands | Painted gloves, with built cuffs for gauntlets | From the start |
-| Waist | Painted belt, with a built buckle; belts carry sockets (hips and back) where pouches, flasks and other attachments hang, and relics will later | From the start |
-| Shoulders | Built: pauldrons of layered, domed lames with rivets, guards and fur, or mantles | From the start |
-| Head | Built: helmets, hats, hoods; trims the hair underneath | From the start |
-| Back | A built cloak that hangs and swings | From the start |
-| Main and off hand | Built, held or sheathed at the hip or back | From the start |
-| Tabard | Painted over the chest, with a built hanging panel | When a god claims you; it shows your god's colours |
-| Face | Built: goggles, masks, monocles | Tinkerer crafts, the gear and water era |
-| Mechanical arm (left or right) | A built device encasing one arm | Gear and water era; asymmetric builds start here |
-| Back device | A built boiler, tank or jetpack, worn with the cloak | Steam era |
-| Rig | A powered suit you climb into | Arcane engine era |
+| Head | Hats, hoods, caps, helmets | From the start |
+| Eyes | Goggles, monocles, visors, eyepatches | From the start |
+| Mouth | Respirators, Fog masks, scarves, pipes | From the start |
+| Shoulders (left and right) | Pads, pauldrons, vial-pauldrons; an item is a pair or a single side, and two different singles can be mixed | Unlocked with progress |
+| Arms (left and right) | Armguards, armbands, tool sleeves | From the start |
+| Chest | Waistcoats, corsets, jerkins, gambesons, mail, brigandines | From the start |
+| Coat | Long coats, greatcoats, trench coats, robes, tabards | From the start |
+| Wrists | Bracers | From the start |
+| Hands | Gloves, gauntlets | From the start |
+| Waist | Belts, tool belts, belt stacks, sashes; each belt has sockets (hips and back) for pouches, tools, weapons and, later, relics | From the start; sockets unlock with progress |
+| Legs | Light (reinforced trousers, chaps) to heavy (greaves, plate legs, armoured skirts) | From the start |
+| Feet | Boots; they replace wardrobe shoes | From the start |
+| Back | Utility items: jetpack, boiler, glider frame, canister pack, Fog lantern, packs, quivers, cloaks | Skill-gated: what you can wear depends on your skills |
+| Trinkets | Two rings and a necklace; not shown on the character for now | From the start |
+| Main and off hand | Weapons and tools, held or carried on the body | From the start |
+| Rig | A powered suit you climb into; it replaces the body rather than being worn | Arcane engine era |
 
-**Layering.** Paint goes on in a fixed order: skin, underclothes, shirt, legs, feet, chest, wrists, hands, waist, tabard. Gloves go over sleeves, boots over trousers, the belt over the chest piece and the tabard over everything. Items carry options, such as trousers tucked into boots or worn over them, and sleeve length; a chest piece flagged as a robe covers the legs and adds a built skirt. Built pieces hide what they cover: a helmet trims the hair, a robe hides the boot cuffs.
+**Items that fill more than one slot**, like a two-handed weapon taking both hands:
+
+- **Heavy armour and plate** fill chest and coat. Plate covers the wardrobe completely. Heavy armour has its own version with a built-in tabard, since nothing goes over it.
+- **Robes** sit in the coat slot and hide the legs; the legs slot still counts for stats.
+- **Full helms** fill head, eyes and mouth and are the strongest (as in Ragnarok Online); others fill head and eyes, or head alone.
+- **Mechanical arms** are special gear filling shoulder, arm, wrist and hand on one side. They replace the glove too.
+- **The canister gauntlet** fills hands and wrists. **A cowl mantle** fills head and shoulders.
+
+**Covering and layering.** Each gear item either *replaces* what is under it (reinforced trousers take the wardrobe lower's place, boots take the shoes, heavy armour takes the shirt) or *overlays* it (chaps, greaves and tassets go over trousers or a skirt; waistcoats and corsets over the shirt). The order from the inside out is fixed: skin, wardrobe, chest, coat, belt, shoulders, back. A slot blocked by another item shows greyed out, linked to the item that blocks it. Robes and long coats drop the boot tops beneath them, and headgear removes the hair it covers.
+
+**Weapons on the body.** Weapons are carried where it makes sense for the weapon: daggers at the hip, boot or small of the back; one-handed swords, axes, maces and hammers at the hip; pistols in a thigh or hip holster; two-handed weapons, polearms and bows across the back; rifles and crossbows slung from the shoulder; shields on the back or forearm. Hip weapons hang from the belt's sockets. When a back utility item takes the back, two-handers move to a hip sling or clip onto the item if it has mounts (a jetpack with rifle clips), and casters keep their staff in hand.
+
+**Rarity shows on the item.** Common gear is plain cloth and simple stitching; uncommon adds contrast trim and brass buttons; rare adds tooled leather, rivets and small brass fittings; epic adds working parts (gauges, small pipes, faintly glowing vials); legendary glows and moves.
+
+**Sets and makers.** Each craft has its own set look for now, with unique set looks later:
+
+| Craft | Silhouette | Materials and details | Signature piece |
+| --- | --- | --- | --- |
+| Tinkerer | Waistcoat, rolled sleeves, tool belt | Brass fittings, goggles, small gauges, coloured glass | Canister gauntlet or canister pack |
+| Millwright | Sturdy work clothes, apron, heavy gloves | Canvas, rope, wooden toggles, cogs as buttons | Rope coil on the shoulder, toolbox on the back |
+| Smith | Leather apron, a short sleeve, heavy boots | Scorched leather, rivets, chain | One big gauntlet, a hammer on the belt |
+| Runecrafter | Long coat or robe, high collar | Dark wool, etched symbols, glowing relic cores | Vial-pauldrons with tubes to the back |
+| Herbalist | Layered skirt or wrap, satchels, rolled sleeves | Linen, dried herbs, glass phials, cork | A belt stack of pouches and jars |
+| Warden | Trench or hooded coat, cape | Waxed leather, fur trim, buckled straps | A lantern on the belt, a cowl mantle |
+
+Crafted items show who made them: a small stamped sigil in a fixed place on each item (a buckle, a collar tab, a pauldron rim), the craft's own finishing style (a Tinkerer's boots get brass eyelets, a Smith's get iron toe caps) and a visible flourish on master work. Sigils are earned: from your settlement, a guild, the god who claims you, and great deeds. There are no items limited to one people for now.
+
+**Later:** dyes as items, restyling gear to look like other gear (transmog), and Fog wear on clothing.
 
 **How it's made**
 
-- **Painted armour is baked, as in WoW.** Each character's paint layers are drawn once into a single texture whenever their gear changes, so the game only reads a texture: a crowd costs about the same as one person. The layers can be rich: linen, wool and leather; studs, mail rings, scale and plate edges; seams, trims and rivets; three dye channels and wear.
-- **Built armour is pinned to the body.** Every point of a built piece is pinned to the body surface beneath it, so it follows every people, both sexes and the build slider with no per-people modelling. Shells hug the body (cuffs, collars, breastplates), drapes hang from it (skirts, tabard panels, cloaks) and rigid pieces ride a bone (helmets, pauldrons, buckles, weapons). A character's built pieces merge into one mesh.
-- **Items are recipes, not models.** An item is a material, a cut, trims, dyes and a few built parts, so a small kit gives a large range of looks, the way WoW repaints shared models. Each people gets its own cuts and patterns.
+- **Painted gear is baked, as in WoW.** Each character's paint layers are drawn once into a single texture whenever their clothes change, so the game only reads a texture: a crowd costs about the same as one person. The layers can be rich: linen, wool and leather; studs, mail rings, scale and plate edges; seams, trims and rivets; three dye channels and wear. Most of the wardrobe is paint.
+- **Cloth is draped once, offline.** Coat skirts, robes, skirts, hoods and puffed sleeves are hung on each body in Blender with its cloth simulation, then frozen: real folds and a real fit, with no cloth simulation in the game. Where the cloth lies on the body it moves with the body; where it hangs free it follows the hips, thighs and, for long hems, the shins, as WoW skins its robes. The body draws in slightly beneath tight cloth so it never shows through.
+- **Fitted and rigid pieces.** Fitted pieces (lapels, corsets, plates, bracers, boot tops) are shells laid onto the body; rigid pieces (buckles, pouches, helmets, pauldrons, back items, weapons) ride a bone. Every point follows every people, both sexes and the build slider through the body's own shapes. A character's built pieces merge into one mesh.
+- **Items are recipes, not models.** An item is a material, a cut, trims, dyes and a few built parts, so a small kit gives a large range of looks, the way WoW repaints shared models.
 
-**No clipping, the WoW way.** WoW avoids clipping by swapping body sections for armour-shaped ones (its "geosets"), giving each area one owner, and hiding hair under helmets. We do the same: the body under a built piece is removed for that character (shoes take the feet, a long robe the upper legs); built pieces stack from the inside out, each sitting outside what is already there; and headgear removes the hair it covers.
-
-**Built armour so far.** Leg harness (thigh plates, knee cops, greaves) and leather greaves; breastplate with back plate; vambraces; plate gauntlets; war belt with tassets; pauldrons; helmets (kettle helm, nasal helm, Ferrin goggle helm), each reshaping the hair beneath it. Layers make room for each other: skirts for leg armour, belts and cloaks for a breastplate.
-
-**Cloth.** Skirts, cloaks, aprons and the flaps below long tunics are a light cloth simulation: pulled toward where they would hang, swinging, pushed out of the way by capsules round the legs and feet, never sinking into the body. Background figures skip it.
+**No clipping, the WoW way.** WoW avoids clipping by swapping body sections for armour-shaped ones (its "geosets"), giving each area one owner, and hiding hair under helmets. We do the same: the body under a built piece is removed or drawn in for that character (shoes take the feet, a long robe the upper legs); built pieces stack from the inside out, each sitting outside what is already there; and headgear removes the hair it covers.
 
 **Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are built; rivets, engraving and wear are paint. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each armour tier gets a clearly different silhouette, from a slim coat to a full plate shell.
 
