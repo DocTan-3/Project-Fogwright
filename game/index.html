@@ -457,7 +457,7 @@ vec2 bricks(vec2 p,vec2 s,float j){p/=s;float row=floor(p.y);p.x+=mod(row,2.)*.5
 vec4 qLook(float q){ // grass in yards, soot, sand, moss
   return q<.5?vec4(.02,.85,0.,0.):q<1.5?vec4(.06,.25,.1,0.):q<2.5?vec4(.14,.25,0.,.35):q<3.5?vec4(.35,.05,0.,.7):q<4.5?vec4(.1,.2,0.,.25):q<5.5?vec4(.1,.05,.05,0.):q<6.5?vec4(.4,.05,0.,.35):vec4(.02,.05,.85,0.);}
 vec2 qGreen(float q){ // how much each people keep green (rich streets), and the green they keep whatever the street: as GREEN_Q
-  return q<.5?vec2(0.):q<1.5?vec2(.45,0.):q<2.5?vec2(.35,0.):q<3.5?vec2(.7,.45):q<4.5?vec2(.4,.05):q<5.5?vec2(1.,.2):q<6.5?vec2(1.,.1):vec2(0.);}
+  return q<.5?vec2(0.):q<1.5?vec2(.75,0.):q<4.5?vec2(0.):q<5.5?vec2(1.,.15):q<6.5?vec2(1.,.05):vec2(0.);}
 vec3 qTint(float q){ // a whisper of each people's colour in the stone
   return q<.5?vec3(.93,.95,1.):q<1.5?vec3(1.04,1.,.96):q<2.5?vec3(1.02,1.,.97):q<3.5?vec3(.99,1.02,.97):q<4.5?vec3(.96,.99,1.04):q<5.5?vec3(1.08,1.07,1.04):q<6.5?vec3(1.05,1.02,.95):vec3(1.07,1.01,.92);}
 float citySA(float a){float s2=sin(2.*a);float f=.27*s2+.1*sin(4.*a)+.05*sin(6.*a)+.025*sin(10.*a)+s2*s2*(.2*sin(3.*a+1.)+.12*sin(5.*a+2.2));return 1.+.04*f+.45*max(0.,f);}
@@ -474,14 +474,21 @@ vec3 cityGround(vec2 w,vec2 wl,float paved,float wealth){
   float edge=(s2-s1)/(2.*max(length(c1-c2),1.)), t=.5*(1.-smoothstep(0.,30.,edge));
   vec4 lk=mix(qLook(q),qLook(q2),t); vec3 tint=mix(qTint(q),qTint(q2),t);
   float aa=1.-smoothstep(.06,.3,length(fwidth(w)));                                       // patterns fade out with distance, no shimmer
-  // yards: trodden earth, grass where it is let grow, sand blown in, cinders where the forges are
-  float g=smoothstep(1.-lk.x-.18,1.-lk.x+.18,gn(w*.18)*.6+n*.4);
-  vec3 yard=mix(vec3(.33,.29,.24),vec3(.30,.38,.21),g); yard=mix(yard,vec3(.42,.40,.36)*(.85+.3*gh(floor(w*1.3))),.35*smoothstep(.5,.8,gn(w*.4+2.)));
-  yard=mix(yard,vec3(.68,.58,.42),lk.z*.8); yard*=(.9+.12*n)*(1.-.45*lk.y);   // trodden earth, broken stone, a little grass, sand, cinders
-  yard*=mix(vec3(1.),atlN(15,w/4.),.8);
-  {vec2 gq=mix(qGreen(q),qGreen(q2),t);float green=clamp(gq.x*smoothstep(.3,.72,wealth)+gq.y,0.,1.);   // where the ward keeps green: an even, tended lawn
-   vec3 lawn=mix(vec3(.27,.40,.18),vec3(.33,.46,.20),gn(w*.09))*(.93+.1*n)*mix(vec3(1.),atlN(15,w/3.),.5);
-   yard=mix(yard,lawn,smoothstep(.15,.6,green)*(.75+.25*g));}
+  // yards, by who lives there: lawns on the rich streets of the Temple, the stewards and the Market; flagged courtyards, moss
+  // in the joints, wherever there is some money; packed earth and gravel in the commons, weeds where they are let grow, sand in
+  // the Zarhim yards, cinders and slag by the Ferrin forges, moss in the Hrimfolk gravel. Only what a yard needs is sampled.
+  vec3 earth=vec3(.40,.35,.29)*atlN(15,w/3.5);
+  earth=mix(earth,vec3(.30,.36,.20)*(.8+.4*n),lk.x*smoothstep(.55,.85,gn(w*.18)*.6+n*.4)*.7);                  // weeds
+  earth=mix(earth,earth*vec3(.82,1.,.74),lk.w*smoothstep(.45,.75,gn(w*.25)));                                 // moss
+  if(lk.z>.01)earth=mix(earth,vec3(.74,.64,.47)*atl2N(3,w/4.),lk.z);                                          // sand
+  if(lk.y>.01)earth=mix(earth,vec3(.21,.20,.20)*atl2N(2,w/3.),lk.y*.85);                                      // cinders and slag
+  float court=smoothstep(.28,.5,wealth)*(1.-lk.z*.7)*(1.-lk.y*.6);
+  vec3 yard=earth;
+  if(court>.01){vec3 ft=atlN(12,w/2.2);float jn=clamp(1.-dot(ft,vec3(.33)),0.,1.);vec3 fl=vec3(.43,.39,.33)*tint*ft*(.85+.3*gh(floor(w/1.1)));   // a yard's own flags: smaller, older, darker than the street's
+    fl=mix(fl,vec3(.24,.31,.17)*(.8+.4*n),smoothstep(.25,.55,jn)*.65*(1.-lk.y));fl=mix(fl,earth,smoothstep(.55,.85,gn(w*.15))*.6);yard=mix(earth,fl,court);}   // moss in the joints, worn through to earth in places
+  {vec2 gq=mix(qGreen(q),qGreen(q2),t);float green=clamp(gq.x*smoothstep(.45,.8,wealth)+gq.y,0.,1.);
+   if(green>.01){vec3 lawn=vec3(.36,.47,.25)*atl2N(0,w/3.)*(.9+.15*gn(w*.08));yard=mix(yard,lawn,smoothstep(.1,.5,green));}}
+  yard*=.92+.1*n;
   // the street stone
   float rough=smoothstep(.42,.12,wealth)+(gh(floor(w/6.))-.5)*.3;
   vec3 tS=atlN(12,w/2.6), tC=atlN(13,w/3.), tx=rough>.5?tC:tS;
@@ -688,13 +695,11 @@ function vegSpot(gx,gz){
   else { if(r<0.2)kind='rock'; else if(r<0.25)kind='dead'; else if(r<0.31)kind='pine'; }
   return {x,z,h,steep,b,kind};
 }
-// Green in the city only where its people keep it: the Temple's tended lawns and cypresses, the Aurelan stewards' hedges
-// and fruit trees, the Ruadhan who keep the Green (old broadleaves and long grass, rich street or poor), the better
-// streets of the Market, Wayfolk and Hrimfolk (pines and birches), palms only by the Oasis Court. None in the Ferrin
-// forges' soot, none on the poor streets: trodden earth there.
-const GREEN_Q={'Ferrin Quarter':[0,0],'Market Ward':[0.45,0],'Wayfolk Quarter':[0.35,0],'Ruadhan Quarter':[0.7,0.45],'Hrimfolk Quarter':[0.4,0.05],'Temple Ward':[1,0.2],'Aurelan Quarter':[1,0.1],'Zarhim Quarter':[0,0]};
+// Gardens in the city belong to the rich districts: the Temple's tended lawns and cypresses, the Aurelan stewards' hedges
+// and fruit trees, the Market's best streets, palms by the Oasis Court. The commons keep working yards, not gardens.
+const GREEN_Q={'Market Ward':[0.75,0],'Temple Ward':[1,0.15],'Aurelan Quarter':[1,0.05]};   // the rich districts only: the commons keep yards, not gardens
 function greenAt(x,z){const dx=x-CITY.x,dz=z-CITY.z,r=Math.hypot(dx,dz);if(r>CITY.r-6||r<CITY.core+24)return 0;const a=Math.atan2(dz,dx),q=quarterAt(x,z).name,G2=GREEN_Q[q]||[0,0];
-  return Math.min(1,G2[0]*smooth(0.3,0.72,cityWealth(a,r))+G2[1]);}
+  return Math.min(1,G2[0]*smooth(0.45,0.8,cityWealth(a,r))+G2[1]);}
 let OCC=null;   // where something stands (1 m cells): grass and trees grow only in the open
 function buildOcc(){const span=2*(CITY.r*1.6+40),N=Math.ceil(span),g=new Uint8Array(N*N),x0=CITY.x-span/2,z0=CITY.z-span/2;
   for(const c of colliders){if(rhoW(c.x,c.z)>CITY.r+12)continue;const R=c.type==='circle'?c.r:Math.hypot(c.hw,c.hd);const co=Math.cos(c.rot||0),si=Math.sin(c.rot||0);
@@ -905,6 +910,14 @@ const clothMats=[flat(0xc0392b),flat(0x2e6db4),flat(0xd4a017),flat(0x3c8d4f)];
 const winMat=new THREE.MeshBasicMaterial({color:0x3a2a1c});
 const sealMat=new THREE.MeshBasicMaterial({color:0xd8b4ff,fog:false});
 const colliders=[]; let windmillSails=null, ship=null, flags=[];
+// Loose static groups (the village props, the old tower, the dressing round the hubs) are drawn one mesh at a time; merged by
+// material they cost a handful of draws. Anything that moves, glows, carries vertex colours or is looked up by the code stays.
+function mergeLoose(){let n=0,before=0,after=0;const F=new Set(flags);   // whole groups only: code may reach into a group by child index
+  for(const c of landmarks.children.slice()){if(!c.isGroup||c.userData.merged||c.name||Object.keys(c.userData).length)continue;let ok=true,m=0;
+    c.traverse(o=>{if(o===c)return;if(o.isLight||o.isSprite||o.isPoints||o.isLine||o.isSkinnedMesh||o.isInstancedMesh||o.name||Object.keys(o.userData).length||F.has(o))ok=false;
+      if(o.isMesh){m++;const mt=o.material;if(Array.isArray(mt)||mt===kitMat||mt.vertexColors||mt.isMeshBasicMaterial||mt.isShaderMaterial||o.geometry.attributes.color||o.onBeforeRender!==THREE.Object3D.prototype.onBeforeRender)ok=false;}});
+    if(!ok||m<3)continue;const g=mergeStatic(c);g.userData.merged=true;landmarks.remove(c);landmarks.add(g);n++;before+=m;after+=g.children.length;}
+  console.log('merged',n,'groups:',before,'meshes ->',after);}
 function mergeStatic(group){
   group.updateMatrixWorld(true); const buckets=new Map();
   group.traverse(o=>{if(!o.isMesh||o.isInstancedMesh)return;const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);
@@ -2343,7 +2356,7 @@ function buildCityHouses(){
       if(g<0.3)continue;for(let k2=0;k2<4;k2++){const b=k2/4*Math.PI*2+Math.PI/4;tree(Q.x+Math.cos(b)*10.8,Q.z+Math.sin(b)*10.8,/Temple/.test(QUARTERS[Q.q].name)?'Cypress':'StreetTree');}}
     console.log('street trees',n);}
   // the inner yards: what is left inside a block is worked and lived in, more garden where the street is rich
-  {const YD={'Temple Ward':[['Cypress',0.3],['FlowerBed',0.3],['Hedge',0.2],['Garden',0.2]],'Aurelan Quarter':[['Hedge',0.25],['FlowerBed',0.25],['YardTree',0.2],['Garden',0.15],['VegBed',0.15]],'Market Ward':[['FlowerBed',0.25],['YardTree',0.3],['Hedge',0.15],['VegBed',0.3]],'Ruadhan Quarter':[['VegBed',0.3],['YardTree',0.3],['WoodPile',0.2],['WashLine',0.2]],rich:[['Garden',0.12],['YardTree',0.4],['VegBed',0.3],['WashLine',0.18]],mid:[['VegBed',0.3],['WashLine',0.25],['YardTree',0.2],['WoodPile',0.15],['Shed',0.1]],poor:[['WoodPile',0.3],['Shed',0.3],['WashLine',0.3],['Crates',0.1]]};
+  {const YD={'Temple Ward':[['Cypress',0.3],['FlowerBed',0.3],['Hedge',0.2],['Garden',0.2]],'Aurelan Quarter':[['Hedge',0.25],['FlowerBed',0.25],['YardTree',0.2],['Garden',0.15],['VegBed',0.15]],'Market Ward':[['FlowerBed',0.25],['YardTree',0.3],['Hedge',0.15],['VegBed',0.3]],rich:[['VegBed',0.3],['WashLine',0.25],['WoodPile',0.2],['Shed',0.15],['Crates',0.1]],mid:[['VegBed',0.3],['WashLine',0.3],['WoodPile',0.2],['Shed',0.2]],poor:[['WoodPile',0.3],['Shed',0.3],['WashLine',0.3],['Crates',0.1]]};
     let n=0;for(let gx=CITY.x-CITY.r;gx<=CITY.x+CITY.r;gx+=3.5)for(let gz=CITY.z-CITY.r;gz<=CITY.z+CITY.r;gz+=3.5){const x=gx+(rnd()-0.5)*2,z=gz+(rnd()-0.5)*2,dx=x-CITY.x,dz=z-CITY.z,r=Math.hypot(dx,dz),a=Math.atan2(dz,dx);
       if(r<CITY.core+28||r>CITY.r-10)continue;
       if(cityPaved(x,z)>0.02||laneDist(x,z)<LANE_HALF+1.6||riverDistP(x,z)<12||inLM(x,z)||TERRACES.some(T=>Math.abs(r-T.b-0.4)<3))continue;
@@ -2872,7 +2885,7 @@ function ensureMesh(p,x,z,make){const d=Math.hypot(x-player.x,z-player.z);
   else if(p.mesh&&d>150){scene.remove(p.mesh);p.mesh=null;}
   return p.mesh;}
 function crowdUpdate(dt,now,night){
-  if(!RESIDENTS.length&&LANDMARK_AT.length){if(kitReady()){buildInteriors();auditRoutes();}buildPeople();}
+  if(!RESIDENTS.length&&LANDMARK_AT.length){if(kitReady()){buildInteriors();auditRoutes();mergeLoose();}buildPeople();}
   const inCity=Math.hypot(player.x-CITY.x,player.z-CITY.z)<CITY.r+160;
   for(const p of RESIDENTS){
     if(p.wait>0){p.wait-=dt;}else{p.a+=p.dir*p.speed*dt/p.R;if(p.a>p.a1||p.a<p.a0){p.a=Math.max(p.a0,Math.min(p.a1,p.a));p.dir*=-1;p.wait=2+((p.id*37)%60)/10;}}
