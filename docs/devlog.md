@@ -4,6 +4,22 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 55 · No more clipping
+
+*Characters · 24 November 2026*
+
+Your note: far too much clipping was left, and to research how WoW does its equipment.
+
+**What WoW does.** Most armour is painted into regions of the body's texture, which we already did. The rest doesn't sit on top of the body: it swaps that section of the body for an armour-shaped version. Boots replace the lower legs, gloves the forearms, robes the upper legs (WoW calls these "geosets"). Nothing is left underneath to poke through. Each body area has one owner at a time, and helmets hide the hair beneath them rather than squashing it.
+
+**What we do now:**
+- **Body removed under armour:** each character's body loses the triangles under its built pieces. Shoes take the feet, and a long robe takes the upper legs, as WoW's robe geoset does.
+- **Inside-out layering:** pieces are built from the inside out (feet, legs, hands, wrists, chest, waist, shoulders, back, head). Each records how far out it reaches, and anything later (a belt, a buckle, a pouch, a skirt, a cloak) sits outside it.
+- **Hair:** headgear now removes the hair under it. Only what hangs below the rim, or the fringe in a hood, stays.
+- **Cloth and legs:** before each cloth step, the cloth's resting place is moved out of the legs' way. Afterwards the legs, sized by what they wear, have the last word, pushing cloth sideways and only from close by.
+
+I checked five outfits through the walk cycle from front, side and back: plate with a cloak, a hooded robe, a Ferrin smith's apron, the Ilvari coat, and a Hrimfolk with a mantle and cloak. None show clipping. A crowd of nine costs about 3 ms a frame with animation and cloth.
+
 ## Devlog 54 · Plate, and more to wear
 
 *Characters · 24 November 2026*
