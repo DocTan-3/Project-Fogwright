@@ -143,7 +143,7 @@ function npcDescribe(p){const T=NPC_TRADES[p.trade];return {name:p.name,what:(p.
   line:p.greeting+' '+p.line};}
 
 /* ---------- on the bodies ---------- */
-const NPC_TIERS={hero:{size:1024,maxBuilt:null},townsfolk:{size:512,maxBuilt:4},crowd:{size:256,maxBuilt:2}};
+const NPC_TIERS={hero:{size:1024,maxBuilt:null},townsfolk:{size:512,maxBuilt:4},crowd:{size:256,maxBuilt:2,cloth:false}};
 // bodies: {m, f, ml, fl} loaded glTFs (preparePainted already run); returns the figure, with userData.mixer
 function npcSpawn(bodies,p,renderer,tier){
   const g=bodies[p.sex], P=PEOPLE[p.people], R_=p.sex==='f'?P.f:P.m, fig=THREE.SkeletonUtils.clone(g.scene);

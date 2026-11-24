@@ -715,6 +715,7 @@ function eqLegCapsules(root,rig,inv){   // thigh and shin of each leg, in the fi
 function eqClothUpdate(root,dt){
   const rig=root.userData.rig; if(!rig||!rig.cloth||!rig.cloth.length)return;
   dt=Math.min(dt,1/20); const body=rig.body,sk=body.skeleton,inf=body.morphTargetInfluences;
+  if(rig.clothSim===false&&dt>0&&(rig.clothTick=(rig.clothTick||0)+1)%2)return;   // background figures: every other frame is enough
   root.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(root.matrixWorld).invert(), sc=root.scale.y||1;
   const M=sk.bones.map((b,i)=>new THREE.Matrix4().multiplyMatrices(inv,b.matrixWorld).multiply(sk.boneInverses[i]).multiply(body.bindMatrix));
   const caps=eqLegCapsules(root,rig,inv);
@@ -732,7 +733,8 @@ function eqClothUpdate(root,dt){
       const l=Math.hypot(nx,ny,nz)||1;T[i*3]=tx;T[i*3+1]=ty;T[i*3+2]=tz;TN[i*3]=nx/l;TN[i*3+1]=ny/l;TN[i*3+2]=nz/l;}
     if(!C.pos){C.pos=Float32Array.from(T);C.prev=Float32Array.from(T);C.len=[];for(let e=0;e<C.edges.length;e+=3){const a=C.edges[e],b=C.edges[e+1];C.len.push(Math.hypot(T[a*3]-T[b*3],T[a*3+1]-T[b*3+1],T[a*3+2]-T[b*3+2]));}}
     const P=C.pos,Q=C.prev;
-    for(let st=0;st<steps;st++){
+    if(rig.clothSim===false){P.set(T);Q.set(T);}   // background figures: the cloth just follows the hips and thighs
+    else for(let st=0;st<steps;st++){
       for(let i=0;i<n;i++){const k3=i*3;
         if(C.pin[i]){P[k3]=Q[k3]=T[k3];P[k3+1]=Q[k3+1]=T[k3+1];P[k3+2]=Q[k3+2]=T[k3+2];continue;}
         const t=C.hang[i],pull=0.1*(1-t)+0.03;
@@ -825,7 +827,7 @@ function dressOutfit(root,look,outfit,renderer,bakeOnly,opts){
   if(!body.userData.baked||body.material.map!==tex){body.material=bakedMaterial(tex);body.userData.baked=true;} else body.material.needsUpdate=true;
   if(bakeOnly)return;
   if(rig.outfit){rig.outfit.parent.remove(rig.outfit);rig.outfit.geometry.dispose();rig.outfit=null;}
-  for(const c of rig.cloth||[]){c.parent.remove(c);c.geometry.dispose();} rig.cloth=[];
+  for(const c of rig.cloth||[]){c.parent.remove(c);c.geometry.dispose();} rig.cloth=[]; rig.clothSim=opts.cloth!==false;
   const built=eqBuiltMesh(body,outfit,rig.lightSrc,opts.maxBuilt);
   if(built){if(built.mesh){body.parent.add(built.mesh);rig.outfit=built.mesh;} for(const c of built.cloth){root.add(c);rig.cloth.push(c);}}
   eqClothUpdate(root,0);
