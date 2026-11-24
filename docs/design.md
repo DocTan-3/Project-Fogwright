@@ -472,6 +472,10 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 - **Built armour is pinned to the body.** Every point of a built piece is pinned to the body surface beneath it, so it follows every people, both sexes and the build slider with no per-people modelling. Shells hug the body (cuffs, collars, breastplates), drapes hang from it (skirts, tabard panels, cloaks) and rigid pieces ride a bone (helmets, pauldrons, buckles, weapons). A character's built pieces merge into one mesh.
 - **Items are recipes, not models.** An item is a material, a cut, trims, dyes and a few built parts, so a small kit gives a large range of looks, the way WoW repaints shared models. Each people gets its own cuts and patterns.
 
+**Built armour so far.** Leg harness (thigh plates, knee cops, greaves) and leather greaves; breastplate with back plate; vambraces; plate gauntlets; war belt with tassets; pauldrons; helmets (kettle helm, nasal helm, Ferrin goggle helm), each reshaping the hair beneath it. Layers make room for each other: skirts for leg armour, belts and cloaks for a breastplate.
+
+**Cloth.** Skirts, cloaks, aprons and the flaps below long tunics are a light cloth simulation: pulled toward where they would hang, swinging, pushed out of the way by capsules round the legs and feet, never sinking into the body. Background figures skip it.
+
 **Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are built; rivets, engraving and wear are paint. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each armour tier gets a clearly different silhouette, from a slim coat to a full plate shell.
 
 **NPCs.** Not every NPC needs full detail, but every one needs personality.

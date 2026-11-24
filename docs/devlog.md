@@ -4,6 +4,24 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 54 · Plate, and more to wear
+
+*Characters · 24 November 2026*
+
+Your note: refine it, and if the meshes no longer overlap, start making more equipment meshes.
+
+**Refinements.** Long skirts have more points, so a shin can no longer slip between two of them, and the feet now push cloth aside as well as the legs. Flaps below long tunics carry their item's pattern, so a gambeson's quilting carries on below the belt.
+
+**New armour.** Every new piece is cut from the body, so it rides the bones and doesn't cross anything when walking:
+- **Legs:** a steel leg harness (thigh plates, knee cops and greaves), and leather greaves.
+- **Body and arms:** a breastplate with a back plate and a plate skirt round the hips; vambraces; plate gauntlets.
+- **Waist:** a war belt with tassets hanging over the thighs.
+- **Helmets:** a kettle helm with a brim, a nasal helm, and a brass Ferrin goggle helm. Each reshapes the hair, so long hair still hangs out below the rim.
+
+Layers make room for each other: a robe over a leg harness, a belt over a breastplate, a cloak over a back plate.
+
+The city watch now turns out in breastplates and helms, hunters in leather greaves, and some Ferrin in goggle helms. A full knight is about 4,300 triangles of armour and cloth on top of the body.
+
 ## Devlog 53 · Clothes that walk
 
 *Characters · 24 November 2026*
