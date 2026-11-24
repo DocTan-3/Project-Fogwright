@@ -4,6 +4,14 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 56 · Hoods that look like hoods
+
+*Characters · 24 November 2026*
+
+Your note: the cowls didn't look like normal hoods; they were far too big.
+
+The hood was still built with room for squashed hair, but since Devlog 55 the hair under headgear is removed, so that room was just bulk. It now fits close to the head with a little room over the ears. It's open down the front to the throat instead of boxing in under the chin, and the crown draws back into a soft peak. The cowl that was a wide square shell over the shoulders is now a short, rounded capelet.
+
 ## Devlog 55 · No more clipping
 
 *Characters · 24 November 2026*
