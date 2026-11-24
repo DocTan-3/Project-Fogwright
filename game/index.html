@@ -391,11 +391,43 @@ function wardCrossings(){if(XR)return XR;XR=[];   // where a street or lane cros
         t0=null;}}}
   return XR;}
 function crossFactor(px,pz){wardCrossings();const l=XR_GRID.get(Math.floor(px/24)+','+Math.floor(pz/24));if(!l)return 0;let X=0;
-  for(const c of l){const dx=px-c.x,dz=pz-c.z,lon=Math.abs(dx*c.sx+dz*c.sz),lat=Math.abs(dx*c.sz-dz*c.sx);X=Math.max(X,(1-smooth(c.hw,c.hw+5,lat))*(1-smooth(20,28,lon)));}return X;}
+  for(const c of l){const dx=px-c.x,dz=pz-c.z,lon=Math.abs(dx*c.sx+dz*c.sz),lat=Math.abs(dx*c.sz-dz*c.sx);X=Math.max(X,(1-smooth(c.hw,c.hw+12,lat))*(1-smooth(20,30,lon)));   /* the ramp's sides fall away gently, not as a bank */}return X;}
+// The topography, checked and repaired: the city's level is sampled on a 2 m grid, and wherever paving climbs more steeply
+// than 1 in 5 between two paved points (a district's edge cutting a street or square that has no gate and no ramp), the ground
+// round it is relaxed into a smooth slope, the plateaus beyond held fixed, the patch widened until the street is walkable.
+// Steps behind walls (unpaved) are left as they are. What cannot be repaired is reported at load as an error.
+let TOPO=null, TOPO_OK=false;
+function buildTopo(){const S=2,R=CITY.r+34,N=Math.ceil(2*R/S)+1,x0=CITY.x-R,z0=CITY.z-R,H=new Float32Array(N*N),inC=new Uint8Array(N*N),PV=new Float32Array(N*N),fix=new Uint8Array(N*N),t0=performance.now();
+  const md=CITY_MAP.image.data,MN=768,span=620,pav=(x,z)=>{const i=Math.floor(((x-CITY.x)/span+0.5)*MN),j=Math.floor(((z-CITY.z)/span+0.5)*MN);return i<0||j<0||i>=MN||j>=MN?0:md[j*MN+i]/255;};
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=x0+i*S,z=z0+j*S,d=Math.hypot(x-CITY.x,z-CITY.z),k=j*N+i;H[k]=districtLevelRaw(x,z,Math.max(d,1));if(d>CITY.r-1||d<CITY.core+2)continue;inC[k]=1;PV[k]=pav(x,z);}   // every node knows its height; only the city proper is checked
+  const MAXS=0.17;   /* a little inside 1 in 5, so what is drawn between grid points stays walkable */
+  const atWall=(x,z)=>{const r=Math.hypot(x-CITY.x,z-CITY.z);return r>CITY.core+23.5&&r<CITY.core+27.6&&avDist(Math.atan2(z-CITY.z,x-CITY.x),r)>12.5;};   // the plaza's own retaining wall
+  const bad=()=>{const out=[];for(let j=1;j<N-1;j++)for(let i=1;i<N-1;i++){const k=j*N+i;if(!inC[k]||PV[k]<0.08)continue;
+      for(const [di,dj] of[[1,0],[0,1],[1,1],[1,-1]]){const k2=(j+dj)*N+i+di;if(!inC[k2]||PV[k2]<0.08||Math.max(PV[k],PV[k2])<0.25)continue;if(atWall(x0+i*S,z0+j*S)||atWall(x0+(i+di)*S,z0+(j+dj)*S))continue;   // both on paving (the kerbs included)
+        if(Math.abs(H[k2]-H[k])/(S*Math.hypot(di,dj))>MAXS){out.push(k);break;}}}return out;};
+  let B=bad();const first=B.length;
+  for(const rad of[5,8,12,16]){if(!B.length)break;const reg=new Uint8Array(N*N);
+    for(const k of B){const ci=k%N,cj=(k/N)|0;for(let dj=-rad;dj<=rad;dj++)for(let di=-rad;di<=rad;di++){if(di*di+dj*dj>rad*rad)continue;const i=ci+di,j=cj+dj;if(i<1||j<1||i>=N-1||j>=N-1)continue;const k2=j*N+i;if(inC[k2])reg[k2]=1;}}
+    const cells=[];for(let k=0;k<N*N;k++)if(reg[k]){cells.push(k);fix[k]=1;}
+    for(let it=0;it<rad*rad*3+120;it++)for(const k of cells){let s2=0,n=0;for(const k2 of[k-1,k+1,k-N,k+N]){s2+=H[k2];n++;}H[k]=s2/n;}   // relax: each cell the mean of its neighbours, the plateaus round it held
+    B=bad();}
+  for(let k=0;k<N*N;k++)if(inC[k]&&PV[k]>=0.25)fix[k]|=2;   /* paving is drawn from this grid too, so the ground drawn is the ground checked */
+  TOPO={H,fix,N,x0,z0,S};
+  console.log('topography: '+first+' steep paved cells found, '+B.length+' left, '+Math.round(performance.now()-t0)+' ms');
+  if(B.length){const k=B[0],[wx,wz]=P2W(x0+(k%N)*S,z0+((k/N)|0)*S);console.error('topography: '+B.length+' paved cells still steeper than 1 in 5, e.g. near '+wx.toFixed(0)+','+wz.toFixed(0));}}
 function districtLevel(px,pz,dcy){
+  if(TOPO_OK){if(!TOPO)buildTopo();const T=TOPO,fx=(px-T.x0)/T.S,fz=(pz-T.z0)/T.S,i=Math.floor(fx),j=Math.floor(fz);
+    if(i>=0&&j>=0&&i<T.N-1&&j<T.N-1){const k=j*T.N+i;if(T.fix[k]||T.fix[k+1]||T.fix[k+T.N]||T.fix[k+T.N+1]){const u=fx-i,v=fz-j;
+      return (T.H[k]*(1-u)+T.H[k+1]*u)*(1-v)+(T.H[k+T.N]*(1-u)+T.H[k+T.N+1]*u)*v;}}}   // inside a repaired patch: the relaxed ground
+  return districtLevelRaw(px,pz,dcy);}
+function districtLevelRaw(px,pz,dcy){
   const F=wardField(px,pz),Li=WARD_LEVEL[F.i],Lj=WARD_LEVEL[F.j];let L=Li;
+  for(const G of GATES){const gx=CITY.x+Math.cos(G.a)*(CITY.r-14),gz=CITY.z+Math.sin(G.a)*(CITY.r-14),d=Math.hypot(px-gx,pz-gz);if(d>44)continue;   // a city gate stands on a level forecourt
+    const G2=wardField(gx,gz),gl=WARD_LEVEL[G2.i];if(d<44){const base=districtLevelRaw2(px,pz,dcy,F,Li,Lj);return lerp(gl,base,smooth(14,44,d));}}
+  return districtLevelRaw2(px,pz,dcy,F,Li,Lj);}
+function districtLevelRaw2(px,pz,dcy,F,Li,Lj){let L=Li;
   if(Math.abs(Li-Lj)>0.05&&F.edge<20){const X=crossFactor(px,pz),band=lerp(0.35,Math.min(18,Math.max(3,Math.abs(Li-Lj)*4.5)),X);L=lerp((Li+Lj)/2,Li,smooth(0,band,F.edge));}
-  const e=dcy-(CITY.core+25.5);if(e<20){const av=avDist(Math.atan2(pz-CITY.z,px-CITY.x),dcy),Xp=1-smooth(8.5,12,av),bp=lerp(0.35,15,Xp);L=lerp(PLAZA_LEVEL,L,smooth(-bp,bp,e));}
+  const e=dcy-(CITY.core+25.5);if(e<20){const av=avDist(Math.atan2(pz-CITY.z,px-CITY.x),dcy),Xp=1-smooth(8.5,18,av),bp=lerp(0.35,15,Xp);L=lerp(PLAZA_LEVEL,L,smooth(-bp,bp,e));}
   return L;}
 function heightAt(x,z){
   if(PLAN){const q=P2W(x,z);x=q[0];z=q[1];}
@@ -2712,7 +2744,8 @@ function rerouteLanes(){
         const clampB=l=>{const sx=Math.abs(l[0])/hw,sz=Math.abs(l[1])/hd;return sx>sz?[Math.sign(l[0])*hw,l[1]]:[l[0],Math.sign(l[1])*hd];};
         const a=clampB(loc(PA)),b=clampB(loc(PB)),P0=2*(hw+hd)*2,ta=per(a),tb=per(b),corners=[[hw,hd],[-hw,hd],[-hw,-hd],[hw,-hd]].map(q=>[q,per(q)]);
         const fwd=((tb-ta)%P0+P0)%P0, mk=go=>{const route=[];for(const [q,t] of corners.slice().sort((u,v)=>go>0?(((u[1]-ta)%P0+P0)%P0)-(((v[1]-ta)%P0+P0)%P0):(((ta-u[1])%P0+P0)%P0)-(((ta-v[1])%P0+P0)%P0))){const d=go>0?((t-ta)%P0+P0)%P0:((ta-t)%P0+P0)%P0;if(d>0&&d<(go>0?fwd:P0-fwd))route.push(wld(...q));}return [wld(...a),...route,wld(...b)];};
-        const crossesStep=rt=>{for(let k=0;k<rt.length-1;k++){const A=rt[k],B=rt[k+1],ra=Math.hypot(A[0]-CITY.x,A[1]-CITY.z),rb=Math.hypot(B[0]-CITY.x,B[1]-CITY.z);for(const T of TERRACES){const rt0=T.b+0.4;if((ra-rt0)*(rb-rt0)<0)return true;}}return false;};
+        const crossesStep=rt=>{for(let k=0;k<rt.length-1;k++){const A=rt[k],B=rt[k+1],L=Math.hypot(B[0]-A[0],B[1]-A[1]),n=Math.max(1,Math.ceil(L));let q0=qIndex(A[0],A[1]);   // a detour may cross a district's edge only where a ramp climbs it
+            for(let m=1;m<=n;m++){const x=A[0]+(B[0]-A[0])*m/n,z=A[1]+(B[1]-A[1])*m/n,q=qIndex(x,z);if(q!==q0&&Math.abs(WARD_LEVEL[q]-WARD_LEVEL[q0])>0.05&&crossFactor(x,z)<0.5)return true;q0=q;}}return false;};
         const r1=mk(fwd<=P0/2?1:-1),r2=mk(fwd<=P0/2?-1:1),pick=!crossesStep(r1)?r1:!crossesStep(r2)?r2:null;
         if(pick){for(let k=0;k<pick.length;k++){out.push(pick[k]);const B=pick[k+1];if(!B)break;const A=pick[k],n=Math.ceil(Math.hypot(B[0]-A[0],B[1]-A[1]));for(let m=1;m<n;m++)out.push([A[0]+(B[0]-A[0])*m/n,A[1]+(B[1]-A[1])*m/n]);}}   // a metre at a time, so the next hub sees the whole detour
         else{out.push(null);ln.severed=true;}          // no way round on one level: the lane is given up (two dead ends help nobody)
@@ -2822,6 +2855,7 @@ const CITY_MAP=(()=>{const N=768,span=620,d=new Uint8Array(N*N);let t0=performan
   for(let j=0;j<N;j++)for(let i=0;i<N;i++){const x=CITY.x+((i+0.5)/N-0.5)*span,z=CITY.z+((j+0.5)/N-0.5)*span;d[j*N+i]=Math.round(cityPaved(x,z)*255);}
   const t=new THREE.DataTexture(d,N,N,THREE.RedFormat,THREE.UnsignedByteType);t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearFilter;t.needsUpdate=true;
   console.log('city map',Math.round(performance.now()-t0),'ms');return t;})();
+TOPO_OK=true;   // the paving map exists: the topography can now be checked and repaired (on first use)
 function cityStreet(x,z){
   const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return false;
   if(r<CITY.core+24)return true; // grand plaza before the sealed walls
