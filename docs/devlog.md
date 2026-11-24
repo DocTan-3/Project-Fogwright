@@ -4,6 +4,18 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 52 · Cloth that hangs, hair under hats
+
+*Characters · 24 November 2026*
+
+Your notes: capes, aprons and skirts didn't fit; hoods and hats looked awkward because they hid the hair; and the guards' vests looked like sports bras.
+
+**Drapes.** All three were built by pinning points close to the body, so they followed every bump. They now hang the way cloth does: from where they're fastened they can move away from the body but never back toward it. A cloak falls straight from the shoulder blades and lies over the shoulders, an apron drops from the chest, and a skirt sits snug at the waist and hangs from the hips. Open coats run from one front edge round the back to the other.
+
+**Hat hair.** As you suggested, headgear no longer hides the hair; it reshapes it. Under a hat, the hair above the band is pressed into the crown and long hair still falls below the brim. Under a hood it's tucked in, with the fringe showing. The hood itself is now a rounded dome fitted to the head, narrowing to the neck, with an oval opening for the face. A brimmed hat joins the head slot.
+
+**Vests.** Sleeveless pieces cut a round armhole that took the whole top of the shoulder away. They now cover the shoulder down to where the arm begins, as a brigandine or jerkin should.
+
 ## Devlog 51 · The townsfolk
 
 *Characters · 24 November 2026*
