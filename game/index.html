@@ -1162,7 +1162,7 @@ class KitB{
       bg.setAttribute('color',new THREE.BufferAttribute(col,3));bg.setAttribute('glow',new THREE.BufferAttribute(gl,1));bg.setAttribute('kmat',new THREE.BufferAttribute(km,1));
       bg.rotateX(-Math.PI/2); // plan (z up, street at -y) to world (y up, street at +z)
       bg.computeBoundingSphere(); return bg;};
-    if(/WallSeg|Tower|Gatehouse|YardForge|Terrace|Quay|WaterGate|Pier|Boat|Harpoon|Aqueduct|Well|Span|Walkway|LaneLine|Portal|Granary|Garden|Clocktower|Observatory|Stall|Pen|Tent|Yurt|Pavilion|Wagon|Crates|Boom|Booth|Tannery|Smithy|Spire|Round|Hut/.test(name))for(const g of this.parts){const a=g.attributes.kmat.array;for(let i=0;i<a.length;i++)if(a[i]<49.5)a[i]+=50;}
+    if(/WallSeg|WardWall|WardGate|WardPost|Tower|Gatehouse|YardForge|Terrace|Quay|WaterGate|Pier|Boat|Harpoon|Aqueduct|Well|Span|Walkway|LaneLine|Portal|Granary|Garden|Clocktower|Observatory|Stall|Pen|Tent|Yurt|Pavilion|Wagon|Crates|Boom|Booth|Tannery|Smithy|Spire|Round|Hut/.test(name))for(const g of this.parts){const a=g.attributes.kmat.array;for(let i=0;i<a.length;i++)if(a[i]<49.5)a[i]+=50;}
     const bg=merge(this.parts), far=merge(this.parts.filter(g=>!g.userData.small)); this.parts.forEach(g=>g.dispose());
     KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; KIT.core[name]=[w,d]; KIT.vents[name]=this.vents.map(([x,y,z,v])=>[x,z,-y,v]); return bg;
   }
@@ -1832,6 +1832,20 @@ function kLongship(name,L,wheels){ // a Hrimfolk longship with an engine: iron-b
     k.box(L*0.6,hw*1.6,0.1,0,0,1.75,'planks:#6a5440');for(let i=0;i<4;i++)k.cyl(0.4,0.4,0.9,8,-L*0.3+i*0.9,hw*0.4,1.8,'planks:#6a4a2e');});
   k.finish(name,L+1.5,hw*2+1.2);
 }
+function kWardKit(){
+  let k=new KitB();const L=6,T=1.2,H=4.6,st='stone:#9d958a';                       // a ward wall: crenellated, a string course, a footing that runs into the ground
+  k.box(L,T,H+1.5,0,0,(H-1.5)/2,st);k.box(L+0.02,T+0.3,0.25,0,0,H*0.55,'stone:#b5ad9c');k.box(L+0.02,T+0.3,0.3,0,0,H+0.15,'stone:#b5ad9c');
+  for(let i=0;i<3;i++)k.box(1.1,T+0.1,0.8,-L/2+1+i*2,0,H+0.7,st);k.finish('WardWall',L,T+0.3);
+  k=new KitB();const W=10,PH=9.2,pc='stone:#a8a091',R=W/2,SP=1.6,N=26;                     // a ward gate: two towers and a round arch over the street, battlements on top
+  for(const sx of[-1,1]){k.box(2.6,2.6,PH+2,sx*(W/2+1.3),0,PH/2-1,pc);k.box(3.0,3.0,0.35,sx*(W/2+1.3),0,PH,'stone:#b5ad9c');for(const [a,b] of[[-1,-1],[1,-1],[-1,1],[1,1]])k.box(0.8,0.8,0.8,sx*(W/2+1.3)+a*1.0,b*1.0,PH+0.55,pc);
+    k.box(0.5,2.7,0.3,sx*(W/2-0.1),0,SP,'stone:#b5ad9c');}
+  {const F=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]],M0=k.M(0,0,0),Q=(x0,z0,x1,z1,x2,z2,x3,z3,d,col)=>k.poly([[x0,-d,z0],[x1,-d,z1],[x2,-d,z2],[x3,-d,z3],[x0,d,z0],[x1,d,z1],[x2,d,z2],[x3,d,z3]],F,M0,col);
+   for(let i=0;i<16;i++){const t0=PI-i/16*PI,t1=PI-(i+1)/16*PI,c0=Math.cos(t0),s0=Math.sin(t0),c1=Math.cos(t1),s1=Math.sin(t1);   // the spandrels above a smooth round arch, and a ring of dressed voussoirs
+     Q(R*c0,SP+R*s0,R*c1,SP+R*s1,R*c1,7.02,R*c0,7.02,1.2,pc);Q((R-0.04)*c0,SP+(R-0.04)*s0,(R-0.04)*c1,SP+(R-0.04)*s1,(R+0.55)*c1,SP+(R+0.55)*s1,(R+0.55)*c0,SP+(R+0.55)*s0,1.32,'stone:#c2b9a6');}}
+  k.box(W,2.4,1.4,0,0,7.7,pc);k.box(W+0.1,2.6,0.25,0,0,8.45,'stone:#b5ad9c');k.box(1.0,2.5,1.0,0,0,6.75,'stone:#c9c0ad');
+  for(let i=0;i<4;i++)k.box(0.9,2.5,0.7,-W/2+1.6+i*2.3,0,8.9,pc);k.finish('WardGate',W+5.2,2.6);
+  k=new KitB();k.box(0.8,0.8,2.2,0,0,1.1,pc);k.box(1.0,1.0,0.25,0,0,2.3,'stone:#b5ad9c');k.box(0.12,0.12,0.9,0,0,2.85,'#2a2c30');k.fire(0.24,0.24,0.3,0,0,3.4);k.box(0.4,0.4,0.06,0,0,3.6,'#b8893e');k.finish('WardPost',1,1);
+}
 function kQuay(){ // a river wall: dressed stone from the water to the street, a coping, mooring rings
   const k=new KitB(),L=6,T=1.6,H=16;k.box(L,T,H,0,0,H/2,'stone:#7a746c');k.box(L+0.05,T+0.25,0.3,0,-0.1,H+0.15,'stone:#9d958a');
   k.sm(()=>{k.ring(0.22,0.05,1.2,-T/2-0.08,H-2.6,'#26262b');k.box(0.5,0.3,0.12,-1.6,-T/2-0.02,H-6,'#3a5a3a');});k.finish('Quay',L,T);
@@ -2019,7 +2033,7 @@ function dressHub(k,name){
 (function buildKit(){const _t0=performance.now();
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
-  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); (()=>{const k=new KitB();k.box(1,1,1,0,0,-0.5,'stone:#8f877b');k.finish('Plinth',1,1);})(); kQuay(); kWaterGate(); kPier(); kBoat(); kHarpoon(); for(let i=0;i<4;i++)kYardForge('YardForge'+i,i+1); kTerrace('Terrace',false); kTerrace('TerraceStair',true); kLongship('Longship',22,true); kLongship('LongshipS',17,false); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); GEN.shack=[]; for(let i=0;i<14;i++)genShack(i+801); for(let i=0;i<8;i++){genCulture('ferrin',i+301);genCulture('hrim',i+401);genCulture('zarhim',i+501);genCulture('ruadhan',i+601);genCulture('temple',i+701);} kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); (()=>{const k=new KitB();k.box(1,1,1,0,0,-0.5,'stone:#8f877b');k.finish('Plinth',1,1);})(); kWardKit(); kQuay(); kWaterGate(); kPier(); kBoat(); kHarpoon(); for(let i=0;i<4;i++)kYardForge('YardForge'+i,i+1); kTerrace('Terrace',false); kTerrace('TerraceStair',true); kLongship('Longship',22,true); kLongship('LongshipS',17,false); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); GEN.shack=[]; for(let i=0;i<14;i++)genShack(i+801); for(let i=0;i<8;i++){genCulture('ferrin',i+301);genCulture('hrim',i+401);genCulture('zarhim',i+501);genCulture('ruadhan',i+601);genCulture('temple',i+701);} kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
   for(const n in KIT.geo){if(/WallSeg|^Tower$|Gatehouse|Terrace|Quay|WaterGate|Span|LaneLine|Walkway|BridgeRoom|Plinth|Aqueduct|^Int_|^Under_|RoofShack|Harpoon|Longship/.test(n))continue;
     const g=KIT.geo[n];g.computeBoundingBox();const b=g.boundingBox;KIT.size[n]=[2*Math.max(-b.min.x,b.max.x),2*Math.max(-b.min.z,b.max.z)];}   // placement uses the true outline: bays, awnings, steps, boilers
   console.log('kit built in',Math.round(performance.now()-_t0),'ms');
@@ -2042,8 +2056,8 @@ function cellInstances(geo,mat,list,far,big,tinted,farGeo){ // list of {x,y,z,ry
   }
 }
 function kitInstances(name,list){
-  if(PLAN){const wall=/WallSeg|Terrace|Quay|WaterGate/.test(name);for(const p of list){const [x,z,ry,st,ryx]=warpPose(p.x,p.z,p.ry||0);p.x=x;p.z=z;p.ry=wall?ryx:ry;if(wall)p.sx=(p.sx||1)*st*1.04;}}
-  for(const v of KIT.vents[name]||[])for(const p of list){const u=p.s||1,c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lx=v[0]*(p.sx||1)*u,lz=v[2]*u;VENTS.push({x:p.x+lx*c+lz*sn,y:p.y+v[1]*u,z:p.z-lx*sn+lz*c,s:v[3]*u});}const big=/WallSeg|Tower|Gatehouse|WaterGate/.test(name),g=KIT.geo[name],small=g.attributes.position.count<2400||/Stall|Tent|Yurt|Pavilion|Wagon|Crates|Booth|Pen|Boat|Pier|Well/.test(name);
+  if(PLAN){const wall=/WallSeg|WardWall|Terrace|Quay|WaterGate/.test(name);for(const p of list){const [x,z,ry,st,ryx]=warpPose(p.x,p.z,p.ry||0);p.x=x;p.z=z;p.ry=wall?ryx:ry;if(wall)p.sx=(p.sx||1)*st*1.04;}}
+  for(const v of KIT.vents[name]||[])for(const p of list){const u=p.s||1,c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lx=v[0]*(p.sx||1)*u,lz=v[2]*u;VENTS.push({x:p.x+lx*c+lz*sn,y:p.y+v[1]*u,z:p.z-lx*sn+lz*c,s:v[3]*u});}const big=/WallSeg|WardWall|WardGate|Tower|Gatehouse|WaterGate/.test(name),g=KIT.geo[name],small=g.attributes.position.count<2400||/Stall|Tent|Yurt|Pavilion|Wagon|Crates|Booth|Pen|Boat|Pier|Well/.test(name);
   cellInstances(g,kitMat,list,big?1e9:small?260:560,big,true,big||small?null:KIT.far[name]);}   // small props keep their shape: their 'far' version would be a bare box
 const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
 function cullCells(){
@@ -2072,7 +2086,7 @@ function pickHouse(a,r,rnd){const rd=riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math
 const v=pickHouse0(a,r,rnd);const fam=/^Row[ABC]$/.test(v)?'row':/^Tenement/.test(v)?'tenement':/^Timberframe/.test(v)?'timber':v==='Forge'?'ferrin':/^(Longhouse|Lodge)$/.test(v)?'hrim':/^Adobe/.test(v)?'zarhim':v==='Roundhouse'?'ruadhan':v==='Chapel'?'temple':null;
   return fam&&GEN[fam].length&&rnd()<0.85?GEN[fam][Math.floor(rnd()*GEN[fam].length)]:v;}
 function pickHouse0(a,r,rnd){ // a district builds its own people's houses; only the poorest streets fall to shacks
-  const w=cityWealth(a,r), x=CITY.x+Math.cos(a)*r+(rnd()-0.5)*44, z=CITY.z+Math.sin(a)*r+(rnd()-0.5)*44, q=quarterAt(x,z).name,
+  const w=cityWealth(a,r), x=CITY.x+Math.cos(a)*r+(rnd()-0.5)*0, z=CITY.z+Math.sin(a)*r+(rnd()-0.5)*0, q=quarterAt(x,z).name,
     own=(CULTURE[q]||['RowA','RowB','RowC']).filter(n=>n!=='Manor'||w>0.6), u=rnd(), any=l=>l[Math.floor(rnd()*l.length)];
   if(w>0.8&&(q==='Market Ward'||q==='Temple Ward'||q==='Aurelan Quarter')&&u<0.4)return 'Manor';
   if(w>0.25)return u<0.18?any(w>0.55?['RowA','RowB','RowC','Shopfront']:['RowB','Tenement4','Tenement']):any(own);
@@ -2162,7 +2176,8 @@ function buildCityHouses(){
      const y=hi>lo+0.3?hi-0.05:lo-0.15; if(hi>lo+0.3)plinths.push({x,z,ry,y:y+0.05,sx:w+0.4,sy:hi-lo+0.7,sz:d+0.4,tint:[0.82,0.8,0.76]});
      (lists[L.name]=lists[L.name]||[]).push({x,y,z,ry,tint:[1,1,1],s:u});} colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d,name:L.name,u,yd:L._yd||0,y:lists[L.name][lists[L.name].length-1].y});}
   rerouteLanes();
-  const blocked=(a,r,half)=>riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r)<9+half||nearAvenue(a,r,8.2+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
+  buildWardWalls(lists);
+  const blocked=(a,r,half)=>wardSquares().some(Q=>Math.hypot(CITY.x+Math.cos(a)*r-Q.x,CITY.z+Math.sin(a)*r-Q.z)<SQ_R+half+2)||riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r)<9+half||nearAvenue(a,r,8.2+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
   const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterAR(a,r).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   // houses face the ring streets, on both kerbs of each ring
   for(const rr of RINGS)for(const side of[-1,1]){
@@ -2231,7 +2246,7 @@ function buildCityHouses(){
           if(blocked(a,rr,w/2)||!footprintFree(f)||footOnLane({x,z,hw:w/2,hd:d/2,rot:ry},LANE_HALF+0.2)){t+=3;continue;}
           if(put(name,x,z,ry,tintFor(a,rr,name))){colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++;} t+=w+(w0<0.3?0.1+rnd()*0.4:0.15+rnd()*0.5);}
         carry=t-len;}}}
-  {const EX=/Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat/,LM=new Set(LANDMARKS.map(L=>L.name)),all=[];
+  {const EX=/WardWall|WardGate|WardPost|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat/,LM=new Set(LANDMARKS.map(L=>L.name)),all=[];
     const ext=n=>{const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox;return [Math.max(-b.min.x,b.max.x),Math.max(-b.min.z,b.max.z)];};
     for(const n in lists){if(EX.test(n)||!KIT.size[n])continue;const [ex,ez]=ext(n);for(const e of lists[n]){const [wx,wz,wry]=warpPose(e.x,e.z,e.ry||0),u=e.s||1;
       all.push({n,e,f:{x:wx,z:wz,hw:ex*u-0.15,hd:ez*u-0.15,rot:wry},pri:LM.has(n)?0:/Terrace|Well|Garden/.test(n)?0.5:1});}}
@@ -2264,7 +2279,7 @@ function buildCityHouses(){
         const kind=lo>8.5&&u<0.16+0.12*(w0<0.35)?(rnd()<0.5?'BridgeRoom':'BridgeRoomB'):lo>6.5&&u<0.4?'Walkway':u<0.85?'LaneLine':null;if(!kind)continue;
         put(kind,px,pz,ry,[1,1,1],y);}
       acc-=len;}}}
-  {const SK=/Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
+  {const SK=/WardWall|WardGate|WardPost|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
     for(const n in lists){if(SK.test(n)||LM.has(n)||!KIT.geo[n])continue;const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
       lists[n]=lists[n].filter(e=>{const c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);for(let u=0;u<=1;u+=0.2)for(let v=0;v<=1;v+=0.2){const lx=(bb.min.x+(bb.max.x-bb.min.x)*u)*0.98,lz=(bb.min.z+(bb.max.z-bb.min.z)*v)*0.98;
         if(cityPaved(e.x+lx*c+lz*sn,e.z-lx*sn+lz*c)>0.5){gone.add(e.x+','+e.z);return false;}}return true;});}   // last sweep: nothing on a street
@@ -2380,6 +2395,48 @@ function cityLevel(x,z,r){
   let lv=0;for(const T of TERRACES){if(Math.abs(r-T.b)>40){if(r<T.b)lv+=TERR_STEP;continue;}const [rp,mk]=rampAt(x,z,r),w=mk>0?lerp(lerp(0.5,44,rp),56,mk):lerp(0.5,44,rp),c=T.b+0.4;
     lv+=TERR_STEP*(1-smooth(c-w/2,c+w/2,r));}
   return lv;}
+function qScore(i,x,z){const [wx,wz]=qWarp(x-CITY.x,z-CITY.z),S=QSEED[i];return (wx-S[0])**2+(wz-S[1])**2-S[2];}
+function wardBoundaries(){ // the line between each pair of neighbouring quarters, traced on a 3 m grid and settled onto the true border
+  const g=3,R0=CITY.core+32,R1=CITY.r-13,n=Math.ceil(2*R1/g),idx=new Int8Array((n+1)*(n+1)).fill(-1),X=i=>CITY.x-R1+i*g,Z=j=>CITY.z-R1+j*g,groups=new Map();
+  for(let j=0;j<=n;j++)for(let i=0;i<=n;i++){const r=Math.hypot(X(i)-CITY.x,Z(j)-CITY.z);if(r>=R0&&r<=R1)idx[j*(n+1)+i]=qIndex(X(i),Z(j));}
+  for(let j=0;j<=n;j++)for(let i=0;i<=n;i++){const a=idx[j*(n+1)+i];if(a<0)continue;for(const [di,dj] of[[1,0],[0,1]]){if(i+di>n||j+dj>n)continue;const b=idx[(j+dj)*(n+1)+i+di];if(b<0||b===a)continue;
+      let x=(X(i)+X(i+di))/2,z=(Z(j)+Z(j+dj))/2;const f=(x,z)=>qScore(a,x,z)-qScore(b,x,z);
+      for(let it=0;it<4;it++){const v=f(x,z),gx=(f(x+0.5,z)-f(x-0.5,z)),gz=(f(x,z+0.5)-f(x,z-0.5)),gg=gx*gx+gz*gz;if(gg<1e-9)break;x-=v*gx/gg;z-=v*gz/gg;}
+      const key=Math.min(a,b)+'|'+Math.max(a,b);(groups.get(key)||groups.set(key,[]).get(key)).push([x,z]);}}
+  const chains=[];
+  for(const [key,P0] of groups){const P=[];for(const q of P0)if(!P.some(o=>Math.hypot(o[0]-q[0],o[1]-q[1])<1.2))P.push(q);
+    const used=new Array(P.length).fill(false);
+    while(true){let s0=-1,best=1e9;for(let i=0;i<P.length;i++){if(used[i])continue;let c=0;for(let k=0;k<P.length;k++)if(!used[k]&&k!==i&&Math.hypot(P[k][0]-P[i][0],P[k][1]-P[i][1])<4.5)c++;if(c<best){best=c;s0=i;}}
+      if(s0<0)break;const ch=[P[s0]];used[s0]=true;let cur=s0;
+      while(true){let nx=-1,nd=6.5;for(let k=0;k<P.length;k++){if(used[k])continue;const d=Math.hypot(P[k][0]-P[cur][0],P[k][1]-P[cur][1]);if(d<nd){nd=d;nx=k;}}if(nx<0)break;used[nx]=true;ch.push(P[nx]);cur=nx;}
+      if(ch.length>3)chains.push({key,pts:ch});}}
+  return chains;}
+function buildWardWalls(lists){ // along each boundary, at half-metre steps: open where a street or lane crosses, blocked by hubs, the river and terraces, walled elsewhere
+  const PUT=(name,e)=>(lists[name]=lists[name]||[]).push(e),DS=0.5,TOW=2.6;
+  const hitC=(x,z)=>colliders.some(o=>{if(Math.abs(o.x-x)>(o.r||o.hw+o.hd)+1||Math.abs(o.z-z)>(o.r||o.hw+o.hd)+1)return false;if(o.type==='circle')return Math.hypot(x-o.x,z-o.z)<o.r+0.8;
+    const c=Math.cos(o.rot),sn=Math.sin(o.rot),dx=x-o.x,dz=z-o.z;return Math.abs(dx*c-dz*sn)<o.hw+0.8&&Math.abs(dx*sn+dz*c)<o.hd+0.8;});
+  for(const ch of wardBoundaries()){const P=ch.pts,cum=[0];for(let i=1;i<P.length;i++)cum.push(cum[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]));const LEN=cum[cum.length-1];
+    const at=t=>{t=Math.max(0,Math.min(LEN,t));let i=1;while(i<P.length-1&&cum[i]<t)i++;const u=(t-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]);return [P[i-1][0]+(P[i][0]-P[i-1][0])*u,P[i-1][1]+(P[i][1]-P[i-1][1])*u];};
+    const n=Math.floor(LEN/DS),st=[];
+    for(let k=0;k<=n;k++){const t=k*DS,c=at(t),a=at(t-1),b=at(t+1),tl=Math.hypot(b[0]-a[0],b[1]-a[1])||1,nx=-(b[1]-a[1])/tl,nz=(b[0]-a[0])/tl,rc=Math.hypot(c[0]-CITY.x,c[1]-CITY.z);
+      let open=false;for(const o of[-0.9,0,0.9])if(cityPaved(c[0]+nx*o,c[1]+nz*o)>0.2)open=true;
+      st.push(open?'o':(inLM(c[0],c[1])||riverDistP(c[0],c[1])<11||TERRACES.some(T=>Math.abs(rc-T.b)<2.6)||hitC(c[0],c[1]))?'b':'w');}
+    const runs=[];for(let k=0;k<=n;){let m=k;while(m+1<=n&&st[m+1]===st[k])m++;runs.push({s:st[k],t0:Math.max(0,k*DS-DS/2),t1:Math.min(LEN,m*DS+DS/2)});k=m+1;}
+    for(let r=0;r<runs.length;r++)if(runs[r].s==='w'){if(runs[r-1]&&runs[r-1].s==='o')runs[r].t0+=0.4;if(runs[r+1]&&runs[r+1].s==='o')runs[r].t1-=0.4;}
+    // openings first: a gate over a street, a pair of lantern posts at a lane; the wall either side is cut back to the gate's towers
+    for(let r=0;r<runs.length;r++){const R=runs[r];if(R.s!=='o')continue;const L0=runs[r-1],L1=runs[r+1];if(!L0||!L1||L0.s!=='w'||L1.s!=='w')continue;
+      const w=R.t1-R.t0,q0=at(R.t0),q1=at(R.t1),mx=(q0[0]+q1[0])/2,mz=(q0[1]+q1[1])/2,tl=Math.hypot(q1[0]-q0[0],q1[1]-q0[1])||1,tx=(q1[0]-q0[0])/tl,tz=(q1[1]-q0[1])/tl,ry=Math.atan2(-tz,tx);
+      if(w>=7){const sc=(w+0.8)/10,half=(w+0.8)/2+TOW*sc;PUT('WardGate',{x:mx,z:mz,y:heightAt(mx,mz)-0.2,ry,sx:sc,tint:[1,1,1]});
+        for(const s2 of[-1,1])colliders.push({type:'circle',x:mx+tx*s2*((w+0.8)/2+TOW*sc/2),z:mz+tz*s2*((w+0.8)/2+TOW*sc/2),r:TOW*sc/2+0.2});
+        const cut=half-w/2-0.1;L0.t1-=cut;L1.t0+=cut;}
+      else{for(const s2 of[-1,1]){const x=mx+tx*s2*(w/2+0.5),z=mz+tz*s2*(w/2+0.5);PUT('WardPost',{x,z,y:heightAt(x,z)-0.1,ry,tint:[1,1,1]});colliders.push({type:'circle',x,z,r:0.5});}
+        L0.t1-=0.9;L1.t0+=0.9;}}
+    // the wall itself: each stretch filled with pieces cut to fit
+    for(const R of runs){if(R.s!=='w')continue;const len=R.t1-R.t0;if(len<1.2)continue;const np=Math.max(1,Math.round(len/4.2)),pl=len/np;
+      for(let k=0;k<np;k++){const A=at(R.t0+k*pl),B=at(R.t0+(k+1)*pl),x=(A[0]+B[0])/2,z=(A[1]+B[1])/2,tx=B[0]-A[0],tz=B[1]-A[1],l=Math.hypot(tx,tz)||pl,ry=Math.atan2(-tz,tx);
+        const y=Math.min(heightAt(A[0],A[1]),heightAt(B[0],B[1]),heightAt(x,z))-0.3;
+        PUT('WardWall',{x,z,y,ry,sx:(l+0.12)/6,tint:[1,1,1]});colliders.push({x,z,hw:l/2,hd:0.75,rot:ry});}}}
+}
 function rerouteLanes(){
   const M=LANE_HALF+1.4,extra=[];
   for(const ln of LANES){let pts=[];const src=ln.pts;
@@ -2418,11 +2475,22 @@ const quarterAt=(x,z)=>QUARTERS[qIndex(x,z)], quarterAR=(a,r)=>quarterAt(CITY.x+
 const roofCache=new Map(); const roofMat=c=>{if(!roofCache.has(c))roofCache.set(c,flat(c));return roofCache.get(c);};
 function nearAvenue(a,r,w){return avDist(a,r)<w;}
 const marketPos=()=>[CITY.x,CITY.z+MARKET.r];
+const SQ_NAMES=["Anvil Square",null,"Wayfarers' Square","Bondkeepers' Green","Longhall Square","Pilgrims' Square","Stewards' Square","Oasis Court"], SQ_R=13;
+let _WSQ=null;
+function wardSquares(){if(_WSQ)return _WSQ;_WSQ=[];
+  QUARTERS.forEach((Q,i)=>{if(!SQ_NAMES[i])return;const [a0,r0]=QSEED_AR[i],sx=CITY.x+Math.cos(a0)*r0,sz=CITY.z+Math.sin(a0)*r0;let best=null,bd=1e9;
+    for(const R of RINGS)for(let a=0;a<6.283;a+=0.01){const x=CITY.x+Math.cos(a)*R,z=CITY.z+Math.sin(a)*R;if(qIndex(x,z)!==i)continue;
+      let inside=true;for(let k=0;k<12;k++){const b=k/12*Math.PI*2;if(qIndex(x+Math.cos(b)*(SQ_R+8),z+Math.sin(b)*(SQ_R+8))!==i){inside=false;break;}}if(!inside)continue;   // the whole square well inside its quarter
+      if(avDist(a,R)<SQ_R+14||riverDistP(x,z)<SQ_R+12||Math.hypot(x-CITY.x,z-(CITY.z+MARKET.r))<MARKET.rad+SQ_R+10)continue;
+      const d=Math.hypot(x-sx,z-sz);if(d<bd){bd=d;best=[x,z];}}
+    if(best)_WSQ.push({x:best[0],z:best[1],q:i,name:SQ_NAMES[i]});});
+  return _WSQ;}
 function cityPaved(x,z){ // 0 in yards, 1 on streets, the avenues, the plaza and the market; a soft kerb between
   const dx=x-CITY.x, dz=z-CITY.z, r=Math.hypot(dx,dz); if(r>CITY.r+4||r<CITY.core)return 0;
   let k=smooth(CITY.core+25,CITY.core+23,r); for(const R of RINGS)k=Math.max(k,smooth(6.4,5.6,Math.abs(r-R)));
   const a=Math.atan2(dz,dx); k=Math.max(k,smooth(8.4,7.6,avDist(a,r)));
   if(!PAVE_NOLANE&&!inLM(x,z))k=Math.max(k,smooth(LANE_HALF+0.5,LANE_HALF-0.4,laneDist(x,z)));
+  for(const Q of wardSquares())k=Math.max(k,smooth(SQ_R+0.6,SQ_R-0.6,Math.hypot(x-Q.x,z-Q.z)));
   const [mx,mz]=marketPos(); return Math.max(k,smooth(MARKET.rad+0.6,MARKET.rad-0.6,Math.hypot(x-mx,z-mz)));
 }
 // lanes are cut where a hub stands (they go round it); the map is drawn again once the hubs are placed
@@ -2438,6 +2506,7 @@ function cityStreet(x,z){
   if(r<CITY.core+24)return true; // grand plaza before the sealed walls
   for(const R of RINGS)if(Math.abs(r-R)<6)return true;
   if(nearAvenue(Math.atan2(dz,dx),r,8)||laneDist(x,z)<LANE_HALF)return true;
+  for(const Q of wardSquares())if(Math.hypot(x-Q.x,z-Q.z)<SQ_R)return true;
   const [mx,mz]=marketPos(); return Math.hypot(x-mx,z-mz)<MARKET.rad;
 }
 function buildCityInterior(parent){
@@ -2458,6 +2527,16 @@ function buildCityInterior(parent){
       house(qGroups[QUARTERS.indexOf(Qd)],x,z,facing,8.4,6.4,fl+(hash(k,R,3)<0.3?1:0),ri,wall); roofMats.pop(); count++;
     }
   }
+  // the ward squares
+  for(const Q of wardSquares()){const y=heightAt(Q.x,Q.z),col=flat(new THREE.Color().setHSL(Q.q/8,0.35,0.45).getHex()),water=new THREE.MeshLambertMaterial({color:0x3f6f86});
+    const bronze=flat(0x8a6a3a);
+    parent.add(cyl(3.9,4.1,0.3,24,cityStone,Q.x,y+0.15,Q.z),cyl(3.5,3.6,0.75,24,cityStone,Q.x,y+0.55,Q.z),cyl(3.1,3.1,0.06,24,water,Q.x,y+0.95,Q.z));   // step, basin rim, water
+    for(let k=0;k<8;k++){const a=k/8*Math.PI*2;parent.add(box(0.5,0.85,0.5,cityStone,Q.x+Math.cos(a)*3.45,y+0.55,Q.z+Math.sin(a)*3.45,-a));}
+    parent.add(cyl(0.6,0.85,1.9,10,cityStone,Q.x,y+1.6,Q.z),cyl(1.6,0.6,0.4,16,cityStone,Q.x,y+2.65,Q.z),cyl(1.45,1.45,0.05,16,water,Q.x,y+2.86,Q.z),cyl(0.28,0.4,1.4,8,bronze,Q.x,y+3.5,Q.z),cyl(0.55,0.2,0.3,8,bronze,Q.x,y+4.3,Q.z));
+    for(let k=0;k<4;k++){const a=k/4*Math.PI*2+0.4;parent.add(box(0.12,0.12,1.2,water,Q.x+Math.cos(a)*1.9,y+1.9,Q.z+Math.sin(a)*1.9,-a,0.0,0));}
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2;parent.add(box(0.5,0.18,0.5,col,Q.x+Math.cos(a)*1.55,y+2.7,Q.z+Math.sin(a)*1.55,-a));}colliders.push({type:'circle',x:Q.x,z:Q.z,r:4.1});
+    for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4,bx=Q.x+Math.cos(a)*7,bz=Q.z+Math.sin(a)*7;const b=box(2.2,0.45,0.7,timber,bx,heightAt(bx,bz)+0.45,bz,-a+Math.PI/2);parent.add(b);
+      parent.add(box(2.2,0.1,0.75,timberDark,bx,heightAt(bx,bz)+0.7,bz,-a+Math.PI/2));colliders.push({x:bx,z:bz,hw:1.1,hd:0.4,rot:-a+Math.PI/2});}}
   // the market: stalls around a fountain
   const my=heightAt(mx,mz);
   // a roundabout: carts and people go round the fountain island; the stalls stand back on the outside of the ring
@@ -2637,6 +2716,7 @@ function placeName(x,z){
   if(riverDistP(x,z)<8)return 'The River Aldwater';
   if(dc<CITY.core+26)return 'The grand plaza';
   const [mx,mz]=marketPos(); if(Math.hypot(x-mx,z-mz)<MARKET.rad+6)return 'The market square';
+  for(const Q of wardSquares())if(Math.hypot(x-Q.x,z-Q.z)<SQ_R+3)return Q.name;
   if(dc<CITY.r)return quarterAt(x,z).name;
   if(dc<CITY.r+55&&Math.abs(x-CITY.x)<30)return 'The gate checkpoint';
   if(inOutskirts(x,z))return 'The outskirts';
@@ -4097,10 +4177,12 @@ function buildLamps(){
   const C=(r,a)=>P2W(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r);
   // city: both kerbs of every ring street, every ~22 m, staggered
   for(const R of RINGS)for(const s of[-1,1]){const r=R+s*5.3,n=Math.floor(2*Math.PI*r/22);
-    for(let k=0;k<n;k++){const a=(k+(s>0?0.5:0))/n*Math.PI*2;if(nearAvenue(a,r,9.5))continue;const [x,z]=C(r,a);addLamp('city',x,z,0);}}
+    for(let k=0;k<n;k++){const a=(k+(s>0?0.5:0))/n*Math.PI*2;if(nearAvenue(a,r,9.5)||wardSquares().some(Q=>Math.hypot(CITY.x+Math.cos(a)*r-Q.x,CITY.z+Math.sin(a)*r-Q.z)<SQ_R+3))continue;const [x,z]=C(r,a);addLamp('city',x,z,0);}}
   // avenues, from the plaza out to the wall
   for(let ai=0;ai<8;ai++)for(const s of[-1,1])for(let r=CITY.core+30;r<(ai%2?262:CITY.r-10);r+=20){const av=avAt(ai,r);
     if(RINGS.some(R=>Math.abs(r-R)<9))continue;const a=av+s*7.2/r;const [x,z]=C(r,a);addLamp('city',x,z,0);}
+  // the ward squares
+  for(const Q of wardSquares())for(let k=0;k<4;k++){const a=k/4*Math.PI*2;const [x,z]=P2W(Q.x+Math.cos(a)*10.5,Q.z+Math.sin(a)*10.5);addLamp('city',x,z,0);}
   // the grand plaza and the market square
   for(let k=0;k<32;k++){const a=(k+0.5)/32*Math.PI*2;if(nearAvenue(a,CITY.core+21,8))continue;const [x,z]=C(CITY.core+21,a);addLamp('city',x,z,0);}
   {const [mx,mz]=marketPos();for(let k=0;k<12;k++){const a=k/12*Math.PI*2;addLamp('city',mx+Math.cos(a)*(MARKET.rad-2),mz+Math.sin(a)*(MARKET.rad-2),0);}}
