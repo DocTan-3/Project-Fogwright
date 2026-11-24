@@ -141,7 +141,7 @@ const EQ_ITEMS={
       built:[{type:'collar',colour:0},{type:'buttons'}]},
     {id:'furjerkin',people:'Hrimfolk',dye:'leather',name:'Hrimfolk fur-collared jerkin',paint:{kind:'leather',trim:0.012,a:[0.86,-1,0,0.0],dyes:['#5a4030','#c8b48a','#3a2a1c']},
       built:[{type:'furcollar'}]},
-    {id:'apron',people:'Ferrin',name:"Ferrin smith's apron",paint:{kind:'linen',a:[0.9,1.1,0,0.03],dyes:['#b8a888','#8a3a26','#c9a046']},
+    {id:'apron',people:'Ferrin',name:"Ferrin smith's apron",paint:{kind:'linen',a:[0.95,1.1,0,0.03],dyes:['#b8a888','#8a3a26','#c9a046']},
       built:[{type:'apron'}]},
     {id:'wraps',people:'Zarhim',dye:'main',name:'Zarhim desert wraps',paint:{kind:'linen',pattern:'hemband',trim:0.01,a:[0.86,1.95,1,0.06],dyes:['#d8c8a8','#a8783a','#7a5426']},
       built:[{type:'belt',thick:0.008,cloth:1,z:1.0,w:0.09,colour:1}]},
@@ -311,8 +311,8 @@ const eqKey=p=>p.map(v=>Math.round(v*2000)).join(',');
 function eqShell(pc,D,fs,thick,colour,smooth,minH){   // smooth: passes; minH: how close to the body smoothing may bring it
   const polys=eqCut(D,fs), base=pc.P.length/3, edges=new Map(), at=new Map();
   for(const poly of polys){
-    const ids=poly.map(v=>{const e=eqEval(D,v.rec),o=thick(e,v.f),key=eqKey(e.p);
-      const id=eqVert(pc,e,o,colour(e,v.f,0)); at.set(id,{e,o,key,f:v.f}); return id;});
+    const ids=poly.map(v=>{const e=eqEval(D,v.rec),o=Math.max(thick(e,v.f),eqOccAt(D,v.rec)+0.004),key=eqKey(e.p);
+      const id=eqVert(pc,e,o,colour(e,v.f,0)); at.set(id,{e,o,key,f:v.f,rec:v.rec}); return id;});
     for(let k=1;k+1<ids.length;k++)pc.I.push(ids[0],ids[k],ids[k+1]);
     for(let k=0;k<ids.length;k++){const a=ids[k],b=ids[(k+1)%ids.length],ka=at.get(a).key,kb=at.get(b).key,key=ka<kb?ka+'|'+kb:kb+'|'+ka;
       const E=edges.get(key);if(E)E.n++;else edges.set(key,{a,b,n:1});}
@@ -331,14 +331,23 @@ function eqShell(pc,D,fs,thick,colour,smooth,minH){   // smooth: passes; minH: h
       Q.set(k,q);}P=Q;}
     for(const [k,ids] of grp){const p=P.get(k);for(const id of ids){pc.P[id*3]=p[0];pc.P[id*3+1]=p[1];pc.P[id*3+2]=p[2];}}
   }
+  for(const v of at.values())eqOccMark(D,v.rec,v.o+0.002);   // what's outside now
+  if(D.hide)for(let i=0;i<D.n;i++){let m=1e9;for(const f of fs)m=Math.min(m,f[i]);if(m>=0.012)D.hide[i]=1;}   // the body under it goes, all but a margin at its edge
   for(const {a,b,n} of edges.values()){if(n!==1)continue;           // an edge of the piece: a wall from the body up to the shell
     const A=at.get(a),B=at.get(b),col=colour(A.e,A.f,1);
     const a0=eqVert(pc,A.e,0.0015,col),b0=eqVert(pc,B.e,0.0015,col),a1=eqVert(pc,A.e,A.o,col),b1=eqVert(pc,B.e,B.o,col);
     pc.I.push(a0,b0,b1,a0,b1,a1);}                                     // one face: the material draws both sides
   return polys.length;
 }
+// Like World of Warcraft, pieces never fight over the same surface. Each build keeps, for every body point, how far out the
+// pieces already on it reach (D.occ); a later piece goes outside them. Pieces are built from the inside out (EQ_LAYER_ORDER).
+// And the body under a piece is removed (D.hide), the way WoW swaps a body section for an armour-shaped one, so nothing
+// underneath can poke through.
+const eqOccAt=(D,rec)=>D.occ?rec.reduce((a,[i,w])=>a+D.occ[i]*w,0):0;
+function eqOccMark(D,rec,o){if(!D.occ)return;for(const [i,w] of rec)if(w>0.2&&D.occ[i]<o)D.occ[i]=o;}
 // a small block pinned to the body (buckles, pouches, lacing): centred at a body point, facing out along its normal
 function eqBlock(pc,D,rec,w,h,d,off,colour,shade,drop){
+  off=Math.max(off,eqOccAt(D,rec)+0.001); eqOccMark(D,rec,off+d);
   const e=eqEval(D,rec), n=e.n, up=[0,1,0]; let x=[up[1]*n[2]-up[2]*n[1],up[2]*n[0]-up[0]*n[2],up[0]*n[1]-up[1]*n[0]]; const lx=Math.hypot(...x)||1; x=x.map(v=>v/lx);
   const y=[n[1]*x[2]-n[2]*x[1],n[2]*x[0]-n[0]*x[2],n[0]*x[1]-n[1]*x[0]];
   const P=(sx,sy,sz)=>[0,1,2].map(k=>e.p[k]+n[k]*(off+sz*d)+x[k]*sx*w/2+y[k]*(sy*h/2-(drop||0)));
@@ -351,6 +360,7 @@ function eqBlock(pc,D,rec,w,h,d,off,colour,shade,drop){
 }
 // a stud: one small face looking out (rivets, buttons), two triangles
 function eqStud(pc,D,rec,size,off,colour){
+  off=Math.max(off,eqOccAt(D,rec)+0.0015);
   const e=eqEval(D,rec),n=e.n,up=[0,1,0];let x=[up[1]*n[2]-up[2]*n[1],up[2]*n[0]-up[0]*n[2],up[0]*n[1]-up[1]*n[0]];const lx=Math.hypot(...x)||1;x=x.map(v=>v/lx);
   const y=[n[1]*x[2]-n[2]*x[1],n[2]*x[0]-n[0]*x[2],n[0]*x[1]-n[1]*x[0]],i0=pc.P.length/3;
   for(const [a,b,sh] of [[-1,-1,0.8],[1,-1,0.9],[1,1,1.25],[-1,1,1.1]]){pc.P.push(...[0,1,2].map(k=>e.p[k]+n[k]*off+x[k]*a*size/2+y[k]*b*size/2));pc.N.push(...n);
@@ -359,6 +369,7 @@ function eqStud(pc,D,rec,size,off,colour){
 }
 // an upright cylinder pinned to the body (flasks, scroll cases): its side touching the body at off, hanging drop below the pin
 function eqCyl(pc,D,rec,r,h,off,drop,colour,shade,segs){
+  off=Math.max(off,eqOccAt(D,rec)+0.001); eqOccMark(D,rec,off+2*r);
   segs=segs||8; const e=eqEval(D,rec),n=e.n,up=[0,1,0]; let x=[up[1]*n[2]-up[2]*n[1],up[2]*n[0]-up[0]*n[2],up[0]*n[1]-up[1]*n[0]];const lx=Math.hypot(...x)||1;x=x.map(v=>v/lx);
   const y=[n[1]*x[2]-n[2]*x[1],n[2]*x[0]-n[0]*x[2],n[0]*x[1]-n[1]*x[0]], c=[0,1,2].map(k=>e.p[k]+n[k]*(off+r)-y[k]*drop);
   const ring=sy=>{const ids=[];for(let s_=0;s_<segs;s_++){const a=s_/segs*Math.PI*2,dir=[0,1,2].map(k=>n[k]*Math.cos(a)+x[k]*Math.sin(a));
@@ -421,6 +432,7 @@ const EQ_BUILD={
     eqShell(pc,D,fs,thick,(e,f,rim)=>rim?trim.map(v=>v*0.85):main.map(v=>v*(0.92+0.1*eqNoise(e.p,40))));
   },
   foot(pc,D,item,dy){pc.kind=eqMatOf(item,null,3);const z=D.rest,main=eqRGB(dy[0]),sole=eqRGB(dy[2]),top=Math.min(item.paint.a[0],0.11);
+    if(D.hide)for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&z[i*3+2]<top-0.012)D.hide[i]=1;   // the shoe replaces the foot
     const col=(e,f,rim)=>e.r[2]<0.018?sole.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,30)));
     for(const side of [1,-1]){
       const F=[];for(let i=0;i<D.n;i++)if(z[i*3+2]<0.13&&D.arm[i]<0.5&&Math.sign(z[i*3])===side)F.push(i);
@@ -478,11 +490,12 @@ const EQ_BUILD={
     const yT=eqYAt(D,spec.top),yH0=eqYAt(D,spec.hem),yH=yH0==null?yT*spec.hem/spec.top:yH0,M=(spec.top-spec.hem)>0.4?28:20,K=Math.max(3,Math.min(10,Math.round((spec.top-spec.hem)/0.08))),open=spec.open||0,off=spec.off||0,room=Math.min(1,0.2+(spec.top-spec.hem)/0.6);   // short pieces sit closer
     const hips=ctx.bone('hips'),tl=ctx.bone('thigh.L'),tr=ctx.bone('thigh.R');
     // the body's outer envelope in each direction (its support), so the skirt drops straight past the gap between the legs
-    const bodyR=(th,y,band)=>{let r=0;const sx=Math.sin(th),sz=Math.cos(th);for(const i of body){if(Math.abs(P[i*3+1]-y)>band)continue;r=Math.max(r,(P[i*3]-cx)*sx+(P[i*3+2]-cz)*sz);}return r;};
+    const oc=D.occ||new Float32Array(D.n);
+    const bodyR=(th,y,band)=>{let r=0;const sx=Math.sin(th),sz=Math.cos(th);for(const i of body){if(Math.abs(P[i*3+1]-y)>band)continue;r=Math.max(r,(P[i*3]-cx)*sx+(P[i*3+2]-cz)*sz+oc[i]);}return r;};
     // round the waist: all the way for a closed skirt; for an open one, from one front edge round the back to the other
     const TH=open?[...Array(M)].map((_,b)=>open+(Math.PI*2-2*open)*b/(M-1)):[...Array(M)].map((_,b)=>(b/M)*Math.PI*2-Math.PI), Rr=[];
     for(let k=0;k<=K;k++){const t=k/K,y=yT+(yH-yT)*t;Rr.push(TH.map(th=>bodyR(th,y,k?0.03:0.015)));}
-    for(let k=0;k<=K;k++){const t=k/K,row=Rr[k];for(let b=0;b<row.length;b++){const prev=k?Rr[k-1][b]:0;row[b]=Math.max(prev,row[b]+(k?(0.018+0.03*t)*room+(ctx.legPad||0):0.008+(ctx.torsoPad||0))+off)+(k?spec.flare*0.01*t:0);}
+    for(let k=0;k<=K;k++){const t=k/K,row=Rr[k];for(let b=0;b<row.length;b++){const prev=k?Rr[k-1][b]:0;row[b]=Math.max(prev,row[b]+(k?(0.018+0.03*t)*room:0.008)+off)+(k?spec.flare*0.01*t:0);}
       for(let pass=0;pass<2;pass++){const n=row.length,sm=row.map((v,b)=>open?(v*2+row[Math.max(0,b-1)]+row[Math.min(n-1,b+1)])/4:(v*2+row[(b+n-1)%n]+row[(b+1)%n])/4);
         for(let b=0;b<n;b++)row[b]=Math.max(sm[b],k?Rr[k-1][b]:0);}}
     const grid=[];
@@ -492,6 +505,7 @@ const EQ_BUILD={
           e.bones=eqMixBones(e.bones,new Map([[hips,1-kk],[tl,kk*side],[tr,kk*(1-side)]]),eqSm(0,0.3,t));}
         const fold=0.9+0.1*Math.cos(th*7+t*1.5),col=(k===K||(spec.trim&&k>=K-1))?trim:main;ids.push(eqVert(pc,e,0,col.map(v=>v*fold*(k===K?0.85:1))));});
       grid.push(ids);}
+    if(!open&&spec.top-spec.hem>0.4&&D.hide)for(let i=0;i<D.n;i++){const z=D.rest[i*3+2];if(D.arm[i]<0.5&&z<0.93&&z>spec.hem+0.14)D.hide[i]=1;}   // a robe replaces the upper legs
     eqDrapeFinish(pc,grid,(q)=>[q[0]-cx,0,q[2]-cz],!open); ctx.drapeGrid(pc,grid,!open,1,Math.min(1,(spec.top-spec.hem)/0.6));
   },
   buttons(pc,D,item,dy){pc.kind=12;const brass=eqRGB(dy[2]);for(let z=0.98;z<1.44;z+=0.055)eqStud(pc,D,eqNear(D,0,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.012,0.006,brass);},
@@ -503,7 +517,8 @@ const EQ_BUILD={
   apron(pc0,D,item,dy,spec,ctx){const pc=ctx.drapePiece();pc.kind=3;const lea=eqRGB('#5a3a22'),strap=eqRGB('#3a2618'),P=D.pos,hips=ctx.bone('hips');
     const front=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+1]<0.02&&D.rest[i*3+2]<1.5)front.push(i);
     const yT=eqYAt(D,1.37),yH=eqYAt(D,0.47),NU=7,NV=9,Z=[];
-    const frontZ=(x,y)=>{let z=-1e9;for(const i of front)if(Math.abs(P[i*3+1]-y)<0.03&&Math.abs(P[i*3]-x)<0.05)z=Math.max(z,P[i*3+2]);return z;};
+    const oc=D.occ||new Float32Array(D.n);
+    const frontZ=(x,y)=>{let z=-1e9;for(const i of front)if(Math.abs(P[i*3+1]-y)<0.03&&Math.abs(P[i*3]-x)<0.05)z=Math.max(z,P[i*3+2]+oc[i]);return z;};
     const W=t=>0.085+0.08*eqSm(0.05,0.4,t);
     for(let v=0;v<NV;v++){const t=v/(NV-1),y=yT+(yH-yT)*t;Z.push([...Array(NU)].map((_,u)=>{const b=frontZ((u/(NU-1)*2-1)*W(t),y);return b>-1e8?b+0.009+0.03*t:null;}));}
     for(const row of Z){const have=row.map((z,u)=>z==null?null:u).filter(u=>u!=null);
@@ -516,7 +531,7 @@ const EQ_BUILD={
         if(t>0.45)e.bones=eqMixBones(e.bones,new Map([[hips,1]]),eqSm(0.45,0.7,t));
         ids.push(eqVert(pc,e,0,lea.map(c=>c*(0.92+0.08*Math.cos(u*1.1+v*0.7))*(v===NV-1?0.85:1))));}
       grid.push(ids);}
-    eqDrapeFinish(pc,grid,()=>[0,0,1],false); ctx.drapeGrid(pc,grid,false,4,0.6);   // the bib stays on the chest; below it, cloth
+    eqDrapeFinish(pc,grid,()=>[0,0,1],false); ctx.drapeGrid(pc,grid,false,4,0.6,true);   // the bib stays on the chest; below it, cloth
     for(const sx of [-1,1])eqBlock(pc0,D,eqNear(D,0.07*sx,-0.2,1.43,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.014,0.07,0.004,0.006,strap,1);   // the neck strap
     eqShell(pc0,D,[Float32Array.from({length:D.n},(_,i)=>D.arm[i]<0.5?0.012-Math.abs(D.rest[i*3+2]-1.0):-1)],()=>0.005,()=>strap);      // the waist tie
   },
@@ -530,10 +545,10 @@ const EQ_BUILD={
   legplates(pc,D,item,dy,spec){const r=D.rest,F=f=>Float32Array.from({length:D.n},(_,i)=>f(i)),M=eqMetal(spec,dy);pc.kind=spec.leather?3:12;
     const leg=i=>D.arm[i]<0.5&&r[i*3+2]<0.93, sh=eqMetalShade(M);
     if(!spec.greavesOnly){
-      eqShell(pc,D,[F(i=>leg(i)&&r[i*3+1]<0.035?Math.min(r[i*3+2]-0.6,0.86-r[i*3+2]):-1)],()=>0.016,sh,2);
-      for(const sd of [1,-1])eqShell(pc,D,[F(i=>{if(!leg(i)||Math.sign(r[i*3])!==sd||r[i*3+1]>0.0)return -1;return 0.058-Math.hypot(Math.abs(r[i*3])-0.106,r[i*3+2]-0.525);})],
-        e=>0.02+0.014*eqSm(0.058,0,Math.hypot(Math.abs(e.r[0])-0.106,e.r[2]-0.525)),sh,2);}
-    eqShell(pc,D,[F(i=>leg(i)?Math.min(r[i*3+2]-0.15,(spec.greavesOnly?0.46:0.475)-r[i*3+2]):-1)],e=>(spec.leather?0.016:0.02)+0.006*eqSm(0.15,0.3,e.r[2]),sh,2);},
+      eqShell(pc,D,[F(i=>leg(i)&&r[i*3+1]<0.035?Math.min(r[i*3+2]-0.555,0.86-r[i*3+2]):-1)],()=>0.016,sh,2);
+      for(const sd of [1,-1])eqShell(pc,D,[F(i=>{if(!leg(i)||Math.sign(r[i*3])!==sd||r[i*3+1]>0.0)return -1;return 0.07-Math.hypot((Math.abs(r[i*3])-0.106)*0.85,r[i*3+2]-0.525);})],
+        e=>0.02+0.014*eqSm(0.07,0,Math.hypot((Math.abs(e.r[0])-0.106)*0.85,e.r[2]-0.525)),sh,2);}
+    eqShell(pc,D,[F(i=>leg(i)?Math.min(r[i*3+2]-0.15,(spec.greavesOnly?0.46:0.505)-r[i*3+2]):-1)],e=>(spec.leather?0.016:0.02)+0.006*eqSm(0.15,0.3,e.r[2]),sh,2);},
   // a breastplate and back plate, a ridge down the middle and a line where the belly plate (plackart) laps over
   cuirass(pc,D,item,dy,spec){const r=D.rest,M=eqMetal(spec,dy);pc.kind=12;
     const f=Float32Array.from({length:D.n},(_,i)=>{if(D.arm[i]>0.25)return -1;const ax=Math.abs(r[i*3]),z=r[i*3+2];return Math.min(z-0.985,1.458-0.35*Math.max(0,ax-0.07)-z,0.172-ax);});
@@ -668,10 +683,11 @@ const EQ_BUILD={
   // edges curl forward round the shoulders, and lower down it rides the hips, not the legs
   cloak(pc0,D,item,dy,spec,ctx){const pc=ctx.drapePiece();pc.kind=eqMatOf(item,spec,spec.woven?15:1);const main=eqRGB(dy[0]),P=D.pos,hips=ctx.bone('hips'),spine=ctx.bone('spine');
     const back=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+1]>-0.02&&D.rest[i*3+2]<1.53)back.push(i);
-    const yT=eqYAt(D,1.47),yH=eqYAt(D,0.3);let wT=0;for(const i of back)if(Math.abs(P[i*3+1]-yT)<0.04)wT=Math.max(wT,Math.abs(P[i*3]));wT=Math.min(0.2,wT*0.84);   // across the shoulder blades, inside the swing of the arms
+    const yT=eqYAt(D,1.47),yH=eqYAt(D,0.36);let wT=0;for(const i of back)if(Math.abs(P[i*3+1]-yT)<0.04)wT=Math.max(wT,Math.abs(P[i*3]));wT=Math.min(0.2,wT*0.84);   // across the shoulder blades, inside the swing of the arms
     const all=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]<1.53)all.push(i);
     const NU=11,NV=12,Z=[],W=t=>wT+0.06*Math.pow(t,1.2);
-    const backZ=(x,y)=>{let z=1e9;for(const i of back)if(Math.abs(P[i*3+1]-y)<0.035&&Math.abs(P[i*3]-x)<0.06)z=Math.min(z,P[i*3+2]);return z;};
+    const oc=D.occ||new Float32Array(D.n);
+    const backZ=(x,y)=>{let z=1e9;for(const i of back)if(Math.abs(P[i*3+1]-y)<0.035&&Math.abs(P[i*3]-x)<0.06)z=Math.min(z,P[i*3+2]-oc[i]);return z;};
     const yW=eqYAt(D,1.0)||yT*0.6, over=ctx.underSkirt?0.035:0, plate=ctx.torsoPad||0;   // over a skirt or flap it stands off at the hips; over a back plate, all the way down
     for(let v=0;v<NV;v++){const t=v/(NV-1),y=yT+(yH-yT)*t,clear=0.02+0.04*eqSm(0,0.45,t)+0.07*Math.pow(eqSm(0.45,1,t),1.3)+(y<yW+0.05?over:0)+plate;
       Z.push([...Array(NU)].map((_,u)=>{const b=backZ((u/(NU-1)*2-1)*W(t),y);return b<1e8?b-clear:null;}));}
@@ -690,7 +706,7 @@ const EQ_BUILD={
         e.bones=eqMixBones(e.bones,new Map([[spine,0.25],[hips,0.75]]),eqSm(0.15,0.55,t));
         const fold=0.88+0.12*Math.cos(uu*Math.PI*2.5+t*1.2);ids.push(eqVert(pc,e,0,main.map(c=>c*fold*(v===NV-1?0.82:1))));}
       grid.push(ids);}
-    eqDrapeFinish(pc,grid,()=>[0,0,-1],false); ctx.drapeGrid(pc,grid,false,2,1);
+    eqDrapeFinish(pc,grid,()=>[0,0,-1],false); ctx.drapeGrid(pc,grid,false,2,1,true);
     for(const sx of [-1,1])eqBlock(pc0,D,eqNear(D,0.15*sx,-0.2,1.43,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.022,0.022,0.008,0.006,eqRGB(dy[2]),1.2);},
 };
 // a character's whole set of built pieces, merged into one skinned mesh on the body's skeleton
@@ -698,13 +714,15 @@ function eqBuiltMesh(body,outfit,src,maxBuilt){
   const D=eqBodyData(src||body),pc=eqPiece(),bones=body.skeleton.bones,san=n=>n.replace(/[\s\.\[\]:\/]/g,''),drapes=[];
   const ctx={bone:n=>Math.max(0,bones.findIndex(b=>san(b.name)===san(n))),
     drapePiece:()=>{const d=eqPiece();drapes.push({pc:d});return d;},
-    drapeGrid:(d,grid,closed,pinRows,reach)=>{const e=drapes.find(x=>x.pc===d);e.grid=grid;e.closed=closed;e.pinRows=pinRows;e.reach=reach==null?1:reach;}};
+    drapeGrid:(d,grid,closed,pinRows,reach,flat)=>{const e=drapes.find(x=>x.pc===d);e.grid=grid;e.closed=closed;e.pinRows=pinRows;e.reach=reach==null?1:reach;e.flat=!!flat;}};
   { const ch=eqItem('chest',outfit.chest),sh=eqItem('shirt',outfit.shirt),low=it=>it&&((it.built||[]).some(sp=>sp.type==='skirt')||(it.paint&&it.paint.a[0]<EQ_CREASE-0.02));
     ctx.underSkirt=low(ch)||low(sh);
     ctx.legPad=Math.max(...['legs','waist'].map(sl=>(eqItem(sl,outfit[sl])||{}).legPad||0));   // armour on the legs: skirts and cloth make room
-    ctx.torsoPad=ch&&(ch.built||[]).some(sp=>sp.type==='cuirass')?0.024:0; }   // a breastplate: belts, buckles and cloaks sit over it
+    ctx.torsoPad=0; }   // a breastplate: belts, buckles and cloaks sit over it
+  D.occ=new Float32Array(D.n); D.hide=new Uint8Array(D.n);
   let slots=EQ_BUILT_PRIORITY.filter(sl=>sl==='signature'?outfit.signature:(eqItem(sl,outfit[sl])||{}).built);
   if(maxBuilt!=null)slots=slots.slice(0,maxBuilt);
+  slots.sort((a,b)=>EQ_LAYER_ORDER.indexOf(a)-EQ_LAYER_ORDER.indexOf(b));   // inside out
   for(const slot of slots){
     if(slot==='signature'){for(const sg of [].concat(outfit.signature))EQ_BUILD[sg.type](pc,D,{},[sg.colour||'#8a3a26',sg.colour||'#8a3a26','#c9a046'],sg,ctx);continue;}
     const it=eqItem(slot,outfit[slot]),dy=eqDyes(it,outfit.dye);
@@ -717,8 +735,12 @@ function eqBuiltMesh(body,outfit,src,maxBuilt){
   const flap=(it,off)=>EQ_BUILD.skirt(pc,D,it,eqDyes(it,outfit.dye),{type:'skirt',top:0.97,hem:it.paint.a[0],flare:0.3,open:it.paint.b&&it.paint.b[0]>0?0.22:0,off},ctx);
   if(shirt&&shirt.paint&&hemOf(shirt)<EQ_CREASE-0.02&&!(chest&&(hasSkirt(chest)||hemOf(chest)<=hemOf(shirt))))flap(shirt,0);
   if(chest&&chest.paint&&hemOf(chest)<EQ_CREASE-0.02&&!hasSkirt(chest))flap(chest,0.008);
-  const cloth=drapes.filter(d=>d.grid).map(d=>{const m=eqClothMesh(body,D,d);m.userData.cloth.legPad=ctx.legPad||0;return m;});
-  if(!pc.I.length)return cloth.length?{mesh:null,cloth}:null;
+  // what the legs wear, measured from the layering: the cloth's leg capsules grow to match, so cloth clears boots and greaves too
+  const pad={thigh:0,shin:0,foot:outfit.feet?0.018:0};
+  for(let i=0;i<D.n;i++){if(D.arm[i]>0.5)continue;const z=D.rest[i*3+2],o=D.occ[i];if(z<0.12)pad.foot=Math.max(pad.foot,o);else if(z<0.5)pad.shin=Math.max(pad.shin,o);else if(z<0.9)pad.thigh=Math.max(pad.thigh,o);}
+  const cloth=drapes.filter(d=>d.grid).map(d=>{const m=eqClothMesh(body,D,d);m.userData.cloth.pad=pad;return m;});
+  const hide=D.hide; D.occ=null; D.hide=null;
+  if(!pc.I.length)return {mesh:null,cloth,hide};
   const n=pc.P.length/3,g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(pc.P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(pc.N,3));
   g.setAttribute('color',new THREE.Float32BufferAttribute(pc.C,3));
@@ -731,7 +753,7 @@ function eqBuiltMesh(body,outfit,src,maxBuilt){
   const m=new THREE.SkinnedMesh(g,eqOutfitMaterial());
   m.name='Outfit'; m.frustumCulled=false; m.castShadow=true; m.bind(body.skeleton,body.bindMatrix);
   m.morphTargetInfluences=body.morphTargetInfluences;   // the body's people and build shapes drive the outfit too
-  return {mesh:m,cloth};
+  return {mesh:m,cloth,hide};
 }
 /* ---------- cloth: skirts, cloaks and aprons, stepped each frame ---------- */
 // Each drape is a small grid of points (a few hundred). Every frame each point is pulled toward where it would hang (skinned
@@ -754,7 +776,7 @@ function eqClothMesh(body,D,d){
     if(r+1<R_)edges.push(id,d.grid[r+1][c],1);if(r+2<R_)edges.push(id,d.grid[r+2][c],0.3);
     if(c+1<C_)edges.push(id,row[c+1],0.6);else if(d.closed)edges.push(id,row[0],0.6);
     if(r+1<R_&&c+1<C_)edges.push(id,d.grid[r+1][c+1],0.25);}));
-  m.userData.cloth={n,reach:d.reach,base:Float32Array.from(pc.P),nrm:Float32Array.from(pc.N),si,sw,dl,hang,pin,edges,pos:null,prev:null,len:null,T:new Float32Array(n*3),TN:new Float32Array(n*3)};
+  m.userData.cloth={n,grid:d.grid,closed:d.closed,flat:d.flat,reach:d.reach,base:Float32Array.from(pc.P),nrm:Float32Array.from(pc.N),si,sw,dl,hang,pin,edges,pos:null,prev:null,len:null,T:new Float32Array(n*3),TN:new Float32Array(n*3)};
   return m;
 }
 const _cm=new THREE.Matrix4(),_cv=new THREE.Vector3(),_cw=new THREE.Vector3();
@@ -772,7 +794,7 @@ function eqLegCapsules(root,rig,inv){   // thigh and shin of each leg, in the fi
       if(best<0.2)ds[kind].push(best);}
     const q=a=>{a.sort((x,y)=>x-y);return a.length?a[Math.floor(a.length*0.6)]:0.07;};
     rig.legR={thigh:q(ds.thigh),shin:q(ds.shin),foot:0.05};rig.legRSig=sig;}
-  return caps.map(([a,b,kd])=>({a,b,r:rig.legR[kd]+(kd==='shin'?0.03:0.01)}));   // shins leave room for boots
+  return caps.map(([a,b,kd])=>({a,b,kind:kd,r:rig.legR[kd]+0.008}));
 }
 function eqClothUpdate(root,dt){
   const rig=root.userData.rig; if(!rig||!rig.cloth||!rig.cloth.length)return;
@@ -794,6 +816,26 @@ function eqClothUpdate(root,dt){
         const a=C.nrm[i*3],b=C.nrm[i*3+1],c=C.nrm[i*3+2];nx+=w*(e[0]*a+e[4]*b+e[8]*c);ny+=w*(e[1]*a+e[5]*b+e[9]*c);nz+=w*(e[2]*a+e[6]*b+e[10]*c);}
       const l=Math.hypot(nx,ny,nz)||1;T[i*3]=tx;T[i*3+1]=ty;T[i*3+2]=tz;TN[i*3]=nx/l;TN[i*3+1]=ny/l;TN[i*3+2]=nz/l;}
     if(!C.pos){C.pos=Float32Array.from(T);C.prev=Float32Array.from(T);C.len=[];for(let e=0;e<C.edges.length;e+=3){const a=C.edges[e],b=C.edges[e+1];C.len.push(Math.hypot(T[a*3]-T[b*3],T[a*3+1]-T[b*3+1],T[a*3+2]-T[b*3+2]));}}
+    // where it hangs, moved out of the legs' way: each point's deficit along its outward direction to clear any leg beside it,
+    // spread along its row (a cloak or apron row moves as one; a skirt's points share with their neighbours), never less
+    // than the row above. The cloth is then never asked to be inside a leg, so it doesn't fight the legs.
+    // the outward direction for leg clearance: a cloak or apron row shares one (its edges curl round, which would push sideways)
+    const ON=C.ON||(C.ON=new Float32Array(n*3));
+    if(C.flat){for(const row of C.grid){let x=0,y=0,z=0;for(const id of row){x+=TN[id*3];y+=TN[id*3+1];z+=TN[id*3+2];}const l=Math.hypot(x,z)||1;for(const id of row){ON[id*3]=x/l;ON[id*3+1]=0;ON[id*3+2]=z/l;}}}
+    else for(let i=0;i<n;i++){const x=TN[i*3],z=TN[i*3+2],l=Math.hypot(x,z)||1;ON[i*3]=x/l;ON[i*3+1]=0;ON[i*3+2]=z/l;}   // skirts clear the legs sideways, never downward
+    if(caps.length){const G=C.grid,R_=G.length,dv=new Float32Array(n);
+      for(let i=0;i<n;i++){if(C.pin[i])continue;const k3=i*3;let need=0;
+        for(const c of caps){const cr=c.r+(C.pad?C.pad[c.kind]:0.02)+0.006,ax=c.a.x,ay=c.a.y,az=c.a.z,bx=c.b.x-ax,by=c.b.y-ay,bz=c.b.z-az;
+          if(Math.abs(by)<1e-4)continue;const u=(T[k3+1]-ay)/by;if(u<-0.05||u>1.05)continue;const uu=Math.max(0,Math.min(1,u));
+          const lx=ax+bx*uu-T[k3],lz=az+bz*uu-T[k3+2],along=lx*ON[k3]+lz*ON[k3+2],lat=Math.hypot(lx-ON[k3]*along,lz-ON[k3+2]*along);
+          if(lat<cr+0.04)need=Math.max(need,along+cr*Math.sqrt(Math.max(0,1-Math.pow(lat/(cr+0.04),2))));}
+        dv[i]=need;}
+      for(let r=0;r<R_;r++){const row=G[r];
+        if(C.flat){let m=0;for(const id of row)m=Math.max(m,dv[id]);for(const id of row)dv[id]=m;}
+        else{const v=row.map(id=>dv[id]),L_=row.length,nb=c=>C.closed?[(c+L_-1)%L_,(c+1)%L_]:[Math.max(0,c-1),Math.min(L_-1,c+1)];
+          for(let c=0;c<L_;c++){const [a,b]=nb(c);dv[row[c]]=Math.max(v[c],0.7*Math.max(v[a],v[b]));}}
+        if(r>0)for(let c=0;c<row.length;c++)dv[row[c]]=Math.max(dv[row[c]],dv[G[r-1][c]]*0.9);}
+      for(let i=0;i<n;i++)if(dv[i]>0){T[i*3]+=ON[i*3]*dv[i];T[i*3+1]+=ON[i*3+1]*dv[i]*0.3;T[i*3+2]+=ON[i*3+2]*dv[i];}}
     const P=C.pos,Q=C.prev;
     if(rig.clothSim===false){P.set(T);Q.set(T);}   // background figures: the cloth just follows the hips and thighs
     else for(let st=0;st<steps;st++){
@@ -808,18 +850,41 @@ function eqClothUpdate(root,dt){
           const wa=pa?0:pb?1:0.5,wb=pb?0:pa?1:0.5;
           P[a*3]+=dx*f*wa;P[a*3+1]+=dy*f*wa;P[a*3+2]+=dz*f*wa;P[b*3]-=dx*f*wb;P[b*3+1]-=dy*f*wb;P[b*3+2]-=dz*f*wb;}
         for(let i=0;i<n;i++){if(C.pin[i])continue;const k3=i*3,t=C.hang[i];
-          for(const c of caps){   // round the legs
-            const ax=c.a.x,ay=c.a.y,az=c.a.z,bx=c.b.x-ax,by=c.b.y-ay,bz=c.b.z-az,px=P[k3]-ax,py=P[k3+1]-ay,pz=P[k3+2]-az;
-            const u=Math.max(0,Math.min(1,(px*bx+py*by+pz*bz)/(bx*bx+by*by+bz*bz))),qx=px-bx*u,qy=py-by*u,qz=pz-bz*u,dd=Math.hypot(qx,qy,qz);
-            const cr=c.r+(C.legPad||0);
-            if(dd<cr){const push=(cr-dd)*Math.min(1,t*3);if(dd>1e-5){P[k3]+=qx/dd*push;P[k3+1]+=qy/dd*push;P[k3+2]+=qz/dd*push;}else{P[k3]+=TN[k3]*push;P[k3+2]+=TN[k3+2]*push;}}}
           const ox=P[k3]-T[k3],oy=P[k3+1]-T[k3+1],oz=P[k3+2]-T[k3+2],into=ox*TN[k3]+oy*TN[k3+1]+oz*TN[k3+2];   // never into the body
           if(into<-0.004){const f=-0.004-into;P[k3]+=TN[k3]*f;P[k3+1]+=TN[k3+1]*f;P[k3+2]+=TN[k3+2]*f;}
           const md=0.02+0.3*t*C.reach,dd=Math.hypot(P[k3]-T[k3],P[k3+1]-T[k3+1],P[k3+2]-T[k3+2]);   // within reach of where it would hang
-          if(dd>md){const f=md/dd;for(let a=0;a<3;a++)P[k3+a]=T[k3+a]+(P[k3+a]-T[k3+a])*f;}}}
-    }
+          if(dd>md){const f=md/dd;for(let a=0;a<3;a++)P[k3+a]=T[k3+a]+(P[k3+a]-T[k3+a])*f;}
+          // the legs have the last word: whatever the other rules did, cloth ends outside them
+          for(const c of caps){   // round the legs, one-sided and horizontal: at its own height, cloth ends on its outer side of each leg
+            const ax=c.a.x,ay=c.a.y,az=c.a.z,bx=c.b.x-ax,by=c.b.y-ay,bz=c.b.z-az,wt=Math.min(1,t*3);
+            if(!wt||Math.abs(by)<1e-4)continue; const u=(P[k3+1]-ay)/by; if(u<-0.05||u>1.05)continue; const uu=Math.max(0,Math.min(1,u));
+            const cr=c.r+(C.pad?C.pad[c.kind]:0.02),ox_=P[k3]-(ax+bx*uu),oz_=P[k3+2]-(az+bz*uu),nx=ON[k3],nz=ON[k3+2],nl=Math.hypot(nx,nz)||1;
+            const side=(ox_*nx+oz_*nz)/nl,lat=Math.abs((ox_*nz-oz_*nx)/nl);
+            if(lat>=cr||side<-(cr+0.06))continue;
+            const need=Math.sqrt(cr*cr-lat*lat);
+            if(side<need){const f=(need-side)*wt/nl;P[k3]+=nx*f;P[k3+2]+=nz*f;}}
+        }}}
     const A=mesh.geometry.attributes.position;A.array.set(P);A.needsUpdate=true;mesh.geometry.computeVertexNormals();
   }
+}
+// Remove the body under built pieces (hide: per point of the light body the pieces were built on). The figure gets its own
+// view of the body: the same points, shapes and skin, a shorter triangle list.
+function eqHideBody(rig,hide){
+  const body=rig.body, g0=rig.bodyGeo0||(rig.bodyGeo0=body.geometry);
+  if(body.geometry!==g0){body.geometry.dispose();body.geometry=g0;}
+  if(!hide||!hide.some(v=>v))return;
+  const src=rig.lightSrc||body, L=eqBodyData(src);
+  let map=g0.userData.toLight;                                // each body point's nearest point on the light body, by template place
+  if(!map||map.src!==L){const R0=g0.attributes.rest.array,n=g0.attributes.rest.count;map=new Int32Array(n);
+    if(src===body)for(let i=0;i<n;i++)map[i]=i;
+    else for(let i=0;i<n;i++){let b=0,bd=1e9;const x=R0[i*3],y=R0[i*3+1],z=R0[i*3+2];
+      for(let j=0;j<L.n;j++){const dx=L.rest[j*3]-x,dy=L.rest[j*3+1]-y,dz=L.rest[j*3+2]-z,d=dx*dx+dy*dy+dz*dz;if(d<bd){bd=d;b=j;}}map[i]=b;}
+    map.src=L;g0.userData.toLight=map;}
+  const I0=g0.index.array,keep=[];
+  for(let t=0;t<I0.length;t+=3)if(!(hide[map[I0[t]]]&&hide[map[I0[t+1]]]&&hide[map[I0[t+2]]]))keep.push(I0[t],I0[t+1],I0[t+2]);
+  const g=new THREE.BufferGeometry();for(const k in g0.attributes)g.setAttribute(k,g0.attributes[k]);
+  g.morphAttributes=g0.morphAttributes;g.morphTargetsRelative=g0.morphTargetsRelative;g.userData=g0.userData;
+  g.setIndex(keep);g.boundingSphere=g0.boundingSphere;g.boundingBox=g0.boundingBox;body.geometry=g;
 }
 // Hat hair: headgear doesn't hide the hair, it reshapes it to fit, as games commonly do. Each hairstyle is worked out once per
 // kind of headgear (and cached on its geometry) against an ellipsoid fitted to the scalp:
@@ -848,6 +913,14 @@ function eqHairFit(geo,mode,S){
       if(sN>lim){const k=lim/sN;const nx=cx+(x-cx)*k,ny=y>cy?cy+(y-cy)*k:y,nz=cz+(z-cz)*k;x+=(nx-x)*w;y+=(ny-y)*w;z+=(nz-z)*w;}}
     if(mode==='hat'&&y>band+0.07)y=band+0.07;
     A.setXYZ(i,x,y,z);}
+  // like WoW, hair under the headgear is removed, not squashed: under a hat or helmet everything above the rim; under a wrap
+  // everything above the nape; under a hood all but the fringe in the face opening
+  const O=base.attributes.position, keep=i=>{const x=O.getX(i),y=O.getY(i),z=O.getZ(i);
+    if(mode==='hat')return y<band+0.02; if(mode==='wrap')return y<S.nape+0.01;
+    return z>cz+zf*0.45&&y>cy&&y<S.top-0.03&&Math.abs(x-cx)<rx*0.8;};
+  const I=base.index?Array.from(base.index.array):[...Array(O.count).keys()], kept=[];
+  for(let t=0;t<I.length;t+=3)if(keep(I[t])||keep(I[t+1])||keep(I[t+2]))kept.push(I[t],I[t+1],I[t+2]);
+  g.setIndex(kept);
   A.needsUpdate=true; g.computeBoundingSphere(); g.userData.hairBase=base;
   return base.userData.fits[key]=g;
 }
@@ -885,6 +958,7 @@ float gearTile(float tile,vec2 uv){vec2 o=vec2(mod(tile,4.),floor(tile/4.)),f=fr
 // dress a figure: bake its paint and painted armour, and build its built armour
 // rig.lightSrc (optional): the distance body's mesh; built pieces are cut from it, so they stay light.
 // opts: size (the baked texture, default 1024), maxBuilt (how many slots may have built pieces, in EQ_BUILT_PRIORITY order)
+const EQ_LAYER_ORDER=['feet','legs','hands','wrists','chest','waist','shoulders','back','head','signature'];
 const EQ_BUILT_PRIORITY=['chest','back','head','waist','feet','legs','shoulders','hands','wrists','signature'];
 function dressOutfit(root,look,outfit,renderer,bakeOnly,opts){
   opts=opts||{};
@@ -896,6 +970,7 @@ function dressOutfit(root,look,outfit,renderer,bakeOnly,opts){
   if(rig.outfit){rig.outfit.parent.remove(rig.outfit);rig.outfit.geometry.dispose();rig.outfit=null;}
   for(const c of rig.cloth||[]){c.parent.remove(c);c.geometry.dispose();} rig.cloth=[]; rig.clothSim=opts.cloth!==false;
   const built=eqBuiltMesh(body,outfit,rig.lightSrc,opts.maxBuilt);
+  eqHideBody(rig,built&&built.hide);
   if(built){if(built.mesh){body.parent.add(built.mesh);rig.outfit=built.mesh;} for(const c of built.cloth){root.add(c);rig.cloth.push(c);}}
   eqClothUpdate(root,0);
   // hat hair: reshape the hairstyle to the headgear (beards and moustaches stay as they are)
