@@ -1958,7 +1958,7 @@ function kWalls(){
    then each hub's own trade spills onto the street. Front face at plan y=f, width W, eave e, door at x=dx. ---------- */
 const HUB_DRESS={
   Tavern:{W:12.6,f:-5.3,e:6.9,dx:0,ban:'#2e5a46',extra:'tavern'}, Tavern2:{W:12.6,f:-5.3,e:6.9,dx:0,ban:'#7a2a24',extra:'tavern'},
-  Foundry:{W:16,f:-7,e:7,dx:0,ban:'#5a2e24',extra:'foundry',nodoor:1}, Barracks:{W:20,f:-6,e:6,dx:0,ban:'#3f3a6c',extra:'barracks'},
+  Foundry:{W:16,f:-7,e:7,dx:0,ban:'#5a2e24',extra:'foundry',nodoor:1}, Barracks:{W:20,f:-6,e:6,dx:0,ban:'#3f3a6c',extra:''},
   Laboratory:{W:12,f:-6,e:7,dx:0,ban:'#2f5fa8',extra:'lab'}, Bank:{W:26,f:-10,e:11.6,dx:0,ban:'#7a2a24',extra:'bank',nogutter:1},
   Guild:{W:22,f:-8.3,e:9.6,dx:0,ban:'#7a2a24',extra:'guild'}, Arcade:{W:28,f:-6,e:6.2,dx:0,ban:'#2e5a46',extra:'arcade',nogutter:1},
   Waterworks:{W:14,f:-5,e:8,dx:-2,ban:'#2f4a5e',extra:'water'}, Granary:{W:14,f:-7,e:7,dx:-4,ban:'#8a6a3a',extra:'granary',cx:-4},
@@ -2089,7 +2089,7 @@ function rectHit(a,b){
 function footprintFree(f){for(const c of colliders){if(c.type==='circle'){if(Math.abs(c.x-f.x)>c.r+f.hw+f.hd||Math.abs(c.z-f.z)>c.r+f.hw+f.hd)continue;const co=Math.cos(f.rot),si=Math.sin(f.rot),dx=c.x-f.x,dz=c.z-f.z,lx=dx*co-dz*si,lz=dx*si+dz*co,qx=Math.max(-f.hw,Math.min(f.hw,lx)),qz=Math.max(-f.hd,Math.min(f.hd,lz));if(Math.hypot(lx-qx,lz-qz)<c.r)return false;continue;}if(rectHit(f,c))return false;}return true;}
 const LANDMARKS=[
   {name:'Tavern',label:'The Lantern & Gear',R:196,side:1,a:1.95,s:1.7},{name:'Tavern2',label:'The Fogbound Arms',R:262,side:-1,a:1.79,s:1.7},
-  {name:'Foundry',label:'The Ironway Foundry',R:196,side:-1,a:-1.0,s:1.5},{name:'Barracks',label:'Hall of the Lantern Vigil',R:262,side:1,a:1.36,s:1.5},
+  {name:'Foundry',label:'The Ironway Foundry',R:196,side:-1,a:-1.0,s:1.5},{name:'Barracks',label:'Hall of the Lantern Vigil',R:196,side:-1,a:1.36,s:1.5},
   {name:'Arcade',label:'The Glass Arcade',R:196,side:-1,a:1.36},
   {name:'Bank',label:'The Treasury of Aldrath',R:118,side:1,a:1.22,s:1.35},{name:'Guild',label:"The Adventurers' Guildhall",R:196,side:1,a:1.74,s:1.35},
   {name:'Observatory',label:'The Moonwatch',R:118,side:1,a:-1.95,s:1.2},{name:'Granary',label:'The Granary',R:262,side:1,a:0.3},
@@ -2116,18 +2116,19 @@ function buildCityHouses(){
     L._run=0;
     // a hub looks for its site: along its street (a little either way) and back from it, it takes the site with the gentlest
     // climb whose building and staircase are clear of every road and of the hubs already placed
+    const YD=L.name==='Barracks'?12:0, dd=d+YD;   // the Vigil's parade ground
     let SIDE=L.side;
-    const pose=(da,push)=>{if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(8.6+d/2+push)*SIDE,rr=L.r+da*180;return [CITY.x+Math.cos(L.av)*rr+px*off,CITY.z+Math.sin(L.av)*rr+pz*off,Math.atan2(-px*SIDE,-pz*SIDE)];}
+    const pose=(da,push)=>{if(L.av!=null){const px=-Math.sin(L.av),pz=Math.cos(L.av),off=(8.6+dd/2+push)*SIDE,rr=L.r+da*180;return [CITY.x+Math.cos(L.av)*rr+px*off,CITY.z+Math.sin(L.av)*rr+pz*off,Math.atan2(-px*SIDE,-pz*SIDE)];}
       if(L.plaza){return [CITY.x+Math.cos(L.a)*L.plaza,CITY.z+Math.sin(L.a)*L.plaza,Math.PI/2-L.a];}
-      const a=L.a+da,r=L.R+SIDE*(6.8+d/2+push);return [CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r,-a+Math.PI/2+(SIDE>0?Math.PI:0)];};
-    const hub=/Tavern|Foundry|Barracks|Laboratory|Bank|Guild|Shop/.test(L.name),ddx=(/Shop/.test(L.name)?3.1:0)*u;
-    const test=(x,z,ry)=>{const c0=Math.cos(ry),s0=Math.sin(ry),P=(lx,lz)=>[x+lx*c0+lz*s0,z-lx*s0+lz*c0];PAVE_NOLANE=true;
-      try{for(let a2=-1;a2<=1;a2+=0.25)for(let b2=-1;b2<=1;b2+=0.25)if(cityPaved(...P(a2*(w/2-0.2),b2*(d/2-0.2)))>0.5)return null;
-        if(!footprintFree({x,z,hw:w/2,hd:d/2,rot:ry}))return null;
-        let hi=-1e9,lo=1e9;for(let a2=-1;a2<=1;a2+=0.5)for(let b2=-1;b2<=1;b2+=0.5){const hh=heightAt(...P(a2*w/2*0.9,b2*d/2*0.9));hi=Math.max(hi,hh);lo=Math.min(lo,hh);}
-        const rise=hub?hi+0.2-heightAt(...P(ddx,d/2+4.2)):0;let run=0;
-        if(rise>0.3){const nn=Math.ceil(rise/0.17);run=nn*0.32+Math.floor((nn-1)/14)*1.3+1.4;for(let v=0;v<=run+1;v+=0.5)for(let a2=-2.8;a2<=2.8;a2+=0.7)if(cityPaved(...P(ddx+a2,d/2+0.2+v))>0.3)return null;
-          if(!footprintFree({x:P(ddx,d/2+0.2+run/2)[0],z:P(ddx,d/2+0.2+run/2)[1],hw:3.3,hd:run/2+0.6,rot:ry}))return null;}
+      const a=L.a+da,r=L.R+SIDE*(6.8+dd/2+push);return [CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r,-a+Math.PI/2+(SIDE>0?Math.PI:0)];};
+    const hub=/Tavern|Foundry|Barracks|Laboratory|Bank|Guild|Shop|Arcade|Clocktower|Observatory|Granary|Waterworks/.test(L.name),ddx=(/Shop/.test(L.name)?3.1:0)*u;
+    const W_=k=>{L._why=L._why||{};L._why[k]=(L._why[k]||0)+1;};const test=(x,z,ry)=>{const c0=Math.cos(ry),s0=Math.sin(ry),P=(lx,lz)=>[x+lx*c0+lz*s0,z-lx*s0+lz*c0];PAVE_NOLANE=true;
+      try{for(let a2=-1;a2<=1;a2+=0.25)for(let b2=-1;b2<=1;b2+=0.25)if(cityPaved(...P(a2*(w/2-0.2),b2*(dd/2-0.2)))>0.5){W_('road');return null;}
+        if(!footprintFree({x,z,hw:w/2,hd:dd/2,rot:ry})){W_('coll');return null;}
+        let hi=-1e9,lo=1e9;for(let a2=-1;a2<=1;a2+=0.5)for(let b2=-1;b2<=1;b2+=0.5){const hh=heightAt(...P(a2*w/2*0.9,b2*dd/2*0.9));hi=Math.max(hi,hh);lo=Math.min(lo,hh);}
+        const rise=hub?hi+0.2-heightAt(...P(ddx,dd/2+4.2)):0;let run=0;
+        if(rise>0.3){const nn=Math.ceil(rise/0.17);run=nn*0.32+Math.floor((nn-1)/14)*1.3+1.4;for(let v=0;v<=run+1;v+=0.5)for(let a2=-2.8;a2<=2.8;a2+=0.7)if(cityPaved(...P(ddx+a2,dd/2+0.2+v))>0.3){W_('stair');return null;}
+          if(!footprintFree({x:P(ddx,dd/2+0.2+run/2)[0],z:P(ddx,dd/2+0.2+run/2)[1],hw:3.3,hd:run/2+0.6,rot:ry}))return null;}
         return {rise:Math.max(0,rise),run,found:hi-lo};}finally{PAVE_NOLANE=false;}};
     let best=null;
     if(L.plaza){[x,z,ry]=pose(0,0);}
@@ -2138,13 +2139,15 @@ function buildCityHouses(){
       if(!best)for(let k2=0;k2<=40&&!best;k2++)for(const sg of[1,-1])for(const sd of[L.side,-L.side]){if(best)break;SIDE=sd;const da=sg*k2*0.045;
         for(let push=0;push<=30;push+=1){const [px,pz,pr]=pose(da,push),t=test(px,pz,pr);if(!t)continue;best={x:px,z:pz,ry:pr,run:t.run,score:0,sd};break;}}   // last resort: a steep site with a long stair
       if(best)SIDE=best.sd;
-      if(best){x=best.x;z=best.z;ry=best.ry;L._run=best.run;L._dx=ddx;}else{SIDE=L.side;[x,z,ry]=pose(0,0);console.log('no clear site for',L.label);}}
+      if(best){x=best.x-Math.sin(best.ry)*YD/2;z=best.z-Math.cos(best.ry)*YD/2;ry=best.ry;L._run=best.run;L._dx=ddx;}else{SIDE=L.side;[x,z,ry]=pose(0,0);console.log('no clear site for',L.label,JSON.stringify(L._why||{}));}}
     PAVE_NOLANE=false;LM_RECTS.push({x,z,hw:w/2+1.2,hd:d/2+1.2,rot:ry});
-    if(L._run){const cl=d/2+0.2+L._run/2,cx=x+cl*Math.sin(ry)+L._dx*Math.cos(ry),cz=z+cl*Math.cos(ry)-L._dx*Math.sin(ry);
+    L._yd=YD;
+    if(YD){const cl=d/2+YD/2,cx=x+cl*Math.sin(ry),cz=z+cl*Math.cos(ry);colliders.push({x:cx,z:cz,hw:w/2,hd:YD/2,rot:ry,reserve:'yard:'+L.label});LM_RECTS.push({x:cx,z:cz,hw:w/2+1,hd:YD/2+1,rot:ry});}
+    if(L._run){const cl=d/2+YD+0.2+L._run/2,cx=x+cl*Math.sin(ry)+L._dx*Math.cos(ry),cz=z+cl*Math.cos(ry)-L._dx*Math.sin(ry);
       colliders.push({x:cx,z:cz,hw:3.3,hd:L._run/2+0.6,rot:ry,reserve:L.label});LM_RECTS.push({x:cx,z:cz,hw:3,hd:L._run/2+0.5,rot:ry});}   // room kept for the staircase
     {const c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;for(const [p,q] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=p*w*0.48,lz=q*d*0.48,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}
      const y=hi>lo+0.3?hi-0.05:lo-0.15; if(hi>lo+0.3)plinths.push({x,z,ry,y:y+0.05,sx:w+0.4,sy:hi-lo+0.7,sz:d+0.4,tint:[0.82,0.8,0.76]});
-     (lists[L.name]=lists[L.name]||[]).push({x,y,z,ry,tint:[1,1,1],s:u});} colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d,name:L.name,u,y:lists[L.name][lists[L.name].length-1].y});}
+     (lists[L.name]=lists[L.name]||[]).push({x,y,z,ry,tint:[1,1,1],s:u});} colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d,name:L.name,u,yd:L._yd||0,y:lists[L.name][lists[L.name].length-1].y});}
   const blocked=(a,r,half)=>riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r)<9+half||nearAvenue(a,r,8.2+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
   const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterAR(a,r).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   // houses face the ring streets, on both kerbs of each ring
@@ -2546,10 +2549,13 @@ function crowdUpdate(dt,now,night){
     {const q=P2W(x,z);x=q[0];z=q[1];}
     const m=inCity?ensureMesh(p,x,z,()=>makeFolk(true,'Aurelan',seeded(p.id))):(p.mesh&&(scene.remove(p.mesh),p.mesh=null)); if(!m)continue;
     folkShadow(m,Math.hypot(x-player.x,z-player.z)); m.position.set(x,surfaceAt(x,z),z); walkOrIdle(m,true); m.userData.mixer.timeScale=1; m.userData.mixer.update(dt); armsIn(m,0.2);}
+  yardUpdate(dt,inCity);
   for(const h of HUBFOLK){const m=inCity?ensureMesh(h,h.x,h.z,()=>{const q=makeFolk(!!h.guard,h.race,seeded(h.id),{fem:h.fem,dressed:1});const sp=nameplate(h.name,h.title);sp.position.y=2.35/q.scale.y;q.add(sp);q.userData.plate=sp;return q;}):(h.mesh&&(scene.remove(h.mesh),h.mesh=null));
     if(!m)continue; folkShadow(m,Math.hypot(h.x-player.x,h.z-player.z)); m.position.set(h.x,h.y!=null?h.y:surfaceAt(h.x,h.z),h.z); m.rotation.y=h.face; walkOrIdle(m,false); m.userData.mixer.update(dt); armsIn(m,0.2);
     m.userData.plate.visible=Math.hypot(h.x-player.x,h.z-player.z)<32;}
 }
+function yardUpdate(dt,inCity){for(const h of YARDFOLK){const m=inCity?ensureMesh(h,h.x,h.z,()=>makeFolk(true,'Aurelan',seeded(h.id))):(h.mesh&&(scene.remove(h.mesh),h.mesh=null));if(!m)continue;
+  m.position.set(h.x,h.y,h.z);m.rotation.y=h.face;walkOrIdle(m,false);m.userData.mixer.update(dt);armsIn(m,0.2);}}
 function hubNear(){for(const h of HUBFOLK)if(h.mesh&&Math.hypot(h.x-player.x,h.z-player.z)<3.2)return h;return null;}
 function talkTo(h){$('dialog').querySelector('.giver').textContent=h.title;$('dTitle').textContent=h.name;$('dText').textContent=h.line;$('dObj').textContent='';$('dAccept').hidden=true;$('dialog').hidden=false;}
 // the coarse ground for the whole island (points 20 m apart) sinks out of the way where the detailed ground is drawn,
@@ -3744,14 +3750,62 @@ const SHELL={Tavern:{W:12,D:10,face:-5,dx:0,gw:2,gh:2.6},Tavern2:{W:12,D:10,face
 const RAMPS=[];
 function rampTop(x,z){let t=-1e9;for(const R of RAMPS){const dx=x-R.x,dz=z-R.z,c=Math.cos(R.ry),sn=Math.sin(R.ry),lx=dx*c-dz*sn,lz=dx*sn+dz*c;if(Math.abs(lx)<R.hw&&Math.abs(lz)<R.hl){const u=(lz+R.hl)/(2*R.hl);t=Math.max(t,R.y0+(R.y1-R.y0)*u);}}return t;}
 const CUTS={A:[...Array(12)].map(()=>new THREE.Vector4(0,0,0,-1e4)),B:[...Array(12)].map(()=>new THREE.Vector4(0,0,0,-1e4))};
+
+// the Vigil's parade ground: a walled training yard level with the hall's door, carried on an arcaded base where the land
+// falls away, round towers at the front corners, a gate to the stair; dummies, butts, a sparring ring, racks, and the watch at drill
+const YARDFOLK=[]; const yardDirt=flat(0x8a7a5a); texturize(yardDirt,1,15,3);
+function buildParade(L,S,u,y,W2,yb,yf,label){
+  const g=new THREE.Group(),Wy=S.W*u,D=yf-yb,cz=(yb+yf)/2,add=(m,lx,ly,lz)=>{m.position.set(lx,ly,lz);g.add(m);return m;};
+  let lo=1e9;for(let a=-1;a<=1;a+=0.25)for(let b=0;b<=1;b+=0.25){const q=W2(a*Wy/2,yb+b*D);lo=Math.min(lo,heightAt(q[0],q[1]));}
+  const ph=y-lo+0.6;
+  add(box(Wy,ph,D,cityStone,0,0,0),0,y-ph/2,cz);                                                     // the base
+  add(box(Wy-1.6,0.06,D-1.4,yardDirt,0,0,0),0,y+0.02,cz-0.2);                                       // beaten earth
+  add(box(4.4,0.08,D,cityStone,0,0,0),0,y+0.04,cz);                                                  // the flagged way from gate to door
+  // walls with merlons, a gate in the front, piers with lanterns and banners
+  for(const s2 of[-1,1]){add(box(0.7,1.5,D,cityStone,0,0,0),s2*(Wy/2-0.35),y+0.75,cz);for(let t=yb+0.8;t<yf;t+=1.8)add(box(0.75,0.5,0.8,cityStone,0,0,0),s2*(Wy/2-0.35),y+1.75,t);
+    const fl=Wy/2-3.2;add(box(fl,1.5,0.7,cityStone,0,0,0),s2*(3.2+fl/2),y+0.75,yf-0.35);for(let t=3.6;t<Wy/2;t+=1.8)add(box(0.8,0.5,0.75,cityStone,0,0,0),s2*t,y+1.75,yf-0.35);
+    add(box(1.3,3.4,1.3,stoneDark,0,0,0),s2*3.6,y+1.7,yf-0.35);add(new THREE.Mesh(new THREE.OctahedronGeometry(0.28,0),new THREE.MeshBasicMaterial({color:0xffd27a})),s2*3.6,y+3.7,yf-0.35);
+    add(box(0.06,2.6,1.1,clothMats[1],0,0,0),s2*3.6,y+2.2,yf+0.36);}
+  // round towers at the front corners, rising from the ground
+  for(const s2 of[-1,1]){const q=W2(s2*Wy/2,yf),hg=heightAt(q[0],q[1]),th=y+5-hg;add(cyl(2.4,2.7,th,12,cityStone,0,0,0),s2*Wy/2,hg+th/2-0.3,yf);
+    const r=new THREE.Mesh(new THREE.ConeGeometry(2.9,3.4,12),slate);add(r,s2*Wy/2,y+6.4,yf);for(let k=0;k<8;k++){const a=k/8*Math.PI*2;add(box(0.7,0.6,0.5,cityStone,0,0,0),s2*Wy/2+Math.cos(a)*2.5,y+4.9,yf+Math.sin(a)*2.5);}}
+  // where the base stands high, it is an arcade of storerooms: blind arches with keystones between pilasters
+  const arc=(lx,lz,face)=>{const q=W2(lx,lz),hg=heightAt(q[0],q[1]),h=Math.min(y-hg-0.4,3.6);if(h<1.3)return;const m=face==='f'?[0,0.05]:[0.05,0];
+    const dk=box(face==='f'?2.0:0.12,h-0.4,face==='f'?0.12:2.0,dark,0,0,0);add(dk,lx+(face==='f'?0:Math.sign(lx)*0.03),hg+(h-0.4)/2,lz+(face==='f'?0.03:0));
+    for(let k=0;k<5;k++){const t=(k+0.5)/5*Math.PI,ox=-Math.cos(t)*1.05,oy=Math.sin(t)*0.55;const st=box(face==='f'?0.5:0.3,0.32,face==='f'?0.3:0.5,stoneDark,0,0,0);add(st,lx+(face==='f'?ox:Math.sign(lx)*0.1),hg+h-0.4+oy,lz+(face==='f'?0.1:ox));}
+    const pil=box(face==='f'?0.5:0.35,h+0.4,face==='f'?0.35:0.5,stoneDark,0,0,0);add(pil,lx+(face==='f'?1.6:Math.sign(lx)*0.12),hg+(h+0.4)/2,lz+(face==='f'?0.12:1.6));};
+  for(let lx=-Wy/2+3.4;lx<=Wy/2-3.4;lx+=3.2)if(Math.abs(lx)>3.8)arc(lx,yf,'f');
+  for(const s2 of[-1,1])for(let lz=yb+2;lz<yf-3;lz+=3.2)arc(s2*Wy/2,lz,'s');
+  // drill: dummies in two rows, archery butts along the wall, a sparring ring, weapon racks
+  const dum=(lx,lz)=>{add(cyl(0.08,0.1,1.7,6,timberDark,0,0,0),lx,y+0.85,lz);add(box(0.55,0.75,0.4,sailMat,0,0,0),lx,y+1.55,lz);add(box(1.1,0.12,0.12,timberDark,0,0,0),lx,y+1.5,lz);
+    const h=new THREE.Mesh(new THREE.SphereGeometry(0.22,8,6),sailMat);add(h,lx,y+2.15,lz);};
+  for(let k=0;k<4;k++){dum(-Wy/2+3.2+k*2.4,cz-2.5);dum(-Wy/2+3.2+k*2.4,cz+1.5);}
+  for(let k=0;k<3;k++){const lz=yb+4+k*4,bt=new THREE.Mesh(new THREE.CylinderGeometry(0.75,0.75,0.4,14),clothMats[0]);bt.rotation.z=Math.PI/2;add(bt,Wy/2-1.5,y+1.4,lz);
+    const wt=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.42,12),sailMat);wt.rotation.z=Math.PI/2;add(wt,Wy/2-1.49,y+1.4,lz);for(const s2 of[-0.5,0.5])add(box(0.1,1.4,0.1,timberDark,0,0,0),Wy/2-1.35,y+0.7,lz+s2);}
+  const rc=[Wy/4,cz+2];for(let k=0;k<10;k++){const a=k/10*Math.PI*2;add(cyl(0.08,0.08,1.1,6,timberDark,0,0,0),rc[0]+Math.cos(a)*3,y+0.55,rc[1]+Math.sin(a)*3);}
+  {const rp=new THREE.Mesh(new THREE.TorusGeometry(3,0.03,4,24),dark);rp.rotation.x=Math.PI/2;add(rp,rc[0],y+0.95,rc[1]);}
+  for(const lz of[yb+1.5,yb+4]){add(box(2.4,1.8,0.5,timberDark,0,0,0),-Wy/2+1.2,y+0.9,lz);for(let k=0;k<5;k++)add(box(0.05,1.7,0.05,flat(0xc0c6cc),0,0,0),-Wy/2+0.4+k*0.4,y+1.0,lz+0.3);}
+  g.position.set(L.x,0,L.z);g.rotation.y=L.ry;landmarks.add(mergeStatic(g));
+  // walking on it, and what stops you
+  {const m=W2(0,cz);RAMPS.push({x:m[0],z:m[1],ry:L.ry,hw:Wy/2,hl:D/2,y0:y,y1:y});
+    const ri=colliders.findIndex(q=>q.reserve==='yard:'+label);if(ri>=0)colliders.splice(ri,1);
+    for(const s2 of[-1,1]){const q=W2(s2*(Wy/2-0.35),cz);colliders.push({x:q[0],z:q[1],hw:0.4,hd:D/2,rot:L.ry});const fl=Wy/2-3.2,f2=W2(s2*(3.2+fl/2),yf-0.35);colliders.push({x:f2[0],z:f2[1],hw:fl/2,hd:0.4,rot:L.ry});
+      const t=W2(s2*Wy/2,yf);colliders.push({type:'circle',x:t[0],z:t[1],r:2.7});}
+    for(let k=0;k<4;k++)for(const lz of[cz-2.5,cz+1.5]){const q=W2(-Wy/2+3.2+k*2.4,lz);colliders.push({type:'circle',x:q[0],z:q[1],r:0.35});}}
+  // the watch at drill: four at the dummies, two sparring in the ring
+  const P=(lx,lz,f)=>{const q=W2(lx,lz);YARDFOLK.push({x:q[0],z:q[1],y,face:L.ry+f,mesh:null,id:950+YARDFOLK.length});};
+  for(let k=0;k<4;k++)P(-Wy/2+3.2+k*2.4,cz-1.4,Math.PI);P(rc[0]-1,rc[1],Math.PI/2);P(rc[0]+1,rc[1],-Math.PI/2);
+}
 function buildInteriors(){
   if(INTERIORS.length)return; let i=0;
   for(const label in INT_DEFS){const L=LANDMARK_AT.find(q=>q.label===label);if(!L||!SHELL[L.name])continue;const S=SHELL[L.name],u=L.u||1,def=INT_DEFS[label];
     const W=Math.min(S.W,S.maxW||S.W)*u-1.2, D=S.D*u-1.2, H=Math.min(def.H,8.6), cy=S.face*u+0.12+0.5+D/2, c=Math.cos(L.ry), sn=Math.sin(L.ry);
     let hi=-1e9;for(const [a,b] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=a*W/2,lz=-(b*D/2+cy);hi=Math.max(hi,heightAt(L.x+lx*c+lz*sn,L.z-lx*sn+lz*c));}
     const y=Math.max(L.y+(S.floor||0)*u+0.02,hi+0.04), gh=Math.min(S.gh*u,H-0.6), gw=S.gw*u, ddx=S.dx*u;
-    {const W2=(lx,lz)=>[L.x+lx*c+lz*sn,L.z-lx*sn+lz*c],zf0=-S.face*u+((S.floor?0:0.35)),pf=(KIT.size[L.name]?KIT.size[L.name][1]*u/2+0.25:zf0),zf=L.y>hi-0.2?Math.max(zf0,pf-0.05):zf0,out=W2(ddx,zf+4),hs=heightAt(out[0],out[1]),rise=y-hs;   // steps up to the door when the hub stands high
-      if(rise>0.3){const n=Math.ceil(rise/0.17),T2=0.32,LD=1.3,at=k2=>k2*T2+Math.floor(k2/14)*LD,run=at(n),g=new THREE.Group(),w=Math.max(gw+1.6,3.2);
+    const W2=(lx,lz)=>[L.x+lx*c+lz*sn,L.z-lx*sn+lz*c], YD=L.yd||0, pf0=KIT.size[L.name]?KIT.size[L.name][1]*u/2:0; let footZ=0,stairW=0;
+    {const zf0=-S.face*u+((S.floor?0:0.35)),pf=(KIT.size[L.name]?pf0+0.25:zf0),zf=YD?pf0+YD:(L.y>hi-0.2?Math.max(zf0,pf-0.05):zf0),out=W2(ddx,zf+4),hs=heightAt(out[0],out[1]),rise=y-hs;   // steps up to the door when the hub stands high
+      footZ=zf;
+      if(rise>0.3){const n=Math.ceil(rise/0.17),T2=0.32,LD=1.3,at=k2=>k2*T2+Math.floor(k2/14)*LD,run=at(n),g=new THREE.Group(),w=YD?6:Math.max(gw+1.6,3.2);footZ=zf+run;stairW=w;
         for(let k2=0;k2<n;k2++){const top=y-(k2+1)*rise/n+rise/n,h=top-hs+0.4,land=k2>0&&k2%14===0;   // a landing every 14 steps
           if(land)g.add(box(w,h,LD,cityStone,ddx,top-h/2,zf+at(k2)-LD/2));g.add(box(w,h,T2+0.02,cityStone,ddx,top-h/2,zf+T2/2+at(k2)));}
         for(const s2 of[-1,1]){for(let k2=0;k2<=n;k2+=3){const top=y-k2*rise/n;g.add(cyl(0.035,0.035,0.95,5,dark,ddx+s2*(w/2-0.15),top+0.47,zf+at(k2)+0.1));}
@@ -3761,6 +3815,12 @@ function buildInteriors(){
           g.add(box(w+0.04,0.06,0.08,stoneDark,ddx,top+0.005,lz+T2));}
         g.position.set(L.x,0,L.z);g.rotation.y=L.ry;landmarks.add(g);const m=W2(ddx,zf+run/2);RAMPS.push({x:m[0],z:m[1],ry:L.ry,hw:w/2,hl:run/2,y0:y,y1:hs,flip:1});{const ri=colliders.findIndex(q=>q.reserve===L.label);if(ri>=0)colliders.splice(ri,1);}
         for(const s2 of[-1,1]){const q=W2(ddx+s2*(w/2+0.22),zf+run/2);colliders.push({x:q[0],z:q[1],hw:0.25,hd:run/2,rot:L.ry});}}}
+
+    if(YD)buildParade(L,S,u,y,W2,-S.face*u,pf0+YD,label);
+    // a paved way from the entrance (or the foot of its stair) to the nearest street
+    {const pg=new THREE.Group();for(let v=0.3;v<45;v+=1){const q=W2(ddx,footZ+v);if(cityPaved(...W2P(q[0],q[1]))>0.5)break;const hq=heightAt(q[0],q[1]);
+        const sl=box(Math.max(stairW,3.2),0.14,1.04,cityStone,0,hq+0.03,0);sl.position.set(q[0],hq+0.03,q[1]);sl.rotation.y=L.ry;pg.add(sl);}
+      if(pg.children.length)landmarks.add(mergeStatic(pg));}
     const I=buildInterior(label,{...def,W,D,H,ddx,gw,gh},i,{x:L.x,z:L.z,ry:L.ry,y,cy});
     const ci=colliders.findIndex(q=>q.type!=='circle'&&Math.abs(q.x-L.x)<0.01&&Math.abs(q.z-L.z)<0.01);if(ci>=0)colliders.splice(ci,1);   // the solid block becomes rooms
     for(const q of I.colliders)colliders.push(q);
