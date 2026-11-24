@@ -468,13 +468,15 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 
 **Items that fill more than one slot**, like a two-handed weapon taking both hands:
 
-- **Heavy armour and plate** fill chest and coat. Plate covers the wardrobe completely. Heavy armour has its own version with a built-in tabard, since nothing goes over it.
+- **Heavy armour and plate** are split like WoW's: a chest piece and a legs piece. The chest piece fills chest and coat; plate covers the wardrobe completely. Heavy chests come in versions with a built-in tabard or coat skirt, since nothing goes over them. Plate skirts and tassets come from the legs piece or from a belt (a war belt with tassets), as WoW's belts and leggings carry the hip plates.
 - **Robes** sit in the coat slot and hide the legs; the legs slot still counts for stats.
 - **Full helms** fill head, eyes and mouth and are the strongest (as in Ragnarok Online); others fill head and eyes, or head alone.
-- **Mechanical arms** are special gear filling shoulder, arm, wrist and hand on one side. They replace the glove too.
+- **Mechanical arms** always come as a pair: they fill the shoulders, arms, wrists and hands on both sides and replace the gloves. Whether one arm or both look mechanical is a cosmetic choice of the item.
 - **The canister gauntlet** fills hands and wrists. **A cowl mantle** fills head and shoulders.
 
 **Covering and layering.** Each gear item either *replaces* what is under it (reinforced trousers take the wardrobe lower's place, boots take the shoes, heavy armour takes the shirt) or *overlays* it (chaps, greaves and tassets go over trousers or a skirt; waistcoats and corsets over the shirt). The order from the inside out is fixed: skin, wardrobe, chest, coat, belt, shoulders, back. A slot blocked by another item shows greyed out, linked to the item that blocks it. Robes and long coats drop the boot tops beneath them, and headgear removes the hair it covers.
+
+**Straps and beards.** Harnesses, cross straps and bandoliers are not items: they appear only as part of a piece of armour, as cosmetic detail. Beards and braids show over the chest only with select gear (open collars, some breastplates); other gear covers them, and a full helm covers the beard completely.
 
 **Weapons on the body.** Weapons are carried where it makes sense for the weapon: daggers at the hip, boot or small of the back; one-handed swords, axes, maces and hammers at the hip; pistols in a thigh or hip holster; two-handed weapons, polearms and bows across the back; rifles and crossbows slung from the shoulder; shields on the back or forearm. Hip weapons hang from the belt's sockets. When a back utility item takes the back, two-handers move to a hip sling or clip onto the item if it has mounts (a jetpack with rifle clips), and casters keep their staff in hand.
 
