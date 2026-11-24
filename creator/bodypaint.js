@@ -19,6 +19,21 @@ float hairline(float th){ // height of the hairline around the head (0 = brow, p
   th=abs(th);
   return th<0.6?mix(1.745,1.748,th/0.6):th<1.15?mix(1.748,1.706,(th-0.6)/0.55):th<1.5?mix(1.706,1.655,(th-1.15)/0.35):th<2.45?mix(1.655,1.618,(th-1.5)/0.95):mix(1.618,1.604,(th-2.45)/0.7);
 }
+float cardline(float th){ // the hair meshes' hairline (tools/blender/hair.py HAIRLINE): rising at the temples, down to the sideburns, just over the ears
+  float a=abs(th);
+  if(a<0.3000)return mix(1.756,1.760,(a-0.0000)/0.3000);
+  if(a<0.6500)return mix(1.760,1.770,(a-0.3000)/0.3500);
+  if(a<0.9500)return mix(1.770,1.758,(a-0.6500)/0.3000);
+  if(a<1.1500)return mix(1.758,1.735,(a-0.9500)/0.2000);
+  if(a<1.3000)return mix(1.735,1.672,(a-1.1500)/0.1500);
+  if(a<1.4200)return mix(1.672,1.690,(a-1.3000)/0.1200);
+  if(a<1.6000)return mix(1.690,1.697,(a-1.4200)/0.1800);
+  if(a<1.8500)return mix(1.697,1.697,(a-1.6000)/0.2500);
+  if(a<2.0500)return mix(1.697,1.682,(a-1.8500)/0.2000);
+  if(a<2.2500)return mix(1.682,1.662,(a-2.0500)/0.2000);
+  if(a<2.6000)return mix(1.662,1.628,(a-2.2500)/0.3500);
+  if(a<3.1416)return mix(1.628,1.622,(a-2.6000)/0.5416);
+  return 1.622;}
 vec3 cloth(vec3 base,vec3 p,float k){return base*(0.94+0.06*vnoise(p.xz*vec2(260.,90.))+0.05*(vnoise(p.xz*40.)-.5)*k);}
 vec3 paintHead(vec3 p){
   float ax=abs(p.x), th=atan(p.x,-(p.y-0.002)), front=(1.-smoothstep(-0.07,-0.03,p.y));
@@ -80,7 +95,7 @@ vec3 paintHead(vec3 p){
     ink=max(ink,inside(abs(ax-0.0105)-0.0022)*step(1.574,p.z)*step(p.z,1.598));
     c=mix(c,uInk,ink*front*0.92+ink*(1.-front)*0.5);}
   // hair painted on the scalp
-  if(uF2.x>0.5){float hl=hairline(th)-(uF2.x>1.5?0.04*smoothstep(1.4,2.6,abs(th)):0.); float h=smoothstep(-0.002,0.002,p.z-hl)*step(ax,0.083+step(1.68,p.z));
+  if(uF2.x>0.5){float hl=cardline(th)-0.004; float h=smoothstep(-0.007,0.006,p.z-hl)*step(ax,0.083+step(1.68,p.z))*0.9;   // fades softly into the skin, a few mm past the hair mesh's clean edge
     float strands=0.78+0.3*vnoise(vec2(th*90.,p.z*160.))+0.12*vnoise(vec2(th*12.,p.z*20.));
     c=mix(c,uHair*strands,h);}
   else c=mix(c,c*0.93,smoothstep(1.74,1.75,p.z)*0.5);
@@ -317,11 +332,43 @@ float hn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hh(i)
   m.customProgramCacheKey=()=>'painted-hair'; return m;
 }
 const HAIR_MESHES=['Hair_Short','Hair_Swept','Hair_Ponytail','Hair_Long','Hair_Topknot','Beard_Full','Beard_Short','Beard_Pointed','Beard_Braided','Beard_Forked','Moustache_Chevron','Moustache_Horseshoe','Moustache_Walrus','Moustache_Handlebar','Moustache_Pencil'];
+// Low-poly hair (tools/blender/hair.py): a scalp cap and a few locks per style, a few hundred triangles, textured from
+// tex/hair.png and cut out by its alpha. Installed once per figure in place of the older hair meshes of the same name; it is
+// skinned to the figure's own skeleton and shares the body's shape weights, so it fits every people and build.
+const HAIR_TEX=(typeof THREE!=='undefined')?new THREE.TextureLoader().load('tex/hair.png',t=>{t.anisotropy=4;}):null;
+function hairInstall(root,sex){
+  if(typeof HAIR_CARDS==='undefined'||!HAIR_CARDS[sex]||root.userData.hairCards===sex)return;
+  let body=null;root.traverse(o=>{if(!body&&o.isSkinnedMesh&&o.morphTargetDictionary&&'Lean' in o.morphTargetDictionary)body=o;});if(!body)return;
+  const styles=HAIR_CARDS[sex],old=[];
+  root.traverse(o=>{if(o.isMesh&&(o.userData.hairCard||Object.keys(styles).some(k=>o.name.startsWith('Hair_'+k))))old.push(o);});
+  for(const o of old)o.parent.remove(o);
+  const bones=body.skeleton.bones,san=n=>n.replace(/[\s\.\[\]:\/]/g,''),names=Object.keys(body.morphTargetDictionary).sort((a,b)=>body.morphTargetDictionary[a]-body.morphTargetDictionary[b]);
+  for(const [style,H] of Object.entries(styles)){
+    const g=new THREE.BufferGeometry(),n=H.pos.length/3;
+    g.setAttribute('position',new THREE.Float32BufferAttribute(H.pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(H.nrm,3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute(H.uv,2));g.setAttribute('rest',new THREE.Float32BufferAttribute(H.rest,3));
+    const bi=H.bones.map(b=>Math.max(0,bones.findIndex(x=>san(x.name)===san(b)))),si=new Uint16Array(n*4),sw=new Float32Array(n*4);
+    H.skin.forEach((w,i)=>w.forEach((x,k)=>{si[i*4+k]=bi[k];sw[i*4+k]=x;}));
+    g.setAttribute('skinIndex',new THREE.BufferAttribute(si,4));g.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4));
+    g.morphAttributes.position=names.map(k=>new THREE.Float32BufferAttribute(H.morph[k]||new Array(n*3).fill(0),3));g.morphTargetsRelative=true;
+    g.setIndex(H.idx);g.computeBoundingSphere();g.userData.hairCard=true;g.userData.rest=true;
+    const m=new THREE.SkinnedMesh(g,new THREE.MeshBasicMaterial());m.name='Hair_'+style;m.userData.hairCard=true;m.frustumCulled=false;
+    m.bind(body.skeleton,body.bindMatrix);m.morphTargetInfluences=body.morphTargetInfluences;body.parent.add(m);}
+  root.userData.hairCards=sex;
+}
+function hairCardMaterial(hex){
+  const m=new THREE.MeshLambertMaterial({map:HAIR_TEX,color:new THREE.Color(hex).multiplyScalar(1.15),alphaTest:0.5,side:THREE.DoubleSide,skinning:true,morphTargets:true});
+  m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace(/gl_FrontFacing/g,'true');};   // both faces of a card light as its front: cards stand for volume
+  m.customProgramCacheKey=()=>'hair-card';
+  m.userData.depth=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:HAIR_TEX,alphaTest:0.5,skinning:true,morphTargets:true});
+  return m;
+}
 function dressFigure(root,look){ // body gets the paint, chosen hair and beard get hair, the rest hide
+  hairInstall(root,look.fem?'f':'m');
   const want=new Set([look.hair&&'Hair_'+look.hair,look.beard&&'Beard_'+look.beard,look.moustache&&'Moustache_'+look.moustache].filter(Boolean));
   root.traverse(o=>{if(!o.isMesh)return;o.frustumCulled=false;o.castShadow=true;
     const n=HAIR_MESHES.find(h=>o.name.startsWith(h));
-    if(!n){o.material=paintedMaterial(look);o.visible=true;}else if(want.has(n)){o.material=hairMaterial(look.uHair);o.visible=true;}else o.visible=false;});
+    if(!n){o.material=paintedMaterial(look);o.visible=true;}else if(want.has(n)){if(o.userData.hairCard){o.material=hairCardMaterial(look.uHair);o.customDepthMaterial=o.material.userData.depth;}else o.material=hairMaterial(look.uHair);o.visible=true;}else o.visible=false;});
 }
 
 // body type: Lean and Heavy blend shapes on the one body, and a posture that goes with them

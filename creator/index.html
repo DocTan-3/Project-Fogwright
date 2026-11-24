@@ -58,12 +58,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+<script src="hair.js"></script>
 <script src="bodypaint.js"></script>
+<script src="drapes.js"></script>
 <script src="equip.js"></script>
 <script src="peoples.js"></script>
 <script>
 const st={sex:'m',people:'Aurelan',h:0.5,w:0.55,skin:1,eye:0,hair:'Swept',hcol:0,beard:null,stache:null,lower:0,view:'full',
-  gear:{shirt:'linen_shirt',chest:'jerkin',legs:'trousers',feet:'boots',wrists:null,hands:null,waist:'belt',shoulders:null,head:null,back:null},belt:{hipR:'pouch'},dye:0};
+  gear:{shirt:'linen_shirt',lower:'trousers',socks:null,shoes:'shoes',chest:'jerkin',coat:null,legs:null,feet:'boots',wrists:null,hands:null,waist:'belt',shoulders:null,head:null,back:null},belt:{hipR:'pouch'},dye:0};
 // ---- scene
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(28,1,0.05,100);
@@ -116,12 +118,18 @@ function build(){
   chips('stache',STACHES,()=>st.stache,v=>{st.stache=v;dress();});
   chips('lower',[['Trousers',0],['Boxers',1]],()=>st.lower,v=>{st.lower=v;dress();shape();});
   const gear=document.getElementById('gear'); gear.innerHTML='';
+  let grp=null;
   for(const sl of EQ_SLOTS){
+    if(sl.group!==grp){grp=sl.group;const h=document.createElement('div');h.className='label';h.style.cssText='margin-top:14px;font-weight:600;opacity:1';
+      h.textContent=grp==='Wardrobe'?'Wardrobe (looks only)':'Gear (worn over it)';gear.appendChild(h);}
     const lab=document.createElement('div');lab.className='label';lab.textContent=sl.name;gear.appendChild(lab);
     const box=document.createElement('div');box.className='chips';box.id='slot_'+sl.id;gear.appendChild(box);
+    const by=eqBlockedBy(st.gear,sl.id);
+    if(by||sl.soon){const b=document.createElement('button');b.textContent=by?'Taken by '+by.name:'Nothing yet';b.disabled=true;box.appendChild(b);
+      if(sl.soon){const n=document.createElement('p');n.className='lock';n.textContent=sl.soon;gear.appendChild(n);}continue;}
     if(sl.locked){const b=document.createElement('button');b.textContent='Locked';b.disabled=true;box.appendChild(b);
       const n=document.createElement('p');n.className='lock';n.textContent=sl.locked;gear.appendChild(n);continue;}
-    chips('slot_'+sl.id,[['None',null]].concat((EQ_ITEMS[sl.id]||[]).map(i=>[i.name,i.id])),()=>st.gear[sl.id],v=>{st.gear[sl.id]=v;if(sl.id==='waist')build();dress();});
+    chips('slot_'+sl.id,[['None',null]].concat((EQ_ITEMS[sl.id]||[]).map(i=>[i.name,i.id])),()=>st.gear[sl.id],v=>{st.gear[sl.id]=v;if(sl.id==='waist'||(eqItem(sl.id,v)||{}).fills||sl.id==='chest')build();dress();});
     const belt=sl.id==='waist'&&eqItem('waist',st.gear.waist);
     if(belt&&belt.sockets){   // what hangs from each of the belt's sockets
       for(const sk of belt.sockets){const l=document.createElement('div');l.className='label sub2';l.textContent='On the belt: '+EQ_SOCKETS[sk].name;gear.appendChild(l);

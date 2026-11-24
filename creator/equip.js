@@ -6,15 +6,16 @@
 
 /* ---------- 1. the slots, and the order their paint goes on ---------- */
 // Paint layers, bottom to top. Built-only slots (shoulders, head, back) have no layer.
-const EQ_LAYERS=['shirt','legs','feet','chest','wrists','hands','waist','tabard'];
+// Paint layers, inside out; each slot paints a region of its own shape (EQ_LAYER_SHAPE: 0/3 torso, 1 legs band, 2 feet, 4 wrists,
+// 5 hands, 6 waist, 7 tabard). The wardrobe (shirt, lower, socks, shoes) is looks only; gear goes over it and carries stats.
+const EQ_LAYERS=['shirt','lower','socks','shoes','legs','feet','chest','coat','wrists','hands','waist'];
+const EQ_LAYER_SHAPE={shirt:0,lower:1,socks:1,shoes:2,legs:1,feet:2,chest:3,coat:3,wrists:4,hands:5,waist:6,tabard:7};
 const EQ_SLOTS=[
-  {id:'shirt',name:'Shirt'},{id:'chest',name:'Chest'},{id:'legs',name:'Legs'},{id:'feet',name:'Feet'},
-  {id:'wrists',name:'Wrists'},{id:'hands',name:'Hands'},{id:'waist',name:'Waist'},{id:'shoulders',name:'Shoulders'},
-  {id:'head',name:'Head'},{id:'back',name:'Back'},
-  {id:'tabard',name:'Tabard',locked:'Unlocks when a god claims you'},
-  {id:'face',name:'Face',locked:'Unlocks with Tinkerer crafts, in the gear and water era'},
-  {id:'mecharm',name:'Mechanical arm',locked:'Unlocks in the gear and water era'},
-  {id:'device',name:'Back device',locked:'Unlocks in the steam era'}];
+  {id:'shirt',name:'Shirt',group:'Wardrobe'},{id:'lower',name:'Lower',group:'Wardrobe'},{id:'socks',name:'Socks',group:'Wardrobe'},{id:'shoes',name:'Shoes',group:'Wardrobe'},
+  {id:'head',name:'Head',group:'Gear'},{id:'eyes',name:'Eyes',group:'Gear',soon:'Goggles, monocles and visors are coming'},{id:'mouth',name:'Mouth',group:'Gear',soon:'Respirators, Fog masks and scarves are coming'},{id:'shoulders',name:'Shoulders',group:'Gear'},
+  {id:'chest',name:'Chest',group:'Gear'},{id:'coat',name:'Coat',group:'Gear'},{id:'wrists',name:'Wrists',group:'Gear'},{id:'hands',name:'Hands',group:'Gear'},
+  {id:'waist',name:'Waist',group:'Gear'},{id:'legs',name:'Legs',group:'Gear'},{id:'feet',name:'Feet',group:'Gear'},{id:'back',name:'Back',group:'Gear'},
+  {id:'mecharm',name:'Mechanical arm',group:'Gear',locked:'Unlocks in the gear and water era; always a pair, filling the shoulders, arms, wrists and hands (one or both arms look mechanical)'}];
 const EQ_KIND={linen:0,wool:1,leather:2,studded:3,mail:4,plate:5,quilted:6,fur:7};
 // The gear texture sheet (tools/textures/gearsheet.py): sixteen surfaces as greyscale detail, 4 x 4. A layer or built piece
 // names one; each kind has its usual one, and items can choose another (velvet for a noble, hessian for the poor).
@@ -29,7 +30,7 @@ const EQ_PATTERN={plain:0,stripes:1,check:2,hemband:3};
 
 /* ---------- 2. the paint layers (GLSL, in the paint template's space: see bodypaint.js) ---------- */
 const EQUIP_GLSL=`
-uniform vec4 uQ[48];  // 8 layers x 6: [kind, pattern, trim width, on] [a] [b; b.w = material tile] [main colour] [second colour] [trim colour]
+uniform vec4 uQ[66];  // 11 layers x 6 (on = the layer's shape + 1): [kind, pattern, trim width, on] [a] [b; b.w = material tile] [main colour] [second colour] [trim colour]
 uniform sampler2D uGear;
 uniform float uMatScale[16];
 uniform vec4 uWear;   // wear (faded, frayed, patched), dirt, a seed for where patches fall
@@ -103,9 +104,9 @@ vec3 layerColour(float kind,float pat,float tile,vec3 p,vec2 s,float d,vec3 c1,v
   return c;}
 vec3 applyEquip(vec3 c,vec3 p){
   float arm=1.-smoothstep(0.3,0.7,vTorso), t=armT(p); vec2 s=qSurf(p,arm,t);
-  for(int L=0;L<8;L++){
+  for(int L=0;L<11;L++){
     vec4 h=uQ[L*6]; if(h.w<0.5)continue;
-    float d=layerDist(L,p,arm,t,uQ[L*6+1],uQ[L*6+2]);
+    float d=layerDist(int(h.w+0.5)-1,p,arm,t,uQ[L*6+1],uQ[L*6+2]);
     c*=1.-0.22*smoothstep(-0.007,0.,d)*(1.-smoothstep(0.,0.0005,d));            // the layer's shadow on what lies under it
     float cov=inside(-d)*inside(-gCut); if(uWear.x>0.)cov*=step(uWear.x*0.009*vnoise(s*vec2(320.,45.)),d);   // worn hems fray
     if(cov<0.001)continue;
@@ -127,6 +128,25 @@ vec3 applyEquip(vec3 c,vec3 p){
 // paint: the layer's kind, pattern, trim width (m), a and b (see layerDist), colours [main, second, trim]
 // built: pieces made from the body (see section 5)
 const EQ_ITEMS={
+  lower:[
+    {id:'trousers',dye:'second',name:'Wool trousers',paint:{kind:'wool',a:[0.07,1.01],dyes:['#5e5446','#4a4238','#3a3026']}},
+    {id:'breeches',dye:'leather',name:'Leather breeches',paint:{kind:'leather',trim:0.008,a:[0.4,1.01],dyes:['#4e3826','#c8b48a','#2e2016']}},
+    {id:'plaid',dye:'main',name:'Woven trews',paint:{kind:'wool',pattern:'check',a:[0.07,1.01],dyes:['#3e5a3a','#8a3a26','#2a2a20']}}],
+  socks:[
+    {id:'stockings',name:'Stockings',paint:{kind:'wool',mat:'knit',trim:0.006,a:[0.0,0.5],dyes:['#d8d0c0','#b8b0a0','#8a8070']}},
+    {id:'argyle',name:'Argyle socks',paint:{kind:'wool',mat:'knit',pattern:'check',trim:0.006,a:[0.0,0.46],dyes:['#6a6e78','#a04a3a','#3a3e48']}},
+    {id:'legwarmers',name:'Leg warmers',paint:{kind:'wool',mat:'knit',trim:0.01,a:[0.1,0.42],dyes:['#6a3a2a','#8a5a3a','#4a2a1a']}}],
+  shoes:[
+    {id:'shoes',name:'Shoes',paint:{kind:'leather',a:[0.075],dyes:['#3e2a1c','#a08a6a','#2a1c12']},built:[{type:'foot'}]}],
+  coat:[
+    {id:'longcoat',dye:'leather',name:'Long coat',paint:{kind:'leather',trim:0.01,a:[0.97,1.86,1,0.07],b:[0.03],dyes:['#4a3424','#c8b48a','#2e2016']},
+      built:[{type:'drape',asset:'longcoat',kind:1},{type:'collar',colour:0}]},
+    {id:'greatcoat',dye:'main',name:'Greatcoat',paint:{kind:'wool',trim:0.012,a:[0.97,1.86,1,0.07],b:[0.03],dyes:['#1e1c20','#141216','#b08a48']},
+      built:[{type:'drape',asset:'greatcoat'},{type:'collar',colour:0,high:1},{type:'buttons',xs:[-0.065,0.065],z0:1.05,z1:1.4}]},
+    {id:'robe',dye:'main',name:'Wool robe',hides:['legs'],paint:{kind:'wool',pattern:'hemband',trim:0.012,a:[0.12,1.9,0,0.02],dyes:['#6a5a48','#a8844e','#4a3e30']},
+      built:[{type:'skirt',top:1.0,hem:0.12,flare:0.35,kind:0},{type:'collar',colour:0}]},
+    {id:'ilvaricoat',dye:'main',name:'Ilvari long coat',paint:{kind:'wool',trim:0.012,a:[0.5,1.9,0,0.0],b:[0.025],dyes:['#2a3040','#1a2030','#3a6ad0']},
+      built:[{type:'skirt',top:1.0,hem:0.42,flare:0.22,open:0.3,kind:0,trim:1},{type:'collar',colour:0,high:1}]}],
   shirt:[
     {id:'linen_shirt',name:'Linen shirt',paint:{kind:'linen',a:[0.93,1.92,1,0.05],dyes:['#e2d9c6','#cdbfa4','#b8a888']}},
     {id:'tunic',dye:'main',name:'Short tunic',paint:{kind:'wool',pattern:'hemband',trim:0.012,a:[0.8,0.45,0,0.02],dyes:['#7a5a3a','#a8844e','#5a3e26']}}],
@@ -136,10 +156,6 @@ const EQ_ITEMS={
     {id:'gambeson',dye:'main',name:'Quilted gambeson',paint:{kind:'quilted',trim:0.014,a:[0.8,1.72,0,0.0],dyes:['#a89a7e','#8a7c62','#6a4e34']},
       built:[{type:'collar',colour:0}]},
     {id:'mail',dye:'trim',name:'Mail shirt',paint:{kind:'mail',trim:0.008,a:[0.84,1.25,0,0.02],dyes:['#9ea4aa','#6a6e72','#7a5a3a']}},
-    {id:'robe',dye:'main',name:'Wool robe',paint:{kind:'wool',pattern:'hemband',trim:0.012,a:[0.12,1.9,0,0.02],dyes:['#6a5a48','#a8844e','#4a3e30']},
-      built:[{type:'skirt',top:1.0,hem:0.12,flare:0.35,kind:0},{type:'collar',colour:0}]},
-    {id:'longcoat',dye:'leather',name:'Long coat',paint:{kind:'leather',trim:0.01,a:[0.5,1.86,1,0.07],b:[0.03],dyes:['#4a3424','#c8b48a','#2e2016']},
-      built:[{type:'skirt',top:0.95,hem:0.5,flare:0.28,open:0.42,kind:1},{type:'collar',colour:0}]},
     {id:'doublet',people:'Aurelan',dye:'main',name:'Aurelan doublet',paint:{kind:'wool',pattern:'stripes',trim:0.01,a:[0.9,1.9,0,0.0],dyes:['#2e4a6a','#c9a046','#c9a046']},
       built:[{type:'collar',colour:0},{type:'buttons'}]},
     {id:'furjerkin',people:'Hrimfolk',dye:'leather',name:'Hrimfolk fur-collared jerkin',paint:{kind:'leather',trim:0.012,a:[0.86,-1,0,0.0],dyes:['#5a4030','#c8b48a','#3a2a1c']},
@@ -148,20 +164,17 @@ const EQ_ITEMS={
       built:[{type:'apron'}]},
     {id:'wraps',people:'Zarhim',dye:'main',name:'Zarhim desert wraps',paint:{kind:'linen',pattern:'hemband',trim:0.01,a:[0.86,1.95,1,0.06],dyes:['#d8c8a8','#a8783a','#7a5426']},
       built:[{type:'belt',thick:0.008,cloth:1,z:1.0,w:0.09,colour:1}]},
-    {id:'ilvaricoat',people:'Ilvari',dye:'main',name:'Ilvari long coat',paint:{kind:'wool',trim:0.012,a:[0.5,1.9,0,0.0],b:[0.025],dyes:['#2a3040','#1a2030','#3a6ad0']},
-      built:[{type:'skirt',top:0.95,hem:0.42,flare:0.22,open:0.3,kind:0,trim:1},{type:'collar',colour:0,high:1}]},
-    {id:'cuirass',dye:'trim',name:'Steel breastplate',paint:{kind:'mail',trim:0.008,a:[0.95,1.25,0,0.02],dyes:['#9ea4aa','#6a6e72','#7a5a3a']},built:[{type:'cuirass',metal:'#a4aab0'}]},
-    {id:'brigandine',dye:'main',name:'Studded brigandine',paint:{kind:'studded',trim:0.012,a:[0.88,-1,0,0.0],dyes:['#5a2e24','#c9a046','#c9a046']},
+    {id:'cuirass',dye:'trim',name:'Steel breastplate',fills:['coat'],paint:{kind:'mail',trim:0.008,a:[0.95,1.25,0,0.02],dyes:['#9ea4aa','#6a6e72','#7a5a3a']},built:[{type:'cuirass',metal:'#a4aab0'}]},
+    {id:'brigandine',dye:'main',name:'Studded brigandine',fills:['coat'],paint:{kind:'studded',trim:0.012,a:[0.88,-1,0,0.0],dyes:['#5a2e24','#c9a046','#c9a046']},
       built:[{type:'collar',colour:0}]}],
   legs:[
-    {id:'trousers',dye:'second',name:'Wool trousers',paint:{kind:'wool',a:[0.07,1.01],dyes:['#5e5446','#4a4238','#3a3026']}},
-    {id:'breeches',dye:'leather',name:'Leather breeches',paint:{kind:'leather',trim:0.008,a:[0.4,1.01],dyes:['#4e3826','#c8b48a','#2e2016']}},
+    {id:'reinforced',dye:'second',name:'Reinforced trousers',replaces:['lower'],paint:{kind:'leather',mat:'suede',trim:0.008,a:[0.07,1.01],dyes:['#5a4a3a','#3e3226','#2e2218']}},
+    {id:'chaps',dye:'leather',name:'Leather chaps',paint:{kind:'leather',trim:0.01,a:[0.3,0.99],dyes:['#6a4428','#c8b48a','#3e2818']}},
     {id:'platelegs',dye:'second',name:'Steel leg harness',paint:{kind:'wool',a:[0.07,1.01],dyes:['#4a4238','#3a3026','#2a2018']},built:[{type:'legplates',metal:'#9aa0a6'}],legPad:0.024},
-    {id:'leathergreaves',dye:'leather',name:'Leather greaves',paint:{kind:'leather',trim:0.008,a:[0.07,1.01],dyes:['#4e3826','#c8b48a','#2e2016']},built:[{type:'legplates',greavesOnly:1,leather:'#5a3a22'}],legPad:0.012},
-    {id:'plaid',dye:'main',name:'Woven trews',paint:{kind:'wool',pattern:'check',a:[0.07,1.01],dyes:['#3e5a3a','#8a3a26','#2a2a20']}}],
+    {id:'leathergreaves',dye:'leather',name:'Leather greaves',paint:{kind:'leather',trim:0.008,a:[0.07,1.01],dyes:['#4e3826','#c8b48a','#2e2016']},built:[{type:'legplates',greavesOnly:1,leather:'#5a3a22'}],legPad:0.012}
+],
   feet:[
-    {id:'shoes',name:'Shoes',paint:{kind:'leather',a:[0.075],dyes:['#3e2a1c','#a08a6a','#2a1c12']},built:[{type:'foot'}]},
-    {id:'boots',name:'Tall boots',paint:{kind:'leather',trim:0.008,a:[0.43],dyes:['#4a3020','#b09a76','#2a1a10']},built:[{type:'foot'},{type:'cuff',slot:'feet'}]}],
+    {id:'boots',name:'Tall boots',replaces:['shoes'],paint:{kind:'leather',trim:0.008,a:[0.43],dyes:['#4a3020','#b09a76','#2a1a10']},built:[{type:'foot'},{type:'cuff',slot:'feet'}]}],
   wrists:[
     {id:'vambraces',name:'Steel vambraces',dyes:['#9aa0a6','#5e6266','#c9a046'],built:[{type:'vambrace',metal:'#9aa0a6'}]},
     {id:'bracers',name:'Leather bracers',paint:{kind:'studded',trim:0.006,a:[1.45,1.88],dyes:['#5a3a22','#c8b48a','#b0904a']},built:[{type:'cuff',slot:'wrists'}]}],
@@ -198,6 +211,17 @@ const EQ_SOCKETS={hipL:{name:'Left hip',a:1.35},hipR:{name:'Right hip',a:-1.35},
 const EQ_DYES=[['Natural',null],['Forest',['#3e5a36','#2a3e26','#b0904a']],['Crimson',['#7a2626','#4e1818','#c9a046']],
   ['Midnight',['#2a3450','#1a2036','#b8b8c8']],['Ochre',['#a8783a','#7a5426','#4a3020']],['Ash',['#8a8a86','#5a5a58','#2e2e2c']]];
 function eqItem(slot,id){return (EQ_ITEMS[slot]||[]).find(i=>i.id===id)||null;}
+function eqSlotOf(id){for(const s in EQ_ITEMS)if(EQ_ITEMS[s].some(i=>i.id===id))return s;return null;}
+// What is actually drawn: every item in its own slot (older outfits put coats in chest, trousers in legs, shoes in feet); slots
+// another item fills are emptied (a breastplate fills the coat slot too); slots an item replaces or hides are left undrawn
+// (boots replace shoes, reinforced trousers the wardrobe's lower, a robe hides the legs, which still count for stats).
+function eqNormalize(o){const out=Object.assign({},o);
+  for(const k of Object.keys(o)){if(!EQ_ITEMS[k]||o[k]==null)continue;const s=eqSlotOf(o[k]);if(s&&s!==k){if(out[k]===o[k])delete out[k];if(out[s]==null)out[s]=o[k];}}
+  for(const s of Object.keys(EQ_ITEMS)){const it=eqItem(s,out[s]);if(it)for(const f of it.fills||[])if(f!==s)delete out[f];}
+  for(const s of Object.keys(EQ_ITEMS)){const it=eqItem(s,out[s]);if(it)for(const f of (it.replaces||[]).concat(it.hides||[]))delete out[f];}
+  return out;}
+// which item, if any, takes this slot away (for the equipment panel)
+function eqBlockedBy(o,slot){const n=eqNormalize(o);for(const s of Object.keys(EQ_ITEMS)){const it=eqItem(s,n[s]);if(it&&(it.fills||[]).includes(slot)&&s!==slot)return it;}return null;}
 // How an outfit's dye reaches each item: 'main' (chests, cloaks, hoods), 'second' (trousers), 'leather' (a part tint, so it
 // still reads as leather), 'trim' (metal keeps its colour, its trim takes the dye); items without a role keep their own colours.
 function eqDyes(item,dye){
@@ -214,9 +238,9 @@ function eqDyes(item,dye){
 /* ---------- 4. the bake: paint + layers into one texture per character ---------- */
 const EQ_CREASE=0.95;   // the template height where the legs part from the body
 function eqLayerUniforms(outfit){ // outfit: {slot: itemId, dye: [..]}
-  const Q=[];for(let i=0;i<48;i++)Q.push(new THREE.Vector4(0,0,0,0));   // (a bare Vector4 has w = 1, which would switch every layer on)
+  const Q=[];for(let i=0;i<66;i++)Q.push(new THREE.Vector4(0,0,0,0));   // (a bare Vector4 has w = 1, which would switch every layer on)
   EQ_LAYERS.forEach((slot,L)=>{const it=eqItem(slot,outfit[slot]);if(!it||!it.paint)return;const P=it.paint,dy=eqDyes(it,outfit.dye);
-    Q[L*6].set(EQ_KIND[P.kind],EQ_PATTERN[P.pattern||'plain'],P.trim||0,1);
+    Q[L*6].set(EQ_KIND[P.kind],EQ_PATTERN[P.pattern||'plain'],P.trim||0,(P.shape!=null?P.shape:EQ_LAYER_SHAPE[slot])+1);
     const a=(P.a||[]).concat([0,0,0,0]),b=(P.b||[]).concat([0,0,0,0]),tile=P.mat!==undefined?EQ_MAT[P.mat]:EQ_KIND_MAT[EQ_KIND[P.kind]];
     Q[L*6+1].set(a[0],a[1],a[2],a[3]);Q[L*6+2].set(b[0],b[1],b[2],tile);
     for(let k=0;k<3;k++){const c=new THREE.Color(dy[k]);Q[L*6+3+k].set(c.r,c.g,c.b,1);}});
@@ -261,7 +285,10 @@ const EqBake=(()=>{
   return {bake,material};
 })();
 // the body's material once baked: a plain textured, skinned, morphed material
-function bakedMaterial(tex){const m=new THREE.MeshLambertMaterial({map:tex,skinning:true,morphTargets:true,morphNormals:true});return m;}
+function bakedMaterial(tex){const m=new THREE.MeshLambertMaterial({map:tex,skinning:true,morphTargets:true,morphNormals:true});
+  // tuck: where cloth lies tight over the body, the body beneath draws in a little, so it never shows through as it moves
+  m.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float tuck;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed-=normal*tuck;');};return m;}
 
 /* ---------- 5. built armour: pieces cut from the body's own surface ---------- */
 // A point of a built piece is a blend of body points ([[index, weight], ...]): its position, skin weights and every
@@ -421,7 +448,8 @@ function eqMetal(spec,dy){const m=eqRGB(spec.metal||spec.leather||dy[0]).map(v=>
 const eqMetalShade=M=>(e,f,rim)=>rim?M.dark:M.main.map(v=>v*(0.82+0.24*eqSm(0,0.025,f[0]))*(0.95+0.05*eqNoise(e.p,40)));
 // the pieces
 const EQ_BUILD={
-  cuff(pc,D,item,dy,spec){pc.kind=eqMatOf(item,null,3);                       // boot tops, gauntlet cuffs, bracers
+  cuff(pc,D,item,dy,spec,ctx){if(spec.slot==='feet'&&ctx&&ctx.longDrape)return;   // under a long coat the boot top is painted only (WoW drops boot geosets under robes)
+    pc.kind=eqMatOf(item,null,3);                       // boot tops, gauntlet cuffs, bracers
     const main=eqRGB(dy[0]),trim=eqRGB(dy[2]),z=D.rest,P=item.paint;
     let fs,thick;
     if(spec.slot==='feet'){const top=P.a[0];
@@ -498,9 +526,11 @@ const EQ_BUILD={
     const hips=ctx.bone('hips'),tl=ctx.bone('thigh.L'),tr=ctx.bone('thigh.R');
     // the envelope: how far the body (and what's on it) reaches in each direction, at each height, all the way down
     const env=(th,y,band)=>{let r=0;const sx=Math.sin(th),sz=Math.cos(th);for(const i of body){if(Math.abs(P[i*3+1]-y)>band)continue;r=Math.max(r,(P[i*3]-cx)*sx+(P[i*3+2]-cz)*sz+oc[i]);}return r;};
+    // the top ring follows the waist itself (its radius in each direction, not the envelope), so the skirt starts snug under the belt
+    const waist=(th,y)=>{let r=0;const half=Math.PI/24*1.5;for(const i of body){if(Math.abs(P[i*3+1]-y)>0.014)continue;const x=P[i*3]-cx,z=P[i*3+2]-cz;let d=Math.atan2(x,z)-th;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<half)r=Math.max(r,Math.hypot(x,z)+Math.min(oc[i],0.012));}return r||env(th,y,0.02);};
     const Rr=[];
     for(let k=0;k<=K;k++){const t=k/K,y=yT+(yH-yT)*t;
-      let row=TH.map(th=>env(th,y,k?0.035:0.015)+(k?(spec.ease!=null?spec.ease:0.014)+0.018*t:0.012)+(spec.off||0));
+      let row=TH.map(th=>(k?env(th,y,0.035):waist(th,y))+(k?(spec.ease!=null?spec.ease:0.014)+0.018*t:0.012)+(spec.off||0));
       if(k)row=row.map((v,b)=>Math.max(v,Rr[k-1][b]));                                       // it never draws back in below the hips
       for(let pass=0;pass<4;pass++){const n=row.length;row=row.map((v,b)=>{const a=closed?row[(b+n-1)%n]:row[Math.max(0,b-1)],c=closed?row[(b+1)%n]:row[Math.min(n-1,b+1)];return Math.max(v,(a+2*v+c)/4);});}
       if(k)row=row.map(v=>v+(spec.flare||0.3)*0.02*t*t);
@@ -516,9 +546,38 @@ const EQ_BUILD={
       grid.push(ids);}
     eqDrapeFinish(pc,grid,(q)=>[q[0]-cx,0,q[2]-cz],closed);
     if(closed&&len>0.4&&D.hide)for(let i=0;i<D.n;i++){const z=D.rest[i*3+2];if(D.arm[i]<0.5&&z<0.93&&z>spec.hem+0.14)D.hide[i]=1;}   // a robe replaces the upper legs, as WoW's robe geoset does
-    for(let k=0;k<=K;k++)TH.forEach((th,b)=>{const i=eqNearPos(D,body,cx+Math.sin(th)*Rr[k][b],yT+(yH-yT)*k/K,cz+Math.cos(th)*Rr[k][b]);if(D.occ&&D.occ[i]<0.02)D.occ[i]=0.02;});
+    if(D.occ){   // the belt and anything later go over the skirt's top: every body point near it is marked as covered out to the skirt
+      const ringAt=th=>{let best=0,bd=9;TH.forEach((t2,b)=>{let d=Math.abs(Math.atan2(Math.sin(t2-th),Math.cos(t2-th)));if(d<bd){bd=d;best=b;}});return {r0:Rr[0][best],r1:Rr[Math.min(1,K)][best]};};
+      for(const i of body){const y=P[i*3+1];if(y<yT-(yT-yH)/K*1.2||y>yT+0.03)continue;const x=P[i*3]-cx,z=P[i*3+2]-cz,th=Math.atan2(x,z),R_=ringAt(th),f=Math.min(1,Math.max(0,(yT-y)/((yT-yH)/K)));
+        const need=(R_.r0*(1-f)+R_.r1*f)-Math.hypot(x,z)+0.004;if(need>D.occ[i])D.occ[i]=need;}}
   },
-  buttons(pc,D,item,dy){pc.kind=12;const brass=eqRGB(dy[2]);for(let z=0.98;z<1.44;z+=0.055)eqStud(pc,D,eqNear(D,0,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.012,0.006,brass);},
+  // a draped garment: cloth hung on this body in Blender (tools/blender/drape.py), frozen. Its points carry their own skin; the
+  // body's people and build shapes reach it from the body points nearest each one, and its folds carry a baked cavity shade.
+  drape(pc,D,item,dy,spec,ctx){const G=(typeof EQ_DRAPES!=='undefined'&&EQ_DRAPES[ctx.sex||'m']||{})[spec.asset];if(!G)return;
+    pc.kind=spec.kind!=null?spec.kind:eqMatOf(item,spec,item.paint?(item.paint.mat!==undefined?EQ_MAT[item.paint.mat]:EQ_KIND_MAT[EQ_KIND[item.paint.kind]]):1);
+    const main=eqRGB(dy[spec.colour||0]),trim=eqRGB(dy[spec.trim!=null?spec.trim:2]),P=D.pos,body=[],bi=G.bones.map(b=>ctx.bone(b)),base=pc.P.length/3;
+    for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]<G.top+0.1&&D.rest[i*3+2]>0.05)body.push(i);
+    const n=G.pos.length/3,hemZ=G.hemY+0.025;
+    for(let v=0;v<n;v++){const x=G.pos[v*3],y=G.pos[v*3+1],z=G.pos[v*3+2];
+      const near=[];for(const i of body){const d=(P[i*3]-x)**2+(P[i*3+1]-y)**2+(P[i*3+2]-z)**2;if(near.length<4||d<near[3][1]){near.push([i,d]);near.sort((a,b)=>a[1]-b[1]);if(near.length>4)near.pop();}}
+      const ws=near.map(([i,d])=>[i,1/(Math.sqrt(d)+0.01)]),sw=ws.reduce((a,b)=>a+b[1],0),e=eqEval(D,ws.map(([i,w])=>[i,w/sw]));
+      const b0=e.p;e.r=[e.r[0]+(x-b0[0]),e.r[1]-(z-b0[2]),e.r[2]+(y-b0[1])];e.p=[x,y,z];e.n=[G.nrm[v*3],G.nrm[v*3+1],G.nrm[v*3+2]];
+      // where the cloth lies on the body it moves exactly as the body does; where it hangs free, by the drape's own blend
+      const free=Math.max(eqSm(0.012,0.05,Math.sqrt(near[0][1])),eqSm(0.1,0.2,G.topY-y)),own=new Map(G.skin[v].map((w,k)=>[bi[k],w]).filter(b=>b[1]>0));e.bones=eqMixBones(e.bones,own,free);
+      const sh=G.shade[v],col=(y<hemZ&&spec.trim!=null?trim:main).map(c=>c*sh*(y<hemZ?0.85:1));eqVert(pc,e,0,col);}
+    for(const i of G.idx)pc.I.push(base+i);
+    if(D.occ){const near=new Float32Array(D.n).fill(9);   // the belt, what hangs from it, and anything later go over the cloth
+      for(let v=0;v<n;v++){const y=G.pos[v*3+1];
+        for(const i of body){const d=Math.hypot(P[i*3]-G.pos[v*3],P[i*3+1]-y,P[i*3+2]-G.pos[v*3+2]);if(d<near[i])near[i]=d;}}
+      for(const i of body)if(near[i]<0.08&&near[i]+0.004>D.occ[i])D.occ[i]=near[i]+0.004;}   // all the way down: what hangs from the belt hangs outside the coat
+    if(D.tuck)for(let v=0;v<n;v++){const x=G.pos[v*3],y=G.pos[v*3+1],z=G.pos[v*3+2];
+      const leg=y<G.topY-0.12;   // on the legs (hidden but for the slit) the tuck is deeper and reaches further
+      for(const i of body){const d=Math.hypot(P[i*3]-x,P[i*3+1]-y,P[i*3+2]-z);
+        if(leg?d<0.08:d<0.03)D.tuck[i]=Math.max(D.tuck[i],leg?0.028*(1-eqSm(0.05,0.08,d)):0.012*(1-eqSm(0.02,0.03,d)));}}
+    if(spec.hideLegs&&D.hide)for(let i=0;i<D.n;i++){const z=D.rest[i*3+2];if(D.arm[i]<0.5&&z<0.93&&z>G.hem+0.14)D.hide[i]=1;}
+  },
+  buttons(pc,D,item,dy,spec){pc.kind=12;const brass=eqRGB(dy[2]),xs=(spec&&spec.xs)||[0],z1=(spec&&spec.z1)||1.44;   // xs: columns (two for double-breasted)
+    for(const x of xs)for(let z=(spec&&spec.z0)||0.98;z<z1;z+=0.055)eqStud(pc,D,eqNear(D,x,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.012,0.006,brass);},
   furcollar(pc,D,item,dy){pc.kind=6;const fur=eqRGB('#7a6248');
     eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,ax=Math.abs(r[i*3]),z_=r[i*3+2];if(D.arm[i]>0.5||z_>1.535)return -1;
       return Math.min(z_-1.43-0.02*eqSmooth([D.pos[i*3],D.pos[i*3+1],D.pos[i*3+2]],50),0.17-ax);})],
@@ -646,10 +705,21 @@ const EQ_BUILD={
     eqBlock(pc,D,rec,0.075,0.085,0.04,0.006,main,1.05); eqBlock(pc,D,rec,0.079,0.04,0.006,0.046,main,0.85);},
   laces(pc,D,item,dy){pc.kind=0;const open=item.paint.b[0],lace=eqRGB(dy[1]);
     for(let z=1.06;z<1.4;z+=0.045){const rec=eqNear(D,0,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0);eqBlock(pc,D,rec,open*2*(0.4+0.6*eqSm(1.0,1.42,z))+0.012,0.005,0.004,0.003,lace,1);}},
-  collar(pc,D,item,dy,spec){pc.kind=eqMatOf(item,spec,item.paint?EQ_KIND_MAT[EQ_KIND[item.paint.kind]]:0);const z=D.rest,main=eqRGB(dy[spec.colour||0]);
-    // a ring round the neck, from its base up, standing a little off it
-    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>D.arm[i]<0.5&&Math.abs(z[i*3])<0.1?Math.min(z[i*3+2]-1.488,1.527-z[i*3+2]):-1)],
-      e=>0.005+0.009*eqSm(1.49,1.527,e.r[2]),(e,f,rim)=>main.map(v=>v*(rim?0.75:0.95)));},
+  // a collar: a smooth band round the neck (rings measured from the neck itself), standing a little off it at the top, with
+  // a thickness at its upper edge; skinned as the neck beneath it bends
+  collar(pc,D,item,dy,spec){pc.kind=eqMatOf(item,spec,item.paint?EQ_KIND_MAT[EQ_KIND[item.paint.kind]]:0);const main=eqRGB(dy[spec.colour||0]),P=D.pos,R_=D.rest;
+    const z0=1.49,z1=spec.high?1.56:1.53,M=20,neck=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&Math.abs(R_[i*3])<0.13&&R_[i*3+2]>z0-0.03&&R_[i*3+2]<z1+0.03)neck.push(i);
+    const yAt=zt=>{const ys=neck.filter(i=>Math.abs(R_[i*3+2]-zt)<0.012).map(i=>P[i*3+1]).sort((a,b)=>a-b);return ys.length?ys[ys.length>>1]:null;};
+    const rows=[[z0,0.005,1],[ (z0+z1)/2,0.008,1],[z1,0.012,1],[z1,0.004,0.7]],grid=[];
+    for(const [zt,off,sh] of rows){const y=yAt(zt);if(y==null)continue;const band=neck.filter(i=>Math.abs(P[i*3+1]-y)<0.012);if(band.length<4)continue;
+      const cx=band.reduce((a,i)=>a+P[i*3],0)/band.length,cz=band.reduce((a,i)=>a+P[i*3+2],0)/band.length,ids=[];
+      for(let m=0;m<M;m++){const th=m/M*Math.PI*2;let r=0;for(const i of band){const x=P[i*3]-cx,z=P[i*3+2]-cz;let d=Math.atan2(x,z)-th;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<Math.PI/M*1.6)r=Math.max(r,Math.hypot(x,z));}
+        r+=off+Math.min(0.02,...band.map(i=>D.occ?D.occ[i]:0));const x=cx+Math.sin(th)*r,z=cz+Math.cos(th)*r;
+        const near=band.map(i=>[i,(P[i*3]-x)**2+(P[i*3+2]-z)**2]).sort((a,b)=>a[1]-b[1]).slice(0,6),ws=near.map(([i,d])=>[i,1/(Math.sqrt(d)+0.01)]),sw=ws.reduce((a,b)=>a+b[1],0);
+        const e=eqEval(D,ws.map(([i,w])=>[i,w/sw]));e.p=[x,y,z];e.n=[Math.sin(th),0,Math.cos(th)];e.r=[Math.sin(th)*0.1,-Math.cos(th)*0.1,zt];
+        ids.push(eqVert(pc,e,0,main.map(v=>v*sh*(0.95+0.05*Math.cos(th*5)))));}
+      grid.push(ids);}
+    if(grid.length>1)eqDrapeFinish(pc,grid,(q)=>[q[0],0,q[2]],true);},
   // pauldrons: stacked lames down the shoulder, each lighter at its crown and darker at its rim, with rivets along the lower
   // rims, an optional raised guard by the neck and an optional roll of fur over the top
   pauldron(pc,D,item,dy,spec){pc.kind=spec.metal?12:eqMatOf(item,spec,3);const metal=spec.metal,main=eqRGB(dy[0]),dark=eqRGB(dy[1]),trim=eqRGB(dy[2]),k=spec.size||1,N=spec.lames||2,r=D.rest;
@@ -744,16 +814,17 @@ const EQ_BUILD={
     for(const sx of [-1,1])eqBlock(pc0,D,eqNear(D,0.15*sx,-0.2,1.43,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.022,0.022,0.008,0.006,eqRGB(dy[2]),1.2);},
 };
 // a character's whole set of built pieces, merged into one skinned mesh on the body's skeleton
-function eqBuiltMesh(body,outfit,src,maxBuilt){
+function eqBuiltMesh(body,outfit,src,maxBuilt,sex){
   const D=eqBodyData(src||body),pc=eqPiece(),bones=body.skeleton.bones,san=n=>n.replace(/[\s\.\[\]:\/]/g,''),drapes=[];
-  const ctx={bone:n=>Math.max(0,bones.findIndex(b=>san(b.name)===san(n))),
+  const ctx={sex,bone:n=>Math.max(0,bones.findIndex(b=>san(b.name)===san(n))),
     drapePiece:()=>{const d=eqPiece();drapes.push({pc:d});return d;},
     drapeGrid:(d,grid,closed,pinRows,reach,flat)=>{const e=drapes.find(x=>x.pc===d);e.grid=grid;e.closed=closed;e.pinRows=pinRows;e.reach=reach==null?1:reach;e.flat=!!flat;}};
-  { const ch=eqItem('chest',outfit.chest),sh=eqItem('shirt',outfit.shirt),low=it=>it&&(it.built||[]).some(sp=>sp.type==='skirt');
-    ctx.underSkirt=low(ch)||low(sh);
+  { const ch=eqItem('chest',outfit.chest),sh=eqItem('shirt',outfit.shirt),co=eqItem('coat',outfit.coat),low=it=>it&&(it.built||[]).some(sp=>sp.type==='skirt');
+    ctx.underSkirt=low(ch)||low(sh)||low(co)||[ch,sh,co].some(it=>it&&(it.built||[]).some(sp=>sp.type==='drape'));
     ctx.legPad=Math.max(...['legs','waist'].map(sl=>(eqItem(sl,outfit[sl])||{}).legPad||0));   // armour on the legs: skirts and cloth make room
-    ctx.torsoPad=0; }   // a breastplate: belts, buckles and cloaks sit over it
-  D.occ=new Float32Array(D.n); D.hide=new Uint8Array(D.n);
+    ctx.torsoPad=0;
+    ctx.longDrape=[ch,sh,co].some(it=>it&&(it.built||[]).some(sp=>sp.type==='drape'&&typeof EQ_DRAPES!=='undefined'&&((EQ_DRAPES.m||{})[sp.asset]||{}).hem<0.45)); }   // a breastplate: belts, buckles and cloaks sit over it
+  D.occ=new Float32Array(D.n); D.hide=new Uint8Array(D.n); D.tuck=new Float32Array(D.n);
   let slots=EQ_BUILT_PRIORITY.filter(sl=>sl==='signature'?outfit.signature:(eqItem(sl,outfit[sl])||{}).built);
   if(maxBuilt!=null)slots=slots.slice(0,maxBuilt);
   slots.sort((a,b)=>EQ_LAYER_ORDER.indexOf(a)-EQ_LAYER_ORDER.indexOf(b));   // inside out
@@ -763,11 +834,11 @@ function eqBuiltMesh(body,outfit,src,maxBuilt){
     for(const spec of it.built)EQ_BUILD[spec.type](pc,D,it,dy,spec,ctx);
     if(slot==='waist'&&it.sockets)for(const sk of it.sockets)EQ_BUILD.attach(pc,D,it,null,{socket:sk,what:(outfit.belt||{})[sk]||null},ctx);}
   // what the legs wear, measured from the layering: the cloth's leg capsules grow to match, so cloth clears boots and greaves too
-  const pad={thigh:0,shin:0,foot:outfit.feet?0.018:0};
+  const pad={thigh:0,shin:0,foot:outfit.feet||outfit.shoes?0.018:0};
   for(let i=0;i<D.n;i++){if(D.arm[i]>0.5)continue;const z=D.rest[i*3+2],o=D.occ[i];if(z<0.12)pad.foot=Math.max(pad.foot,o);else if(z<0.5)pad.shin=Math.max(pad.shin,o);else if(z<0.9)pad.thigh=Math.max(pad.thigh,o);}
   const cloth=drapes.filter(d=>d.grid).map(d=>{const m=eqClothMesh(body,D,d);m.userData.cloth.pad=pad;return m;});
-  const hide=D.hide; D.occ=null; D.hide=null;
-  if(!pc.I.length)return {mesh:null,cloth,hide};
+  const hide=D.hide,tuck=D.tuck; D.occ=null; D.hide=null; D.tuck=null;
+  if(!pc.I.length)return {mesh:null,cloth,hide,tuck};
   const n=pc.P.length/3,g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(pc.P,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(pc.N,3));
   g.setAttribute('color',new THREE.Float32BufferAttribute(pc.C,3));
@@ -780,7 +851,7 @@ function eqBuiltMesh(body,outfit,src,maxBuilt){
   const m=new THREE.SkinnedMesh(g,eqOutfitMaterial());
   m.name='Outfit'; m.frustumCulled=false; m.castShadow=true; m.bind(body.skeleton,body.bindMatrix);
   m.morphTargetInfluences=body.morphTargetInfluences;   // the body's people and build shapes drive the outfit too
-  return {mesh:m,cloth,hide};
+  return {mesh:m,cloth,hide,tuck};
 }
 /* ---------- cloth: skirts, cloaks and aprons, stepped each frame ---------- */
 // Each drape is a small grid of points (a few hundred). Every frame each point is pulled toward where it would hang (skinned
@@ -896,10 +967,12 @@ function eqClothUpdate(root,dt){
 }
 // Remove the body under built pieces (hide: per point of the light body the pieces were built on). The figure gets its own
 // view of the body: the same points, shapes and skin, a shorter triangle list.
-function eqHideBody(rig,hide){
+function eqHideBody(rig,hide,tuck){
   const body=rig.body, g0=rig.bodyGeo0||(rig.bodyGeo0=body.geometry);
   if(body.geometry!==g0){body.geometry.dispose();body.geometry=g0;}
-  if(!hide||!hide.some(v=>v))return;
+  const hasT=tuck&&tuck.some(v=>v>0);
+  if(!hasT&&g0.attributes.tuck)g0.attributes.tuck.array.fill(0),g0.attributes.tuck.needsUpdate=true;
+  if(!hasT&&(!hide||!hide.some(v=>v)))return;
   const src=rig.lightSrc||body, L=eqBodyData(src);
   let map=g0.userData.toLight;                                // each body point's nearest point on the light body, by template place
   if(!map||map.src!==L){const R0=g0.attributes.rest.array,n=g0.attributes.rest.count;map=new Int32Array(n);
@@ -907,6 +980,9 @@ function eqHideBody(rig,hide){
     else for(let i=0;i<n;i++){let b=0,bd=1e9;const x=R0[i*3],y=R0[i*3+1],z=R0[i*3+2];
       for(let j=0;j<L.n;j++){const dx=L.rest[j*3]-x,dy=L.rest[j*3+1]-y,dz=L.rest[j*3+2]-z,d=dx*dx+dy*dy+dz*dz;if(d<bd){bd=d;b=j;}}map[i]=b;}
     map.src=L;g0.userData.toLight=map;}
+  if(hasT){const n=map.length;if(!g0.attributes.tuck)g0.setAttribute('tuck',new THREE.BufferAttribute(new Float32Array(n),1));
+    const ta=g0.attributes.tuck.array;for(let i=0;i<n;i++)ta[i]=tuck[map[i]];g0.attributes.tuck.needsUpdate=true;}
+  if(!hide||!hide.some(v=>v))return;
   const I0=g0.index.array,keep=[];
   for(let t=0;t<I0.length;t+=3)if(!(hide[map[I0[t]]]&&hide[map[I0[t+1]]]&&hide[map[I0[t+2]]]))keep.push(I0[t],I0[t+1],I0[t+2]);
   const g=new THREE.BufferGeometry();for(const k in g0.attributes)g.setAttribute(k,g0.attributes[k]);
@@ -977,18 +1053,18 @@ float gearTile(float tile,vec2 uv){vec2 o=vec2(mod(tile,4.),floor(tile/4.)),f=fr
     else if(pat>1.5&&pat<2.5){float u=step(0.38,abs(fract(s.x/0.05)-0.5)),v=step(0.38,abs(fract(s.y/0.05)-0.5));g*=1.-0.22*max(u,v)-0.1*u*v;}   // check
     else if(pat>3.5){float q=abs(fract((s.x+s.y)/0.06)-0.5),r=abs(fract((s.x-s.y)/0.06)-0.5);g*=1.-0.22*(1.-smoothstep(0.03,0.05,min(q,r)));}   // quilted
     if(tile>5.5&&tile<6.5) g*=0.75+0.5*on(vec2(a.x*60.+on(a*vec2(6.,12.))*3.,a.y*8.));                   // fur: strands running down
-    diffuseColor.rgb*=g; }`)
-      .replace('#include <specularmap_fragment>','#include <specularmap_fragment>\n  { float tile=mod(floor(vK+0.5),16.); specularStrength=(tile>11.5&&tile<14.5)?1.3:(tile>5.5&&tile<6.5)?0.12:(tile>7.5&&tile<8.5)?0.9:0.45; }');
+    diffuseColor.rgb*=g; if(!gl_FrontFacing)diffuseColor.rgb*=0.45; }`)
+      .replace('#include <specularmap_fragment>','#include <specularmap_fragment>\n  { float tile=mod(floor(vK+0.5),16.); specularStrength=(tile>11.5&&tile<14.5)?1.3:(tile>5.5&&tile<6.5)?0.12:(tile>7.5&&tile<8.5)?0.9:(tile>2.5&&tile<5.5)?0.45:0.14; }');
   };
   m.customProgramCacheKey=()=>cloth?'eq-cloth':'eq-outfit'; return m;
 }
 // dress a figure: bake its paint and painted armour, and build its built armour
 // rig.lightSrc (optional): the distance body's mesh; built pieces are cut from it, so they stay light.
 // opts: size (the baked texture, default 1024), maxBuilt (how many slots may have built pieces, in EQ_BUILT_PRIORITY order)
-const EQ_LAYER_ORDER=['feet','legs','hands','wrists','chest','waist','shoulders','back','head','signature'];
-const EQ_BUILT_PRIORITY=['chest','back','head','waist','feet','legs','shoulders','hands','wrists','signature'];
+const EQ_LAYER_ORDER=['shoes','feet','legs','hands','wrists','chest','coat','waist','shoulders','back','head','signature'];
+const EQ_BUILT_PRIORITY=['coat','chest','back','head','waist','feet','shoes','legs','shoulders','hands','wrists','signature'];
 function dressOutfit(root,look,outfit,renderer,bakeOnly,opts){
-  opts=opts||{};
+  opts=opts||{}; outfit=eqNormalize(outfit);
   const rig=root.userData.rig; if(!rig||!rig.body.geometry.attributes.uv)return;   // bodies without a texture layout keep live paint
   if(!EQ_GEAR.image)EQ_GEAR_WAIT.push(()=>dressOutfit(root,look,outfit,renderer,true,opts));
   const body=rig.body, tex=EqBake.bake(renderer,body,look,outfit,opts.size||1024);
@@ -996,8 +1072,8 @@ function dressOutfit(root,look,outfit,renderer,bakeOnly,opts){
   if(bakeOnly)return;
   if(rig.outfit){rig.outfit.parent.remove(rig.outfit);rig.outfit.geometry.dispose();rig.outfit=null;}
   for(const c of rig.cloth||[]){c.parent.remove(c);c.geometry.dispose();} rig.cloth=[]; rig.clothSim=opts.cloth!==false;
-  const built=eqBuiltMesh(body,outfit,rig.lightSrc,opts.maxBuilt);
-  eqHideBody(rig,built&&built.hide);
+  const built=eqBuiltMesh(body,outfit,rig.lightSrc,opts.maxBuilt,look&&(look.sex||(look.fem?"f":"m")));
+  eqHideBody(rig,built&&built.hide,built&&built.tuck);
   if(built){if(built.mesh){body.parent.add(built.mesh);rig.outfit=built.mesh;} for(const c of built.cloth){root.add(c);rig.cloth.push(c);}}
   eqClothUpdate(root,0);
   // hat hair: reshape the hairstyle to the headgear (beards and moustaches stay as they are)
