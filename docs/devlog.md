@@ -4,6 +4,20 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 57 · Skirts, aprons and hoods, the WoW way
+
+*Characters · 24 November 2026*
+
+Your notes: the skirts, flaps and aprons were badly made, the smith's apron was never fixed, and to study how WoW does headgear.
+
+**Skirts and robes.** The cloth simulation was the problem: on so few points it crumpled hems and flared short pieces into tutus. WoW uses no physics here. A robe is a modelled shape skinned partly to the hips and partly to each thigh, its front-left following the left leg and so on. Ours now work the same way, smooth all round, so the legs move them rather than pass through them, and the hem stays a clean line.
+
+**Tunics.** The built flaps under tunics are gone. WoW paints a tunic's skirt down each upper leg, and so do we now: a panel on each thigh, open at the inner thigh, so nothing stretches across the groin.
+
+**The smith's apron.** The bib lies on the chest and falls straight from the bust or chest, bending as the body beneath does. A neck strap and a waist tie hold it, and below the belt a leather panel follows the legs.
+
+**Headgear.** WoW's helmets and hoods are rigid on the head bone, hide all the hair beneath them (crown-like pieces excepted), and hoods are deep cowls with a dark lining. Ours now do the same. The hood's rim stands proud of the face, the face opening is one smooth curve, and a rolled edge joins it to the lining.
+
 ## Devlog 56 · Hoods that look like hoods
 
 *Characters · 24 November 2026*
