@@ -61,8 +61,8 @@ const NPC_GREETING={Hrimfolk:'Hail.',Aurelan:'Good day.',Ilvari:'Well met.',Ferr
 // each slot: [[item id or null, weight], ...]; wealth, wear, dirt: [low, high]; mats: material choices for the chest by wealth
 const NPC_TRADES={
   watch:{name:'City watch',wealth:[0.4,0.6],wear:[0.1,0.4],dirt:[0,0.2],temper:['stern','proud','weary','gruff'],dye:'watch',
-    gear:{shirt:[['linen_shirt',1]],chest:[['mail',3],['brigandine',2]],legs:[['breeches',2],['trousers',1]],feet:[['boots',1]],wrists:[['bracers',1]],
-      hands:[['gauntlets',2],['gloves',1]],waist:[['belt',1]],shoulders:[['plates',2],['spaulders',2],['pads',1]],back:[['cloak',2],[null,1]]},
+    gear:{shirt:[['linen_shirt',1]],chest:[['mail',3],['brigandine',2],['cuirass',2]],legs:[['breeches',2],['trousers',1],['platelegs',1]],feet:[['boots',1]],wrists:[['bracers',2],['vambraces',1]],
+      hands:[['gauntlets',2],['gloves',1],['plategauntlets',1]],waist:[['belt',2],['warbelt',1]],shoulders:[['plates',2],['spaulders',2],['pads',1]],back:[['cloak',2],[null,1]],head:[['kettlehelm',2],['nasalhelm',2],[null,2]]},
     belt:{hipR:[['pouch',1],[null,1]]},signature:[[null,4],['scarf',1]],lines:['The gates close at dusk.','Keep your blade sheathed inside the walls.']},
   smith:{name:'Smith',wealth:[0.35,0.6],wear:[0.3,0.6],dirt:[0.3,0.6],temper:['gruff','cheerful','stern'],
     gear:{shirt:[['linen_shirt',1],['tunic',1]],chest:[['apron',3],['jerkin',1]],legs:[['breeches',2],['trousers',1]],feet:[['boots',1]],hands:[['gauntlets',1],['gloves',1]],waist:[['toolbelt',2],['belt',1]]},
@@ -95,7 +95,7 @@ const NPC_TRADES={
     gear:{shirt:[['tunic',2],['linen_shirt',1]],chest:[['robe',1],[null,2]],legs:[['trousers',1]],feet:[[null,2],['shoes',1]],waist:[['sash',1],[null,1]]},
     belt:{},signature:[['stick',2],[null,1]],mats:{shirt:['hessian'],chest:['hessian']},lines:['Spare a coin?','I saw the Fog take a man once.']},
   hunter:{name:'Hunter',wealth:[0.25,0.5],wear:[0.3,0.6],dirt:[0.2,0.5],temper:['stern','curious','gruff'],
-    gear:{shirt:[['linen_shirt',1],['tunic',1]],chest:[['brigandine',1],['jerkin',2]],legs:[['breeches',2],['plaid',1]],feet:[['boots',1]],wrists:[['bracers',1],[null,1]],
+    gear:{shirt:[['linen_shirt',1],['tunic',1]],chest:[['brigandine',1],['jerkin',2]],legs:[['breeches',2],['plaid',1],['leathergreaves',2]],feet:[['boots',1]],wrists:[['bracers',1],[null,1]],
       hands:[['gloves',1]],waist:[['belt',1]],head:[['hood',1],[null,2]],back:[['cloak',2],[null,1]],shoulders:[['mantle',1],[null,3]]},
     belt:{hipL:[['flask',1]],hipR:[['pouch',1]]},signature:[[null,3],['scarf',1]],lines:['Wolves have been bold this season.','Stay off the old woods after dark.']}};
 
@@ -105,7 +105,7 @@ const NPC_STYLE={
   Aurelan:{swap:{gambeson:['doublet',0.5],longcoat:['doublet',0.3]},palettes:[['#2e4a6a','#c9a046','#c9a046'],['#6a2a2a','#d8c49a','#c9a046'],['#3e5a3a','#c8b48a','#b0904a']]},
   Hrimfolk:{swap:{jerkin:['furjerkin',0.7],brigandine:['furjerkin',0.3]},add:{shoulders:[['mantle',0.35]]},palettes:[['#4a5a6a','#8a8a86','#b8bcc0'],['#5a4a3a','#3a3026','#8a7458'],['#2a3a4a','#6a7a8a','#c9a046']]},
   Ilvari:{swap:{longcoat:['ilvaricoat',0.8],robe:['ilvaricoat',0.4],doublet:['ilvaricoat',0.5]},palettes:[['#2a3040','#1a2030','#3a6ad0'],['#3a4a5a','#2a3040','#5a8ae0'],['#d8d8e0','#8a8aa0','#3a6ad0']]},
-  Ferrin:{swap:{jerkin:['apron',0.4]},palettes:[['#5a2e24','#3a2618','#c9a046'],['#4a3a2a','#2a201a','#b0904a'],['#3a3a3a','#5a3a26','#c9a046']]},
+  Ferrin:{swap:{jerkin:['apron',0.4],kettlehelm:['gogglehelm',0.7],nasalhelm:['gogglehelm',0.7]},add:{head:[['gogglehelm',0.25]]},palettes:[['#5a2e24','#3a2618','#c9a046'],['#4a3a2a','#2a201a','#b0904a'],['#3a3a3a','#5a3a26','#c9a046']]},
   Zarhim:{swap:{jerkin:['wraps',0.5],gambeson:['wraps',0.5]},add:{chest:[['wraps',0.65]],head:[['headwrap',0.6]]},palettes:[['#d8c8a8','#a8783a','#7a5426'],['#c87a3a','#e8d8b8','#7a3a1a'],['#e8e0d0','#4a6a8a','#a8783a']]},
   Ruadhan:{swap:{trousers:['plaid',0.6],cloak:['wovencloak',0.7]},palettes:[['#3e5a3a','#8a3a26','#c9a046'],['#8a3a26','#3e5a3a','#c9a046'],['#4a4a6a','#8a6a3a','#b0904a']]},
   Wayfolk:{palettes:[['#6a5a48','#a8844e','#4a3e30'],['#5a6a4a','#8a7a5a','#3a3026'],['#7a4a3a','#c8b48a','#4a3020'],['#4a5a6a','#a89c86','#3a3a3a']]}};
@@ -143,7 +143,7 @@ function npcDescribe(p){const T=NPC_TRADES[p.trade];return {name:p.name,what:(p.
   line:p.greeting+' '+p.line};}
 
 /* ---------- on the bodies ---------- */
-const NPC_TIERS={hero:{size:1024,maxBuilt:null},townsfolk:{size:512,maxBuilt:4},crowd:{size:256,maxBuilt:2,cloth:false}};
+const NPC_TIERS={hero:{size:1024,maxBuilt:null},townsfolk:{size:512,maxBuilt:6},crowd:{size:256,maxBuilt:2,cloth:false}};
 // bodies: {m, f, ml, fl} loaded glTFs (preparePainted already run); returns the figure, with userData.mixer
 function npcSpawn(bodies,p,renderer,tier){
   const g=bodies[p.sex], P=PEOPLE[p.people], R_=p.sex==='f'?P.f:P.m, fig=THREE.SkeletonUtils.clone(g.scene);

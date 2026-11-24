@@ -47,7 +47,7 @@ button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 'use strict';
 const st={trade:null,people:null,tier:'townsfolk',seed:(Math.random()*1e9)|0,sel:null};
 const TIER_NOTE={hero:'Hero: a 1,024 px texture and every built piece, for players and named characters.',
-  townsfolk:'Townsfolk: a 512 px texture and up to four built pieces.',crowd:'Crowd: a 256 px texture and up to two built pieces, for passers-by.'};
+  townsfolk:'Townsfolk: a 512 px texture and up to six built pieces.',crowd:'Crowd: a 256 px texture and up to two built pieces, for passers-by.'};
 const cv=document.getElementById('stage'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio));R.shadowMap.enabled=true;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#1d1c22');const cam=new THREE.PerspectiveCamera(32,1,0.05,100);
 scene.add(new THREE.HemisphereLight(0xe6ecff,0x3a3028,0.75));const sun=new THREE.DirectionalLight(0xfff2dc,0.8);sun.position.set(3,6,5);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
