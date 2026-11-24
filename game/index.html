@@ -1881,6 +1881,30 @@ function kLongship(name,L,wheels){ // a Hrimfolk longship with an engine: iron-b
     k.box(L*0.6,hw*1.6,0.1,0,0,1.75,'planks:#6a5440');for(let i=0;i<4;i++)k.cyl(0.4,0.4,0.9,8,-L*0.3+i*0.9,hw*0.4,1.8,'planks:#6a4a2e');});
   k.finish(name,L+1.5,hw*2+1.2);
 }
+// ---- The Ferrin Quarter pilot, step 2: a grey-box. Plain massing for each building type, placed by the quarter's own rules,
+// for judging layout and proportion before the Blender kit replaces it. Squat two storeys throughout; stacks above the roofs.
+const FERRIN_GB=true;
+function kFerrinGB(){
+  const G='#9a9894',R='#6c6a68',D='#2a2a2c',S='#5e5c5a';
+  const house=(name,W,Dp,h1,h2,bay,stack)=>{const k=new KitB(),y=-Dp/2;
+    k.box(W,Dp,h1+h2,0,0,(h1+h2)/2,G);k.box(W+0.3,Dp+0.3,0.35,0,0,h1,S);                       // two squat storeys, a string course between
+    k.box(W+0.4,Dp+0.4,0.9,0,0,h1+h2+0.45,S);k.box(W-0.6,Dp-0.6,0.6,0,0,h1+h2+0.4,R);            // a parapet round a low roof
+    if(bay)k.box(bay,0.3,h1-0.6,0,y-0.02,(h1-0.6)/2,D);else{k.box(1.3,0.3,2.4,W/2-1.6,y-0.02,1.2,D);if(name==='FGB_Shop')k.box(3.2,0.3,1.6,-0.9,y-0.02,1.8,D);}   // the forge bay, or a door (and a shop window)
+    for(let x=-W/2+1.5;x<W/2-1;x+=2.4)k.box(0.9,0.3,1.1,x,y-0.02,h1+h2/2,D);                       // small deep windows upstairs
+    if(stack)k.box(1.6,1.6,stack,W/2-1.3,Dp/2-1.3,stack/2,S);k.finish(name,W,Dp);};
+  house('FGB_Forge',9,11,4.2,3.0,4.2,11.5);      // the forge-house: a workshop open to the street, rooms above, a stack at the back
+  house('FGB_Forge2',10,12,4.4,3.0,5,12.5);
+  house('FGB_Shop',7,10,3.6,3.0,0,0);            // a gunsmith's or armourer's: a shop window, no forge
+  house('FGB_Narrow',5.5,10,3.6,3.0,0,9);
+  {const k=new KitB(),W=12,Dp=12;k.box(W,Dp,6.5,0,0,3.25,G);k.box(W+0.4,Dp+0.4,0.6,0,0,6.8,S);k.box(5,0.3,5,0,-Dp/2-0.02,2.5,D);   // the smelter: one tall storey, a hopper, a big stack
+    k.box(3.5,3.5,3,-W/2+2.4,Dp/2-2.4,8,R);k.box(2.2,2.2,14,W/2-1.8,Dp/2-1.8,7,S);k.finish('FGB_Smelter',W,Dp);}
+  {const k=new KitB();k.box(5,5,3,0,0,1.5,G);k.box(5.6,5.6,0.5,0,0,3.25,S);k.box(1.6,0.3,2.4,0,-2.52,1.2,D);k.box(1,1,1.2,0,0,4.1,'#c86428');k.finish('FGB_Shrine',5.6,5.6);}   // Ostrak's shrine: a basalt cell, a brazier that never goes out
+  {const k=new KitB();k.box(4,3,0.15,0,0,0.07,S);k.box(1.6,1.4,1.1,-0.8,0.4,0.55,G);k.box(0.7,0.7,0.8,0.9,-0.6,0.4,D);k.box(1.2,0.6,0.6,0.9,0.7,0.3,'#4a5a66');k.box(0.6,0.6,3.8,-0.8,1.0,1.9,S);k.finish('FGB_YardForge',4,3);}   // an open-air forge: hearth, anvil, quench tub, a short stack
+  {const k=new KitB();k._add(new THREE.ConeGeometry(2.4,1.6,7).toNonIndexed().rotateX(PI/2),k.M(0,0,0.8),'#3a3836');k.finish('FGB_Slag',4.8,4.8);}   // a slag heap
+  {const k=new KitB();k.box(3.2,2.2,1.2,0,0,0.6,'#252526');k.box(3.4,0.2,1.4,0,1.15,0.7,S);k.box(0.2,2.4,1.4,-1.7,0,0.7,S);k.box(0.2,2.4,1.4,1.7,0,0.7,S);k.finish('FGB_Coal',3.6,2.6);}   // a coal bunker
+}
+function ferrinPick(rnd,nearSquare){const u=rnd();if(nearSquare&&u<0.5)return 'FGB_Shop';return u<0.42?'FGB_Forge':u<0.62?'FGB_Forge2':u<0.75?'FGB_Shop':u<0.85?'FGB_Smelter':'FGB_Narrow';}
+const FGB_FILL=['FGB_Shop','FGB_Narrow'];
 function kGreenKit(){ // what the green wards plant
   const ico=(k,r,x,y,z,col,sy)=>k._add(new THREE.IcosahedronGeometry(r,0).toNonIndexed().scale(1,1,sy||1),k.M(x,y,z),col);
   let k=new KitB();k.cyl(0.16,0.22,1.2,6,0,0,0,'bark:#5a4030');                                                 // the Temple's cypress: a dark green flame
@@ -2111,7 +2135,7 @@ function dressHub(k,name){
 (function buildKit(){const _t0=performance.now();
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
-  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); (()=>{const k=new KitB();k.box(1,1,1,0,0,-0.5,'stone:#8f877b');k.finish('Plinth',1,1);})(); kWardKit(); kYardKit(); kGreenKit(); kQuay(); kWaterGate(); kPier(); kBoat(); kHarpoon(); for(let i=0;i<4;i++)kYardForge('YardForge'+i,i+1); kTerrace('Terrace',false); kTerrace('TerraceStair',true); kLongship('Longship',22,true); kLongship('LongshipS',17,false); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); GEN.shack=[]; for(let i=0;i<14;i++)genShack(i+801); for(let i=0;i<8;i++){genCulture('ferrin',i+301);genCulture('hrim',i+401);genCulture('zarhim',i+501);genCulture('ruadhan',i+601);genCulture('temple',i+701);} kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
+  kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); (()=>{const k=new KitB();k.box(1,1,1,0,0,-0.5,'stone:#8f877b');k.finish('Plinth',1,1);})(); kWardKit(); kYardKit(); kGreenKit(); kFerrinGB(); kQuay(); kWaterGate(); kPier(); kBoat(); kHarpoon(); for(let i=0;i<4;i++)kYardForge('YardForge'+i,i+1); kTerrace('Terrace',false); kTerrace('TerraceStair',true); kLongship('Longship',22,true); kLongship('LongshipS',17,false); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); GEN.shack=[]; for(let i=0;i<14;i++)genShack(i+801); for(let i=0;i<8;i++){genCulture('ferrin',i+301);genCulture('hrim',i+401);genCulture('zarhim',i+501);genCulture('ruadhan',i+601);genCulture('temple',i+701);} kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
   for(const n in KIT.geo){if(/WallSeg|^Tower$|Gatehouse|Terrace|Quay|WaterGate|Span|LaneLine|Walkway|BridgeRoom|Plinth|Aqueduct|^Int_|^Under_|RoofShack|Harpoon|Longship/.test(n))continue;
     const g=KIT.geo[n];g.computeBoundingBox();const b=g.boundingBox;KIT.size[n]=[2*Math.max(-b.min.x,b.max.x),2*Math.max(-b.min.z,b.max.z)];}   // placement uses the true outline: bays, awnings, steps, boilers
   console.log('kit built in',Math.round(performance.now()-_t0),'ms');
@@ -2160,6 +2184,7 @@ function cityWealth(a,r){const rvd=riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.s
   const av=avDist(a,r);
   return -0.3*smooth(34,10,rvd)+smooth(CITY.r-20,CITY.core+30,r)*0.72+gate*0.42+smooth(40,12,av)*0.1-back*0.38+Math.max(0,Math.sin(a))*0.16+(WEALTH_Q[q]||0)+N.c(Math.cos(a)*2.2+7,Math.sin(a)*2.2)*0.18+0.04;}
 function pickHouse(a,r,rnd){const rd=riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r);
+  if(FERRIN_GB&&KIT.size.FGB_Forge){const x=CITY.x+Math.cos(a)*r,z=CITY.z+Math.sin(a)*r;if(qIndex(x,z)===0){const Q=wardSquares().find(q=>q.q===0);return ferrinPick(rnd,Q&&Math.hypot(x-Q.x,z-Q.z)<60);}}
   if(rd<30){const u=rnd();if(u<0.28&&KIT.size.Tannery)return 'Tannery';if(u<0.55&&GEN.ferrin.length)return GEN.ferrin[Math.floor(rnd()*GEN.ferrin.length)];if(u<0.85&&GEN.tenement.length)return GEN.tenement[Math.floor(rnd()*GEN.tenement.length)];}
 const v=pickHouse0(a,r,rnd);const fam=/^Row[ABC]$/.test(v)?'row':/^Tenement/.test(v)?'tenement':/^Timberframe/.test(v)?'timber':v==='Forge'?'ferrin':/^(Longhouse|Lodge)$/.test(v)?'hrim':/^Adobe/.test(v)?'zarhim':v==='Roundhouse'?'ruadhan':v==='Chapel'?'temple':null;
   return fam&&GEN[fam].length&&rnd()<0.85?GEN[fam][Math.floor(rnd()*GEN[fam].length)]:v;}
@@ -2199,7 +2224,7 @@ function buildCityHouses(){
     const fz=s0[1]/2+1.2,front=heightAt(x+fz*sn,z+fz*c);return [lo,hi,front];};
   const [mx,mz]=marketPos(), lists={}, plinths=[], put=(name,x,z,ry,tint,y)=>{if(/^Shack2?$/.test(name)&&GEN.shack&&GEN.shack.length)name=GEN.shack[Math.floor(rnd()*GEN.shack.length)];if(y===undefined){const [lo,hi,front]=footY(name,x,z,ry);
       if(hi-lo>7&&!/Span|Well|Garden/.test(name))return false;
-      const built=/^(Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
+      const built=/^(FGB_(Forge|Shop|Narrow|Smelter)|Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
       if(!built&&hi-lo>0.9&&!/Span|Well|Garden|Terrace/.test(name))return false;
       if(built&&hi-lo>0.35&&KIT.core[name]){   // the door is at the street's level; the uphill back is dug into the slope (no more than a storey's worth),
         y=Math.max(front-0.08,hi-2.2);                        // the downhill side shows a lower storey of its own
@@ -2279,7 +2304,7 @@ function buildCityHouses(){
     let t=0.5+rnd()*2,fails=0;
     while(t<L){let placed=false;const [qx,qz]=sample(Math.min(L,t+3)),qa=Math.atan2(qz-CITY.z,qx-CITY.x),qr=Math.hypot(qx-CITY.x,qz-CITY.z),w0=cityWealth(qa,qr),poor=w0<0.3;
       let first=pickHouse(qa,qr,rnd);if(KIT.size[first][1]>maxD)first=FILLERS.find(n=>KIT.size[n][1]<=maxD)||'Shack';
-      const cands=[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
+      const inF=FERRIN_GB&&/^FGB_/.test(first),cands=inF?[first,...FGB_FILL.filter(n=>n!==first&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
       for(const name of cands){const [w,d]=KIT.size[name];if(t+w>L+0.3)continue;
         const [px,pz,nx,nz]=sample(t+w/2),jit=poor?(rnd()-0.5)*0.6:0,off=off0+d/2+jit,x=px+nx*off,z=pz+nz*off,ry=Math.atan2(-nx,-nz)+(poor?(rnd()-0.5)*0.1:0);
         const f={x,z,hw:w/2+0.15,hd:d/2+0.15,rot:ry};
@@ -2356,12 +2381,12 @@ function buildCityHouses(){
       if(g<0.3)continue;for(let k2=0;k2<4;k2++){const b=k2/4*Math.PI*2+Math.PI/4;tree(Q.x+Math.cos(b)*10.8,Q.z+Math.sin(b)*10.8,/Temple/.test(QUARTERS[Q.q].name)?'Cypress':'StreetTree');}}
     console.log('street trees',n);}
   // the inner yards: what is left inside a block is worked and lived in, more garden where the street is rich
-  {const YD={'Temple Ward':[['Cypress',0.3],['FlowerBed',0.3],['Hedge',0.2],['Garden',0.2]],'Aurelan Quarter':[['Hedge',0.25],['FlowerBed',0.25],['YardTree',0.2],['Garden',0.15],['VegBed',0.15]],'Market Ward':[['FlowerBed',0.25],['YardTree',0.3],['Hedge',0.15],['VegBed',0.3]],rich:[['VegBed',0.3],['WashLine',0.25],['WoodPile',0.2],['Shed',0.15],['Crates',0.1]],mid:[['VegBed',0.3],['WashLine',0.3],['WoodPile',0.2],['Shed',0.2]],poor:[['WoodPile',0.3],['Shed',0.3],['WashLine',0.3],['Crates',0.1]]};
+  {const YD={'Ferrin Quarter':FERRIN_GB?[['FGB_YardForge',0.4],['FGB_Coal',0.25],['FGB_Slag',0.2],['Crates',0.15]]:null,'Temple Ward':[['Cypress',0.3],['FlowerBed',0.3],['Hedge',0.2],['Garden',0.2]],'Aurelan Quarter':[['Hedge',0.25],['FlowerBed',0.25],['YardTree',0.2],['Garden',0.15],['VegBed',0.15]],'Market Ward':[['FlowerBed',0.25],['YardTree',0.3],['Hedge',0.15],['VegBed',0.3]],rich:[['VegBed',0.3],['WashLine',0.25],['WoodPile',0.2],['Shed',0.15],['Crates',0.1]],mid:[['VegBed',0.3],['WashLine',0.3],['WoodPile',0.2],['Shed',0.2]],poor:[['WoodPile',0.3],['Shed',0.3],['WashLine',0.3],['Crates',0.1]]};
     let n=0;for(let gx=CITY.x-CITY.r;gx<=CITY.x+CITY.r;gx+=3.5)for(let gz=CITY.z-CITY.r;gz<=CITY.z+CITY.r;gz+=3.5){const x=gx+(rnd()-0.5)*2,z=gz+(rnd()-0.5)*2,dx=x-CITY.x,dz=z-CITY.z,r=Math.hypot(dx,dz),a=Math.atan2(dz,dx);
       if(r<CITY.core+28||r>CITY.r-10)continue;
       if(cityPaved(x,z)>0.02||laneDist(x,z)<LANE_HALF+1.6||riverDistP(x,z)<12||inLM(x,z)||TERRACES.some(T=>Math.abs(r-T.b-0.4)<3))continue;
       let near=false;for(let k2=0;k2<8&&!near;k2++){const b=k2/8*Math.PI*2;if(cityPaved(x+Math.cos(b)*3,z+Math.sin(b)*3)>0.05)near=true;}if(near)continue;   // not out on a street's edge: inside the block
-      const w0=cityWealth(a,r),gq=greenAt(x,z),qn=quarterAt(x,z).name,set=gq>0.45&&YD[qn]?YD[qn]:w0>0.55?YD.rich:w0>0.25?YD.mid:YD.poor;let u=rnd(),name=set[set.length-1][0];for(const [nm,p2] of set){if(u<p2){name=nm;break;}u-=p2;}
+      const w0=cityWealth(a,r),gq=greenAt(x,z),qn=quarterAt(x,z).name,set=YD[qn]&&(gq>0.45||qn==='Ferrin Quarter')?YD[qn]:w0>0.55?YD.rich:w0>0.25?YD.mid:YD.poor;let u=rnd(),name=set[set.length-1][0];for(const [nm,p2] of set){if(u<p2){name=nm;break;}u-=p2;}
       if(!KIT.size[name])continue;const [w,d]=KIT.size[name],ry=-a+Math.PI/2+(rnd()<0.5?0:Math.PI/2)+(rnd()-0.5)*0.2,f={x,z,hw:w/2+0.4,hd:d/2+0.4,rot:ry};
       if(!footprintFree(f)||footOnLane(f,LANE_HALF+0.6))continue;
       if(put(name,x,z,ry,[1,1,1])){colliders.push(name==='YardTree'?{type:'circle',x,z,r:0.5}:{x,z,hw:w/2+0.1,hd:d/2+0.1,rot:ry});n++;}}
@@ -2748,7 +2773,18 @@ function buildCityInterior(parent){
     }
   }
   // the ward squares
-  for(const Q of wardSquares()){const y=heightAt(Q.x,Q.z),col=flat(new THREE.Color().setHSL(Q.q/8,0.35,0.45).getHex()),water=new THREE.MeshLambertMaterial({color:0x3f6f86});
+  for(const Q of wardSquares()){if(Q.q===0&&FERRIN_GB){   // Anvil Square, grey-box: a working forecourt round Ostrak's Anvil
+      const y=heightAt(Q.x,Q.z),g1=flat(0x8a8884),g2=flat(0x5e5c5a),g3=flat(0x3a3a3c);
+      parent.add(cyl(3.2,3.6,1.1,8,g2,Q.x,y+0.55,Q.z),box(3.4,1.3,1.4,g3,Q.x,y+1.75,Q.z,0.3),box(1.6,0.9,1.1,g3,Q.x,y+0.95+1.2,Q.z,0.3),box(4.6,0.4,0.6,g3,Q.x+Math.cos(0.3)*0,y+2.6,Q.z,0.3));   // the plinth and the great anvil
+      colliders.push({type:'circle',x:Q.x,z:Q.z,r:3.7});
+      {const a=0.3+Math.PI/2,tx=Q.x+Math.cos(a)*6,tz=Q.z+Math.sin(a)*6;parent.add(box(5,0.9,1.4,g1,tx,heightAt(tx,tz)+0.45,tz,-a+Math.PI/2));colliders.push({x:tx,z:tz,hw:2.5,hd:0.7,rot:-a+Math.PI/2});}   // the quench trough
+      for(let k=0;k<5;k++){const a=k/5*Math.PI*2+1.2,bx=Q.x+Math.cos(a)*8.2,bz=Q.z+Math.sin(a)*8.2,by=heightAt(bx,bz),kind=k%3;
+        if(kind===0){parent.add(box(1.6,0.6,1.0,g2,bx,by+0.3,bz,-a),box(1.4,0.35,0.9,g2,bx,by+0.78,bz,-a+0.2));}            // ingots, stacked
+        else if(kind===1){parent.add(box(1.8,1.2,1.8,g1,bx,by+0.6,bz,-a));}                                                    // an ore bin
+        else parent.add(box(2.2,0.9,0.9,g1,bx,by+0.45,bz,-a),box(0.5,0.5,0.4,g3,bx,by+1.1,bz,-a));                          // a workbench with a vice
+        colliders.push({x:bx,z:bz,hw:1.1,hd:0.9,rot:-a});}
+      continue;}
+    const y=heightAt(Q.x,Q.z),col=flat(new THREE.Color().setHSL(Q.q/8,0.35,0.45).getHex()),water=new THREE.MeshLambertMaterial({color:0x3f6f86});
     const bronze=flat(0x8a6a3a);
     parent.add(cyl(3.9,4.1,0.3,24,cityStone,Q.x,y+0.15,Q.z),cyl(3.5,3.6,0.75,24,cityStone,Q.x,y+0.55,Q.z),cyl(3.1,3.1,0.06,24,water,Q.x,y+0.95,Q.z));   // step, basin rim, water
     for(let k=0;k<8;k++){const a=k/8*Math.PI*2;parent.add(box(0.5,0.85,0.5,cityStone,Q.x+Math.cos(a)*3.45,y+0.55,Q.z+Math.sin(a)*3.45,-a));}
