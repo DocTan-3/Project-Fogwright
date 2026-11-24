@@ -658,27 +658,30 @@ const EQ_BUILD={
   // face, with a soft peak behind; below the jaw a cowl lies over the shoulders
   hood(pc,D,item,dy,spec,ctx){pc.kind=eqMatOf(item,null,1);const main=eqRGB(dy[0]),lin=eqRGB(dy[1]),S=eqScalp(D),[cx,cy,cz]=S.c,[rx,ry,zf,zb]=S.r,P=D.pos;
     const headPts=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]>1.5)headPts.push(i);
-    const yTop=S.top+0.035,yBot=(eqYAt(D,1.505)??S.nape-0.08)-0.01,chin=cy-0.115,M=20,K=10,grid=[],skip=new Set();   // down to where the cowl begins
+    const yTop=S.top+0.02,yBot=(eqYAt(D,1.505)??S.nape-0.08)-0.01,chin=cy-0.115,M=20,K=10,grid=[],skip=new Set();   // down to where the cowl begins
     let neckR=0.06;{const rs=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&Math.abs(D.rest[i*3])<0.075&&Math.abs(P[i*3+1]-yBot)<0.015)rs.push(Math.hypot(P[i*3]-cx,P[i*3+2]-cz));   /* the neck alone, not the shoulders */rs.sort((a,b)=>a-b);if(rs.length)neckR=rs[Math.floor(rs.length*0.8)];}
-    const K1=6;   // rings over the head (crown to eye level), then rings closing in to the neck
+    const K1=6,HX=0.016,HF=0.012,HB=0.024,EAR=y=>0.016*Math.exp(-Math.pow((y-(cy-0.025))/0.04,2));   // room for the ears   // rings over the head (crown to eye level), then rings closing in to the neck; it fits close (the hair under it is removed)
     for(let k=0;k<=K;k++){let y,fx,fzF,fzB;
-      if(k<=K1){const ang=k/K1*Math.PI/2;y=cy+(yTop-cy)*Math.cos(ang);const w=Math.sin(ang)*0.9+0.1;fx=(rx+0.035)*w;fzF=(zf+0.03)*w;fzB=(zb+0.05)*w;}
-      else{const t=(k-K1)/(K-K1),e_=t*t*(3-2*t);y=cy+(yBot-cy)*t;const nr=neckR+0.03;fx=(rx+0.035)+(nr-(rx+0.035))*e_;fzF=(zf+0.03)+(nr+0.02-(zf+0.03))*e_;fzB=(zb+0.05)+(nr+0.01-(zb+0.05))*e_;}
+      if(k<=K1){const ang=k/K1*Math.PI/2;y=cy+(yTop-cy)*Math.cos(ang);const w=Math.sin(ang);fx=(rx+HX+EAR(y))*w;fzF=(zf+HF)*w;fzB=(zb+HB)*w;}
+      else{const t=(k-K1)/(K-K1),e_=t*t*(3-2*t);y=cy+(yBot-cy)*t;const nr=neckR+0.02;fx=(rx+HX+EAR(y))+(nr-(rx+HX+EAR(y)))*e_;fzF=(zf+HF)+(nr+0.015-(zf+HF))*e_;fzB=(zb+HB)+(nr+0.01-(zb+HB))*e_;}
       const ids=[];
       for(let m=0;m<M;m++){const th=m/M*Math.PI*2,sx=Math.sin(th),c=Math.cos(th);   // th = 0 is the front (+z)
-        const x=cx+sx*fx,z=cz+c*(c>0?fzF:fzB),e=eqEval(D,[[eqNearPos(D,headPts,x,y,z),1]]);e.p=[x,y,z];e.n=[sx,k<=K1?Math.cos(k/K1*Math.PI/2):-0.3,c];
+        const pk=k<=K1?Math.pow(Math.cos(k/K1*Math.PI/2),1.5):0;   // the crown drawn back into a soft peak
+        const x=cx+sx*fx,z=cz+c*(c>0?fzF:fzB)-0.03*pk*(c<0?1:0.5),e=eqEval(D,[[eqNearPos(D,headPts,x,y,z),1]]);e.p=[x,y,z];e.n=[sx,k<=K1?Math.cos(k/K1*Math.PI/2):-0.3,c];
         e.r=[sx*0.1,-c*0.1,1.5+(y-yBot)];                                     // its own smooth place, for the cloth pattern
         ids.push(eqVert(pc,e,0,main.map(v=>v*(0.92+0.08*eqNoise(e.p,20)))));
         const mid=(S.top-0.04+chin)/2,half=(S.top-0.04-chin)/2,q=(y-mid)/half;    // an oval opening for the face
-        if(Math.abs(q)<1&&Math.abs(Math.atan2(sx,c))<0.9*Math.sqrt(1-q*q))skip.add(k*M+m);}
+        const wOpen=q>0?0.9*Math.sqrt(Math.max(0,1-q*q)):0.9;   // rounded above the brow, open all the way down the front, as a hood is
+        if(q<1&&Math.abs(Math.atan2(sx,c))<wOpen)skip.add(k*M+m);}
       grid.push(ids);}
     for(let k=0;k<=K;k++)for(let m=0;m<M;m++){const id=grid[k][m],n=pc.N.slice(id*3,id*3+3),l=Math.hypot(...n);for(let q=0;q<3;q++)pc.N[id*3+q]=n[q]/l;}
     for(let k=0;k<K;k++)for(let m=0;m<M;m++){if(skip.has(k*M+m)||skip.has((k+1)*M+m)||skip.has(k*M+(m+1)%M)||skip.has((k+1)*M+(m+1)%M))continue;
       const a=grid[k][m],b=grid[k][(m+1)%M],c=grid[k+1][(m+1)%M],d=grid[k+1][m];pc.I.push(a,d,c,a,c,b);}
     for(let k=0;k<=K;k++)for(let m=0;m<M;m++)if(skip.has(k*M+m)&&!skip.has(k*M+(m+1)%M)||!skip.has(k*M+m)&&skip.has(k*M+(m+1)%M)){const id=grid[k][skip.has(k*M+m)?(m+1)%M:m];for(let q=0;q<3;q++)pc.C[id*3+q]=lin[q]*0.8;}   // a darker rim at the opening
     // the cowl over the shoulders
-    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,z=r[i*3+2];if(D.arm[i]>0.5)return -1;return Math.min(z-1.36,1.53-z,0.24-Math.abs(r[i*3]));})],
-      e=>0.012+0.022*eqSm(1.36,1.52,e.r[2]),(e,f,rim)=>rim?lin.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,20))),6,0.01);},
+    // the cowl: a short rounded capelet over the tops of the shoulders, cut in a curve
+    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,z=r[i*3+2];if(D.arm[i]>0.5)return -1;return Math.min(1.53-z,0.17-Math.hypot(Math.abs(r[i*3])*0.85,(1.53-z)*1.25));})],
+      e=>0.008+0.012*eqSm(1.42,1.52,e.r[2]),(e,f,rim)=>rim?lin.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,20))),6,0.01);},
   // a cloak: fastened across the shoulders, falling straight from the shoulder blades, clear of the legs at the hem; the
   // edges curl forward round the shoulders, and lower down it rides the hips, not the legs
   cloak(pc0,D,item,dy,spec,ctx){const pc=ctx.drapePiece();pc.kind=eqMatOf(item,spec,spec.woven?15:1);const main=eqRGB(dy[0]),P=D.pos,hips=ctx.bone('hips'),spine=ctx.bone('spine');
