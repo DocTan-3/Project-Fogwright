@@ -67,8 +67,8 @@ float qArmhole(vec3 p){return length(vec2(abs(p.x)-0.205,(p.z-1.39)*0.8))-0.075;
 float layerDist(int L,vec3 p,float arm,float t,vec4 a,vec4 b){
   float ax=abs(p.x), body=1.-arm;
   if(L==0||L==3){ // shirt, chest: a = hem, sleeve (in arm units: 0 shoulder .. 2 wrist; below 0 sleeveless), neckline style, depth; b.x = open front
-    float dt=qTorso(p,a.x,a.z,a.w,b.x); if(a.y<0.)dt=min(dt,qArmhole(p));
-    float da=a.y<0.?-1.:(a.y-t)*0.25;
+    float dt=qTorso(p,a.x,a.z,a.w,b.x);
+    float da=a.y<0.?(0.14-t)*0.25:(a.y-t)*0.25;     // sleeveless pieces still cover the shoulder, ending in a short cap where the arm begins
     return p.z>1.53?-1.:mix(dt,da,smoothstep(0.35,0.65,arm));}
   if(L==1){if(arm>0.5)return -1.;return min(p.z-a.x,a.y-p.z);}                          // legs: cuff height, waist height
   if(L==2){if(arm>0.5)return -1.;return a.x-p.z;}                                         // feet: top of the boot
@@ -134,7 +134,7 @@ const EQ_ITEMS={
       built:[{type:'collar',colour:0}]},
     {id:'mail',dye:'trim',name:'Mail shirt',paint:{kind:'mail',trim:0.008,a:[0.84,1.25,0,0.02],dyes:['#9ea4aa','#6a6e72','#7a5a3a']}},
     {id:'robe',dye:'main',name:'Wool robe',paint:{kind:'wool',pattern:'hemband',trim:0.012,a:[0.12,1.9,0,0.02],dyes:['#6a5a48','#a8844e','#4a3e30']},
-      built:[{type:'skirt',top:0.97,hem:0.12,flare:0.35,kind:0},{type:'collar',colour:0}]},
+      built:[{type:'skirt',top:1.0,hem:0.12,flare:0.35,kind:0},{type:'collar',colour:0}]},
     {id:'longcoat',dye:'leather',name:'Long coat',paint:{kind:'leather',trim:0.01,a:[0.5,1.86,1,0.07],b:[0.03],dyes:['#4a3424','#c8b48a','#2e2016']},
       built:[{type:'skirt',top:0.95,hem:0.5,flare:0.28,open:0.42,kind:1},{type:'collar',colour:0}]},
     {id:'doublet',people:'Aurelan',dye:'main',name:'Aurelan doublet',paint:{kind:'wool',pattern:'stripes',trim:0.01,a:[0.9,1.9,0,0.0],dyes:['#2e4a6a','#c9a046','#c9a046']},
@@ -173,8 +173,9 @@ const EQ_ITEMS={
     {id:'furplates',name:'Fur-trimmed pauldrons',built:[{type:'pauldron',lames:3,metal:1,rivets:1,fur:1,size:1.1}],dyes:['#7e868c','#8a7458','#c9a046'],dye:'trim'},
     {id:'mantle',name:'Fur mantle',built:[{type:'mantle'}],dyes:['#6e5640','#3e3024','#2a2018']}],
   head:[
-    {id:'hood',dye:'main',name:'Hood',hidesHair:1,built:[{type:'hood'}],dyes:['#4a5a3a','#3a4a2e','#2a2a20']},
-    {id:'headwrap',people:'Zarhim',dye:'main',name:'Zarhim head wrap',hidesHair:1,built:[{type:'headwrap'}],dyes:['#d8c8a8','#a8783a','#7a5426']}],
+    {id:'hood',dye:'main',name:'Hood',built:[{type:'hood'}],dyes:['#4a5a3a','#3a4a2e','#2a2a20']},
+    {id:'hat',dye:'main',name:'Brimmed hat',built:[{type:'hat'}],dyes:['#4a3424','#3a2618','#c9a046']},
+    {id:'headwrap',people:'Zarhim',dye:'main',name:'Zarhim head wrap',built:[{type:'headwrap'}],dyes:['#d8c8a8','#a8783a','#7a5426']}],
   back:[
     {id:'cloak',dye:'main',name:'Cloak',built:[{type:'cloak'}],dyes:['#5a2a26','#3e1c18','#c9a046']},
     {id:'wovencloak',people:'Ruadhan',dye:'main',name:'Ruadhan woven cloak',built:[{type:'cloak',woven:1}],dyes:['#3e5a3a','#8a3a26','#c9a046']}],
@@ -374,6 +375,23 @@ function eqSmooth(p,s){const x=p[0]*s,y=p[1]*s,z=p[2]*s,ix=Math.floor(x),iy=Math
 const eqFur=(p)=>0.6*eqSmooth(p,38)+0.4*eqSmooth(p,95);
 const eqNoise=(p,s)=>{const v=Math.sin(p[0]*s*12.9898+p[1]*s*78.233+p[2]*s*37.719)*43758.5453;return v-Math.floor(v);};
 
+// Drapes (cloaks, aprons, skirts) hang the way cloth does: from where they are fastened they may move away from the body but
+// never back toward it, so they fall straight from whatever sticks out most (shoulder blades, chest, hips) instead of
+// following every curve. Their surface directions come from their own grid, and their triangles face outward.
+function eqDrapeFinish(pc,grid,hint,closed){
+  const R=grid.length,Cn=grid[0].length,G=(r,c)=>{const id=grid[r][c];return [pc.P[id*3],pc.P[id*3+1],pc.P[id*3+2]];};
+  for(let r=0;r<R;r++)for(let c=0;c<Cn;c++){
+    const cl=closed?(c+Cn-1)%Cn:Math.max(0,c-1),cr=closed?(c+1)%Cn:Math.min(Cn-1,c+1),A=G(r,cl),B=G(r,cr),U=G(Math.max(0,r-1),c),Dn=G(Math.min(R-1,r+1),c);
+    const du=B.map((v,k)=>v-A[k]),dv=Dn.map((v,k)=>v-U[k]);let n=[du[1]*dv[2]-du[2]*dv[1],du[2]*dv[0]-du[0]*dv[2],du[0]*dv[1]-du[1]*dv[0]];
+    const h=hint(G(r,c),r,c),L=Math.hypot(...n)||1;if(n[0]*h[0]+n[1]*h[1]+n[2]*h[2]<0)n=n.map(v=>-v);const id=grid[r][c];for(let k=0;k<3;k++)pc.N[id*3+k]=n[k]/L;}
+  for(let r=0;r+1<R;r++)for(let c=0;c<(closed?Cn:Cn-1);c++){const c2=(c+1)%Cn,a=grid[r][c],b=grid[r][c2],cc=grid[r+1][c2],d=grid[r+1][c];
+    const A=G(r,c),B=G(r,c2),Dd=G(r+1,c),u=B.map((v,k)=>v-A[k]),w=Dd.map((v,k)=>v-A[k]),n=[u[1]*w[2]-u[2]*w[1],u[2]*w[0]-u[0]*w[2],u[0]*w[1]-u[1]*w[0]],o=pc.N.slice(a*3,a*3+3);
+    if(n[0]*o[0]+n[1]*o[1]+n[2]*o[2]>0)pc.I.push(a,b,cc,a,cc,d);else pc.I.push(a,d,cc,a,cc,b);}
+}
+// the body's height (glTF y) at a template height; the nearest body point to a spot (for shapes and skin); blended skin
+function eqYAt(D,zt,filter){const ys=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&Math.abs(D.rest[i*3+2]-zt)<0.012&&(!filter||filter(i)))ys.push(D.pos[i*3+1]);ys.sort((a,b)=>a-b);return ys.length?ys[ys.length>>1]:null;}
+function eqNearPos(D,ids,x,y,z){let b=ids[0],bd=1e9;for(const i of ids){const d=(D.pos[i*3]-x)**2+(D.pos[i*3+1]-y)**2*1.5+(D.pos[i*3+2]-z)**2;if(d<bd){bd=d;b=i;}}return b;}
+function eqMixBones(a,b,t){const m=new Map();for(const [k,w] of a)m.set(k,(m.get(k)||0)+w*(1-t));for(const [k,w] of b)m.set(k,(m.get(k)||0)+w*t);return m;}
 // the pieces
 const EQ_BUILD={
   cuff(pc,D,item,dy,spec){pc.kind=eqMatOf(item,null,3);                       // boot tops, gauntlet cuffs, bracers
@@ -436,47 +454,58 @@ const EQ_BUILD={
     eqBlock(pc,D,rec,0.05*k,0.04*k,0.006,0.007,brass,1.15); eqBlock(pc,D,rec,0.03*k,0.022*k,0.004,0.0125,eqRGB(dy[0]),0.8);},
   // a skirt for robes and coats: rings from the hips to the hem, measured round the legs so it clears them, flaring towards
   // the hem; lower down it follows the thighs, so it moves when walking. open: a gap at the front (half-angle, radians)
-  skirt(pc,D,item,dy,spec,ctx){pc.kind=eqMatOf(item,spec,item.paint?(item.paint.mat!==undefined?EQ_MAT[item.paint.mat]:EQ_KIND_MAT[EQ_KIND[item.paint.kind]]):1);const main=eqRGB(dy[0]),trim=eqRGB(dy[2]),z=D.rest,P=D.pos,legs=[];
-    for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&z[i*3+2]<spec.top+0.03)legs.push(i);
-    const med=a=>{a=a.slice().sort((x,y)=>x-y);return a[a.length>>1];};
-    const topI=legs.filter(i=>Math.abs(z[i*3+2]-spec.top)<0.015),hemI=legs.filter(i=>Math.abs(z[i*3+2]-spec.hem)<0.015);
-    const cx=topI.reduce((a,i)=>a+P[i*3],0)/topI.length,cz=topI.reduce((a,i)=>a+P[i*3+2],0)/topI.length;
-    const yT=med(topI.map(i=>P[i*3+1])),yH=hemI.length?med(hemI.map(i=>P[i*3+1])):yT*spec.hem/spec.top;
-    const M=20,K=6,open=spec.open||0,hips=ctx.bone('hips'),tl=ctx.bone('thigh.L'),tr=ctx.bone('thigh.R');
-    const radius=(y,band)=>{const r=new Float32Array(M);for(const i of legs){const dy_=P[i*3+1]-y;if(Math.abs(dy_)>band)continue;
-      const x=P[i*3]-cx,zz=P[i*3+2]-cz,b=((Math.round(Math.atan2(x,zz)/(Math.PI*2)*M)%M)+M)%M;r[b]=Math.max(r[b],Math.hypot(x,zz));}
-      const o=new Float32Array(M);for(let b=0;b<M;b++){let m=0;for(let k=-2;k<=2;k++)m=Math.max(m,r[(b+k+M)%M]);o[b]=m;}return o;};
-    const r0=radius(yT,0.02),rows=[];
-    for(let k=0;k<=K;k++){const t=k/K,y=yT+(yH-yT)*t,rb=radius(y,0.03),ids=[];
-      for(let b=0;b<=M;b++){const th=(b/M)*Math.PI*2-Math.PI;if(open&&Math.abs(th)<open)continue;   // front is th = 0 (+z)
-        const bb=((Math.round(th/(Math.PI*2)*M)%M)+M)%M,r=Math.max(r0[bb]*(1+spec.flare*Math.pow(t,1.3)),rb[bb]+0.02+0.03*t)+0.006,x=cx+Math.sin(th)*r,zz=cz+Math.cos(th)*r;
-        let best=-1,bd=1e9;for(const i of legs){const d=(P[i*3]-x)**2+(P[i*3+1]-y)**2+(P[i*3+2]-zz)**2;if(d<bd){bd=d;best=i;}}
-        const e=eqEval(D,[[best,1]]);e.p=[x,y,zz];e.n=[Math.sin(th),-0.15,Math.cos(th)];
-        if(t>0){const kk=Math.min(0.6,t*0.75),side=eqSm(-0.05,0.05,x-cx),b_=new Map();b_.set(hips,1-kk);b_.set(tl,kk*side);b_.set(tr,kk*(1-side));e.bones=b_;}
-        const fold=0.88+0.12*Math.cos(th*9+t*2), col=(k===K||spec.trim&&k>=K-1)?trim:main;
-        ids.push(eqVert(pc,e,0,col.map(v=>v*fold*(k===K?0.85:1))));}
-      rows.push(ids);}
-    for(let k=0;k<K;k++)for(let b=0;b+1<rows[k].length;b++){const a=rows[k][b],c=rows[k][b+1],d=rows[k+1][b+1],f=rows[k+1][b];pc.I.push(a,f,d,a,d,c);}
-    if(!open){const a=rows[0].length-1;}
+  // skirts for robes and coats: snug at the waist, hanging from the hips; the hem clears the legs and flares a little, and
+  // lower down the skirt follows each thigh partly, so it moves when walking. open: a gap at the front (half-angle, radians)
+  skirt(pc,D,item,dy,spec,ctx){pc.kind=eqMatOf(item,spec,item.paint?(item.paint.mat!==undefined?EQ_MAT[item.paint.mat]:EQ_KIND_MAT[EQ_KIND[item.paint.kind]]):1);
+    const main=eqRGB(dy[0]),trim=eqRGB(dy[2]),P=D.pos,body=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]<spec.top+0.04)body.push(i);
+    const ring=body.filter(i=>Math.abs(D.rest[i*3+2]-spec.top)<0.015),cx=ring.reduce((a,i)=>a+P[i*3],0)/ring.length,cz=ring.reduce((a,i)=>a+P[i*3+2],0)/ring.length;
+    const yT=eqYAt(D,spec.top),yH0=eqYAt(D,spec.hem),yH=yH0==null?yT*spec.hem/spec.top:yH0,M=22,K=8,open=spec.open||0;
+    const hips=ctx.bone('hips'),tl=ctx.bone('thigh.L'),tr=ctx.bone('thigh.R');
+    const bodyR=(th,y,band)=>{let r=0;for(const i of body){if(Math.abs(P[i*3+1]-y)>band)continue;const x=P[i*3]-cx,z=P[i*3+2]-cz;let d=Math.atan2(x,z)-th;d=Math.atan2(Math.sin(d),Math.cos(d));if(Math.abs(d)<Math.PI/M*1.7)r=Math.max(r,Math.hypot(x,z));}return r;};
+    // round the waist: all the way for a closed skirt; for an open one, from one front edge round the back to the other
+    const TH=open?[...Array(M)].map((_,b)=>open+(Math.PI*2-2*open)*b/(M-1)):[...Array(M)].map((_,b)=>(b/M)*Math.PI*2-Math.PI), Rr=[];
+    for(let k=0;k<=K;k++){const t=k/K,y=yT+(yH-yT)*t;Rr.push(TH.map(th=>bodyR(th,y,k?0.03:0.015)));}
+    for(let k=0;k<=K;k++){const t=k/K,row=Rr[k];for(let b=0;b<row.length;b++){const prev=k?Rr[k-1][b]:0;row[b]=Math.max(prev,row[b]+(k?0.01+0.022*t:0.008))+(k?spec.flare*0.008*t:0);}
+      for(let pass=0;pass<2;pass++){const n=row.length,sm=row.map((v,b)=>open?(v*2+row[Math.max(0,b-1)]+row[Math.min(n-1,b+1)])/4:(v*2+row[(b+n-1)%n]+row[(b+1)%n])/4);
+        for(let b=0;b<n;b++)row[b]=Math.max(sm[b],k?Rr[k-1][b]:0);}}
+    const grid=[];
+    for(let k=0;k<=K;k++){const t=k/K,y=yT+(yH-yT)*t,ids=[];
+      TH.forEach((th,b)=>{const r=Rr[k][b],x=cx+Math.sin(th)*r,z=cz+Math.cos(th)*r,e=eqEval(D,[[eqNearPos(D,body,x,y,z),1]]);e.p=[x,y,z];e.n=[Math.sin(th),0,Math.cos(th)];
+        if(k>0){const kk=Math.min(0.4,t*0.5),side=eqSm(-0.3,0.3,Math.sin(th)),legs=new Map([[hips,1-kk],[tl,kk*side],[tr,kk*(1-side)]]);e.bones=eqMixBones(e.bones,legs,eqSm(0,0.25,t));}
+        const fold=0.9+0.1*Math.cos(th*7+t*1.5),col=(k===K||(spec.trim&&k>=K-1))?trim:main;ids.push(eqVert(pc,e,0,col.map(v=>v*fold*(k===K?0.85:1))));});
+      grid.push(ids);}
+    eqDrapeFinish(pc,grid,(q)=>[q[0]-cx,0,q[2]-cz],!open);
   },
   buttons(pc,D,item,dy){pc.kind=12;const brass=eqRGB(dy[2]);for(let z=0.98;z<1.44;z+=0.055)eqStud(pc,D,eqNear(D,0,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.012,0.006,brass);},
   furcollar(pc,D,item,dy){pc.kind=6;const fur=eqRGB('#7a6248');
     eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,ax=Math.abs(r[i*3]),z_=r[i*3+2];if(D.arm[i]>0.5||z_>1.535)return -1;
       return Math.min(z_-1.43-0.02*eqSmooth([D.pos[i*3],D.pos[i*3+1],D.pos[i*3+2]],50),0.17-ax);})],
       e=>0.03+0.02*eqFur(e.p),(e,f,rim)=>fur.map(v=>v*(0.55+0.6*eqFur(e.p))),4,0.015);},
-  apron(pc,D,item,dy,spec,ctx){pc.kind=3;const ctx_hips=ctx.bone('hips');const lea=eqRGB('#5a3a22'),strap=eqRGB('#3a2618'),NU=6,NV=8,top=1.36,bot=0.46,ids=[];   // a leather apron hanging in front
-    const front=i=>D.arm[i]<0.5&&D.rest[i*3+1]<0.0;
-    for(let v=0;v<NV;v++){const z=top-(top-bot)*v/(NV-1),hang=(top-z)/(top-bot),w=0.1+0.07*eqSm(0,0.4,hang);
-      for(let u=0;u<NU;u++){const x=(u/(NU-1)*2-1)*w,e=eqEval(D,eqNear(D,x*(z<0.95?0.8:1),-0.2,z,4,front)),off=0.012+0.07*Math.pow(eqSm(0.25,1,hang),1.3);
-        e.p=[e.p[0]+e.n[0]*0.3*off,e.p[1],e.p[2]+off];e.n=[0,0,1];
-        if(z<1.0){const b=new Map();b.set(ctx_hips,1);e.bones=b;}
-        ids.push(eqVert(pc,e,0,lea.map(c=>c*(0.9+0.12*Math.cos(u*1.3+v)))));}}
-    for(let v=0;v+1<NV;v++)for(let u=0;u+1<NU;u++){const a=ids[v*NU+u],b=ids[v*NU+u+1],c=ids[(v+1)*NU+u+1],d=ids[(v+1)*NU+u];pc.I.push(a,d,c,a,c,b);}
-    for(const sx of [-1,1])eqBlock(pc,D,eqNear(D,0.09*sx,-0.2,1.4,2,front),0.018,0.07,0.004,0.004,strap,1);},
+  // a leather apron: tied at the neck and waist, hanging straight from the chest to the knees
+  apron(pc,D,item,dy,spec,ctx){pc.kind=3;const lea=eqRGB('#5a3a22'),strap=eqRGB('#3a2618'),P=D.pos,hips=ctx.bone('hips');
+    const front=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+1]<0.02&&D.rest[i*3+2]<1.5)front.push(i);
+    const yT=eqYAt(D,1.37),yH=eqYAt(D,0.47),NU=7,NV=9,Z=[];
+    const frontZ=(x,y)=>{let z=-1e9;for(const i of front)if(Math.abs(P[i*3+1]-y)<0.03&&Math.abs(P[i*3]-x)<0.05)z=Math.max(z,P[i*3+2]);return z;};
+    const W=t=>0.085+0.08*eqSm(0.05,0.4,t);
+    for(let v=0;v<NV;v++){const t=v/(NV-1),y=yT+(yH-yT)*t;Z.push([...Array(NU)].map((_,u)=>{const b=frontZ((u/(NU-1)*2-1)*W(t),y);return b>-1e8?b+0.009+0.03*t:null;}));}
+    for(const row of Z){const have=row.map((z,u)=>z==null?null:u).filter(u=>u!=null);
+      if(have.length)for(let u=0;u<NU;u++)if(row[u]==null){const n=have.reduce((a,b)=>Math.abs(b-u)<Math.abs(a-u)?b:a);row[u]=row[n];}}
+    for(let v=0;v<NV;v++)for(let u=0;u<NU;u++){if(Z[v][u]==null)Z[v][u]=v?Z[v-1][u]:0.1;if(v)Z[v][u]=Math.max(Z[v-1][u],Z[v][u]);}   // it never moves back toward the body
+    for(let v=0;v<NV;v++){const row=Z[v].slice();for(let u=1;u+1<NU;u++)Z[v][u]=Math.max(row[u],(row[u-1]+row[u]*2+row[u+1])/4);}
+    const grid=[];
+    for(let v=0;v<NV;v++){const t=v/(NV-1),y=yT+(yH-yT)*t,ids=[];
+      for(let u=0;u<NU;u++){const x=(u/(NU-1)*2-1)*W(t),z=Z[v][u],e=eqEval(D,[[eqNearPos(D,front,x,y,z),1]]);e.p=[x,y,z];e.n=[0,0,1];
+        if(t>0.45)e.bones=eqMixBones(e.bones,new Map([[hips,1]]),eqSm(0.45,0.7,t));
+        ids.push(eqVert(pc,e,0,lea.map(c=>c*(0.92+0.08*Math.cos(u*1.1+v*0.7))*(v===NV-1?0.85:1))));}
+      grid.push(ids);}
+    eqDrapeFinish(pc,grid,()=>[0,0,1],false);
+    for(const sx of [-1,1])eqBlock(pc,D,eqNear(D,0.07*sx,-0.2,1.43,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.014,0.07,0.004,0.006,strap,1);   // the neck strap
+    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>D.arm[i]<0.5?0.012-Math.abs(D.rest[i*3+2]-1.0):-1)],()=>0.005,()=>strap);      // the waist tie
+  },
   headwrap(pc,D,item,dy){pc.kind=0;const main=eqRGB(dy[0]),dark=eqRGB(dy[1]);   // wound cloth over the crown and brow, the face left open
     eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,x=r[i*3],y=r[i*3+1],z_=r[i*3+2];if(D.arm[i]>0.5||z_<1.55)return -1;
       return Math.min(z_-(y<-0.02?1.705:1.62),1)})],
-      e=>0.016+0.01*eqSm(1.7,1.82,e.r[2])+0.006*Math.sin(e.r[2]*180+Math.atan2(e.r[0],-e.r[1])*2),(e,f,rim)=>(rim?dark:main).map(v=>v*(0.86+0.14*Math.sin(e.r[2]*180+Math.atan2(e.r[0],-e.r[1])*2))),3);
+      e=>0.01+0.006*eqSm(1.7,1.82,e.r[2])+0.004*Math.sin(e.r[2]*180+Math.atan2(e.r[0],-e.r[1])*2),(e,f,rim)=>(rim?dark:main).map(v=>v*(0.86+0.14*Math.sin(e.r[2]*180+Math.atan2(e.r[0],-e.r[1])*2))),3);
     const tail=eqNear(D,0.02,0.2,1.64,3,i=>D.arm[i]<0.5&&D.rest[i*3+1]>0.0);eqBlock(pc,D,tail,0.05,0.16,0.012,0.02,main,0.9,0.09);},
   // signature pieces: what makes one townsperson recognisable in a crowd
   hat(pc,D,item,dy,spec){pc.kind=spec.mat!==undefined?EQ_MAT[spec.mat]:1;const P=D.pos,head=[];   // a brimmed hat sized to the head
@@ -546,25 +575,58 @@ const EQ_BUILD={
       const tuft=0.03*(eqSmooth([pos[i*3],pos[i*3+1],pos[i*3+2]],60)-0.5);                 // a ragged, tufted hem
       return D.arm[i]>0.5?(0.38-D.t[i])*0.25+tuft:Math.min(z-(1.385-0.05*eqSm(0.0,0.06,r[i*3+1]))+tuft,0.25-ax);})],
       e=>0.026+0.022*eqFur(e.p),(e,f,rim)=>{const k=eqFur(e.p),tip=eqSm(0,0.03,f[0]);return (rim?dark:main).map(v=>v*(0.55+0.55*k)*(0.8+0.25*tip));},3,0.02);},
-  hood(pc,D,item,dy){pc.kind=eqMatOf(item,null,1);const main=eqRGB(dy[0]),lin=eqRGB(dy[1]);
-    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,x=r[i*3],y=r[i*3+1],z=r[i*3+2];if(D.arm[i]>0.5)return -1;
-      const face=1-((x/0.07)**2+((z-1.665)/0.105)**2), open=y<0.0?face:-1;                    // the opening for the face
-      return Math.min(-open*0.05, z-1.36, 0.24-Math.abs(x));})],
-      e=>{const r=e.r; if(r[2]<1.5)return 0.012+0.02*eqSm(1.36,1.5,r[2]);
-        const back=eqSm(-0.02,0.06,r[1]), top=eqSm(1.66,1.8,r[2]);
-        return 0.032+0.018*back+0.012*top+0.05*back*top*eqSm(0.04,0.0,Math.abs(r[0]));},   // roomy over the head, a peak behind
-      (e,f,rim)=>rim?lin.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,20))));},
-  cloak(pc,D,item,dy,spec,ctx){pc.kind=eqMatOf(item,spec,spec.woven?15:1);const main=eqRGB(dy[0]),lin=eqRGB(dy[1]),hips=ctx.bone('hips'),spine=ctx.bone('spine');
-    const NU=9,NV=10,top=1.43,bot=0.3,back=i=>D.arm[i]<0.5&&D.rest[i*3+1]>0.0, ids=[];
-    for(let v=0;v<NV;v++){const z=top-(top-bot)*v/(NV-1),hang=(top-z)/(top-bot),w=0.17+0.11*hang;
-      for(let u=0;u<NU;u++){const x=(u/(NU-1)*2-1)*w,rec=eqNear(D,x*(z<0.95?0.75:1),0.2,z,4,back),e=eqEval(D,rec);
-        const off=0.02+0.03*eqSm(0,0.25,hang)+0.17*Math.pow(hang,1.4), dir=[e.n[0]*0.4,e.n[1]*0.3,e.n[2]*0.6-0.6]; const L=Math.hypot(...dir);
-        const p=[0,1,2].map(k=>e.p[k]+dir[k]/L*off);
-        let bones=e.bones; if(z<1.08){const k=eqSm(1.08,0.92,z),b=new Map();for(const [bi,ww] of e.bones)b.set(bi,ww*(1-k));b.set(hips,(b.get(hips)||0)+k*0.8);b.set(spine,(b.get(spine)||0)+k*0.2);bones=b;}
-        const i=pc.P.length/3;pc.P.push(...p);pc.N.push(0,0,-1);pc.DL.push(e.dl);pc.SK.push(bones);pc.RS.push(x,0.2+hang*0.1,z);pc.K.push(pc.kind);
-        const fold=0.86+0.14*Math.cos((u/(NU-1))*Math.PI*5+hang*1.5);pc.C.push(...main.map(c=>c*fold*(v===NV-1?0.8:1)));ids.push(i);}}
-    for(let v=0;v+1<NV;v++)for(let u=0;u+1<NU;u++){const a=ids[v*NU+u],b=ids[v*NU+u+1],c=ids[(v+1)*NU+u+1],d=ids[(v+1)*NU+u];pc.I.push(a,b,c,a,c,d);}
-    for(const sx of [-1,1])eqBlock(pc,D,eqNear(D,0.155*sx,-0.2,1.425,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.026,0.026,0.008,0.006,eqRGB(dy[2]),1.2);},
+  // a hood: a rounded dome fitted to the scalp, roomy enough for the hair (which is reshaped to fit, see eqHairFit), open at the
+  // face, with a soft peak behind; below the jaw a cowl lies over the shoulders
+  hood(pc,D,item,dy,spec,ctx){pc.kind=eqMatOf(item,null,1);const main=eqRGB(dy[0]),lin=eqRGB(dy[1]),S=eqScalp(D),[cx,cy,cz]=S.c,[rx,ry,zf,zb]=S.r,P=D.pos;
+    const headPts=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]>1.5)headPts.push(i);
+    const yTop=S.top+0.035,yBot=(eqYAt(D,1.505)??S.nape-0.08)-0.01,chin=cy-0.115,M=20,K=10,grid=[],skip=new Set();   // down to where the cowl begins
+    let neckR=0.06;{const rs=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&Math.abs(D.rest[i*3])<0.075&&Math.abs(P[i*3+1]-yBot)<0.015)rs.push(Math.hypot(P[i*3]-cx,P[i*3+2]-cz));   /* the neck alone, not the shoulders */rs.sort((a,b)=>a-b);if(rs.length)neckR=rs[Math.floor(rs.length*0.8)];}
+    const K1=6;   // rings over the head (crown to eye level), then rings closing in to the neck
+    for(let k=0;k<=K;k++){let y,fx,fzF,fzB;
+      if(k<=K1){const ang=k/K1*Math.PI/2;y=cy+(yTop-cy)*Math.cos(ang);const w=Math.sin(ang)*0.9+0.1;fx=(rx+0.035)*w;fzF=(zf+0.03)*w;fzB=(zb+0.05)*w;}
+      else{const t=(k-K1)/(K-K1),e_=t*t*(3-2*t);y=cy+(yBot-cy)*t;const nr=neckR+0.03;fx=(rx+0.035)+(nr-(rx+0.035))*e_;fzF=(zf+0.03)+(nr+0.02-(zf+0.03))*e_;fzB=(zb+0.05)+(nr+0.01-(zb+0.05))*e_;}
+      const ids=[];
+      for(let m=0;m<M;m++){const th=m/M*Math.PI*2,sx=Math.sin(th),c=Math.cos(th);   // th = 0 is the front (+z)
+        const x=cx+sx*fx,z=cz+c*(c>0?fzF:fzB),e=eqEval(D,[[eqNearPos(D,headPts,x,y,z),1]]);e.p=[x,y,z];e.n=[sx,k<=K1?Math.cos(k/K1*Math.PI/2):-0.3,c];
+        e.r=[sx*0.1,-c*0.1,1.5+(y-yBot)];                                     // its own smooth place, for the cloth pattern
+        ids.push(eqVert(pc,e,0,main.map(v=>v*(0.92+0.08*eqNoise(e.p,20)))));
+        const mid=(S.top-0.04+chin)/2,half=(S.top-0.04-chin)/2,q=(y-mid)/half;    // an oval opening for the face
+        if(Math.abs(q)<1&&Math.abs(Math.atan2(sx,c))<0.9*Math.sqrt(1-q*q))skip.add(k*M+m);}
+      grid.push(ids);}
+    for(let k=0;k<=K;k++)for(let m=0;m<M;m++){const id=grid[k][m],n=pc.N.slice(id*3,id*3+3),l=Math.hypot(...n);for(let q=0;q<3;q++)pc.N[id*3+q]=n[q]/l;}
+    for(let k=0;k<K;k++)for(let m=0;m<M;m++){if(skip.has(k*M+m)||skip.has((k+1)*M+m)||skip.has(k*M+(m+1)%M)||skip.has((k+1)*M+(m+1)%M))continue;
+      const a=grid[k][m],b=grid[k][(m+1)%M],c=grid[k+1][(m+1)%M],d=grid[k+1][m];pc.I.push(a,d,c,a,c,b);}
+    for(let k=0;k<=K;k++)for(let m=0;m<M;m++)if(skip.has(k*M+m)&&!skip.has(k*M+(m+1)%M)||!skip.has(k*M+m)&&skip.has(k*M+(m+1)%M)){const id=grid[k][skip.has(k*M+m)?(m+1)%M:m];for(let q=0;q<3;q++)pc.C[id*3+q]=lin[q]*0.8;}   // a darker rim at the opening
+    // the cowl over the shoulders
+    eqShell(pc,D,[Float32Array.from({length:D.n},(_,i)=>{const r=D.rest,z=r[i*3+2];if(D.arm[i]>0.5)return -1;return Math.min(z-1.36,1.53-z,0.24-Math.abs(r[i*3]));})],
+      e=>0.012+0.022*eqSm(1.36,1.52,e.r[2]),(e,f,rim)=>rim?lin.map(v=>v*0.8):main.map(v=>v*(0.9+0.1*eqNoise(e.p,20))),6,0.01);},
+  // a cloak: fastened across the shoulders, falling straight from the shoulder blades, clear of the legs at the hem; the
+  // edges curl forward round the shoulders, and lower down it rides the hips, not the legs
+  cloak(pc,D,item,dy,spec,ctx){pc.kind=eqMatOf(item,spec,spec.woven?15:1);const main=eqRGB(dy[0]),P=D.pos,hips=ctx.bone('hips'),spine=ctx.bone('spine');
+    const back=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+1]>-0.02&&D.rest[i*3+2]<1.53)back.push(i);
+    const yT=eqYAt(D,1.47),yH=eqYAt(D,0.3);let wT=0;for(const i of back)if(Math.abs(P[i*3+1]-yT)<0.04)wT=Math.max(wT,Math.abs(P[i*3]));wT=Math.min(0.23,wT*0.97);
+    const all=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]<1.53)all.push(i);
+    const NU=11,NV=12,Z=[],W=t=>wT+0.06*Math.pow(t,1.2);
+    const backZ=(x,y)=>{let z=1e9;for(const i of back)if(Math.abs(P[i*3+1]-y)<0.035&&Math.abs(P[i*3]-x)<0.06)z=Math.min(z,P[i*3+2]);return z;};
+    for(let v=0;v<NV;v++){const t=v/(NV-1),y=yT+(yH-yT)*t,clear=0.02+0.04*eqSm(0,0.45,t)+0.07*Math.pow(eqSm(0.45,1,t),1.3);
+      Z.push([...Array(NU)].map((_,u)=>{const b=backZ((u/(NU-1)*2-1)*W(t),y);return b<1e8?b-clear:null;}));}
+    for(const row of Z){const have=row.map((z,u)=>z==null?null:u).filter(u=>u!=null);   // columns with no body near them take the nearest that has one
+      if(have.length)for(let u=0;u<NU;u++)if(row[u]==null){const n=have.reduce((a,b)=>Math.abs(b-u)<Math.abs(a-u)?b:a);row[u]=row[n];}}
+    for(let v=0;v<NV;v++)for(let u=0;u<NU;u++){if(Z[v][u]==null)Z[v][u]=v?Z[v-1][u]:0;if(v)Z[v][u]=Math.min(Z[v-1][u],Z[v][u]);}   // it never moves back toward the body
+    for(let pass=0;pass<2;pass++)for(let v=0;v<NV;v++){const row=Z[v].slice();for(let u=0;u<NU;u++)Z[v][u]=Math.min(row[u],(row[Math.max(0,u-1)]+row[u]*2+row[Math.min(NU-1,u+1)])/4);}
+    const grid=[];
+    for(let v=0;v<NV;v++){const t=v/(NV-1),y=yT+(yH-yT)*t,ids=[];
+      for(let u=0;u<NU;u++){const uu=u/(NU-1)*2-1,x=uu*W(t);let y_=y,z=Z[v][u]+0.07*uu*uu*Math.pow(1-t,2)-0.014*Math.sin(uu*Math.PI*3.2)*eqSm(0.2,1,t);
+        if(v===0){   // the top edge lies over the shoulders and round the back of the neck
+          let ty=-1e9,zs=0,n=0;for(const i of all)if(Math.abs(P[i*3]-x)<0.04&&Math.abs(P[i*3+1]-yT)<0.09){ty=Math.max(ty,P[i*3+1]);}
+          for(const i of all)if(Math.abs(P[i*3]-x)<0.04&&Math.abs(P[i*3+1]-ty)<0.02){zs+=P[i*3+2];n++;}
+          if(n){y_=ty+0.012;z=Math.min(zs/n-0.01*(1-Math.abs(uu)),Z[1][u]+0.03);}}
+        const e=eqEval(D,[[eqNearPos(D,back,x,y_,z),1]]);e.p=[x,y_,z];e.n=[0,0,-1];
+        e.bones=eqMixBones(e.bones,new Map([[spine,0.25],[hips,0.75]]),eqSm(0.15,0.55,t));
+        const fold=0.88+0.12*Math.cos(uu*Math.PI*2.5+t*1.2);ids.push(eqVert(pc,e,0,main.map(c=>c*fold*(v===NV-1?0.82:1))));}
+      grid.push(ids);}
+    eqDrapeFinish(pc,grid,()=>[0,0,-1],false);
+    for(const sx of [-1,1])eqBlock(pc,D,eqNear(D,0.15*sx,-0.2,1.43,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.022,0.022,0.008,0.006,eqRGB(dy[2]),1.2);},
 };
 // a character's whole set of built pieces, merged into one skinned mesh on the body's skeleton
 function eqBuiltMesh(body,outfit,src,maxBuilt){
@@ -590,6 +652,35 @@ function eqBuiltMesh(body,outfit,src,maxBuilt){
   m.name='Outfit'; m.frustumCulled=false; m.castShadow=true; m.bind(body.skeleton,body.bindMatrix);
   m.morphTargetInfluences=body.morphTargetInfluences;   // the body's people and build shapes drive the outfit too
   return m;
+}
+// Hat hair: headgear doesn't hide the hair, it reshapes it to fit, as games commonly do. Each hairstyle is worked out once per
+// kind of headgear (and cached on its geometry) against an ellipsoid fitted to the scalp:
+//  hat: hair above the hatband is pressed onto the scalp inside the crown; below the brim it is left as it is
+//  hood: hair is pressed close to the scalp, and long hair below the skull is folded up into the nape, inside the hood
+//  wrap: hair under the wrap is pressed flat; long hair still hangs out below it
+function eqScalp(D){
+  if(D.scalp)return D.scalp; const P=D.pos,pts=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]>1.56)pts.push(i);
+  const q=(arr,f)=>{arr=arr.slice().sort((a,b)=>a-b);return arr[Math.min(arr.length-1,Math.floor(arr.length*f))];};
+  const ys=pts.map(i=>P[i*3+1]),top=Math.max(...ys),eyeY=q(pts.filter(i=>Math.abs(D.rest[i*3+2]-1.69)<0.015).map(i=>P[i*3+1]),0.5)||top-0.12;
+  const crown=pts.filter(i=>P[i*3+1]>eyeY-0.02),cx=0,cz=(Math.max(...crown.map(i=>P[i*3+2]))+Math.min(...crown.map(i=>P[i*3+2])))/2;
+  const rx=q(crown.map(i=>Math.abs(P[i*3]-cx)),0.9),zf=q(crown.map(i=>P[i*3+2]-cz),0.97),zb=-q(crown.map(i=>P[i*3+2]-cz),0.03);
+  let nape=null;{const ns=[];for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+1]>0&&Math.abs(D.rest[i*3+2]-1.62)<0.015)ns.push(P[i*3+1]);ns.sort((a,b)=>a-b);nape=ns.length?ns[ns.length>>1]:eyeY-0.08;}
+  return D.scalp={c:[cx,eyeY,cz],r:[rx,top-eyeY,zf,zb],top,eyeY,nape,bottom:Math.min(...ys)};
+}
+function eqHairFit(geo,mode,S){
+  const base=geo.userData.hairBase||geo; base.userData.fits=base.userData.fits||{};
+  const key=mode+':'+S.top.toFixed(3); if(base.userData.fits[key])return base.userData.fits[key];
+  const g=base.clone(), A=g.attributes.position, [cx,cy,cz]=S.c, [rx,ry,zf,zb]=S.r, band=S.top-0.075;
+  const lim=mode==='hat'?1.04:mode==='wrap'?1.05:1.1;
+  for(let i=0;i<A.count;i++){let x=A.getX(i),y=A.getY(i),z=A.getZ(i);
+    const w=mode==='hat'?eqSm(band-0.03,band+0.005,y):mode==='wrap'?eqSm(S.nape-0.02,S.nape+0.015,y):1;
+    if(mode==='hood'&&y<S.nape){const k=eqSm(S.nape,S.nape-0.25,y);y=S.nape-(S.nape-y)*(1-0.85*k);x=cx+(x-cx)*(1-0.45*k);z=cz+(z-cz)*(1-0.3*k)+0.02*k;}   // long hair folds up into the nape
+    if(w>0){const dx=(x-cx)/rx,dy=Math.max(0,y-cy)/ry,dz=(z-cz)/(z>cz?zf:zb),sN=Math.hypot(dx,dy,dz);
+      if(sN>lim){const k=lim/sN;const nx=cx+(x-cx)*k,ny=y>cy?cy+(y-cy)*k:y,nz=cz+(z-cz)*k;x+=(nx-x)*w;y+=(ny-y)*w;z+=(nz-z)*w;}}
+    if(mode==='hat'&&y>band+0.07)y=band+0.07;
+    A.setXYZ(i,x,y,z);}
+  A.needsUpdate=true; g.computeBoundingSphere(); g.userData.hairBase=base;
+  return base.userData.fits[key]=g;
 }
 // Built pieces are coloured per point; this adds the fine surface per fragment: fur strands, leather grain and creases, brushed
 // metal with a stronger highlight, cloth weave.
@@ -632,6 +723,8 @@ function dressOutfit(root,look,outfit,renderer,bakeOnly,opts){
   if(bakeOnly)return;
   if(rig.outfit){rig.outfit.parent.remove(rig.outfit);rig.outfit.geometry.dispose();rig.outfit=null;}
   const m=eqBuiltMesh(body,outfit,rig.lightSrc,opts.maxBuilt); if(m){body.parent.add(m);rig.outfit=m;}
-  const head=eqItem('head',outfit.head), hide=(head&&head.hidesHair)||[].concat(outfit.signature||[]).some(sg=>sg&&sg.type==='hat');    // hoods and wraps hide the hair (beards and moustaches stay)
-  root.traverse(o=>{if(o.isMesh&&hide&&o.name.startsWith('Hair_'))o.visible=false;});
+  // hat hair: reshape the hairstyle to the headgear (beards and moustaches stay as they are)
+  const head=eqItem('head',outfit.head), hat=[].concat(outfit.signature||[]).some(sg=>sg&&sg.type==='hat');
+  const mode=head&&head.id==='hood'?'hood':head&&head.id==='headwrap'?'wrap':(hat||(head&&head.id==='hat'))?'hat':null, S=mode?eqScalp(eqBodyData(rig.lightSrc||body)):null;
+  root.traverse(o=>{if(!o.isMesh||!o.name.startsWith('Hair_'))return;const base=o.geometry.userData.hairBase||o.geometry;o.geometry=mode?eqHairFit(base,mode,S):base;});
 }
