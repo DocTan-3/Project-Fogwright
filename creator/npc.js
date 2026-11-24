@@ -167,5 +167,5 @@ function npcAnimate(fig,dt){
   const k=Math.min(1,dt*T.look[2]); S.yaw+=(S.tYaw-S.yaw)*k; S.tilt+=(S.tTilt-S.tilt)*k*0.6;
   const pose=Object.assign({},T.pose); pose['head.y']=(pose['head.y']||0)+S.yaw*0.65; pose['neck.y']=(pose['neck.y']||0)+S.yaw*0.35;
   pose['head.z']=(pose['head.z']||0)+S.tilt; if(T.sway)pose['spine.z']=(pose['spine.z']||0)+Math.sin(S.t*1.3*p.energy)*T.sway;
-  fig.userData.pose=pose; fig.userData.mixer.update(dt); buildPosture(fig);
+  fig.userData.pose=pose; fig.userData.mixer.update(dt); buildPosture(fig); eqClothUpdate(fig,dt);
 }

@@ -146,6 +146,6 @@ let drag=null;cv.addEventListener('pointerdown',e=>{drag=e.clientX;spin=false;cv
 const BODY_FILES=new URLSearchParams(location.search).get('body')==='old'?[['m','male.gltf.json'],['f','female_cc.gltf.json']]:[['m','mh_m.gltf.json'],['f','mh_f.gltf.json'],['ml','mh_m_lod.gltf.json'],['fl','mh_f_lod.gltf.json']];
 Promise.all(BODY_FILES.map(([k,f])=>new Promise((res,rej)=>new THREE.GLTFLoader().load(f,g=>{preparePainted(g);G[k]=g;res();},undefined,rej)))).then(()=>{
   document.getElementById('status').remove(); build(); body();
-  (function loop(){requestAnimationFrame(loop);const dt=Math.min(0.05,clock.getDelta());if(spin)yaw+=dt*0.35;if(fig){fig.rotation.y=yaw;mixer.update(dt);buildPosture(fig);}R.render(scene,cam);})();
+  (function loop(){requestAnimationFrame(loop);const dt=Math.min(0.05,clock.getDelta());if(spin)yaw+=dt*0.35;if(fig){fig.rotation.y=yaw;mixer.update(dt);buildPosture(fig);eqClothUpdate(fig,dt);}R.render(scene,cam);})();
 }).catch(()=>{document.getElementById('status').textContent='Could not load the bodies.';});
 </script>
