@@ -4,6 +4,23 @@ Nov 22, 2026 · @Dev Tan
 
 The story of making Fogwright, written as we go: what we built, what we decided, and the patch notes for each step. Newest entries first.
 
+## Devlog 53 · Clothes that walk
+
+*Characters · 24 November 2026*
+
+Your note: seams still showed at the hips and groin, and clothes should be made with walking and running in mind.
+
+Two things caused it. Skirts were fixed to the hips, so a striding leg went straight through a robe and tore it open below the belt. And tunics and jerkins were painted below the leg crease, so their hems split and stretched across each thigh as the legs moved.
+
+**Cloth.** Skirts, cloaks and aprons are now a light cloth simulation, a few hundred points each:
+- **Hang:** each point is pulled toward where it would hang, partly following its thigh, and swings under gravity, held to its neighbours.
+- **Collision:** it's pushed out of capsules round the thighs and shins, never sinks into the body, and the fastened rows stay put.
+- **Walking:** a robe now sways round the forward leg, coats part at the front, and a cloak trails a little.
+
+It costs about 2.5 ms a frame for a crowd of nine; background figures skip it.
+
+**Hems.** Painted chest pieces and shirts now stop at the leg crease. Anything longer gets a short built flap below it that moves with the legs, the way WoW's tunics do. Skirts are measured as the body's outer envelope, so they drop straight past the gap between the legs instead of curving into it. A cloak stands off a little over a skirt or flap.
+
 ## Devlog 52 · Cloth that hangs, hair under hats
 
 *Characters · 24 November 2026*
