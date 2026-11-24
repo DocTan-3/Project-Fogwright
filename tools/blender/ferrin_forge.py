@@ -210,9 +210,6 @@ for cx, cy, sx, sy in [(-W / 2, fy, 1, 1), (W / 2, fy, -1, 1), (-W / 2, D / 2, 1
         box((cx - sx * 0.03, cy + sy * (Ls / 2 - 0.04), z + h / 2), (0.14, Ls, h - 0.015), 'F_ashlar', 0.035, tag='quoin')
         z += h; k += 1
 
-for cx, cy, sx2, sy2 in [(-W / 2, fy, 1, 1), (W / 2, fy, -1, 1)]:
-    box((cx + sx2 * 0.06, cy - 0.11, 1.25 + 1.3), (0.2, 0.04, 2.6), 'F_iron', 0.006, tag='guard'); box((cx - sx2 * 0.11, cy + 0.06, 1.25 + 1.3), (0.04, 0.2, 2.6), 'F_iron', 0.006, tag='guard')
-    for z in (1.6, 2.4, 3.2, 3.9): rivet((cx + sx2 * 0.06, cy - 0.135, z), (0, -1, 0))
 
 # the string course between the storeys, with a weathered drip
 for (c, s) in [((0, fy - 0.07, H1), (W + 0.3, 0.26, 0.3)), ((0, D / 2 + 0.07, H1), (W + 0.3, 0.26, 0.3)),
@@ -233,15 +230,17 @@ def corbels(a0, a1, face, n, along_x):
     box(c, s3, 'F_iron', 0.01, tag='cornice')
 corbels(-W / 2, W / 2, fy, -1, True); corbels(-W / 2, W / 2, D / 2, 1, True); corbels(-D / 2, D / 2, W / 2, 1, False); corbels(-D / 2, D / 2, -W / 2, -1, False)
 
-cgx, cgz = FX(BAY['u0'] + (BAY['u1'] - BAY['u0']) / 2), H1 + H2 + PAR / 2 + 0.05
-cyl((cgx, fy - 0.1, cgz), 0.62, 0.62, 0.14, 'F_iron', seg=24, axis='Y', bev=0.02, tag='cog')
-cyl((cgx, fy - 0.2, cgz), 0.26, 0.26, 0.1, 'F_iron', seg=16, axis='Y', bev=0.015)
-cyl((cgx, fy - 0.24, cgz), 0.1, 0.1, 0.08, 'F_rust', seg=10, axis='Y')
-for t in range(12):
-    a = t / 12 * math.pi * 2; box((cgx + math.cos(a) * 0.72, fy - 0.1, cgz + math.sin(a) * 0.72), (0.2, 0.14, 0.18), 'F_iron', 0.015, rz=0, tag='cog', rx=0)
-    PARTS[-1] = ([Vector((cgx, 0, cgz)) + (Matrix.Rotation(-a, 4, 'Y') @ (p - Vector((cgx, 0, cgz)))) if False else p for p in PARTS[-1][0]], PARTS[-1][1], PARTS[-1][2], PARTS[-1][3])
-for t in range(6):
-    a = t / 6 * math.pi * 2; pipe((cgx + math.cos(a) * 0.26, fy - 0.17, cgz + math.sin(a) * 0.26), (cgx + math.cos(a) * 0.58, fy - 0.17, cgz + math.sin(a) * 0.58), 0.045, 'F_iron', seg=6)
+cgx, cgz, cr = FX(5.3), H1 + 1.25, 0.5   # Ostrak's cog: the cast tie-plate of the floor beams, between the middle windows, clear of every course
+cyl((cgx, fy - 0.07, cgz), cr, cr, 0.1, 'F_iron', seg=28, axis='Y', bev=0.015, tag='cog')
+for t in range(14):   # teeth, each a trapezoid turned to its own angle on the rim
+    a = t / 14 * math.pi * 2; h0, h1 = 0.14, 0.09
+    P = lambda r, s2: Vector((cgx + math.cos(a) * r - math.sin(a) * s2, fy - 0.025, cgz + math.sin(a) * r + math.cos(a) * s2))
+    prism([P(cr - 0.04, -h0), P(cr - 0.04, h0), P(cr + 0.17, h1), P(cr + 0.17, -h1)], 0.09, (0, -1, 0), 'F_iron', 0.01, tag='cog')
+cyl((cgx, fy - 0.13, cgz), 0.2, 0.2, 0.08, 'F_iron', seg=16, axis='Y', bev=0.012)
+for t in range(5):
+    a = t / 5 * math.pi * 2 + math.pi / 2; pipe((cgx + math.cos(a) * 0.19, fy - 0.12, cgz + math.sin(a) * 0.19), (cgx + math.cos(a) * 0.44, fy - 0.12, cgz + math.sin(a) * 0.44), 0.04, 'F_iron', seg=6)
+cyl((cgx, fy - 0.19, cgz), 0.09, 0.09, 0.1, 'F_iron', seg=6, axis='Y')                            # the tie-rod's nut
+cyl((cgx, fy - 0.25, cgz), 0.035, 0.035, 0.06, 'F_rust', seg=6, axis='Y')
 
 # coping on the parapet, on each wall's centre line, overhanging both faces
 def coping(a0, a1, fixed, along_x):
@@ -271,15 +270,30 @@ for side in (0, 1):   # jambs: alternating long and short dressed blocks, beside
         box((x, fy - 0.035 + T / 2, z + hh / 2), (Lb, T + 0.07, hh - 0.015), 'F_ashlar', 0.03, tag='jamb')
         z += hh; k += 1
 
-cz0 = BAY['z1'] + BAY['rise'] + 0.95; cw = FX(BAY['u1']) - FX(BAY['u0']) + 0.9
-pts = [Vector((cu - cw / 2, fy, cz0)), Vector((cu + cw / 2, fy, cz0)), Vector((cu + cw / 2, fy - 1.35, cz0 - 0.42)), Vector((cu - cw / 2, fy - 1.35, cz0 - 0.42))]
-prism(pts, 0.06, (0, 0, 1), 'F_iron', 0.01, tag='canopy')
-box((cu, fy - 1.36, cz0 - 0.5), (cw + 0.04, 0.06, 0.18), 'F_iron', 0.01, tag='canopy')
-for k in range(9): rivet((cu - cw / 2 + 0.25 + k * (cw - 0.5) / 8, fy - 1.39, cz0 - 0.5), (0, -1, 0))
-for x in (cu - cw / 2 + 0.2, cu + cw / 2 - 0.2):
-    pipe((x, fy - 0.02, cz0 + 0.9), (x, fy - 1.3, cz0 - 0.38), 0.02, 'F_iron', seg=4)            # its chains
-    box((x, fy - 0.05, cz0 + 0.9), (0.14, 0.1, 0.14), 'F_iron', 0.01)
-for k in range(3): pipe((cu - cw / 2 + 0.3 + k * (cw - 0.6) / 2, fy, cz0 - 0.03), (cu - cw / 2 + 0.3 + k * (cw - 0.6) / 2, fy - 1.3, cz0 - 0.44), 0.03, 'F_iron', seg=4)   # its ribs
+CD, slope = 2.6, math.radians(14)                      # deep enough to shoe a horse or quench a bar out of the rain
+cz0 = H1 + 0.3; czf = cz0 - CD * math.tan(slope); cw = FX(BAY['u1']) - FX(BAY['u0']) + 1.2; cl, cr2 = cu - cw / 2, cu + cw / 2
+Z = lambda y: cz0 + (y - fy) * math.tan(slope)          # the sheet's height at a distance out from the wall (y < fy)
+box((cu, fy - 0.06, cz0 + 0.06), (cw + 0.2, 0.12, 0.22), 'F_iron', 0.01, tag='canopy')                       # the wall plate, bolted on
+for k in range(10): rivet((cl + 0.1 + k * (cw) / 9, fy - 0.12, cz0 + 0.08), (0, -1, 0))
+prism([Vector((cl, fy, cz0)), Vector((cr2, fy, cz0)), Vector((cr2, fy - CD, czf)), Vector((cl, fy - CD, czf))], 0.05, (0, 0, 1), 'F_iron', 0.008, tag='canopy')   # the sheet
+for k in range(int(cw / 0.6) + 1):                                                                            # its standing seams
+    x = cl + 0.05 + k * (cw - 0.1) / int(cw / 0.6); pipe((x, fy - 0.02, cz0 + 0.03), (x, fy - CD + 0.02, czf + 0.03), 0.016, 'F_iron', seg=4)
+box((cu, fy - CD - 0.02, czf - 0.06), (cw + 0.04, 0.05, 0.16), 'F_iron', 0.006, tag='canopy')                # front fascia
+for x in (cl, cr2): prism([Vector((x, fy, cz0 - 0.16)), Vector((x, fy - CD, czf - 0.16)), Vector((x, fy - CD, czf + 0.02)), Vector((x, fy, cz0 + 0.02))], 0.05, (1 if x > cu else -1, 0, 0), 'F_iron', 0.004)
+for k in range(12): rivet((cl + 0.15 + k * (cw - 0.3) / 11, fy - CD - 0.05, czf - 0.06), (0, -1, 0))
+for y in (fy - 0.9, fy - 1.8): box((cu, y, Z(y) - 0.09), (cw - 0.1, 0.1, 0.12), 'F_wood', 0.01)            # purlins under the sheet
+for x in (cl + 0.12, cu, cr2 - 0.12): prism([Vector((x - 0.05, fy, cz0 - 0.02)), Vector((x + 0.05, fy, cz0 - 0.02)), Vector((x + 0.05, fy - CD + 0.05, czf - 0.02)), Vector((x - 0.05, fy - CD + 0.05, czf - 0.02))], 0.16, (0, 0, 1), 'F_wood', 0.01)   # rafters
+for x in (cl + 0.2, cr2 - 0.2):                                                                              # knee braces at each end, from the wall
+    pipe((x, fy - 0.05, cz0 - 1.35), (x, fy - 1.55, Z(fy - 1.55) - 0.05), 0.045, 'F_iron', seg=6)
+    box((x, fy - 0.06, cz0 - 1.35), (0.18, 0.12, 0.3), 'F_iron', 0.01)
+for x in (cl + 0.3, cr2 - 0.3):                                                                              # tie-rods from anchor plates under the corbels
+    pipe((x, fy - 0.06, H1 + H2 - 0.45), (x, fy - CD + 0.08, czf + 0.06), 0.022, 'F_iron', seg=5)
+    box((x, fy - 0.05, H1 + H2 - 0.45), (0.2, 0.1, 0.2), 'F_iron', 0.01); cyl((x, fy - CD + 0.08, czf + 0.09), 0.05, 0.05, 0.06, 'F_iron', seg=6)
+pipe((cl - 0.05, fy - CD - 0.08, czf - 0.12), (cr2 + 0.05, fy - CD - 0.08, czf - 0.04), 0.075, 'F_iron', seg=8)   # the gutter, falling to the left end
+pipe((cl - 0.07, fy - CD - 0.08, czf - 0.12), (cl - 0.07, fy - 0.2, Z(fy - 0.2) - 0.25), 0.05, 'F_iron', seg=6)   # its pipe back to the wall
+pipe((cl - 0.07, fy - 0.2, Z(fy - 0.2) - 0.25), (cl - 0.07, fy - 0.2, 0.35), 0.05, 'F_iron', seg=6, tag='downpipe')
+pipe((cl - 0.07, fy - 0.2, 0.35), (cl - 0.07, fy - 0.45, 0.12), 0.05, 'F_iron', seg=6)
+for z in (1.2, 2.4, 3.4): box((cl - 0.07, fy - 0.1, z), (0.16, 0.22, 0.05), 'F_iron', 0.004)
 km = (a0 + a1) / 2; kx = cu + math.cos(km) * (R + 0.45); kz = cz + math.sin(km) * (R + 0.45)
 box((kx, fy - 0.14, kz + 0.05), (0.34, 0.06, 0.12), 'F_iron', 0.01); box((kx, fy - 0.14, kz - 0.07), (0.16, 0.06, 0.14), 'F_iron', 0.01)   # Ostrak's anvil on the keystone
 
@@ -351,7 +365,7 @@ for (x, y, n, a) in [(W / 2, fy + 5.0, (1, 0, 0), (0, 1, 0)), (-W / 2, D / 2 - 5
 window(W / 2 - 2.4, D / 2, (0, 1, 0), (-1, 0, 0), 0.8, WIN[1], WIN[2])
 
 # ---- iron wall anchors at the floor line: the beams within are tied to the walls
-for x in (-W / 2 + 0.75, FX(5.3), W / 2 - 0.75):
+for x in (-W / 2 + 0.75, W / 2 - 0.75):
     box((x, fy - 0.03, H1 + 0.42), (0.7, 0.04, 0.09), 'F_iron', 0.01, rz=0, tag='anchor', rx=0)
     box((x, fy - 0.03, H1 + 0.42), (0.09, 0.04, 0.7), 'F_iron', 0.01, tag='anchor')
     cyl((x, fy - 0.06, H1 + 0.42), 0.08, 0.06, 0.06, 'F_iron', seg=8, axis='Y')
@@ -396,7 +410,7 @@ for y in (fy + 2.2, fy + 5, fy + 8): box((W / 2 + 0.1, y, 0.9 if y > fy + 3 else
 cyl((W / 2 + 0.28, fy + 2.2, 2.0), 0.14, 0.14, 0.03, 'F_rust', seg=10, axis='X')                  # a valve wheel
 
 # ---- the sign: a wrought bracket over the bay with a hanging hammer-and-anvil plate; a lantern by the door
-sxp = FX(BAY['u0']) - 0.25
+sxp = (cr2 + FX(DOOR['u0']) - 0.16) / 2
 box((sxp, fy - 0.55, 3.55), (0.06, 1.1, 0.06), 'F_iron', 0.0); pipe((sxp, fy - 0.02, 3.1), (sxp, fy - 0.85, 3.55), 0.025, 'F_iron', seg=6)
 for y in (fy - 0.35, fy - 0.85): pipe((sxp, y, 3.52), (sxp, y, 3.3), 0.012, 'F_iron', seg=4)
 box((sxp, fy - 0.6, 2.95), (0.05, 0.7, 0.62), 'F_rust', 0.01, tag='sign')
