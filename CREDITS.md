@@ -25,3 +25,9 @@ CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 4x4 s
 leafy_grass, forest_leaves_02, coast_land_rocks_01, coast_sand_01, brown_mud, grass_path_2, bark_brown_02, forest_leaves_04,
 wood_table_worn, quatrefoil_jacquard_fabric (greyscale), brown_leather, rusty_metal_02, green_metal_rust, dirty_carpet,
 terry_cloth (greyscale), aerial_rocks_02.
+
+## Ferrin Quarter textures (game/tex/ferrin)
+
+CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 1K colour, normal (OpenGL) and roughness maps:
+rock_wall_05, medieval_blocks_03, castle_brick_07, metal_plate_02, rusty_metal_02, dark_wooden_planks.
+The Ferrin forge-house model (game/models/ferrin_forge.glb) is built by tools/blender/ferrin_forge.py.

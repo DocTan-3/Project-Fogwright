@@ -1903,7 +1903,7 @@ function kFerrinGB(){
   {const k=new KitB();k._add(new THREE.ConeGeometry(2.4,1.6,7).toNonIndexed().rotateX(PI/2),k.M(0,0,0.8),'#3a3836');k.finish('FGB_Slag',4.8,4.8);}   // a slag heap
   {const k=new KitB();k.box(3.2,2.2,1.2,0,0,0.6,'#252526');k.box(3.4,0.2,1.4,0,1.15,0.7,S);k.box(0.2,2.4,1.4,-1.7,0,0.7,S);k.box(0.2,2.4,1.4,1.7,0,0.7,S);k.finish('FGB_Coal',3.6,2.6);}   // a coal bunker
 }
-function ferrinPick(rnd,nearSquare){const u=rnd();if(nearSquare&&u<0.5)return 'FGB_Shop';return u<0.42?'FGB_Forge':u<0.62?'FGB_Forge2':u<0.75?'FGB_Shop':u<0.85?'FGB_Smelter':'FGB_Narrow';}
+function ferrinPick(rnd,nearSquare){const u=rnd();if(nearSquare&&u<0.5)return 'FGB_Shop';const F=FX.FX_Forge?'FX_Forge':null;return u<0.42?(F||'FGB_Forge'):u<0.62?(F||'FGB_Forge2'):u<0.75?'FGB_Shop':u<0.85?'FGB_Smelter':'FGB_Narrow';}
 const FGB_FILL=['FGB_Shop','FGB_Narrow'];
 function kGreenKit(){ // what the green wards plant
   const ico=(k,r,x,y,z,col,sy)=>k._add(new THREE.IcosahedronGeometry(r,0).toNonIndexed().scale(1,1,sy||1),k.M(x,y,z),col);
@@ -2140,6 +2140,33 @@ function dressHub(k,name){
     const g=KIT.geo[n];g.computeBoundingBox();const b=g.boundingBox;KIT.size[n]=[2*Math.max(-b.min.x,b.max.x),2*Math.max(-b.min.z,b.max.z)];}   // placement uses the true outline: bays, awnings, steps, boilers
   console.log('kit built in',Math.round(performance.now()-_t0),'ms');
 })();
+// ---- The Ferrin Quarter pilot, step 3: buildings modelled in Blender (tools/blender/ferrin_forge.py). Real geometry, CC0 PBR
+// textures (colour, normal, roughness) and weathering baked into vertex colours. Drawn instanced per material, a decimated
+// version beyond ~110 m. Loaded with the kit: the game starts once they are in (or gives up and keeps the grey-box).
+const FX={}, FX_SETS={F_stone:['rock_wall_05',[0.15,0.155,0.17],0.3],F_ashlar:['medieval_blocks_03',[0.25,0.255,0.27],0.3],F_brick:['castle_brick_07',[0.62,0.48,0.42],1],
+  F_iron:['metal_plate_02',[0.22,0.22,0.24],1],F_rust:['rusty_metal_02',[0.30,0.24,0.20],1],F_wood:['dark_wooden_planks',[0.70,0.62,0.55],1],F_copper:['rusty_metal_02',[0.78,0.46,0.30],1]};
+const FX_MATS={};
+function fxMaterial(name){if(FX_MATS[name])return FX_MATS[name];const lin=v=>v<=0.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-0.055;let m;
+  if(name==='F_glow')m=new THREE.MeshBasicMaterial({color:0xff5a14});
+  else if(name==='F_glass')m=new THREE.MeshStandardMaterial({color:0x0d0f12,roughness:0.15,metalness:0.2});
+  else{const S=FX_SETS[name]||FX_SETS.F_stone,TL=new THREE.TextureLoader(),an=renderer.capabilities.getMaxAnisotropy?Math.min(8,renderer.capabilities.getMaxAnisotropy()):4;
+    const tx=k=>{const t=TL.load('tex/ferrin/'+S[0]+'_'+k+'.jpg');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.flipY=false;t.anisotropy=an;return t;};
+    m=new THREE.MeshStandardMaterial({map:tx('diff'),normalMap:tx('nor'),roughnessMap:tx('rough'),vertexColors:true,color:new THREE.Color(lin(S[1][0])*1.15,lin(S[1][1])*1.15,lin(S[1][2])*1.15),roughness:1,metalness:/iron|rust|copper/.test(name)?0.25:0});
+    const sat=S[2];if(sat<1)m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(vec3(dot(diffuseColor.rgb,vec3(.299,.587,.114))),diffuseColor.rgb,'+sat.toFixed(2)+');');};}
+  m.name=name;return FX_MATS[name]=m;}
+function registerFX(name,root,n0,n1,core,vents){root.updateMatrixWorld(true);const pick=nm=>{const o=root.getObjectByName(nm),out={};if(!o)return out;
+    o.traverse(q=>{if(!q.isMesh)return;const g=q.geometry.clone();g.applyMatrix4(q.matrixWorld);const ca=g.attributes.color;
+      if(ca){const c=new THREE.Color(),out2=new Float32Array(ca.count*3),div=!ca.normalized?1:ca.array instanceof Uint8Array?255:65535;for(let i=0;i<ca.count;i++){c.setRGB(ca.array[i*ca.itemSize]/div,ca.array[i*ca.itemSize+1]/div,ca.array[i*ca.itemSize+2]/div).convertLinearToSRGB();out2[i*3]=c.r;out2[i*3+1]=c.g;out2[i*3+2]=c.b;}g.setAttribute('color',new THREE.BufferAttribute(out2,3));}
+      g.computeBoundingSphere();out[q.material.name]=g;});return out;};
+  const A=pick(n0),B=pick(n1),subs=Object.keys(A).map(k=>({geo:A[k],lod:B[k]||null,mat:fxMaterial(k)}));if(!subs.length)return false;
+  const bb=new THREE.Box3();for(const s2 of subs){s2.geo.computeBoundingBox();bb.union(s2.geo.boundingBox);}
+  FX[name]={subs};KIT.size[name]=[2*Math.max(-bb.min.x,bb.max.x),2*Math.max(-bb.min.z,bb.max.z)];KIT.core[name]=core;KIT.vents[name]=vents||[];
+  KIT.geo[name]=new THREE.BoxGeometry(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z).translate((bb.max.x+bb.min.x)/2,(bb.max.y+bb.min.y)/2,(bb.max.z+bb.min.z)/2);   // the outline, for placement and the overlap checks
+  return true;}
+(function loadFerrin(){if(typeof FERRIN_GB==='undefined'||!FERRIN_GB||!THREE.GLTFLoader)return;KIT.done=false;let fin=false;
+  const done=()=>{if(fin)return;fin=true;KIT.done=true;for(const w of KIT.waiters.splice(0))w();};
+  new THREE.GLTFLoader().load('models/ferrin_forge.gltf.json',g=>{try{registerFX('FX_Forge',g.scene,'FerrinForge','FerrinForge_LOD1',[10.6,11],[[3.8,17.6,-3.9,1.6]]);}catch(e){console.warn('ferrin forge',e);}done();},undefined,()=>done());
+  setTimeout(done,20000);})();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
 // and only blocks near the player cast shadows. One batch per house type for the whole city drew all of it from anywhere.
 const CELLS=[], CELL=64, SHADOW_NEAR=70;
@@ -2159,6 +2186,8 @@ function cellInstances(geo,mat,list,far,big,tinted,farGeo){ // list of {x,y,z,ry
 }
 function kitInstances(name,list){
   if(PLAN){const wall=/WallSeg|WardWall|WardGate|Terrace|Quay|WaterGate/.test(name);for(const p of list){const [x,z,ry,st,ryx]=warpPose(p.x,p.z,p.ry||0);p.x=x;p.z=z;p.ry=wall?ryx:ry;if(wall)p.sx=(p.sx||1)*st*1.04;}}
+  if(FX[name]){for(const v of KIT.vents[name]||[])for(const p of list){const u=p.s||1,c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lx=v[0]*u,lz=v[2]*u;VENTS.push({x:p.x+lx*c+lz*sn,y:p.y+v[1]*u,z:p.z-lx*sn+lz*c,s:v[3]*u});}
+    for(const s2 of FX[name].subs)cellInstances(s2.geo,s2.mat,list,480,false,false,s2.lod);return;}
   for(const v of KIT.vents[name]||[])for(const p of list){const u=p.s||1,c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lx=v[0]*(p.sx||1)*u,lz=v[2]*u;VENTS.push({x:p.x+lx*c+lz*sn,y:p.y+v[1]*u,z:p.z-lx*sn+lz*c,s:v[3]*u});}const big=/WallSeg|WardWall|WardGate|Tower|Gatehouse|WaterGate/.test(name),g=KIT.geo[name],small=g.attributes.position.count<2400||/Stall|Tent|Yurt|Pavilion|Wagon|Crates|Booth|Pen|Boat|Pier|Well/.test(name);
   cellInstances(g,kitMat,list,big?1e9:small?260:560,big,true,big||small?null:KIT.far[name]);}   // small props keep their shape: their 'far' version would be a bare box
 const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
@@ -2224,7 +2253,7 @@ function buildCityHouses(){
     const fz=s0[1]/2+1.2,front=heightAt(x+fz*sn,z+fz*c);return [lo,hi,front];};
   const [mx,mz]=marketPos(), lists={}, plinths=[], put=(name,x,z,ry,tint,y)=>{if(/^Shack2?$/.test(name)&&GEN.shack&&GEN.shack.length)name=GEN.shack[Math.floor(rnd()*GEN.shack.length)];if(y===undefined){const [lo,hi,front]=footY(name,x,z,ry);
       if(hi-lo>7&&!/Span|Well|Garden/.test(name))return false;
-      const built=/^(FGB_(Forge|Shop|Narrow|Smelter)|Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
+      const built=/^(FX_|FGB_(Forge|Shop|Narrow|Smelter)|Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
       if(!built&&hi-lo>0.9&&!/Span|Well|Garden|Terrace/.test(name))return false;
       if(built&&hi-lo>0.35&&KIT.core[name]){   // the door is at the street's level; the uphill back is dug into the slope (no more than a storey's worth),
         y=Math.max(front-0.08,hi-2.2);                        // the downhill side shows a lower storey of its own
@@ -2304,7 +2333,7 @@ function buildCityHouses(){
     let t=0.5+rnd()*2,fails=0;
     while(t<L){let placed=false;const [qx,qz]=sample(Math.min(L,t+3)),qa=Math.atan2(qz-CITY.z,qx-CITY.x),qr=Math.hypot(qx-CITY.x,qz-CITY.z),w0=cityWealth(qa,qr),poor=w0<0.3;
       let first=pickHouse(qa,qr,rnd);if(KIT.size[first][1]>maxD)first=FILLERS.find(n=>KIT.size[n][1]<=maxD)||'Shack';
-      const inF=FERRIN_GB&&/^FGB_/.test(first),cands=inF?[first,...FGB_FILL.filter(n=>n!==first&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
+      const inF=FERRIN_GB&&/^(FGB_|FX_)/.test(first),cands=inF?[first,...FGB_FILL.filter(n=>n!==first&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
       for(const name of cands){const [w,d]=KIT.size[name];if(t+w>L+0.3)continue;
         const [px,pz,nx,nz]=sample(t+w/2),jit=poor?(rnd()-0.5)*0.6:0,off=off0+d/2+jit,x=px+nx*off,z=pz+nz*off,ry=Math.atan2(-nx,-nz)+(poor?(rnd()-0.5)*0.1:0);
         const f={x,z,hw:w/2+0.15,hd:d/2+0.15,rot:ry};
