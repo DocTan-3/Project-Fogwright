@@ -321,7 +321,8 @@ const AVENUES=[0,0.86,Math.PI/2,2.4,Math.PI,3.9,Math.PI*1.5,5.5];
 // Gate's road stays the straight processional way. [lateral swing in m, wavelength, phase]
 const AVM=[[22,34,0.4],[18,28,2.1],[0,30,0],[24,31,1.2],[20,36,2.8],[16,26,0.9],[21,33,1.9],[19,29,3.3]];
 function avAt(i,r){const m=AVM[i],t=smooth(CITY.core,CITY.core+30,r)*(1-smooth(CITY.r-28,CITY.r-4,r));return AVENUES[i]+m[0]*Math.sin((r-CITY.core)/m[1]+m[2])*t/Math.max(r,1);}
-function avDist(a,r){let d=1e9;for(let i=0;i<8;i++){const v=avAt(i,r);d=Math.min(d,Math.abs(Math.atan2(Math.sin(a-v),Math.cos(a-v)))*r);}return d;}   // the old roads from the plaza to the wall; the gate road runs due south
+function avDist(a,r){let d=1e9;for(let i=0;i<8;i++){if(i%2&&r>268)continue;   // only the gate roads run on to the wall
+    const v=avAt(i,r);d=Math.min(d,Math.abs(Math.atan2(Math.sin(a-v),Math.cos(a-v)))*r);}return d;}   // the old roads from the plaza to the wall; the gate road runs due south
 const Q_WEIGHT=[0.08,0.15,0.23,0.08,0.08,0.10,0.12,0.08];   // Ferrin, Market, Wayfolk, Ruadhan, Hrimfolk, Temple, Aurelan, Zarhim
 // (the Ilvari have no quarter: the lore makes them rare travellers with no city; in Aldrath they keep only the Laboratory)
 const CITY={x:0,z:-1400,r:300,core:72}, VILLAGE={x:0,z:2,r:46}, PORT={x:20,z:1000,r:38};
@@ -338,7 +339,7 @@ function warpPose(x,z,ry){const w=P2W(x,z),f=P2W(x+Math.sin(ry)*0.5,z+Math.cos(r
 // the hill: the sealed core stands on its crown, the city falls away to the walls
 const CITY_HILL=20;
 // the river: in from the western hills, through the low ground of the outer city, out past the Sea Gate to the sea (plan a, r)
-const RIVER_P=[[3.25,560],[3.28,420],[3.32,300],[3.42,262],[3.6,241],[3.85,236],[4.1,238],[4.3,250],[4.42,262],[4.5,300],[4.53,420],[4.55,560],[4.56,700]].map(([a,r])=>[CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r]);
+const RIVER_P=[[3.25,560],[3.28,420],[3.31,330],[3.35,300],[3.43,284],[3.6,279],[3.85,278],[4.1,278],[4.3,280],[4.41,288],[4.47,300],[4.5,330],[4.53,420],[4.55,560],[4.56,700]].map(([a,r])=>[CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r]);
 function riverDistP(x,z){let d=1e9;for(let i=0;i<RIVER_P.length-1;i++)d=Math.min(d,segDist(x,z,RIVER_P[i],RIVER_P[i+1]));return d;}
 // Aldrath grew from its gate (south, angle PI/2) inward: traders and travellers by the gate road, the old faithful and the
 // lords by the sealed core, the smoke and the cold peoples pushed to the back walls. Each quarter grows from a seed
@@ -460,7 +461,7 @@ vec2 w2p(vec2 w){vec2 d=w-uCity.xy;float L=length(d);if(L<=uCity.w)return w;floa
 vec3 cityGround(vec2 w,vec2 wl,float paved,float wealth){
   vec2 d=wl-uCity.xy; float r=length(d), a=atan(d.y,d.x); if(a<0.)a+=6.2831853;
   float q=0., q2=0., av=1e4, n=gn(w*.7)*.5+gn(w*3.1)*.5;
-  for(int i=0;i<8;i++){vec3 m=uAvM[i];float tt=smoothstep(uCity.w,uCity.w+30.,r)*(1.-smoothstep(uCity.z-28.,uCity.z-4.,r));float v=uAv[i]+m.x*sin((r-uCity.w)/m.y+m.z)*tt/max(r,1.);
+  for(int i=0;i<8;i++){if(i-2*(i/2)==1&&r>268.)continue;vec3 m=uAvM[i];float tt=smoothstep(uCity.w,uCity.w+30.,r)*(1.-smoothstep(uCity.z-28.,uCity.z-4.,r));float v=uAv[i]+m.x*sin((r-uCity.w)/m.y+m.z)*tt/max(r,1.);
     float da=abs(a-v);da=min(da,6.2831853-da);av=min(av,da*r);}
   vec2 p=d+(vec2(gn(w*.02),gn(w*.02+9.))-.5)*30.; p+=vec2(24.*sin(p.y*.019+.7)+10.*sin((p.x+p.y)*.043),24.*sin(p.x*.017+2.1)+10.*sin((p.x-p.y)*.047+1.1));
   float s1=1e18,s2=1e18; vec2 c1=vec2(0.),c2=vec2(0.);
@@ -1007,7 +1008,7 @@ function buildPort(){
 const LONGSHIPS=[], SEA_STRAND={x:0,z:0};
 /* ---------- Building kit, generated in code: every house is a recipe, nothing to download ---------- */
 // Recipes are written in "plan" coordinates: x along the frontage, -y is the street side, z is up.
-const KIT={done:true,geo:{},far:{},size:{},vents:{},waiters:[]};
+const KIT={done:true,geo:{},far:{},size:{},core:{},vents:{},waiters:[]};
 const VENTS=[];
 // CC0 surface textures (Poly Haven, see CREDITS.md), packed 4x4 into one 2048 px sheet. Each is divided by its own average
 // colour, so the parts keep the colours the recipes give them and the photo brings only the detail and the wear.
@@ -1163,7 +1164,7 @@ class KitB{
       bg.computeBoundingSphere(); return bg;};
     if(/WallSeg|Tower|Gatehouse|YardForge|Terrace|Quay|WaterGate|Pier|Boat|Harpoon|Aqueduct|Well|Span|Walkway|LaneLine|Portal|Granary|Garden|Clocktower|Observatory|Stall|Pen|Tent|Yurt|Pavilion|Wagon|Crates|Boom|Booth|Tannery|Smithy|Spire|Round|Hut/.test(name))for(const g of this.parts){const a=g.attributes.kmat.array;for(let i=0;i<a.length;i++)if(a[i]<49.5)a[i]+=50;}
     const bg=merge(this.parts), far=merge(this.parts.filter(g=>!g.userData.small)); this.parts.forEach(g=>g.dispose());
-    KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; KIT.vents[name]=this.vents.map(([x,y,z,v])=>[x,z,-y,v]); return bg;
+    KIT.geo[name]=bg; KIT.far[name]=far; KIT.size[name]=[w,d]; KIT.core[name]=[w,d]; KIT.vents[name]=this.vents.map(([x,y,z,v])=>[x,z,-y,v]); return bg;
   }
 }
 const PI=Math.PI; // plan-space helpers below
@@ -2019,7 +2020,7 @@ function dressHub(k,name){
   kRow('RowA','brick:#9a4a36','#e3dccb','slate:#3f4a5c',3,true,true,-1); kRow('RowB','plaster:#c9b48e','#f1ecdf','tile:#8a4a3a',3,false,false,1); kRow('RowC','brick:#7a3c31','#d9cfba','slate:#2f3640',4,true,true,1);
   kManor(); kTenement('Tenement',5); kTenement('Tenement4',4); kTenement('Tenement7',7); kShack('Shack',false); kShack('Shack2',true); kLonghouse('Longhouse','shingle:#5a4a3a'); kLonghouse('Lodge','thatch:#5c6b3e');
   kHut('HutRound','round'); kHut('HutFrame','aframe'); kHut('HutAdobe','adobe'); kHut('HutWhite','white'); kHut('HutTemple','temple'); kHut('HutIron','iron'); kAdobe('Adobe',false); kAdobe('AdobeDome',true); kSpire(); kForge(); kRound(); kTimber('Timberframe',0,'plaster:#e6dcc4','tile:#a8452f'); kTimber('Timberframe3',1,'plaster:#d8c8a0','slate:#3f4a5c'); kTimber('TimberframeB',0,'plaster:#c9b8a0','shingle:#5a4a3a'); kSpan(); kChapel(); kShop('Shopfront','#b5473a',null); kShop('ShopArmor','#3f4a5c','shield'); kShop('ShopWeapon','#7a2a24','sword'); kShop('ShopAlchemy','#3c8d4f','flask'); kShop('ShopTailor','#9a5ad0','spool'); kGarden(); kWalls(); kTavern('Tavern','#e8dcc2','#9a4a36','#2e5a46'); kTavern('Tavern2','#d8ccb0','#6a5a4a','#7a2a24'); kFoundry(); kBarracks(); kArcade(); kBank(); kGuild(); kObservatory(); kGranary(); kWaterworks(); kAqueduct(); kWell(); (()=>{const k=new KitB();k.box(1,1,1,0,0,-0.5,'stone:#8f877b');k.finish('Plinth',1,1);})(); kQuay(); kWaterGate(); kPier(); kBoat(); kHarpoon(); for(let i=0;i<4;i++)kYardForge('YardForge'+i,i+1); kTerrace('Terrace',false); kTerrace('TerraceStair',true); kLongship('Longship',22,true); kLongship('LongshipS',17,false); for(let i=0;i<12;i++){genHouse('row',i+1);genHouse('timber',i+101);} for(let i=0;i<10;i++)genHouse('tenement',i+201); GEN.shack=[]; for(let i=0;i<14;i++)genShack(i+801); for(let i=0;i<8;i++){genCulture('ferrin',i+301);genCulture('hrim',i+401);genCulture('zarhim',i+501);genCulture('ruadhan',i+601);genCulture('temple',i+701);} kRoofShack('RoofShack',false); kRoofShack('RoofShack2',true); kBridgeRoom('BridgeRoom',7.4); kBridgeRoom('BridgeRoomB',7.4); kWalkway(); kLaneLine(); kLab(); kClock(); kPortal();
-  for(const n in KIT.geo){if(/WallSeg|^Tower$|Gatehouse|Terrace|Quay|WaterGate|Span|LaneLine|Walkway|BridgeRoom|Plinth|Aqueduct|^Int_|RoofShack|Harpoon|Longship/.test(n))continue;
+  for(const n in KIT.geo){if(/WallSeg|^Tower$|Gatehouse|Terrace|Quay|WaterGate|Span|LaneLine|Walkway|BridgeRoom|Plinth|Aqueduct|^Int_|^Under_|RoofShack|Harpoon|Longship/.test(n))continue;
     const g=KIT.geo[n];g.computeBoundingBox();const b=g.boundingBox;KIT.size[n]=[2*Math.max(-b.min.x,b.max.x),2*Math.max(-b.min.z,b.max.z)];}   // placement uses the true outline: bays, awnings, steps, boilers
   console.log('kit built in',Math.round(performance.now()-_t0),'ms');
 })();
@@ -2101,14 +2102,19 @@ const LANDMARKS=[
 const LANDMARK_AT=[];
 const portalLight=new THREE.PointLight(0xb48cff,0,22,2); scene.add(portalLight);
 function buildCityHouses(){
-  const footY=(name,x,z,ry)=>{const s0=KIT.size[name]||[6,6],c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;
-    for(const [u,v] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=u*s0[0]*0.45,lz=v*s0[1]*0.45,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}return [lo,hi];};
-  const [mx,mz]=marketPos(), lists={}, plinths=[], put=(name,x,z,ry,tint,y)=>{if(/^Shack2?$/.test(name)&&GEN.shack&&GEN.shack.length)name=GEN.shack[Math.floor(rnd()*GEN.shack.length)];if(y===undefined){const [lo,hi]=footY(name,x,z,ry);
-      if(hi-lo>4.5&&!/Span|Well|Garden/.test(name))return false;
+  const footY=(name,x,z,ry)=>{const s0=KIT.core[name]||KIT.size[name]||[6,6],c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;
+    for(const [u,v] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=u*s0[0]*0.48,lz=v*s0[1]*0.48,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}
+    const fz=s0[1]/2+1.2,front=heightAt(x+fz*sn,z+fz*c);return [lo,hi,front];};
+  const [mx,mz]=marketPos(), lists={}, plinths=[], put=(name,x,z,ry,tint,y)=>{if(/^Shack2?$/.test(name)&&GEN.shack&&GEN.shack.length)name=GEN.shack[Math.floor(rnd()*GEN.shack.length)];if(y===undefined){const [lo,hi,front]=footY(name,x,z,ry);
+      if(hi-lo>7&&!/Span|Well|Garden/.test(name))return false;
       const built=/^(Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
       if(!built&&hi-lo>0.9&&!/Span|Well|Garden|Terrace/.test(name))return false;
-      if(built&&hi-lo>0.35&&KIT.size[name]){y=hi-0.1;const g=KIT.geo[name];if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox,cx=(b.min.x+b.max.x)/2,cz=(b.min.z+b.max.z)/2,c=Math.cos(ry),sn=Math.sin(ry);
-        plinths.push({x:x+cx*c+cz*sn,z:z-cx*sn+cz*c,ry,y:y+0.05,sx:(b.max.x-b.min.x)*0.9,sy:hi-lo+0.6,sz:(b.max.z-b.min.z)*0.9,tint:[0.82,0.8,0.76]});}else y=lo-0.12;}
+      if(built&&hi-lo>0.35&&KIT.core[name]){   // the door is at the street's level; the uphill back is dug into the slope (no more than a storey's worth),
+        y=Math.max(front-0.08,hi-2.2);                        // the downhill side shows a lower storey of its own
+        if(y-front>0.45)return false;                          // the door would hang above the street: not here
+        if(!built)y=lo-0.12;}
+      else y=lo-0.12;
+      const e={x,y,z,ry,tint,lo};(lists[name]=lists[name]||[]).push(e);return e;}
     const e={x,y,z,ry,tint};(lists[name]=lists[name]||[]).push(e);return e;};
   let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647; let count=0;
   LANDMARK_AT.length=0; LM_RECTS.length=0; PADS.length=0;
@@ -2146,12 +2152,16 @@ function buildCityHouses(){
       if(best){x=best.x-Math.sin(best.ry)*YD/2;z=best.z-Math.cos(best.ry)*YD/2;ry=best.ry;L._run=best.run;L._dx=ddx;}else{SIDE=L.side;[x,z,ry]=pose(0,0);console.log('no clear site for',L.label,JSON.stringify(L._why||{}));}}
     PAVE_NOLANE=false;LM_RECTS.push({x,z,hw:w/2+1.2,hd:d/2+1.2,rot:ry});
     L._yd=YD;
+    {const f0=d/2+YD+(L._run||0)+0.2,sx=Math.sin(ry),cz0=Math.cos(ry),ddx2=L._dx||0;let v=0;   // the way from the door to the street is kept clear
+      for(;v<45;v+=0.5){const px=x+(f0+v)*sx+ddx2*cz0,pz=z+(f0+v)*cz0-ddx2*sx;if(cityPaved(px,pz)>0.5)break;}
+      if(v>0.5){const m=f0+v/2;colliders.push({x:x+m*sx+ddx2*cz0,z:z+m*cz0-ddx2*sx,hw:2.4,hd:v/2+0.5,rot:ry,reserve:'path:'+L.label});}}
     if(YD){const cl=d/2+YD/2,cx=x+cl*Math.sin(ry),cz=z+cl*Math.cos(ry);colliders.push({x:cx,z:cz,hw:w/2,hd:YD/2,rot:ry,reserve:'yard:'+L.label});LM_RECTS.push({x:cx,z:cz,hw:w/2+1,hd:YD/2+1,rot:ry});}
     if(L._run){const cl=d/2+YD+0.2+L._run/2,cx=x+cl*Math.sin(ry)+L._dx*Math.cos(ry),cz=z+cl*Math.cos(ry)-L._dx*Math.sin(ry);
       colliders.push({x:cx,z:cz,hw:3.3,hd:L._run/2+0.6,rot:ry,reserve:L.label});LM_RECTS.push({x:cx,z:cz,hw:3,hd:L._run/2+0.5,rot:ry});}   // room kept for the staircase
     {const c=Math.cos(ry),sn=Math.sin(ry);let lo=1e9,hi=-1e9;for(const [p,q] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[0,1],[0,-1],[1,0],[-1,0]]){const lx=p*w*0.48,lz=q*d*0.48,h=heightAt(x+lx*c+lz*sn,z-lx*sn+lz*c);lo=Math.min(lo,h);hi=Math.max(hi,h);}
      const y=hi>lo+0.3?hi-0.05:lo-0.15; if(hi>lo+0.3)plinths.push({x,z,ry,y:y+0.05,sx:w+0.4,sy:hi-lo+0.7,sz:d+0.4,tint:[0.82,0.8,0.76]});
      (lists[L.name]=lists[L.name]||[]).push({x,y,z,ry,tint:[1,1,1],s:u});} colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); LANDMARK_AT.push({x,z,label:L.label,r:Math.max(w,d)/2+8,ry,d,name:L.name,u,yd:L._yd||0,y:lists[L.name][lists[L.name].length-1].y});}
+  rerouteLanes();
   const blocked=(a,r,half)=>riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r)<9+half||nearAvenue(a,r,8.2+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
   const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterAR(a,r).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   // houses face the ring streets, on both kerbs of each ring
@@ -2216,7 +2226,7 @@ function buildCityHouses(){
           if(wallLane&&w0>0.3){t+=8;continue;}
           let name=wallLane?(HUT[quarterAR(a,rr).name]&&rnd()<0.2?HUT[quarterAR(a,rr).name]:rnd()<0.4?'Shack2':'Shack'):pickHouse(a,rr+side*8,rnd);
           if(KIT.size[name][1]>maxD)name=SMALL.find(n=>KIT.size[n]&&KIT.size[n][1]<=maxD&&(w0<0.25||!/Shack|Hut/.test(n)))||'Shack';
-          const [w,d]=KIT.size[name],off=LANE_HALF+0.5+d/2+(w0<0.25?rnd()*0.6:0),x=px+nx*side*off,z=pz+nz*side*off,ry=Math.atan2(-nx*side,-nz*side)+(w0<0.25?(rnd()-0.5)*0.12:0);
+          const [w,d]=KIT.size[name],off=LANE_HALF+0.9+d/2+(w0<0.25?rnd()*0.6:0),x=px+nx*side*off,z=pz+nz*side*off,ry=Math.atan2(-nx*side,-nz*side)+(w0<0.25?(rnd()-0.5)*0.12:0);
           const f={x,z,hw:w/2+0.3,hd:d/2+0.3,rot:ry};
           if(blocked(a,rr,w/2)||!footprintFree(f)||footOnLane({x,z,hw:w/2,hd:d/2,rot:ry},LANE_HALF+0.2)){t+=3;continue;}
           if(put(name,x,z,ry,tintFor(a,rr,name))){colliders.push({x,z,hw:w/2+0.2,hd:d/2+0.2,rot:ry}); count++;} t+=w+(w0<0.3?0.1+rnd()*0.4:0.15+rnd()*0.5);}
@@ -2259,6 +2269,9 @@ function buildCityHouses(){
       lists[n]=lists[n].filter(e=>{const c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);for(let u=0;u<=1;u+=0.2)for(let v=0;v<=1;v+=0.2){const lx=(bb.min.x+(bb.max.x-bb.min.x)*u)*0.98,lz=(bb.min.z+(bb.max.z-bb.min.z)*v)*0.98;
         if(cityPaved(e.x+lx*c+lz*sn,e.z-lx*sn+lz*c)>0.5){gone.add(e.x+','+e.z);return false;}}return true;});}   // last sweep: nothing on a street
     if(gone.size){lists.Plinth=(lists.Plinth||[]);for(let i=colliders.length-1;i>=0;i--){const c=colliders[i];if(c.type!=='circle'&&gone.has(c.x+','+c.z))colliders.splice(i,1);}}}
+  for(const n of Object.keys(lists)){if(!KIT.core[n]||/^Under_/.test(n))continue;for(const e of lists[n]){if(e.lo===undefined||e.y-e.lo<0.4)continue;
+      const un=underFor(n),k=Math.ceil((e.y-e.lo+0.3)/3.2);for(let i=0;i<k;i++)(lists[un]=lists[un]||[]).push({x:e.x,z:e.z,ry:e.ry,y:e.y-3.2*(i+1)+0.02,tint:[0.95,0.93,0.9]});}}
+  for(let i=colliders.length-1;i>=0;i--)if(colliders[i].reserve)colliders.splice(i,1);   // reservations have done their job
   for(const n in lists)kitInstances(n,lists[n]);
   if(LM_RECTS.length)fillCityMap(CITY_MAP);
   return count;
@@ -2272,7 +2285,7 @@ let _RX=null; const riverX=()=>_RX||(_RX=(()=>{const out=[],P=(a,r)=>[CITY.x+Mat
     for(let i=1;i<run.length-1;i++)if(run[i][1]<2&&run[i][1]<=run[i-1][1]&&run[i][1]<=run[i+1][1]){const t=run[i][0];out.push(t);}};
   for(const R of RINGS){const ts=[];const pt=a=>P(a,R);let last=null;for(let a=0;a<6.2832;a+=0.6/R){const [x,z]=pt(a),d=riverDistP(x,z);if(d<1.2&&(last===null||a-last>0.2)){ts.push(a);last=a;}}
     for(const a of ts){const da=13/R;const [ax,az]=pt(a-da),[bx,bz]=pt(a+da);out.push({ax,az,bx,bz});}}
-  for(let i=0;i<8;i++){let last=-99;for(let r=CITY.core+30;r<CITY.r-4;r+=0.5){const [x,z]=P(avAt(i,r),r);if(riverDistP(x,z)<1.0&&r-last>20){last=r;const [ax,az]=P(avAt(i,r-13),r-13),[bx,bz]=P(avAt(i,r+13),r+13);out.push({ax,az,bx,bz});}}}
+  for(let i=0;i<8;i++){let last=-99;for(let r=CITY.core+30;r<(i%2?262:CITY.r-4);r+=0.5){const [x,z]=P(avAt(i,r),r);if(riverDistP(x,z)<1.0&&r-last>20){last=r;const [ax,az]=P(avAt(i,r-13),r-13),[bx,bz]=P(avAt(i,r+13),r+13);out.push({ax,az,bx,bz});}}}
   return out.filter(o=>typeof o==='object');})());
 function buildBridges(cs){
   BRIDGES.length=0;
@@ -2285,6 +2298,10 @@ function buildBridges(cs){
     for(const k of[-1,1])g.add(box(8.4,tp+2.2,2.2,cityStone,0,(tp-2.2)/2,k*L*0.18));    // the piers in the stream
     landmarks.add(g);}
 }
+function underFor(name){ // a storey of stone under a house standing on a slope: its own windows by floor, a door at the back, a string course
+  const n='Under_'+name;if(KIT.geo[n])return n;const [w,d]=KIT.core[name],k=new KitB(),W=Math.max(2.4,w-0.3),D=Math.max(2.4,d-0.3),st='stone:#8a8478';
+  k.box(W,D,3.2,0,0,1.6,st);k.box(W+0.18,D+0.18,0.22,0,0,3.1,'stone:#a39d90');for(const s2 of[-1,1])k.box(0.35,0.35,3.2,s2*(W/2-0.05),-D/2+0.05,1.6,'stone:#9a9488');
+  kDoor(k,0,D/2,0,1.1,2.2,'#4a2e22','stone:#a39d90');k.finish(n,W,D);KIT.core[n]=null;return n;}
 function buildCity(){
   PLAN=true; const c0=colliders.length, lm0=landmarks.children.length, f0=flags.length;
   const cs=new THREE.Group(), y0=heightAt(CITY.x,CITY.z), R=CITY.r, N=72, kitWall=[], kitTower=[];
@@ -2335,13 +2352,20 @@ const RINGS=[118,196,262], MARKET={r:232,rad:24};
 // and nothing is built on them. (A grid of 16 m cells keeps the distance lookups quick.)
 const LANE_HALF=2.1, LANES=(()=>{let sd=4242;const rnd=()=>(sd=(sd*16807)%2147483647)/2147483647,L=[],C={x:0,z:-1400};
   const P=(a,r)=>[C.x+Math.cos(a)*r,C.z+Math.sin(a)*r];
-  for(const M of[157,229,288]){const pts=[];for(let a=0;a<=Math.PI*2+0.001;a+=8/M)pts.push(P(a,M));L.push({pts,back:true,M});}
+  const wet=(x,z)=>riverDistP(x,z)<13, inMarket=(x,z)=>Math.hypot(x-C.x,z-(C.z+232))<22;   // lanes stop at the market square's edge
+  for(const M of[157,229,288]){let pts=[];const flush=()=>{if(pts.length>1){L.push({pts,back:true,M});}pts=[];};
+    for(let a=0;a<=Math.PI*2+0.001;a+=8/M){const q=P(a,M);if(inMarket(q[0],q[1])){flush();continue;}if(wet(q[0],q[1])){if(pts.length){const a0=Math.atan2(pts[pts.length-1][1]-C.z,pts[pts.length-1][0]-C.x);pts.push(P(a0,268));}flush();continue;}   // a lane that meets the river turns in to the quay road
+      if(!pts.length&&a>0){pts.push(P(a,268));}pts.push(q);}
+    if(pts.length&&L.every(l=>l.M!==M)&&!wet(...P(0,M))&&!inMarket(...P(0,M)))pts.push(P(0,M));   // an unbroken ring closes on itself
+    flush();}
   for(const [r0,r1,M] of[[124.5,189.5,157],[202.5,255.5,229],[268.5,285,288]]){let a=rnd()*0.2;while(a<Math.PI*2){a+=(45+rnd()*25)/M;
       if(typeof AVM!=='undefined'&&avDist(a,M)<24)continue;
-      const jog=(rnd()<0.5?-1:1)*(1.5+rnd()*2.5),pts=[P(a,r0),P(a,M-LANE_HALF),P(a+jog/M,M+LANE_HALF),P(a+jog/M,r1)];L.push({pts,back:false});}}
+      const jog=(rnd()<0.5?-1:1)*(1.5+rnd()*2.5),pts=[P(a,r0),P(a,M-LANE_HALF),P(a+jog/M,M+LANE_HALF),P(a+jog/M,r1)];if(pts.some(q=>wet(q[0],q[1]))||wet(...P(a,(r0+r1)/2)))continue;L.push({pts,back:false});}}
   return L;})();
-const LANE_GRID=(()=>{const g=new Map();for(const l of LANES)for(let i=0;i<l.pts.length-1;i++){const A=l.pts[i],B=l.pts[i+1];
-    for(let cx=Math.floor((Math.min(A[0],B[0])-6)/16);cx<=Math.floor((Math.max(A[0],B[0])+6)/16);cx++)for(let cz=Math.floor((Math.min(A[1],B[1])-6)/16);cz<=Math.floor((Math.max(A[1],B[1])+6)/16);cz++){const k=cx+','+cz;if(!g.has(k))g.set(k,[]);g.get(k).push([A,B]);}}return g;})();
+const LANE_GRID=new Map();
+function fillLaneGrid(){const g=LANE_GRID;g.clear();for(const l of LANES)for(let i=0;i<l.pts.length-1;i++){const A=l.pts[i],B=l.pts[i+1];
+    for(let cx=Math.floor((Math.min(A[0],B[0])-6)/16);cx<=Math.floor((Math.max(A[0],B[0])+6)/16);cx++)for(let cz=Math.floor((Math.min(A[1],B[1])-6)/16);cz<=Math.floor((Math.max(A[1],B[1])+6)/16);cz++){const k=cx+','+cz;if(!g.has(k))g.set(k,[]);g.get(k).push([A,B]);}}return g;}
+fillLaneGrid();
 // Aldrath climbs toward the sealed core in terraces: the middle city stands 3.5 m above the outer, the inner city 3.5 m
 // above that. The steps run just inside the back lanes, held by thick retaining walls; the avenues and cross-lanes climb
 // them as ramps, and the market slopes gently across its square.
@@ -2356,6 +2380,31 @@ function cityLevel(x,z,r){
   let lv=0;for(const T of TERRACES){if(Math.abs(r-T.b)>40){if(r<T.b)lv+=TERR_STEP;continue;}const [rp,mk]=rampAt(x,z,r),w=mk>0?lerp(lerp(0.5,44,rp),56,mk):lerp(0.5,44,rp),c=T.b+0.4;
     lv+=TERR_STEP*(1-smooth(c-w/2,c+w/2,r));}
   return lv;}
+function rerouteLanes(){
+  const M=LANE_HALF+1.4,extra=[];
+  for(const ln of LANES){let pts=[];const src=ln.pts;
+    for(let i=0;i<src.length-1;i++){const A=src[i],B=src[i+1],n=Math.max(1,Math.ceil(Math.hypot(B[0]-A[0],B[1]-A[1])));for(let k=0;k<n;k++)pts.push([A[0]+(B[0]-A[0])*k/n,A[1]+(B[1]-A[1])*k/n]);}
+    pts.push(src[src.length-1]);
+    for(const R of LM_RECTS){const c=Math.cos(R.rot),sn=Math.sin(R.rot),hw=R.hw+M,hd=R.hd+M,loc=q=>{const dx=q[0]-R.x,dz=q[1]-R.z;return [dx*c-dz*sn,dx*sn+dz*c];},
+        wld=(lx,lz)=>[R.x+lx*c+lz*sn,R.z-lx*sn+lz*c],inside=q=>{const l=loc(q);return Math.abs(l[0])<hw&&Math.abs(l[1])<hd;};
+      const out=[];let i=0;
+      while(i<pts.length){if(pts[i]===null||!inside(pts[i])){out.push(pts[i]);i++;continue;}let j=i;while(j<pts.length&&pts[j]!==null&&inside(pts[j]))j++;
+        if(i===0||j>=pts.length||pts[i-1]===null||pts[j]===null){out.push(null);i=j;continue;}                                    // the lane started or ended inside: it just stops short
+        const per=l=>{const [x,z]=l;if(Math.abs(z-hd)<1e-6||z>=hd-1e-6)return hw-x;if(x<=-hw+1e-6)return 2*hw+(hd-z);if(z<=-hd+1e-6)return 2*hw+2*hd+(x+hw);return 4*hw+2*hd+(z+hd);};   // position round the perimeter
+        const clampB=l=>{const sx=Math.abs(l[0])/hw,sz=Math.abs(l[1])/hd;return sx>sz?[Math.sign(l[0])*hw,l[1]]:[l[0],Math.sign(l[1])*hd];};
+        const a=clampB(loc(pts[i-1])),b=clampB(loc(pts[j])),P0=2*(hw+hd)*2,ta=per(a),tb=per(b),corners=[[hw,hd],[-hw,hd],[-hw,-hd],[hw,-hd]].map(q=>[q,per(q)]);
+        const fwd=((tb-ta)%P0+P0)%P0, mk=go=>{const route=[];for(const [q,t] of corners.slice().sort((u,v)=>go>0?(((u[1]-ta)%P0+P0)%P0)-(((v[1]-ta)%P0+P0)%P0):(((ta-u[1])%P0+P0)%P0)-(((ta-v[1])%P0+P0)%P0))){const d=go>0?((t-ta)%P0+P0)%P0:((ta-t)%P0+P0)%P0;if(d>0&&d<(go>0?fwd:P0-fwd))route.push(wld(...q));}return [wld(...a),...route,wld(...b)];};
+        const crossesStep=rt=>{for(let k=0;k<rt.length-1;k++){const A=rt[k],B=rt[k+1],ra=Math.hypot(A[0]-CITY.x,A[1]-CITY.z),rb=Math.hypot(B[0]-CITY.x,B[1]-CITY.z);for(const T of TERRACES){const rt0=T.b+0.4;if((ra-rt0)*(rb-rt0)<0)return true;}}return false;};
+        const r1=mk(fwd<=P0/2?1:-1),r2=mk(fwd<=P0/2?-1:1),pick=!crossesStep(r1)?r1:!crossesStep(r2)?r2:null;
+        if(pick)out.push(...pick);else{out.push(null);}                          // no way round on one level: the lane stops at the hub
+        i=j;}
+      pts=out;}
+    if(pts.includes(null)){const parts=[];let cur=[];for(const q of pts){if(q===null){if(cur.length>1)parts.push(cur);cur=[];}else cur.push(q);}if(cur.length>1)parts.push(cur);
+      ln.pts=parts[0]||[];for(let k=1;k<parts.length;k++)extra.push({...ln,pts:parts[k]});}
+    else ln.pts=pts;}
+  LANES.push(...extra);
+  fillLaneGrid();
+}
 function laneDist(x,z){const l=LANE_GRID.get(Math.floor(x/16)+','+Math.floor(z/16));if(!l)return 99;let d=99;for(const [A,B] of l)d=Math.min(d,segDist(x,z,A,B));return d;}
 function footOnLane(f,m){if(inLM(f.x,f.z))return false;const c=Math.cos(f.rot),sn=Math.sin(f.rot);for(const [u,v] of[[0,0],[1,1],[1,-1],[-1,1],[-1,-1],[1,0],[-1,0],[0,1],[0,-1],[0.5,1],[-0.5,1],[0.5,-1],[-0.5,-1]]){
   const lx=u*f.hw,lz=v*f.hd,x=f.x+lx*c+lz*sn,z=f.z-lx*sn+lz*c;if(laneDist(x,z)<(m||LANE_HALF+0.3))return true;}return false;}
@@ -3803,7 +3852,20 @@ function buildParade(L,S,u,y,W2,yb,yf,label){
   const P=(lx,lz,f)=>{const q=W2(lx,lz);YARDFOLK.push({x:q[0],z:q[1],y,face:L.ry+f,mesh:null,id:950+YARDFOLK.length});};
   for(let k=0;k<4;k++)P(-Wy/2+3.2+k*2.4,cz-1.4,Math.PI);P(rc[0]-1,rc[1],Math.PI/2);P(rc[0]+1,rc[1],-Math.PI/2);
 }
-function auditRoutes(){let bad=0;
+function auditLanes(){let bad=0;const street=(x,z)=>{PAVE_NOLANE=true;try{return cityPaved(x,z)>0.5;}finally{PAVE_NOLANE=false;}};
+  for(const ln of LANES){const P=ln.pts;if(P.length<2)continue;const ends=[[P[0],P[1]],[P[P.length-1],P[P.length-2]]];
+    const closed=Math.hypot(P[0][0]-P[P.length-1][0],P[0][1]-P[P.length-1][1])<2;if(closed)continue;
+    for(const [E,F] of ends){const L2=Math.hypot(E[0]-F[0],E[1]-F[1])||1,dx=(E[0]-F[0])/L2,dz=(E[1]-F[1])/L2;let ok=false;
+      for(let t=-2;t<=6&&!ok;t+=0.5){const x=E[0]+dx*t,z=E[1]+dz*t;if(street(x,z))ok=true;else{for(const o of LANES)if(o!==ln&&laneDistOne(o,x,z)<LANE_HALF){ok=true;break;}}}
+      if(!ok){const [wx,wz]=P2W(E[0],E[1]);console.error('route: a lane ends at nothing near '+wx.toFixed(0)+','+wz.toFixed(0));bad++;}}}
+  for(const ln of LANES){const P=ln.pts;for(let i=0;i<P.length-1;i++){const A=P[i],B=P[i+1],n=Math.ceil(Math.hypot(B[0]-A[0],B[1]-A[1]));
+      for(let k=0;k<n;k++){const x=A[0]+(B[0]-A[0])*k/n,z=A[1]+(B[1]-A[1])*k/n,[wx,wz]=P2W(x,z);
+        for(const c of colliders){if(Math.abs(c.x-wx)>(c.r||c.hw+c.hd)||Math.abs(c.z-wz)>(c.r||c.hw+c.hd))continue;let hit=false;
+          if(c.type==='circle')hit=Math.hypot(wx-c.x,wz-c.z)<c.r-0.2;else{const co=Math.cos(c.rot),si=Math.sin(c.rot),dx=wx-c.x,dz=wz-c.z;hit=Math.abs(dx*co-dz*si)<c.hw-0.2&&Math.abs(dx*si+dz*co)<c.hd-0.2;}
+          if(hit){console.error('route: a lane is blocked near '+wx.toFixed(0)+','+wz.toFixed(0));bad++;k=n;i=P.length;break;}}}}}
+  return bad;}
+function laneDistOne(l,x,z){let d=99;for(let i=0;i<l.pts.length-1;i++)d=Math.min(d,segDist(x,z,l.pts[i],l.pts[i+1]));return d;}
+function auditRoutes(){let bad=auditLanes();
   for(const R of RAMPS){const c=Math.cos(R.ry),sn=Math.sin(R.ry);let worst=0;for(let a=-0.8;a<=0.8;a+=0.4)for(let b=-0.8;b<=0.8;b+=0.4){const lx=a*R.hw,lz=b*R.hl,x=R.x+lx*c+lz*sn,z=R.z-lx*sn+lz*c,
       top=R.y0+(R.y1-R.y0)*(b+1)/2;worst=Math.max(worst,surfaceAt(x,z)-top);}
     if(worst>0.25){console.error('route: a walkway at '+R.x.toFixed(0)+','+R.z.toFixed(0)+' is buried '+worst.toFixed(2)+' m under the ground');bad++;}}
@@ -3848,6 +3910,7 @@ function buildInteriors(){
     const ci=colliders.findIndex(q=>q.type!=='circle'&&Math.abs(q.x-L.x)<0.01&&Math.abs(q.z-L.z)<0.01);if(ci>=0)colliders.splice(ci,1);   // the solid block becomes rooms
     for(const q of I.colliders)colliders.push(q);
     {const ri=colliders.findIndex(q=>q.reserve===label);if(ri>=0)colliders.splice(ri,1);}
+    {const ri=colliders.findIndex(q=>q.reserve==='path:'+label);if(ri>=0)colliders.splice(ri,1);}
     CUTS.A[i].set(L.x,L.z,L.ry,y);CUTS.B[i].set(ddx,gw/2+0.02,-S.face*u+(S.floor?0.25:0),y+gh);   // open the shell's doorway
     i++;}
 }
@@ -4036,7 +4099,7 @@ function buildLamps(){
   for(const R of RINGS)for(const s of[-1,1]){const r=R+s*5.3,n=Math.floor(2*Math.PI*r/22);
     for(let k=0;k<n;k++){const a=(k+(s>0?0.5:0))/n*Math.PI*2;if(nearAvenue(a,r,9.5))continue;const [x,z]=C(r,a);addLamp('city',x,z,0);}}
   // avenues, from the plaza out to the wall
-  for(let ai=0;ai<8;ai++)for(const s of[-1,1])for(let r=CITY.core+30;r<CITY.r-10;r+=20){const av=avAt(ai,r);
+  for(let ai=0;ai<8;ai++)for(const s of[-1,1])for(let r=CITY.core+30;r<(ai%2?262:CITY.r-10);r+=20){const av=avAt(ai,r);
     if(RINGS.some(R=>Math.abs(r-R)<9))continue;const a=av+s*7.2/r;const [x,z]=C(r,a);addLamp('city',x,z,0);}
   // the grand plaza and the market square
   for(let k=0;k<32;k++){const a=(k+0.5)/32*Math.PI*2;if(nearAvenue(a,CITY.core+21,8))continue;const [x,z]=C(CITY.core+21,a);addLamp('city',x,z,0);}
