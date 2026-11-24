@@ -2056,7 +2056,7 @@ function cellInstances(geo,mat,list,far,big,tinted,farGeo){ // list of {x,y,z,ry
   }
 }
 function kitInstances(name,list){
-  if(PLAN){const wall=/WallSeg|WardWall|Terrace|Quay|WaterGate/.test(name);for(const p of list){const [x,z,ry,st,ryx]=warpPose(p.x,p.z,p.ry||0);p.x=x;p.z=z;p.ry=wall?ryx:ry;if(wall)p.sx=(p.sx||1)*st*1.04;}}
+  if(PLAN){const wall=/WallSeg|WardWall|WardGate|Terrace|Quay|WaterGate/.test(name);for(const p of list){const [x,z,ry,st,ryx]=warpPose(p.x,p.z,p.ry||0);p.x=x;p.z=z;p.ry=wall?ryx:ry;if(wall)p.sx=(p.sx||1)*st*1.04;}}
   for(const v of KIT.vents[name]||[])for(const p of list){const u=p.s||1,c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lx=v[0]*(p.sx||1)*u,lz=v[2]*u;VENTS.push({x:p.x+lx*c+lz*sn,y:p.y+v[1]*u,z:p.z-lx*sn+lz*c,s:v[3]*u});}const big=/WallSeg|WardWall|WardGate|Tower|Gatehouse|WaterGate/.test(name),g=KIT.geo[name],small=g.attributes.position.count<2400||/Stall|Tent|Yurt|Pavilion|Wagon|Crates|Booth|Pen|Boat|Pier|Well/.test(name);
   cellInstances(g,kitMat,list,big?1e9:small?260:560,big,true,big||small?null:KIT.far[name]);}   // small props keep their shape: their 'far' version would be a bare box
 const _frustum=new THREE.Frustum(), _pm=new THREE.Matrix4();
@@ -2274,7 +2274,7 @@ function buildCityHouses(){
     // across the lanes: rooms bridging the alley, walkways, and lines of lanterns and washing, wherever both sides are built
     for(const ln of LANES){let acc=rnd()*8;for(let i=0;i<ln.pts.length-1;i++){const A=ln.pts[i],B=ln.pts[i+1],len=Math.hypot(B[0]-A[0],B[1]-A[1]);
       for(;acc<len;acc+=7+rnd()*9){const px=A[0]+(B[0]-A[0])*acc/len,pz=A[1]+(B[1]-A[1])*acc/len,tx=(B[0]-A[0])/len,tz=(B[1]-A[1])/len,nx=-tz,nz=tx;
-        const L1=houseAt(px+nx*(LANE_HALF+1.6),pz+nz*(LANE_HALF+1.6)),L2=houseAt(px-nx*(LANE_HALF+1.6),pz-nz*(LANE_HALF+1.6));if(!L1||!L2)continue;
+        const L1=houseAt(px+nx*(LANE_HALF+1.6),pz+nz*(LANE_HALF+1.6)),L2=houseAt(px-nx*(LANE_HALF+1.6),pz-nz*(LANE_HALF+1.6));if(!L1||!L2)continue;if(WARD_GATES.some(g=>Math.hypot(px-g.x,pz-g.z)<g.r+3))continue;
         const a=Math.atan2(pz-CITY.z,px-CITY.x),r=Math.hypot(px-CITY.x,pz-CITY.z),w0=cityWealth(a,r),u=rnd(),lo=Math.min(L1.h,L2.h),ry=Math.atan2(-nz,nx),y=heightAt(px,pz)-0.2;
         const kind=lo>8.5&&u<0.16+0.12*(w0<0.35)?(rnd()<0.5?'BridgeRoom':'BridgeRoomB'):lo>6.5&&u<0.4?'Walkway':u<0.85?'LaneLine':null;if(!kind)continue;
         put(kind,px,pz,ry,[1,1,1],y);}
@@ -2411,6 +2411,16 @@ function wardBoundaries(){ // the line between each pair of neighbouring quarter
       while(true){let nx=-1,nd=6.5;for(let k=0;k<P.length;k++){if(used[k])continue;const d=Math.hypot(P[k][0]-P[cur][0],P[k][1]-P[cur][1]);if(d<nd){nd=d;nx=k;}}if(nx<0)break;used[nx]=true;ch.push(P[nx]);cur=nx;}
       if(ch.length>3)chains.push({key,pts:ch});}}
   return chains;}
+const WARD_GATES=[];   // plan positions of the ward gates: lamps keep out of the gateways
+function streetAxis(x,z){ // the one street through a point: its direction and width, or null at a junction, a square or the plaza
+  const dx=x-CITY.x,dz=z-CITY.z,r=Math.hypot(dx,dz),a=Math.atan2(dz,dx),E=[];
+  if(r<CITY.core+27||wardSquares().some(Q=>Math.hypot(x-Q.x,z-Q.z)<SQ_R+3))return null;{const [mx,mz]=marketPos();if(Math.hypot(x-mx,z-mz)<MARKET.rad+3)return null;}
+  for(const R of RINGS)if(Math.abs(r-R)<6.6)E.push([-Math.sin(a),Math.cos(a),12.4]);
+  for(let i=0;i<8;i++){if(i%2&&r>268)continue;const v=avAt(i,r);if(Math.abs(Math.atan2(Math.sin(a-v),Math.cos(a-v)))*r>8.6)continue;
+    const v0=avAt(i,r-1),v1=avAt(i,r+1),ux=Math.cos(v1)*(r+1)-Math.cos(v0)*(r-1),uz=Math.sin(v1)*(r+1)-Math.sin(v0)*(r-1),l=Math.hypot(ux,uz);E.push([ux/l,uz/l,16.4]);}
+  if(!inLM(x,z)){const l=LANE_GRID.get(Math.floor(x/16)+','+Math.floor(z/16));let bd=LANE_HALF+0.6,seg=null;if(l)for(const [A,B] of l){const d=segDist(x,z,A,B);if(d<bd){bd=d;seg=[A,B];}}
+    if(seg){const ux=seg[1][0]-seg[0][0],uz=seg[1][1]-seg[0][1],L=Math.hypot(ux,uz)||1;if(!E.some(e=>Math.abs(e[0]*ux/L+e[1]*uz/L)>0.9))E.push([ux/L,uz/L,2*LANE_HALF+0.6]);}}
+  return E.length===1?E[0]:null;}
 function buildWardWalls(lists){ // along each boundary, at half-metre steps: open where a street or lane crosses, blocked by hubs, the river and terraces, walled elsewhere
   const PUT=(name,e)=>(lists[name]=lists[name]||[]).push(e),DS=0.5,TOW=2.6;
   const hitC=(x,z)=>colliders.some(o=>{if(Math.abs(o.x-x)>(o.r||o.hw+o.hd)+1||Math.abs(o.z-z)>(o.r||o.hw+o.hd)+1)return false;if(o.type==='circle')return Math.hypot(x-o.x,z-o.z)<o.r+0.8;
@@ -2423,14 +2433,38 @@ function buildWardWalls(lists){ // along each boundary, at half-metre steps: ope
       st.push(open?'o':(inLM(c[0],c[1])||riverDistP(c[0],c[1])<11||TERRACES.some(T=>Math.abs(rc-T.b)<2.6)||hitC(c[0],c[1]))?'b':'w');}
     const runs=[];for(let k=0;k<=n;){let m=k;while(m+1<=n&&st[m+1]===st[k])m++;runs.push({s:st[k],t0:Math.max(0,k*DS-DS/2),t1:Math.min(LEN,m*DS+DS/2)});k=m+1;}
     for(let r=0;r<runs.length;r++)if(runs[r].s==='w'){if(runs[r-1]&&runs[r-1].s==='o')runs[r].t0+=0.4;if(runs[r+1]&&runs[r+1].s==='o')runs[r].t1-=0.4;}
-    // openings first: a gate over a street, a pair of lantern posts at a lane; the wall either side is cut back to the gate's towers
+    // openings: the gate stands square to the street, whatever angle the border crosses it at, and the wall turns to meet its towers
+    const pav=(x,z)=>cityPaved(x,z)>0.3,extra=[];
     for(let r=0;r<runs.length;r++){const R=runs[r];if(R.s!=='o')continue;const L0=runs[r-1],L1=runs[r+1];if(!L0||!L1||L0.s!=='w'||L1.s!=='w')continue;
-      const w=R.t1-R.t0,q0=at(R.t0),q1=at(R.t1),mx=(q0[0]+q1[0])/2,mz=(q0[1]+q1[1])/2,tl=Math.hypot(q1[0]-q0[0],q1[1]-q0[1])||1,tx=(q1[0]-q0[0])/tl,tz=(q1[1]-q0[1])/tl,ry=Math.atan2(-tz,tx);
-      if(w>=7){const sc=(w+0.8)/10,half=(w+0.8)/2+TOW*sc;PUT('WardGate',{x:mx,z:mz,y:heightAt(mx,mz)-0.2,ry,sx:sc,tint:[1,1,1]});
-        for(const s2 of[-1,1])colliders.push({type:'circle',x:mx+tx*s2*((w+0.8)/2+TOW*sc/2),z:mz+tz*s2*((w+0.8)/2+TOW*sc/2),r:TOW*sc/2+0.2});
-        const cut=half-w/2-0.1;L0.t1-=cut;L1.t0+=cut;}
-      else{for(const s2 of[-1,1]){const x=mx+tx*s2*(w/2+0.5),z=mz+tz*s2*(w/2+0.5);PUT('WardPost',{x,z,y:heightAt(x,z)-0.1,ry,tint:[1,1,1]});colliders.push({type:'circle',x,z,r:0.5});}
-        L0.t1-=0.9;L1.t0+=0.9;}}
+      const tm=(R.t0+R.t1)/2,m0=at(tm),bt=at(R.t1),ba0=at(R.t0),btx=bt[0]-ba0[0],btz=bt[1]-ba0[1];
+      const SA=streetAxis(m0[0],m0[1]);if(!SA){R.s='b';continue;}                                      // a junction or a square at the border: leave it open
+      let tx=-SA[1],tz=SA[0];if(tx*btx+tz*btz<0){tx=-tx;tz=-tz;}                      // across the street, pointing the way the border runs
+      const cross=Math.acos(Math.min(1,Math.abs(tx*btx+tz*btz)/(Math.hypot(btx,btz)||1)));
+      if(cross>0.95){R.s='b';continue;}                                                              // the border runs along the street: leave it open, no gate
+      let e0=0,e1=0;while(e0<20&&pav(m0[0]-tx*(e0+0.25),m0[1]-tz*(e0+0.25)))e0+=0.25;while(e1<20&&pav(m0[0]+tx*(e1+0.25),m0[1]+tz*(e1+0.25)))e1+=0.25;
+      if(e0+e1>SA[2]+2.5){R.s='b';continue;}                                                        // wider than its street: something else joins here
+      const w=e0+e1,cx=m0[0]+tx*(e1-e0)/2,cz=m0[1]+tz*(e1-e0)/2,ry=Math.atan2(-tz,tx);
+      let ta,tb;
+      if(w>=7){const sc=(w+0.8)/10,inner=(w+0.8)/2,outer=inner+TOW*sc;
+        {let onRoad=w>20;for(const s2 of[-1,1])for(let u=inner;u<=outer&&!onRoad;u+=0.4)for(const v of[-1.3,0,1.3]){const ax=cx+tx*s2*u+tz*v*sc,az=cz+tz*s2*u-tx*v*sc;if(pav(ax,az)){onRoad=true;break;}}
+          if(onRoad){R.s='b';continue;}}                                                            // a tower would stand on another street (a junction at the border): leave it open
+        WARD_GATES.push({x:cx,z:cz,r:outer+1.5});PUT('WardGate',{x:cx,z:cz,y:heightAt(cx,cz)-0.2,ry,sx:sc,tint:[1,1,1]});
+        for(const s2 of[-1,1])colliders.push({type:'circle',x:cx+tx*s2*(inner+TOW*sc/2),z:cz+tz*s2*(inner+TOW*sc/2),r:TOW*sc/2+0.2});
+        ta=[cx-tx*outer,cz-tz*outer];tb=[cx+tx*outer,cz+tz*outer];}
+      else{for(const s2 of[-1,1]){const x=cx+tx*s2*(w/2+0.5),z=cz+tz*s2*(w/2+0.5);PUT('WardPost',{x,z,y:heightAt(x,z)-0.1,ry,tint:[1,1,1]});colliders.push({type:'circle',x,z,r:0.5});}
+        ta=[cx-tx*(w/2+1),cz-tz*(w/2+1)];tb=[cx+tx*(w/2+1),cz+tz*(w/2+1)];}
+      // each side: the wall leaves the tower in the gate's own line for a few metres, then turns to meet the border
+      const near=(T,lo,hi)=>{let bt2=lo,bd=1e9;for(let t=lo;t<=hi;t+=0.25){const q=at(t),d=Math.hypot(q[0]-T[0],q[1]-T[1]);if(d<bd){bd=d;bt2=t;}}return bt2;};
+      const clearSeg=(A,B)=>{const l=Math.hypot(B[0]-A[0],B[1]-A[1]);if(l<0.05)return true;const nx=-(B[1]-A[1])/l,nz=(B[0]-A[0])/l;
+        for(let u=0;u<=1.001;u+=Math.min(0.5,0.4/l))for(const v of[-0.9,0,0.9]){const x=A[0]+(B[0]-A[0])*u+nx*v,z=A[1]+(B[1]-A[1])*u+nz*v;if(pav(x,z)||hitC(x,z))return false;}return true;};
+      for(const [T,sd,L] of[[ta,-1,L0],[tb,1,L1]]){let done=false;
+        for(const ext of[5,3.5,2,0]){const X=[T[0]+tx*sd*ext,T[1]+tz*sd*ext];if(ext>0&&!clearSeg([T[0]+tx*sd*1.3,T[1]+tz*sd*1.3],X))continue;
+          const t=sd<0?near(X,L.t0,R.t1):near(X,R.t0,L.t1),tt=sd<0?Math.min(L.t1,t):Math.max(L.t0,t),q=at(tt);
+          if(Math.hypot(q[0]-X[0],q[1]-X[1])>0.6&&!clearSeg(X,q))continue;
+          if(sd<0)L.t1=tt;else L.t0=tt;if(ext>0)extra.push([T,X]);if(Math.hypot(q[0]-X[0],q[1]-X[1])>0.6)extra.push([X,q]);done=true;break;}
+        if(!done){const t=sd<0?near(T,L.t0,R.t1):near(T,R.t0,L.t1);if(sd<0)L.t1=Math.min(L.t1,t);else L.t0=Math.max(L.t0,t);}}}
+    for(const [A,B] of extra){const x=(A[0]+B[0])/2,z=(A[1]+B[1])/2,l=Math.hypot(B[0]-A[0],B[1]-A[1]),ry=Math.atan2(-(B[1]-A[1]),B[0]-A[0]);
+      PUT('WardWall',{x,z,y:Math.min(heightAt(A[0],A[1]),heightAt(B[0],B[1]))-0.3,ry,sx:(l+1.2)/6,tint:[1,1,1]});colliders.push({x,z,hw:l/2,hd:0.75,rot:ry});}
     // the wall itself: each stretch filled with pieces cut to fit
     for(const R of runs){if(R.s!=='w')continue;const len=R.t1-R.t0;if(len<1.2)continue;const np=Math.max(1,Math.round(len/4.2)),pl=len/np;
       for(let k=0;k<np;k++){const A=at(R.t0+k*pl),B=at(R.t0+(k+1)*pl),x=(A[0]+B[0])/2,z=(A[1]+B[1])/2,tx=B[0]-A[0],tz=B[1]-A[1],l=Math.hypot(tx,tz)||pl,ry=Math.atan2(-tz,tx);
@@ -4165,6 +4199,7 @@ const LAMP_TYPES={
         glass:new THREE.CylinderGeometry(0.15,0.15,0.48,6).translate(0,2.9,1.0), h:2.9, off:1.0},
 };
 function addLamp(type,x,z,ry){
+  if(WARD_GATES.length&&rhoW(x,z)<CITY.r){const [px,pz]=W2P(x,z);if(WARD_GATES.some(g=>Math.hypot(px-g.x,pz-g.z)<g.r))return;}
   if(rhoW(x,z)<CITY.r+60&&riverDistP(...W2P(x,z))<11)return;
   for(const L of LANDMARK_AT){const dx=x-L.x,dz=z-L.z,c=Math.cos(L.ry),sn=Math.sin(L.ry),lx=dx*c-dz*sn,lz=dx*sn+dz*c,yd=L.yd||0;if(Math.abs(lx)<(yd?6:3.5)&&lz>L.d/2-1&&lz<L.d/2+yd+5)return;if(yd&&Math.abs(lx)<L.d&&lz>L.d/2-1&&lz<L.d/2+yd+1)return;}
   if(colliders.some(c=>Math.abs(c.x-x)<12&&Math.abs(c.z-z)<12&&(c.type==='circle'?Math.hypot(x-c.x,z-c.z)<c.r+0.6:(()=>{const co=Math.cos(c.rot),si=Math.sin(c.rot),dx=x-c.x,dz=z-c.z;return Math.abs(dx*co-dz*si)<c.hw+0.6&&Math.abs(dx*si+dz*co)<c.hd+0.6;})())))return;
