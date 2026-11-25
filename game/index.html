@@ -2240,7 +2240,8 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
     ['ferrin_shrine','FX_Shrine','FerrinShrine',[6,6.6],[[0,7.3,0,0.6]],[7.6,8.2],null],
     ['ferrin_narrow','FX_Narrow','FerrinNarrow',[5.6,9.6],[[-1.7,11.1,-3.7,0.8]],[6.4,10.4],null],
     ['ferrin_toolmaker','FX_Tool','FerrinToolmaker',[7.4,9],[[4.06,10.6,-1.2,0.8]],[9.0,9.8],null],
-    ['ferrin_stair','FX_Stair','FerrinStair',[6.4,9.4],[[-2.1,10.2,-3.5,0.8]],[9.0,10.2],null]];
+    ['ferrin_stair','FX_Stair','FerrinStair',[6.4,9.4],[[-2.1,10.2,-3.5,0.8]],[9.0,10.2],null],
+    ['ferrin_foundry','FX_Foundry','FerrinFoundry',[16,14],[[-5,17.1,-5,1.6],[5,17.1,-5,1.6],[-9.3,3.3,2.0,0.7]],[21,17],null]];   // the Ironway Foundry (drawn at its hub's scale)
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
     ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil']];
@@ -2268,6 +2269,7 @@ function cellInstances(geo,mat,list,far,big,tinted,farGeo){ // list of {x,y,z,ry
   }
 }
 function kitInstances(name,list){
+  if(name==='Foundry'&&FX.FX_Foundry)name='FX_Foundry';   // the Ironway Foundry, rebuilt in the Ferrin kit: same footprint, a true doorway
   if(PLAN){const wall=/WallSeg|WardWall|WardGate|Terrace|Quay|WaterGate/.test(name);for(const p of list){const [x,z,ry,st,ryx]=warpPose(p.x,p.z,p.ry||0);p.x=x;p.z=z;p.ry=wall?ryx:ry;if(wall)p.sx=(p.sx||1)*st*1.04;}}
   if(FX[name]){const DA=DOOR_AT[name];if(DA)for(const p of list){const c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lz=KIT.size[name][1]/2+1.6;DOORWAYS.push({x:p.x+DA[0]*c+lz*sn,z:p.z-DA[0]*sn+lz*c,hw:DA[1]+0.9,hd:1.6,rot:p.ry||0});}
     const CN=FX[name].canopy;if(CN)for(const p of list){const c=Math.cos(p.ry||0),sn=Math.sin(p.ry||0),lz=(CN.z0+CN.z1)/2;CANOPIES.push({x:p.x+CN.x*c+lz*sn,z:p.z-CN.x*sn+lz*c,hw:CN.hw,hd:(CN.z1-CN.z0)/2,rot:p.ry||0});}
@@ -4258,7 +4260,7 @@ const INT_LIGHTS=[new THREE.PointLight(0xffb070,0,34,1.3),new THREE.PointLight(0
 const INT_DEFS={
   'The Lantern & Gear':{type:'tavern',W:17,D:14,H:5.2,floor:'planks:#6a4a2e',wall:'plaster:#d8c8a8'},
   'The Fogbound Arms':{type:'tavern',W:16,D:13,H:5,floor:'planks:#5a3e28',wall:'timber:#4a3626',dark:1},
-  'The Ironway Foundry':{type:'forge',W:20,D:15,H:8,floor:'stone:#5e5a56',wall:'brick:#6a3a2e'},
+  'The Ironway Foundry':{type:'forge',W:20,D:15,H:8,floor:'stone:#5e5a56',wall:'stone:#4a4846'},
   'Hall of the Lantern Vigil':{type:'hall',W:19,D:15,H:6.5,floor:'stone:#8f877b',wall:'stone:#a8a091'},
   "The Artificers' Laboratory":{type:'lab',W:15,D:13,H:6,floor:'planks:#4a3a30',wall:'plaster:#c9c4b8'},
   'The Treasury of Aldrath':{type:'bank',W:28,D:20,H:9,floor:'marble:#ddd6c6',wall:'marble:#e6e0d0'},
@@ -4492,6 +4494,8 @@ function buildInteriors(){
     const I=buildInterior(label,{...def,W,D,H,ddx,gw,gh},i,{x:L.x,z:L.z,ry:L.ry,y,cy});
     const ci=colliders.findIndex(q=>q.type!=='circle'&&Math.abs(q.x-L.x)<0.01&&Math.abs(q.z-L.z)<0.01);if(ci>=0)colliders.splice(ci,1);   // the solid block becomes rooms
     for(const q of I.colliders)colliders.push(q);
+    if(L.name==='Foundry'&&FX.FX_Foundry){const C2=(lx,lz,o)=>{const [x,z]=W2(lx*u,lz*u);colliders.push({...o,x,z,rot:L.ry});};   // the boiler and the gantry crane's legs stand outside the hall
+      C2(-9.3,1.33,{hw:1.0*u,hd:2.2*u});for(const gz of[-5.67,5.67])for(const gx of[8.65,10.15])C2(gx,gz,{type:'circle',r:0.25*u});}
     {const ri=colliders.findIndex(q=>q.reserve===label);if(ri>=0)colliders.splice(ri,1);}
     {const ri=colliders.findIndex(q=>q.reserve==='path:'+label);if(ri>=0)colliders.splice(ri,1);}
     CUTS.A[i].set(L.x,L.z,L.ry,y);CUTS.B[i].set(ddx,gw/2+0.02,-S.face*u+(S.floor?0.25:0),y+gh);   // open the shell's doorway

@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 src = open(os.path.join(HERE, 'ferrin_forge.py')).read()
 exec(compile(src[:src.index('# ---------------------------------------------------------------- the forge-house')], 'ferrin_forge_head', 'exec'))
 BUILDING = os.environ.get('BUILDING', 'shop')
-random.seed({'shop': 21, 'smelter': 33, 'shrine': 45, 'narrow': 57, 'toolmaker': 69, 'stair': 81}.get(BUILDING, 7))
+random.seed({'shop': 21, 'smelter': 33, 'shrine': 45, 'narrow': 57, 'toolmaker': 69, 'stair': 81, 'foundry': 93}.get(BUILDING, 7))
 
 def smooth(a, b, x): t = max(0.0, min(1.0, (x - a) / (b - a))); return t * t * (3 - 2 * t)
 SOOT = []      # (x, y, z0, z1, radius, strength): plumes and stained places
@@ -438,6 +438,88 @@ if BUILDING == 'stair':
     SOOT += [(sx, sy, S['rz0'] + 1.5, SH + 0.5, 0.8, 0.7), ((x0 + x1) / 2, fy, WD['z1'] - 0.3, S['HT'], 1.4, 0.35)]
     PLOT = (W + 2.6, D + 0.8); VENTS = [(sx, SH + 0.4, sy)]
 
+
+# ================================================================ the Ironway Foundry: the quarter's great works hall (a walk-in hub)
+# Built in metres at its true size (24 x 21 m) and scaled to the kit's units at the end (the game draws it at 1.5x). The
+# walls stand just outside the hall's interior, and the doorway is a true opening the interior is entered through.
+if BUILDING == 'foundry':
+    NAME = 'FerrinFoundry'; OUTSCALE = 1 / 1.5
+    W, D, T, H1, H2, PAR = 24.0, 21.0, 0.55, 6.6, 3.4, 1.0
+    FX = lambda u: -W / 2 + u
+    GW, GH = 5.4, 6.3
+    DOOR = dict(u0=W / 2 - GW / 2, u1=W / 2 + GW / 2, z0=0.0, z1=GH)
+    WL = [2.3, 5.6, 21.7]                                                   # tall hall windows along the front
+    op = lambda c, w, h, z: dict(u0=c - w / 2, u1=c + w / 2, z0=z, z1=z + h)
+    front = [DOOR] + [op(c, 1.4, 3.4, 1.6) for c in WL] + [op(c, 1.0, 1.3, H1 + 0.9) for c in (2.3, 5.6, 8.6, 15.4, 18.4, 21.7)]
+    sides = [op(c, 1.4, 3.4, 1.6) for c in (3.5, 7.8, 13.2, 17.5)] + [op(c, 1.0, 1.3, H1 + 0.9) for c in (3.5, 7.8, 13.2, 17.5)]
+    S = shell(W, D, H1, H2, PAR, T, front, sides=sides, back=[op(c, 1.4, 3.4, 1.6) for c in (6, 18)], batter_gaps=[(FX(DOOR['u0']) - 0.4, FX(DOOR['u1']) + 0.4)], course_at=H1)
+    fy = S['fy']
+    for c in WL: iron_window(FX(c), fy, (0, -1, 0), (1, 0, 0), 1.4, 3.4, 1.6, shutters=False)
+    for c in (2.3, 5.6, 8.6, 15.4, 18.4, 21.7): iron_window(FX(c), fy, (0, -1, 0), (1, 0, 0), 1.0, 1.3, H1 + 0.9, shutters=False)
+    for side in (-1, 1):
+        for c in (3.5, 7.8, 13.2, 17.5):
+            y = fy + c if side > 0 else D / 2 - c
+            iron_window(side * W / 2, y, (side, 0, 0), (0, 1, 0), 1.4, 3.4, 1.6, shutters=False); iron_window(side * W / 2, y, (side, 0, 0), (0, 1, 0), 1.0, 1.3, H1 + 0.9, shutters=False)
+    # the doorway: dressed jambs, a riveted iron lintel beam, a flat arch of voussoirs above, the great iron door rolled aside on its rail
+    for sx in (-1, 1):
+        z = 0.0; k = 0
+        while z < GH - 0.05:
+            hh = min(0.55, GH - z); Lb = 0.8 if k % 2 == 0 else 0.5
+            box((sx * (GW / 2 + Lb / 2 - 0.02), fy - 0.04 + T / 2, z + hh / 2), (Lb, T + 0.1, hh - 0.015), 'F_ashlar', 0.035, tag='jamb'); z += hh; k += 1
+    box((0, fy - 0.08, GH + 0.25), (GW + 1.0, 0.5, 0.5), 'F_iron', 0.02, tag='lintel')
+    for i in range(12): rivet((-GW / 2 - 0.3 + i * (GW + 0.6) / 11, fy - 0.34, GH + 0.25), (0, -1, 0))
+    for i in range(11):
+        u = -GW / 2 - 0.5 + (i + 0.5) * (GW + 1.0) / 11; tilt = (u / (GW / 2 + 0.5)) * 0.35
+        box((u, fy - 0.03, GH + 0.95), ((GW + 1.0) / 11 - 0.03, T + 0.06, 0.9), 'F_ashlar', 0.03, rz=0, rx=0, tag='voussoir')
+    box((0, fy - 0.05, GH + 0.95), (0.9, T + 0.12, 1.1), 'F_ashlar', 0.035)                                          # the keystone
+    cog(0, fy - 0.05, GH + 2.2, 0.75, teeth=14)
+    box((0, fy - 0.45, GH + 0.62), (GW * 2 + 1.2, 0.12, 0.16), 'F_iron', 0.01)                                         # the door's rail
+    for k in range(3): pipe((GW / 2 + 0.5 + k * 2.4, fy - 0.3, GH + 0.62), (GW / 2 + 0.5 + k * 2.4, fy - 0.02, GH + 0.62), 0.04, 'F_iron', seg=5)
+    dx0 = GW / 2 + 0.15; box((dx0 + GW / 2, fy - 0.3, GH / 2 + 0.1), (GW, 0.12, GH + 0.2), 'F_iron', 0.01, tag='door')   # the door, rolled clear of the opening
+    for z in (0.6, GH / 2, GH - 0.4): box((dx0 + GW / 2, fy - 0.38, z), (GW, 0.04, 0.16), 'F_rust', 0.0)
+    for x in (dx0 + 0.25, dx0 + GW - 0.25): box((x, fy - 0.38, GH / 2), (0.16, 0.04, GH), 'F_rust', 0.0)
+    for i in range(2): cyl((dx0 + 0.6 + i * (GW - 1.2), fy - 0.3, GH + 0.72), 0.14, 0.14, 0.1, 'F_iron', seg=10, axis='Y')
+    box((0, fy - 1.0, 0.03), (GW + 0.4, 2.0, 0.06), 'F_ashlar', 0.01)                                                  # a worn threshold
+    for sx in (-0.7, 0.7): box((sx, fy - 1.0, 0.07), (0.1, 2.2, 0.06), 'F_iron', 0.0)                                  # rails run in through the door
+    # the roof: a louvred ventilator along the ridge, the heat out of the hall
+    rz = S['rz0'] + 0.7; vx = 7.0
+    box((0, 0, rz + 0.1), (2 * vx, 2.4, 0.2), 'F_iron', 0.01)
+    for sy in (-1, 1):
+        for i in range(14):
+            x = -vx + 0.5 + i * (2 * vx - 1) / 13
+            box((x, sy * 1.15, rz + 0.75), (0.5, 0.06, 0.9), 'F_iron', 0.0, rx=sy * 0.5)
+    prism([Vector((-vx - 0.2, -1.6, rz + 1.25)), Vector((vx + 0.2, -1.6, rz + 1.25)), Vector((vx + 0.2, 0, rz + 1.9)), Vector((-vx - 0.2, 0, rz + 1.9))], 0.05, (0, 0, 1), 'F_iron', 0.0, tag='roof')
+    prism([Vector((-vx - 0.2, 1.6, rz + 1.25)), Vector((vx + 0.2, 1.6, rz + 1.25)), Vector((vx + 0.2, 0, rz + 1.9)), Vector((-vx - 0.2, 0, rz + 1.9))], 0.05, (0, 0, 1), 'F_iron', 0.0, tag='roof')
+    for x in (-vx, vx): box((x, 0, rz + 0.65), (0.1, 2.4, 1.1), 'F_iron', 0.0)
+    # two great stacks at the back corners, iron-banded
+    VENTS = []
+    for sx in (-1, 1):
+        cx, cy2, SH = sx * 7.5, D / 2 - 3.0, 25.0
+        cyl((cx, cy2, (S['rz0'] + SH) / 2), 1.45, 1.15, SH - S['rz0'], 'F_brick', seg=16, tag='stack')
+        for z in (S['rz0'] + 3, S['rz0'] + 8, SH - 2.5): cyl((cx, cy2, z), 1.47 - (z - S['rz0']) / (SH - S['rz0']) * 0.3 + 0.04, 1.47 - (z - S['rz0']) / (SH - S['rz0']) * 0.3 + 0.04, 0.3, 'F_iron', seg=16)
+        cyl((cx, cy2, SH + 0.2), 1.35, 1.35, 0.4, 'F_brick', seg=16); cyl((cx, cy2, SH + 0.42), 0.85, 0.85, 0.05, 'F_glass', seg=16)
+        SOOT.append((cx, cy2, S['rz0'], SH + 1, 1.8, 0.8)); VENTS.append((cx, SH + 0.6, cy2))
+    # the boiler on the left: riveted iron on stone saddles, its steam pipe into the hall
+    bx = -W / 2 - 1.95; by = -2.0
+    for y in (by - 2.0, by + 2.0): box((bx, y, 0.55), (2.6, 0.8, 1.1), 'F_ashlar', 0.03)
+    cyl((bx, by, 2.25), 1.2, 1.2, 6.2, 'F_iron', seg=20, axis='Y', tag='boiler')
+    for k in range(5): cyl((bx, by - 2.6 + k * 1.3, 2.25), 1.24, 1.24, 0.08, 'F_rust', seg=20, axis='Y')
+    for sy in (-1, 1): cyl((bx, by + sy * 3.12, 2.25), 1.05, 0.2, 0.5 if False else 0.1, 'F_iron', seg=20, axis='Y')
+    cyl((bx, by - 1.0, 3.75), 0.35, 0.35, 0.8, 'F_iron', seg=12); cyl((bx, by - 1.0, 4.2), 0.45, 0.45, 0.12, 'F_copper', seg=12)   # a steam dome
+    pipe((bx, by + 1.5, 3.35), (bx, by + 1.5, 5.4), 0.16, 'F_copper', seg=10); pipe((bx, by + 1.5, 5.4), (-W / 2 + 0.2, by + 1.5, 5.4), 0.16, 'F_copper', seg=10)
+    box((bx, by - 3.2, 1.0), (1.4, 0.4, 1.6), 'F_iron', 0.02); box((bx, by - 3.42, 1.0), (0.6, 0.06, 0.5), 'F_glow', 0.0, tag='glow')   # the firebox
+    VENTS.append((bx, 5.0, by - 1.0))
+    # the gantry crane on the right: two iron A-frames, a beam, a hoist and its chain
+    gx = W / 2 + 2.1
+    for gy in (-D / 2 + 2.0, D / 2 - 2.0):
+        for s2 in (-1, 1): pipe((gx + s2 * 1.1, gy, 0.0), (gx, gy, 9.0), 0.16, 'F_iron', seg=8)
+        box((gx, gy, 0.15), (2.8, 0.7, 0.3), 'F_ashlar', 0.03); pipe((gx - 0.8, gy, 3.0), (gx + 0.8, gy, 3.0), 0.08, 'F_iron', seg=6)
+    box((gx, 0, 9.15), (0.5, D - 3.2, 0.6), 'F_iron', 0.01)
+    box((gx, -1.5, 8.6), (0.8, 1.0, 0.6), 'F_rust', 0.02)
+    for k in range(12): box((gx, -1.5, 8.2 - k * 0.42), (0.08, 0.18 if k % 2 else 0.06, 0.4), 'F_iron', 0.0)
+    box((gx, -1.5, 2.9), (1.4, 1.0, 0.7), 'F_iron', 0.03); box((gx, -1.5, 3.32), (1.2, 0.8, 0.06), 'F_glow', 0.0)        # an ingot mould on the hook
+    PLOT = (W + 7.5, D + 4.5)
+
 # ---------------------------------------------------------------- one mesh, UVs by world projection, weathering
 me = bpy.data.meshes.new(NAME); obj = bpy.data.objects.new(NAME, me); scene.collection.objects.link(obj)
 for name in MAT_LIST:
@@ -459,6 +541,7 @@ for f in bm.faces:
         if ax == 1 and n.y > 0: u = -u
         l[uvl].uv = (u / tile, v / tile)
 bm.to_mesh(me); bm.free()
+if 'OUTSCALE' in globals(): me.transform(Matrix.Scale(OUTSCALE, 4)); SOOT[:] = [(a2 * OUTSCALE, b2 * OUTSCALE, c2 * OUTSCALE, d2 * OUTSCALE, e2 * OUTSCALE, f2) for (a2, b2, c2, d2, e2, f2) in SOOT]; VENTS = [tuple(v * OUTSCALE for v in V) for V in VENTS]; PLOT = tuple(v * OUTSCALE for v in PLOT)   # built at true size, drawn scaled up
 for p in me.polygons: p.use_smooth = False
 col = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT'); me.color_attributes.active_color = col
 for d in col.data: d.color = (1, 1, 1, 1)
@@ -472,7 +555,8 @@ rust_src = []
 for vs, fs, mat, tag in PARTS:
     if tag in ('shutter', 'awning', 'sign', 'door', 'cog'):
         xs = [p.x for p in vs]; ys = [p.y for p in vs]; zs = [p.z for p in vs]; rust_src.append((min(xs), max(xs), min(ys), max(ys), min(zs)))
-HTOP = S['HT']
+HTOP = S['HT'] * globals().get('OUTSCALE', 1.0)
+if 'OUTSCALE' in globals(): rust_src = [tuple(v * OUTSCALE for v in r2) for r2 in rust_src]
 for i, v in enumerate(me.vertices):
     ao = 0.35 + 0.65 * col.data[i].color[0]; p = v.co
     soot = smooth(HTOP - 1.4, HTOP + 0.3, p.z) * 0.3
