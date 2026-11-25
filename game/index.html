@@ -2769,6 +2769,7 @@ function buildWardWalls(lists){KNOTS.length=0;
     for(const R of runs){if(R.s!=='w')continue;let RY=1e9,RT=-1e9;   // the coping runs level from pier to pier, at the height its highest point needs
       for(let t=R.t0;t<=R.t1+0.01;t+=1){const [x,z]=at(t),F=wardField(x,z);RY=Math.min(RY,WARD_LEVEL[F.i],WARD_LEVEL[F.j],heightAt(x,z)-0.3);RT=Math.max(RT,WARD_LEVEL[F.i],WARD_LEVEL[F.j]);}
       R.y=RY-0.3;R.sy=Math.max(0.9,(RT-R.y+1.3)/5.1);R.top=RT+1.15;}
+    for(const R of runs){if(R.s!=='w')continue;if(R.t0<0.01&&ch.hj==='knot'){R.t0=2.0;R.k0=1;}if(R.t1>LEN-0.01&&ch.tj==='knot'){R.t1=LEN-2.0;R.k1=1;}}   // a wall meets a corner tower at its face (radius 2.35), not at its middle
     const pier=(t,R,end)=>{const [x,z]=at(t),a=at(t-1),b=at(t+1),ry=Math.atan2(-(b[1]-a[1]),b[0]-a[0]);
       if(PIERS.some(q=>Math.hypot(q[0]-x,q[1]-z)<2.2))return;PIERS.push([x,z]);
       if(FXW)PUT(end?'FX_WardEnd':'FX_WardPier',{x,z,y:R.top,ry:downRy(x,z,b[0]-a[0],b[1]-a[1]),tint:[1,1,1]});   // a stretch that stops at a street ends in a lantern pier
@@ -2779,14 +2780,14 @@ function buildWardWalls(lists){KNOTS.length=0;
     for(let r=0;r<runs.length;r++){const R=runs[r];if(R.s!=='w'||R.t1-R.t0<1.2)continue;   // every stretch ends at something: a street, a gate, a corner, the city wall or the plaza's
       for(const [t,nb,j,hit] of[[R.t0,runs[r-1],ch.hj,R.hit0],[R.t1,runs[r+1],ch.tj,R.hit1]]){const ok=hit?true:nb?nb.s==='o'||nb.s==='O'||nb.s==='x'||nb.s==='R':!!j;if(!ok){const [x,z]=at(t);LOOSE.push([...P2W(x,z).map(Math.round),nb?nb.s:'end',ch.key]);}}}
     for(let r=0;r<runs.length;r++){const R=runs[r];if(R.s!=='w'||R.t1-R.t0<1.2)continue;const st=n2=>!!n2&&/[oO]/.test(n2.s);
-      pier(R.t0<0.01?R.t0:R.t0+1.0,R,st(runs[r-1]));pier(R.t1>LEN-0.01?R.t1:R.t1-1.0,R,st(runs[r+1]));for(const t of turns)if(t>R.t0+2&&t<R.t1-2)pier(t,R);}   // a pier ends each stretch and marks each turn
+      if(!R.k0)pier(R.t0<0.01?R.t0:R.t0+1.0,R,st(runs[r-1]));if(!R.k1)pier(R.t1>LEN-0.01?R.t1:R.t1-1.0,R,st(runs[r+1]));for(const t of turns)if(t>R.t0+2&&t<R.t1-2)pier(t,R);}   // a pier ends each stretch and marks each turn
     for(const R of runs){if(R.s!=='w')continue;const len=R.t1-R.t0;if(len<1.2)continue;const np=Math.max(1,Math.round(len/4.2)),pl=len/np;
       for(let k=0;k<np;k++){const A=at(R.t0+k*pl),B=at(R.t0+(k+1)*pl),x=(A[0]+B[0])/2,z=(A[1]+B[1])/2,tx=B[0]-A[0],tz=B[1]-A[1],l=Math.hypot(tx,tz)||pl,ry=Math.atan2(-tz,tx);
         // a retaining wall: founded on the lower side, its parapet above the upper
         const F=wardField(x,z),lo=Math.min(WARD_LEVEL[F.i],WARD_LEVEL[F.j]),hi=Math.max(WARD_LEVEL[F.i],WARD_LEVEL[F.j]),y=Math.min(lo,heightAt(A[0],A[1]),heightAt(B[0],B[1]))-0.3;
         if(FXW)PUT('FX_WardWall',{x,z,y:R.top,ry:downRy(x,z,tx,tz),sx:(l+0.1)/4.2,tint:[1,1,1]});else PUT('WardWall',{x,z,y:R.y,ry,sx:(l+0.12)/6,sy:R.sy,tint:[1,1,1]});colliders.push({x,z,hw:l/2,hd:0.75,rot:ry,ward:1});RES.push({x,z,hw:l/2+1,hd:3.3,rot:ry,reserve:'ward-wall'});}}}
   for(const K of KNOTS){const [x,z]=K;let ry=0;{const c=CH.find(c2=>c2.pts.some(q=>q===K));if(c){const i=c.pts.indexOf(K),o=c.pts[i?i-1:1];ry=Math.atan2(-(o[1]-z),o[0]-x);}}
-    if(FXW)PUT('FX_WardKnot',{x,z,y:topAt(x,z,4),ry,tint:[1,1,1]});else PUT('WardPier',{x,z,y:topAt(x,z,4)-6,ry,sx:1.6,sz:1.6,sy:1.3,tint:[1,1,1]});colliders.push({x,z,hw:2.3,hd:2.3,rot:ry,ward:1});RES.push({x,z,hw:5,hd:5,rot:ry,reserve:'ward-wall'});}
+    if(FXW)PUT('FX_WardKnot',{x,z,y:topAt(x,z,4),ry,tint:[1,1,1]});else PUT('WardPier',{x,z,y:topAt(x,z,4)-6,ry,sx:1.6,sz:1.6,sy:1.3,tint:[1,1,1]});colliders.push({type:'circle',x,z,r:2.6,ward:1});RES.push({x,z,hw:5,hd:5,rot:ry,reserve:'ward-wall'});}
   colliders.push(...RES);
   if(LOOSE.length)console.error('ward walls: '+LOOSE.length+' wall ends meet nothing '+JSON.stringify(LOOSE.slice(0,8)));   // houses, yards and props stand clear of a ward wall (the reservation is lifted once the city is placed)
   // the plaza stands on its own retaining wall round the sealed core; the avenues ramp up through the gaps

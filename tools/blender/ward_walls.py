@@ -73,26 +73,22 @@ def pier(name, top, s, lantern=False):
 PIECES['WardPier'] = pier('WardPier', 0.55, 1.8)
 PIECES['WardEnd'] = pier('WardEnd', 0.75, 1.7, lantern=True)
 
-def knot():   # where walls meet: a squat corner tower, battered at the foot, a corbelled cornice and a stone cap
-    h = 2.1; top = 2.7
-    box((0, 0, (DEEP + top - 0.7) / 2), (2 * h, 2 * h, top - 0.7 - DEEP), 'W_ashlar', 0.02)
-    stones(-h - 0.1, h + 0.1, -h - 0.1, h + 0.1, -1.36, -1.12, 'W_cope', n=3, bev=0.03)
-    for k in range(9):
-        z = -1.1 + k * 0.42
-        if z + 0.4 > top - 0.75: break
-        for (a, c) in [(-1, -1), (1, -1), (1, 1), (-1, 1)]:
-            lx, ly = (0.62, 0.36) if (k + (a * c > 0)) % 2 else (0.36, 0.62)
-            box((a * (h - lx / 2 + 0.012), c * (h - ly / 2 + 0.012), z + 0.2), (lx, ly, 0.4), 'W_cope', 0.02)
-    for side in range(4):                                                                                       # corbels under the cornice
-        for i in range(5):
-            u = -h + 0.42 + i * (2 * h - 0.84) / 4
-            p = [(u, -h - 0.1), (h + 0.1, u), (-u, h + 0.1), (-h - 0.1, -u)][side]
-            box((p[0], p[1], top - 0.9), (0.3 if side % 2 == 0 else 0.26, 0.26 if side % 2 == 0 else 0.3, 0.3), 'W_cope', 0.02)
-    stones(-h - 0.22, h + 0.22, -h - 0.22, h + 0.22, top - 0.75, top - 0.45, 'W_cope', n=4, bev=0.04)
-    pyramid(0, 0, top - 0.45, h + 0.05, h + 0.05, 1.5, 'W_cope'); cyl((0, 0, top + 1.2), 0.12, 0.06, 0.5, 'F_iron', seg=8)
-    for side in range(4):                                                                                       # a narrow window each way
-        p, n = [((0, -h), 'y'), ((h, 0), 'x'), ((0, h), 'y'), ((-h, 0), 'x')][side]
-        box((p[0], p[1], 0.9), (0.22 if n == 'y' else 0.08, 0.08 if n == 'y' else 0.22, 0.75), 'F_glass', 0.0)
+KR = 2.35   # the drum's radius at the coping (the game trims each wall to meet it)
+def knot():   # where walls meet: a drum tower, so a wall can arrive from any side and meet it square
+    top = 2.7; seg = 28
+    cyl((0, 0, (DEEP - 1.4) / 2), KR + 0.32, KR + 0.04, -1.4 - DEEP, 'W_ashlar', seg=seg)                       # a battered foot below the high ground
+    cyl((0, 0, (top - 0.75 - 1.4) / 2), KR, KR, top - 0.75 + 1.4, 'W_ashlar', seg=seg)                           # the drum
+    cyl((0, 0, -1.25), KR + 0.12, KR + 0.12, 0.24, 'W_cope', seg=seg)                                           # a string course at the high ground
+    for i in range(16):                                                                                         # a ring of corbels under the parapet
+        a = i / 16 * 2 * math.pi; r = KR + 0.1
+        box((math.cos(a) * r, math.sin(a) * r, top - 0.92), (0.26, 0.3, 0.32), 'W_cope', 0.02, rz=a)
+    cyl((0, 0, top - 0.6), KR + 0.24, KR + 0.24, 0.3, 'W_cope', seg=seg)                                         # the cornice
+    cone_h = 1.9; cyl((0, 0, top - 0.45 + cone_h / 2), KR + 0.18, 0.06, cone_h, 'W_cope', seg=seg)                # a conical stone cap
+    cyl((0, 0, top - 0.45 + cone_h + 0.25), 0.07, 0.03, 0.5, 'F_iron', seg=8)
+    for i in range(3):                                                                                          # slit windows, round the drum
+        a = i / 3 * 2 * math.pi + 0.5
+        box((math.cos(a) * (KR - 0.02), math.sin(a) * (KR - 0.02), 0.8), (0.08, 0.2, 0.8), 'F_glass', 0.0, rz=a)
+        box((math.cos(a) * (KR + 0.01), math.sin(a) * (KR + 0.01), 1.27), (0.1, 0.42, 0.12), 'W_cope', 0.01, rz=a)
 PIECES['WardKnot'] = knot
 
 def gate():   # a ward gate: one round arch between two towers, a parapet over it; its street at z = 0 (scaled whole to fit)
@@ -149,6 +145,11 @@ def build(name, maker):
     uvl = bm.loops.layers.uv.new('UVMap')
     for f in bm.faces:
         tile = MATS[MAT_LIST[f.material_index]][1]; n = f.normal; ax = max(range(3), key=lambda i: abs(n[i]))
+        if name == 'WardKnot' and abs(n.z) < 0.6 and f.calc_area() > 0.05:
+            angs = [math.atan2(l.vert.co.y, l.vert.co.x) for l in f.loops]
+            if max(angs) - min(angs) > math.pi: angs = [a2 + 2 * math.pi if a2 < 0 else a2 for a2 in angs]
+            for l, a2 in zip(f.loops, angs): l[uvl].uv = (a2 * KR / tile, l.vert.co.z / tile)
+            continue
         for l in f.loops:
             p = l.vert.co; u, v = ((p.y, p.z) if ax == 0 else (p.x, p.z) if ax == 1 else (p.x, p.y)); l[uvl].uv = (u / tile, v / tile)
     bm.to_mesh(me); bm.free()
@@ -190,7 +191,7 @@ if RENDER:   # a contact sheet: a run of wall with its pieces, seen from the low
     P = {o.name: o for o in objs}
     for k in range(3):
         c = P['WardWall'].copy(); scene.collection.objects.link(c); c.location = (-8.4 + k * 4.2, 0, 0)
-    P['WardWall'].location = (-12.6, 0, 0); P['WardKnot'].location = (-16.7, 0, 0); P['WardPier'].location = (-4.2 + 1.1, 0, 0)
+    P['WardWall'].location = (-12.6, 0, 0); P['WardKnot'].location = (-16.6 + 0.3, 0, 0); P['WardPier'].location = (-4.2 + 1.1, 0, 0)
     P['WardEnd'].location = (-1.5, 0, 0); P['WardGateA'].location = (8, 0, -3.6); P['WardGateA'].scale = (0.8, 0.8, 0.8)
     lo = bpy.data.objects.new('lo', bpy.data.meshes.new('lo')); scene.collection.objects.link(lo)
     gb = bmesh.new(); bmesh.ops.create_grid(gb, x_segments=2, y_segments=2, size=40); bmesh.ops.translate(gb, verts=gb.verts, vec=(0, -39.5, -3.6)); gb.to_mesh(lo.data); gb.free()
