@@ -2241,7 +2241,7 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
     ['ferrin_narrow','FX_Narrow','FerrinNarrow',[5.6,9.6],[[-1.7,11.1,-3.7,0.8]],[6.4,10.4],null]];
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
-    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate']];
+    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil']];
   let left=SETS.length+2;const one=()=>{if(--left<=0)done();};
   new THREE.GLTFLoader().load('models/ward_walls.gltf.json',g=>{for(const [node,nm] of[['WardWall','FX_WardWall'],['WardPier','FX_WardPier'],['WardEnd','FX_WardEnd'],['WardKnot','FX_WardKnot'],['WardGateA','FX_WardGate']]){
     try{if(registerFX(nm,g.scene,node,node+'_LOD1',null,[],null,null))FX[nm].far=900;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
@@ -3017,10 +3017,13 @@ function buildCityInterior(parent){
   // the ward squares
   for(const Q of wardSquares()){if(Q.q===0&&FERRIN_GB){   // Anvil Square, grey-box: a working forecourt round Ostrak's Anvil
       const tm=n=>{if(!FX_MATS[n])return null;const m=fxMaterial(n).clone();m.vertexColors=false;return m;},y=heightAt(Q.x,Q.z),g1=tm('F_ashlar')||flat(0x8a8884),g2=tm('F_stone')||flat(0x5e5c5a),g3=tm('F_iron')||flat(0x3a3a3c);   // the square's furniture in the quarter's own stone and iron
-      parent.add(cyl(3.2,3.6,1.1,8,g2,Q.x,y+0.55,Q.z),box(3.4,1.3,1.4,g3,Q.x,y+1.75,Q.z,0.3),box(1.6,0.9,1.1,g3,Q.x,y+0.95+1.2,Q.z,0.3),box(4.6,0.4,0.6,g3,Q.x+Math.cos(0.3)*0,y+2.6,Q.z,0.3));   // the plinth and the great anvil
+      const fxm=(n,x,yy,z,ry)=>{const g=new THREE.Group();for(const s2 of FX[n].subs){const m=new THREE.Mesh(s2.geo,s2.mat);m.castShadow=m.receiveShadow=true;g.add(m);}g.position.set(x,yy,z);g.rotation.y=ry;g.userData.fx=true;return g;};   // a modelled piece, placed once (kept out of the merged group: the merge drops its baked shading)
+      if(FX.FX_Anvil)landmarks.add(fxm('FX_Anvil',Q.x,y-0.04,Q.z,0.3));
+      else parent.add(cyl(3.2,3.6,1.1,8,g2,Q.x,y+0.55,Q.z),box(3.4,1.3,1.4,g3,Q.x,y+1.75,Q.z,0.3),box(1.6,0.9,1.1,g3,Q.x,y+0.95+1.2,Q.z,0.3),box(4.6,0.4,0.6,g3,Q.x+Math.cos(0.3)*0,y+2.6,Q.z,0.3));   // the plinth and the great anvil
       colliders.push({type:'circle',x:Q.x,z:Q.z,r:3.7});
       {const a=0.3+Math.PI/2,tx=Q.x+Math.cos(a)*6,tz=Q.z+Math.sin(a)*6;parent.add(box(5,0.9,1.4,g1,tx,heightAt(tx,tz)+0.45,tz,-a+Math.PI/2));colliders.push({x:tx,z:tz,hw:2.5,hd:0.7,rot:-a+Math.PI/2});}   // the quench trough
       for(let k=0;k<5;k++){const a=k/5*Math.PI*2+1.2,bx=Q.x+Math.cos(a)*8.2,bz=Q.z+Math.sin(a)*8.2,by=heightAt(bx,bz),kind=k%3;
+        if(FX.FX_Ingots){landmarks.add(fxm(['FX_Ingots','FX_Cart','FX_Workbench','FX_Crates','FX_Barrels'][k],bx,by-0.05,bz,-a+Math.PI/2));colliders.push({x:bx,z:bz,hw:1.3,hd:0.9,rot:-a+Math.PI/2});continue;}   // the forecourt's work: ingots, an ore cart, a bench, crates, barrels
         if(kind===0){parent.add(box(1.6,0.6,1.0,g2,bx,by+0.3,bz,-a),box(1.4,0.35,0.9,g2,bx,by+0.78,bz,-a+0.2));}            // ingots, stacked
         else if(kind===1){parent.add(box(1.8,1.2,1.8,g1,bx,by+0.6,bz,-a));}                                                    // an ore bin
         else parent.add(box(2.2,0.9,0.9,g1,bx,by+0.45,bz,-a),box(0.5,0.5,0.4,g3,bx,by+1.1,bz,-a));                          // a workbench with a vice

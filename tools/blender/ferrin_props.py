@@ -170,6 +170,39 @@ def yard_gate():   # a cart gate into a yard: two dressed piers, a pair of iron 
         a = i / 8 * 2 * math.pi; box((math.cos(a) * 0.3, 0, 2.78 + math.sin(a) * 0.3), (0.09, 0.07, 0.09), 'F_rust', 0.0, rx=0)
 PROPS['FerrinYardGate'] = yard_gate
 
+def ostrak():   # Ostrak's Anvil: the god's anvil on a stepped basalt plinth, a hammer laid against it, braziers at its feet
+    for k, (r, h) in enumerate([(3.5, 0.36), (2.95, 0.36), (2.35, 0.5)]):
+        z0 = sum(hh for _, hh in [(3.5, 0.36), (2.95, 0.36), (2.35, 0.5)][:k])
+        cyl((0, 0, z0 + h / 2 - (0.4 if k == 0 else 0)), r, r, h + (0.8 if k == 0 else 0), 'F_stone', seg=8, bev=0.02)
+        cyl((0, 0, z0 + h - 0.03), r + 0.04, r + 0.04, 0.06, 'F_ashlar', seg=8)                                   # a dressed nosing on each step
+    zt = 1.22
+    for i in range(4):                                                                                           # bronze plaques round the top step
+        a = i / 4 * 2 * math.pi + math.pi / 8 + math.pi / 4
+        box((math.cos(a) * 2.37, math.sin(a) * 2.37, zt - 0.25), (0.04, 0.9, 0.26), 'F_copper', 0.01, rz=a)
+    # the anvil: a waisted foot, the body, a long horn and a square heel, the face polished bright
+    prism([Vector((-1.0, -0.65, zt)), Vector((1.0, -0.65, zt)), Vector((0.55, -0.38, zt + 0.95)), Vector((-0.55, -0.38, zt + 0.95))], -1.3, (0, 1, 0), 'F_iron', 0.03)
+    box((0, 0, zt + 0.2), (2.1, 1.4, 0.4), 'F_iron', 0.04)
+    box((0, 0, zt + 1.3), (2.4, 0.95, 0.75), 'F_iron', 0.05)
+    box((-1.55, 0, zt + 1.42), (0.8, 0.8, 0.5), 'F_iron', 0.04)                                                   # the heel
+    bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=14, radius1=0.42, radius2=0.03, depth=1.7)
+    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi / 2, 3, 'Y'))
+    bmesh.ops.scale(bm, vec=(1, 1, 0.9), verts=bm.verts); bmesh.ops.translate(bm, verts=bm.verts, vec=(2.05, 0, zt + 1.48)); add_bm(bm, 'F_iron', 'horn')
+    box((0, 0, zt + 1.69), (2.3, 0.86, 0.04), 'F_iron', 0.01)                                                    # the worn face
+    box((-1.0, 0, zt + 1.73), (0.12, 0.12, 0.02), 'F_iron', 0.0)                                                  # the hardy hole
+    # the hammer, laid against the anvil, its handle on the step
+    hb, ht = Vector((1.7, -2.3, 0.74)), Vector((0.35, -0.2, zt + 1.86))                                        # the hammer: its head resting on the face, the haft down to the step
+    pipe(hb, ht, 0.08, 'F_wood', seg=8)
+    d = (ht - hb).normalized(); rz = math.atan2(d.y, d.x) + math.pi / 2
+    box((ht.x, ht.y, ht.z + 0.02), (1.05, 0.46, 0.46), 'F_iron', 0.05, rz=rz)
+    for k in (-0.38, 0.38): box((ht.x + math.cos(rz) * k, ht.y + math.sin(rz) * k, ht.z + 0.02), (0.07, 0.5, 0.5), 'F_copper', 0.01, rz=rz)
+    for i in range(4):                                                                                           # braziers at the four quarters of the lowest step
+        a = i / 4 * 2 * math.pi + math.pi / 4; x, y = math.cos(a) * 3.15, math.sin(a) * 3.15; zb = 0.36
+        for k in range(3):
+            b = k / 3 * 2 * math.pi; pipe((x + math.cos(b) * 0.35, y + math.sin(b) * 0.35, zb), (x + math.cos(b) * 0.18, y + math.sin(b) * 0.18, zb + 0.95), 0.03, 'F_iron', seg=5)
+        cyl((x, y, zb + 1.05), 0.42, 0.24, 0.26, 'F_iron', seg=12); cyl((x, y, zb + 1.16), 0.37, 0.37, 0.03, 'F_glow', seg=12)
+        for k in range(7): lump((x + random.uniform(-0.22, 0.22), y + random.uniform(-0.22, 0.22), zb + 1.2), random.uniform(0.06, 0.1), 'F_glow' if k % 2 else 'F_glass', 0.6, sub=1)
+PROPS['FerrinAnvil'] = ostrak
+
 def build(name, maker):
     PARTS.clear(); maker()
     me = bpy.data.meshes.new(name); obj = bpy.data.objects.new(name, me); scene.collection.objects.link(obj)
