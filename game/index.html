@@ -2212,14 +2212,14 @@ function dressHub(k,name){
 // version beyond ~110 m. Loaded with the kit: the game starts once they are in (or gives up and keeps the grey-box).
 const DOORWAYS=[], DOOR_AT={FX_Forge:[2.575,0.6],FX_Shop:[2.25,0.55],FX_Smelter:[0,2.6],FX_Shrine:[0,0.8],FX_Narrow:[-1.275,0.53],FX_Tool:[0,0.55],FX_Stair:[-1.25,1.25]};   // each model's front door (local x, half width): the street in front of it is kept clear
 const CANOPIES=[];   // iron canopies over the street (world): street lamps keep out from under them
-const FX={}, FX_SETS={W_ashlar:['medieval_blocks_03',[0.62,0.58,0.52],0.45],W_cope:['medieval_blocks_03',[0.76,0.72,0.64],0.4],W_rubble:['rock_wall_05',[0.62,0.57,0.5],0.4],F_stone:['rock_wall_05',[0.15,0.155,0.17],0.3],F_ashlar:['medieval_blocks_03',[0.25,0.255,0.27],0.3],F_brick:['castle_brick_07',[0.62,0.48,0.42],1],
+const FX={}, FX_SETS={M_ashlar:['white_sandstone_blocks_02',[0.95,0.92,0.86],0.7,'market'],M_plaster:['painted_plaster_wall',[1.12,1.07,0.96],0.8,'market'],M_wood:['medieval_wood',[0.72,0.62,0.52],0.9,'market'],M_tile:['clay_roof_tiles_02',[0.92,0.78,0.68],0.95,'market'],W_ashlar:['medieval_blocks_03',[0.62,0.58,0.52],0.45],W_cope:['medieval_blocks_03',[0.76,0.72,0.64],0.4],W_rubble:['rock_wall_05',[0.62,0.57,0.5],0.4],F_stone:['rock_wall_05',[0.15,0.155,0.17],0.3],F_ashlar:['medieval_blocks_03',[0.25,0.255,0.27],0.3],F_brick:['castle_brick_07',[0.62,0.48,0.42],1],
   F_iron:['metal_plate_02',[0.22,0.22,0.24],1],F_rust:['rusty_metal_02',[0.30,0.24,0.20],1],F_wood:['dark_wooden_planks',[0.70,0.62,0.55],1],F_copper:['rusty_metal_02',[0.78,0.46,0.30],1]};
 const FX_MATS={};
 function fxMaterial(name){if(FX_MATS[name])return FX_MATS[name];const lin=v=>v<=0.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-0.055;let m;
   if(name==='F_glow')m=new THREE.MeshBasicMaterial({color:0xff5a14});
   else if(name==='F_glass')m=new THREE.MeshStandardMaterial({color:0x0d0f12,roughness:0.15,metalness:0.2});
   else{const S=FX_SETS[name]||FX_SETS.F_stone,TL=new THREE.TextureLoader(),an=renderer.capabilities.getMaxAnisotropy?Math.min(8,renderer.capabilities.getMaxAnisotropy()):4;
-    const tx=k=>{const t=TL.load('tex/ferrin/'+S[0]+'_'+k+'.jpg');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.flipY=false;t.anisotropy=an;return t;};
+    const tx=k=>{const t=TL.load('tex/'+(S[3]||'ferrin')+'/'+S[0]+'_'+k+'.jpg');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.flipY=false;t.anisotropy=an;return t;};
     m=new THREE.MeshStandardMaterial({map:tx('diff'),normalMap:tx('nor'),roughnessMap:tx('rough'),vertexColors:true,color:new THREE.Color(lin(S[1][0])*1.15,lin(S[1][1])*1.15,lin(S[1][2])*1.15),roughness:1,metalness:/iron|rust|copper/.test(name)?0.25:0});
     const sat=S[2];if(sat<1)m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <map_fragment>','#include <map_fragment>\n diffuseColor.rgb=mix(vec3(dot(diffuseColor.rgb,vec3(.299,.587,.114))),diffuseColor.rgb,'+sat.toFixed(2)+');');};}
   m.name=name;return FX_MATS[name]=m;}
@@ -2245,7 +2245,8 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
     ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil'],['FerrinWallLamp','FX_WallLamp'],['FerrinSignAnvil','FX_SignAnvil'],['FerrinSignTongs','FX_SignTongs'],['FerrinSignCog','FX_SignCog'],['FerrinButt','FX_Butt'],['FerrinPump','FX_Pump'],['FerrinBollard','FX_Bollard'],['FerrinLeanTo','FX_LeanTo']];
-  let left=SETS.length+2;const one=()=>{if(--left<=0)done();};
+  let left=SETS.length+3;const one=()=>{if(--left<=0)done();};
+  new THREE.GLTFLoader().load('models/market_hall.gltf.json',g=>{try{registerFX('FX_MarketHall',g.scene,'MarketHall','MarketHall_LOD1',null,[],null,null);}catch(e){console.warn('market hall',e);}one();},undefined,()=>one());
   new THREE.GLTFLoader().load('models/ward_walls.gltf.json',g=>{for(const [node,nm] of[['WardWall','FX_WardWall'],['WardPier','FX_WardPier'],['WardEnd','FX_WardEnd'],['WardKnot','FX_WardKnot'],['WardGateA','FX_WardGate']]){
     try{if(registerFX(nm,g.scene,node,node+'_LOD1',null,[],null,null))FX[nm].far=900;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
   new THREE.GLTFLoader().load('models/ferrin_props.gltf.json',g=>{for(const [node,nm,v] of PROPS){try{if(registerFX(nm,g.scene,node,'-',null,v||[],null,null))FX[nm].far=/FWall|FGate|LeanTo/.test(nm)?300:/YardForge|Slag|Coal/.test(nm)?170:120;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
@@ -3063,10 +3064,21 @@ function buildCityInterior(parent){
     for(let k=0;k<6;k++){const a=k/6*Math.PI*2;parent.add(box(0.5,0.18,0.5,col,Q.x+Math.cos(a)*1.55,y+2.7,Q.z+Math.sin(a)*1.55,-a));}colliders.push({type:'circle',x:Q.x,z:Q.z,r:4.1});
     for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4,bx=Q.x+Math.cos(a)*7,bz=Q.z+Math.sin(a)*7;const b=box(2.2,0.45,0.7,timber,bx,heightAt(bx,bz)+0.45,bz,-a+Math.PI/2);parent.add(b);
       parent.add(box(2.2,0.1,0.75,timberDark,bx,heightAt(bx,bz)+0.7,bz,-a+Math.PI/2));colliders.push({x:bx,z:bz,hw:1.1,hd:0.4,rot:-a+Math.PI/2});}}
-  // the market: stalls around a fountain
-  const my=heightAt(mx,mz);
+  // the market: the covered hall on the east side of the processional way, the fountain on the west, the way between them clear
+  const HALL=!!FX.FX_MarketHall,FXo=HALL?-15:0,my=heightAt(mx+FXo,mz);
+  if(HALL){const hx=mx+15,hz=mz,hy=heightAt(hx,hz),g=new THREE.Group();for(const s2 of FX.FX_MarketHall.subs){const m=new THREE.Mesh(s2.geo,s2.mat);m.castShadow=m.receiveShadow=true;g.add(m);}
+    g.position.set(hx,hy-0.3,hz);g.rotation.y=-Math.PI/2;g.userData.fx=true;landmarks.add(g);   // its floor flush with the square; the long side along the way, the arcade open to it
+    for(let i=0;i<=6;i++)for(const sy of[-5.5,5.5])colliders.push({type:'circle',x:hx+sy,z:hz-11+i*22/6,r:0.62});   // the piers (the model's x runs along the way)
+    for(const sy of[-1.83,1.83])for(const sx of[-11,11])colliders.push({type:'circle',x:hx+sy,z:hz+sx,r:0.62});
+    CANOPIES.push({x:hx,z:hz,hw:7.2,hd:12.8,rot:0});   // no street lamp under its roof
+    LANDMARK_AT.push({x:hx,z:hz,label:'The Market Hall',r:14,ry:-Math.PI/2,d:11});
+    const st0=(x,z,ry,k)=>{const st=new THREE.Group();st.position.set(x,heightAt(x,z),z);st.rotation.y=ry;   // stalls trading under the arcade, two rows facing the middle aisle
+      for(const sx of[-1,1])for(const sz of[-1,1])st.add(box(0.12,2.0,0.12,timberDark,sx*1.3,1.0,sz*0.75));st.add(box(2.8,0.9,1.5,timber,0,0.45,0));
+      for(let j=0;j<4;j++)st.add(box(0.7,0.1,1.8,j%2?whiteMat:clothMats[(k+j)%4],-1.05+j*0.7,2.05,0,0,-0.12));parent.add(st);colliders.push({x,z,hw:1.45,hd:0.85,rot:ry});};
+    for(let i=0;i<5;i++)for(const [dx,ry] of[[-2.8,Math.PI/2],[2.8,-Math.PI/2]])st0(hx+dx,hz-8+i*4,ry,i*2+(dx>0?1:0));}
   // a roundabout: carts and people go round the fountain island; the stalls stand back on the outside of the ring
   {const isl=7.5,water=new THREE.MeshLambertMaterial({color:0x3f6f86,transparent:true,opacity:0.85}),grass=flat(0x4f6a35),bronze=flat(0x8a6a3a),verd=flat(0x5f8f78);
+    const mx0=mx;{const mx=mx0+FXo;
     parent.add(cyl(isl+0.35,isl+0.45,0.25,32,cityStone,mx,my+0.12,mz),cyl(isl,isl,0.3,32,grass,mx,my+0.16,mz));        // kerb and the green island
     for(let k=0;k<16;k++){const a=k/16*Math.PI*2;parent.add(new THREE.Mesh(new THREE.SphereGeometry(0.55,7,5),flat(0x3f5a2a)).translateX(mx+Math.cos(a+0.2)*(isl-0.7)).translateY(my+0.4).translateZ(mz+Math.sin(a+0.2)*(isl-0.7)),box(0.3,0.22,0.3,flat([0xb5473a,0xd4a017,0xe8e2d2,0x9a5ad0][k%4]),mx+Math.cos(a)*(isl-0.6),my+0.4,mz+Math.sin(a)*(isl-0.6)));}
     parent.add(cyl(4.6,4.8,0.8,24,cityStone,mx,my+0.55,mz),cyl(4.3,4.3,0.06,24,water,mx,my+0.93,mz));                  // the lower basin
@@ -3074,8 +3086,8 @@ function buildCityInterior(parent){
     parent.add(cyl(0.35,0.45,1.6,8,bronze,mx,my+4.2,mz)); const gl=new THREE.Mesh(new THREE.TorusGeometry(0.55,0.08,6,16),verd);gl.position.set(mx,my+5.2,mz);gl.rotation.x=Math.PI/2;parent.add(gl);
     const orb=new THREE.Mesh(new THREE.SphereGeometry(0.35,10,8),bronze);orb.position.set(mx,my+5.35,mz);parent.add(orb);
     for(let k=0;k<4;k++){const a=k/4*Math.PI*2+Math.PI/4;parent.add(cyl(0.12,0.12,0.5,6,bronze,mx+Math.cos(a)*4.4,my+1.1,mz+Math.sin(a)*4.4));}  // spouts on the rim
-    VENTS.push({x:mx,y:my+5.6,z:mz,s:0.7}); colliders.push({type:'circle',x:mx,z:mz,r:isl+0.3});}
-  for(let k=0;k<16;k++){const a=k/16*Math.PI*2+0.1,rr=k%2?20.5:16.5,x=mx+Math.cos(a)*rr,z=mz+Math.sin(a)*rr;if(Math.abs(x-mx)<9)continue;if(laneDist(x,z)<LANE_HALF+2.2)continue;
+    VENTS.push({x:mx,y:my+5.6,z:mz,s:0.7}); colliders.push({type:'circle',x:mx,z:mz,r:isl+0.3});}}
+  for(let k=0;k<16;k++){const a=k/16*Math.PI*2+0.1,rr=HALL?(k%2?13:10.5):k%2?20.5:16.5,x=mx+FXo+Math.cos(a)*rr,z=mz+Math.sin(a)*rr;if(HALL&&(x>mx-9.5||Math.hypot(x-mx,z-mz)>MARKET.rad-2.5))continue;if(!HALL&&Math.abs(x-mx)<9)continue;if(laneDist(x,z)<LANE_HALF+2.2)continue;   // round the fountain, clear of the way
     const st=new THREE.Group();st.position.set(x,heightAt(x,z),z);st.rotation.y=-a+Math.PI/2;
     for(const sx of[-1,1])for(const sz of[-1,1])st.add(box(0.15,2.4,0.15,timberDark,sx*1.4,1.2,sz*0.9));
     st.add(box(3,0.9,1.8,timber,0,0.45,0));for(let j=0;j<4;j++)st.add(box(0.75,0.12,2.2,j%2?whiteMat:clothMats[(k+j)%4],-1.1+j*0.75,2.5,0,0,-0.15));

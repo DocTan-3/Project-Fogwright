@@ -31,3 +31,7 @@ terry_cloth (greyscale), aerial_rocks_02.
 CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 1K colour, normal (OpenGL) and roughness maps:
 rock_wall_05, medieval_blocks_03, castle_brick_07, metal_plate_02, rusty_metal_02, dark_wooden_planks.
 The Ferrin forge-house model (game/models/ferrin_forge.glb) is built by tools/blender/ferrin_forge.py.
+
+CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 1K colour, normal (OpenGL) and roughness maps, for
+the Market Ward kit (game/tex/market): clay_roof_tiles_02, painted_plaster_wall, white_sandstone_blocks_02, medieval_wood.
+The market hall (game/models/market_hall.gltf.json) is built by tools/blender/market_hall.py.
