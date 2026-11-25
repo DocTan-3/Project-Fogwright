@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 src = open(os.path.join(HERE, 'ferrin_forge.py')).read()
 exec(compile(src[:src.index('# ---------------------------------------------------------------- the forge-house')], 'ferrin_forge_head', 'exec'))
 BUILDING = os.environ.get('BUILDING', 'shop')
-random.seed({'shop': 21, 'smelter': 33, 'shrine': 45}[BUILDING])
+random.seed({'shop': 21, 'smelter': 33, 'shrine': 45, 'narrow': 57}.get(BUILDING, 7))
 
 def smooth(a, b, x): t = max(0.0, min(1.0, (x - a) / (b - a))); return t * t * (3 - 2 * t)
 SOOT = []      # (x, y, z0, z1, radius, strength): plumes and stained places
@@ -300,6 +300,39 @@ if BUILDING == 'shrine':
     SOOT += [(bzx, bzy, bzz - 0.5, bzz + 1.5, 1.2, 0.6), (cu, fy, DOOR['z1'] - 0.5, S['HT'], c + 0.5, 0.45)]
     LIGHT_SPOTS += [(cu, iy, 1.2, 150), (bzx, bzy, bzz + 1.2, 260)]
     PLOT = (W + 1.6, D + 1.6); VENTS = [(bzx, bzz + 1.2, bzy)]
+
+# ================================================================ the narrow house: a smith's family home squeezed into a gap
+if BUILDING == 'narrow':
+    NAME = 'FerrinNarrow'
+    W, D, T, H1, H2, PAR = 5.6, 9.6, 0.55, 3.8, 2.9, 0.8
+    FX = lambda u: -W / 2 + u
+    DOOR = dict(u0=1.0, u1=2.05, z0=0.0, z1=2.25); WINL = dict(u0=3.25, u1=4.55, z0=0.9, z1=2.6)
+    S = shell(W, D, H1, H2, PAR, T, [DOOR, WINL, dict(u0=1.0, u1=1.66, z0=H1 + 0.8, z1=H1 + 1.75), dict(u0=3.5, u1=4.16, z0=H1 + 0.8, z1=H1 + 1.75)],
+              sides=[], back=[dict(u0=2.3, u1=3.3, z0=0, z1=2.2)], batter_gaps=[(FX(DOOR['u0']) - 0.3, FX(DOOR['u1']) + 0.3)], course_at=H1)
+    fy = S['fy']
+    dx0, dx1 = FX(DOOR['u0']), FX(DOOR['u1'])
+    box(((dx0 + dx1) / 2, fy + 0.28, DOOR['z1'] / 2), (dx1 - dx0, 0.08, DOOR['z1']), 'F_wood', 0.01, tag='door')
+    for z in (0.45, 1.8): box(((dx0 + dx1) / 2 - 0.12, fy + 0.235, z), (0.85, 0.02, 0.09), 'F_iron', 0.005)
+    for j in range(4): rivet(((dx0 + dx1) / 2, fy + 0.235, 0.4 + j * 0.45), (0, -1, 0))
+    box(((dx0 + dx1) / 2, fy - 0.04, DOOR['z1'] + 0.2), (dx1 - dx0 + 0.55, T + 0.08, 0.4), 'F_ashlar', 0.035, tag='lintel')
+    box(((dx0 + dx1) / 2, fy + 0.05, 0.07), (dx1 - dx0 + 0.4, 0.5, 0.14), 'F_ashlar', 0.03)
+    wx0, wx1 = FX(WINL['u0']), FX(WINL['u1'])                                                          # the parlour window: a stone mullion, iron bars, shutters
+    box(((wx0 + wx1) / 2, fy - 0.04, WINL['z1'] + 0.2), (wx1 - wx0 + 0.5, T + 0.08, 0.4), 'F_ashlar', 0.035, tag='lintel')
+    box(((wx0 + wx1) / 2, fy - 0.06 + 0.17, WINL['z0'] - 0.07), (wx1 - wx0 + 0.4, 0.36, 0.14), 'F_ashlar', 0.025, tag='sill')
+    box(((wx0 + wx1) / 2, fy + 0.25, (WINL['z0'] + WINL['z1']) / 2), (0.16, T - 0.1, WINL['z1'] - WINL['z0']), 'F_ashlar', 0.02)
+    box(((wx0 + wx1) / 2, fy + 0.36, (WINL['z0'] + WINL['z1']) / 2), (wx1 - wx0, 0.03, WINL['z1'] - WINL['z0']), 'F_glass', 0.0, tag='glass')
+    for k in range(5): box((wx0 + 0.12 + k * (wx1 - wx0 - 0.24) / 4, fy + 0.12, (WINL['z0'] + WINL['z1']) / 2), (0.035, 0.035, WINL['z1'] - WINL['z0']), 'F_iron', 0.0)
+    for c in (1.33, 3.83): iron_window(FX(c), fy, (0, -1, 0), (1, 0, 0), 0.66, 0.95, H1 + 0.8)
+    for x in (wx0 - 0.35, wx1 + 0.35):                                                                 # parlour shutters, iron-clad, thrown back
+        box((x + (0.08 if x < wx0 else -0.08), fy - 0.06, (WINL['z0'] + WINL['z1']) / 2), (0.62, 0.05, WINL['z1'] - WINL['z0'] + 0.04), 'F_iron', 0.008, rz=(0.3 if x < wx0 else -0.3), tag='shutter')
+    pipe((W / 2 - 0.25, fy + 0.3, S['rz0'] + 0.1), (W / 2 - 0.25, fy - 0.3, S['rz0'] + 0.1), 0.06, 'F_iron', seg=8)   # a spout and its downpipe
+    pipe((W / 2 - 0.25, fy - 0.3, S['rz0']), (W / 2 - 0.25, fy - 0.3, 0.3), 0.055, 'F_iron', seg=8, tag='downpipe')
+    for z in (1.2, 3.0, 5.0): box((W / 2 - 0.25, fy - 0.18, z), (0.16, 0.24, 0.05), 'F_iron', 0.004)
+    sx, sy, SH = -W / 2 + 1.1, D / 2 - 1.1, S['top'] + 3.6
+    box((sx, sy, (S['rz0'] + SH) / 2), (1.0, 1.0, SH - S['rz0']), 'F_brick', 0.02, tag='stack')
+    box((sx, sy, SH + 0.08), (1.14, 1.14, 0.15), 'F_brick', 0.012, tag='stack'); box((sx, sy, SH + 0.17), (0.7, 0.7, 0.05), 'F_glass', 0.0)
+    SOOT += [(sx, sy, S['rz0'] + 1.5, SH + 0.5, 0.8, 0.7)]
+    PLOT = (W + 0.8, D + 0.8); VENTS = [(sx, SH + 0.4, sy)]
 
 # ---------------------------------------------------------------- one mesh, UVs by world projection, weathering
 me = bpy.data.meshes.new(NAME); obj = bpy.data.objects.new(NAME, me); scene.collection.objects.link(obj)
