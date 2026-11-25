@@ -1968,8 +1968,8 @@ function kFerrinGB(){
   {const k=new KitB();k._add(new THREE.ConeGeometry(2.4,1.6,7).toNonIndexed().rotateX(PI/2),k.M(0,0,0.8),'#3a3836');k.finish('FGB_Slag',4.8,4.8);}   // a slag heap
   {const k=new KitB();k.box(3.2,2.2,1.2,0,0,0.6,'#252526');k.box(3.4,0.2,1.4,0,1.15,0.7,S);k.box(0.2,2.4,1.4,-1.7,0,0.7,S);k.box(0.2,2.4,1.4,1.7,0,0.7,S);k.finish('FGB_Coal',3.6,2.6);}   // a coal bunker
 }
-function ferrinPick(rnd,nearSquare){const u=rnd(),SH=FX.FX_Shop?'FX_Shop':'FGB_Shop',SM=FX.FX_Smelter?'FX_Smelter':'FGB_Smelter';if(nearSquare&&u<0.5)return SH;const F=FX.FX_Forge?'FX_Forge':null;const NR=FX.FX_Narrow?'FX_Narrow':'FGB_Narrow';return u<0.45?(F||'FGB_Forge'):u<0.62?(F||'FGB_Forge2'):u<0.7?SH:u<0.82?SM:u<0.88?NR:u<0.94?(FX.FX_Tool?'FX_Tool':NR):(FX.FX_Stair?'FX_Stair':NR);}   // the dwellings come in three kinds, so a street is not one house repeated
-const FGB_FILL=['FX_Stair','FX_Tool','FGB_Shop','FGB_Narrow'],FGB_FILL2=['FX_Tool','FX_Stair','FGB_Shop','FGB_Narrow'];   // where the first choice does not fit, the narrower houses in this order
+function ferrinPick(rnd,nearSquare){const u=rnd(),SH=FX.FX_Shop?'FX_Shop':'FGB_Shop',SM=FX.FX_Smelter?'FX_Smelter':'FGB_Smelter';if(nearSquare&&u<0.5)return SH;const F=FX.FX_Forge?'FX_Forge':null;const NR=FX.FX_Narrow?'FX_Narrow':'FGB_Narrow';return u<0.5?(F||'FGB_Forge'):u<0.68?(F||'FGB_Forge2'):u<0.76?SH:u<0.84?SM:u<0.88?NR:u<0.94?(FX.FX_Tool?'FX_Tool':NR):(FX.FX_Stair?'FX_Stair':NR);}   // the dwellings come in three kinds, so a street is not one house repeated
+const FGB_FILL=['FX_Stair','FX_Tool','FGB_Shop','FGB_Narrow'];   // the narrower houses tried where the first choice does not fit, in a fresh order each time
 function kGreenKit(){ // what the green wards plant
   const ico=(k,r,x,y,z,col,sy)=>k._add(new THREE.IcosahedronGeometry(r,0).toNonIndexed().scale(1,1,sy||1),k.M(x,y,z),col);
   let k=new KitB();k.cyl(0.16,0.22,1.2,6,0,0,0,'bark:#5a4030');                                                 // the Temple's cypress: a dark green flame
@@ -2413,6 +2413,17 @@ function buildCityHouses(){
   const blocked=(a,r,half)=>wardSquares().some(Q=>Math.hypot(CITY.x+Math.cos(a)*r-Q.x,CITY.z+Math.sin(a)*r-Q.z)<SQ_R+half+2)||riverDistP(CITY.x+Math.cos(a)*r,CITY.z+Math.sin(a)*r)<9+half||nearAvenue(a,r,8.2+half)||Math.hypot(CITY.x+Math.cos(a)*r-mx,CITY.z+Math.sin(a)*r-mz)<MARKET.rad+half+3;
   const tintFor=(a,r,name)=>{const w=cityWealth(a,r),q=QTINT[quarterAR(a,r).name]||[1,1,1],j=0.92+rnd()*0.14,g=w<0.22?0.8+rnd()*0.1:w>0.78?1.04:1;return [q[0]*j*g,q[1]*j*g,q[2]*j*g];};
   const SMALL=['Shack','Shack2','Tenement4','Tenement',...GEN.tenement,'HutRound','HutFrame','HutAdobe','HutIron','HutTemple'];
+  // smelters are too deep for the Ferrin rows: they get sites of their own, sited before the house rows (as the hubs are),
+  // the great arch onto a street, well apart from each other; the rows then build round them
+  if(FERRIN_GB&&FX.FX_Smelter){const [w,d]=KIT.size.FX_Smelter,have=(lists.FX_Smelter||[]).map(e=>[e.x,e.z]);let n=0;
+    for(let gx=CITY.x-CITY.r;gx<=CITY.x+CITY.r&&n<2;gx+=6)for(let gz=CITY.z-CITY.r;gz<=CITY.z+CITY.r&&n<2;gz+=6){
+      if(qIndex(gx,gz)!==0||cityPaved(gx,gz)>0.02||have.some(q=>Math.hypot(q[0]-gx,q[1]-gz)<60))continue;
+      let best=null;for(let k=0;k<16;k++){const b=k/16*Math.PI*2;for(let r=d/2+0.6;r<=d/2+2.5;r+=0.5){if(cityPaved(gx+Math.cos(b)*r,gz+Math.sin(b)*r)>0.5){if(!best||r<best.r)best={b,r};break;}}}
+      if(!best)continue;const ry=Math.atan2(Math.cos(best.b),Math.sin(best.b)),f={x:gx,z:gz,hw:w/2+0.2,hd:d/2+0.2,rot:ry};   // its front (+z) toward the street
+      if(!footprintFree(f)||footOnLane(f,LANE_HALF+0.4)||inLM(gx,gz))continue;
+      {let pv=false;const c=Math.cos(ry),sn=Math.sin(ry);for(let u=-1;u<=1;u+=0.2)for(let v=-1;v<=1.08;v+=0.12)if(cityPaved(gx+u*(w/2+0.3)*c+v*d/2*sn,gz-u*(w/2+0.3)*sn+v*d/2*c)>0.3)pv=true;if(pv)continue;}
+      if(put('FX_Smelter',gx,gz,ry,[1,1,1])){colliders.push({x:gx,z:gz,hw:w/2+0.2,hd:d/2+0.2,rot:ry});have.push([gx,gz]);n++;}}
+    console.log('ferrin smelter sites',n);}
   // Perimeter blocks: every street is lined on each side by a continuous row of houses, doors to the street. A row tries the
   // house its district would build; where that does not fit it tries narrower ones before it leaves a gap. The ward streets
   // go first, then the avenues, then the rings: each row runs on until it meets the row of the street it crosses, so the
@@ -2425,7 +2436,7 @@ function buildCityHouses(){
     let t=0.5+rnd()*2,fails=0;
     while(t<L){let placed=false;const [qx,qz]=sample(Math.min(L,t+3)),qa=Math.atan2(qz-CITY.z,qx-CITY.x),qr=Math.hypot(qx-CITY.x,qz-CITY.z),w0=cityWealth(qa,qr),poor=w0<0.3;
       let first=pickHouse(qa,qr,rnd);if(KIT.size[first][1]>maxD)first=FILLERS.find(n=>KIT.size[n][1]<=maxD)||'Shack';
-      const inF=FERRIN_GB&&/^(FGB_|FX_)/.test(first),cands=inF?[first,...(rnd()<0.5?FGB_FILL:FGB_FILL2).map(n=>n==='FGB_Shop'&&FX.FX_Shop?'FX_Shop':n==='FGB_Narrow'&&FX.FX_Narrow?'FX_Narrow':n).filter(n=>n!==first&&KIT.size[n]&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
+      const inF=FERRIN_GB&&/^(FGB_|FX_)/.test(first),cands=inF?[first,...(()=>{const L2=FGB_FILL.slice();for(let i=L2.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[L2[i],L2[j]]=[L2[j],L2[i]];}return L2;})().map(n=>n==='FGB_Shop'&&FX.FX_Shop?'FX_Shop':n==='FGB_Narrow'&&FX.FX_Narrow?'FX_Narrow':n).filter(n=>n!==first&&KIT.size[n]&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
       for(const name of cands){const [w,d]=KIT.size[name];if(t+w>L+0.3)continue;
         const [px,pz,nx,nz]=sample(t+w/2),jit=poor?(rnd()-0.5)*0.6:0,off=off0+d/2+jit,x=px+nx*off,z=pz+nz*off,ry=Math.atan2(-nx,-nz)+(poor?(rnd()-0.5)*0.1:0);
         const f={x,z,hw:w/2+0.15,hd:d/2+0.15,rot:ry};
