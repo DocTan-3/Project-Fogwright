@@ -1968,8 +1968,8 @@ function kFerrinGB(){
   {const k=new KitB();k._add(new THREE.ConeGeometry(2.4,1.6,7).toNonIndexed().rotateX(PI/2),k.M(0,0,0.8),'#3a3836');k.finish('FGB_Slag',4.8,4.8);}   // a slag heap
   {const k=new KitB();k.box(3.2,2.2,1.2,0,0,0.6,'#252526');k.box(3.4,0.2,1.4,0,1.15,0.7,S);k.box(0.2,2.4,1.4,-1.7,0,0.7,S);k.box(0.2,2.4,1.4,1.7,0,0.7,S);k.finish('FGB_Coal',3.6,2.6);}   // a coal bunker
 }
-function ferrinPick(rnd,nearSquare){const u=rnd(),SH=FX.FX_Shop?'FX_Shop':'FGB_Shop',SM=FX.FX_Smelter?'FX_Smelter':'FGB_Smelter';if(nearSquare&&u<0.5)return SH;const F=FX.FX_Forge?'FX_Forge':null;return u<0.36?(F||'FGB_Forge'):u<0.5?(F||'FGB_Forge2'):u<0.63?SH:u<0.85?SM:FX.FX_Narrow?'FX_Narrow':'FGB_Narrow';}
-const FGB_FILL=['FGB_Shop','FGB_Narrow'];
+function ferrinPick(rnd,nearSquare){const u=rnd(),SH=FX.FX_Shop?'FX_Shop':'FGB_Shop',SM=FX.FX_Smelter?'FX_Smelter':'FGB_Smelter';if(nearSquare&&u<0.5)return SH;const F=FX.FX_Forge?'FX_Forge':null;const NR=FX.FX_Narrow?'FX_Narrow':'FGB_Narrow';return u<0.45?(F||'FGB_Forge'):u<0.62?(F||'FGB_Forge2'):u<0.7?SH:u<0.82?SM:u<0.88?NR:u<0.94?(FX.FX_Tool?'FX_Tool':NR):(FX.FX_Stair?'FX_Stair':NR);}   // the dwellings come in three kinds, so a street is not one house repeated
+const FGB_FILL=['FX_Stair','FX_Tool','FGB_Shop','FGB_Narrow'],FGB_FILL2=['FX_Tool','FX_Stair','FGB_Shop','FGB_Narrow'];   // where the first choice does not fit, the narrower houses in this order
 function kGreenKit(){ // what the green wards plant
   const ico=(k,r,x,y,z,col,sy)=>k._add(new THREE.IcosahedronGeometry(r,0).toNonIndexed().scale(1,1,sy||1),k.M(x,y,z),col);
   let k=new KitB();k.cyl(0.16,0.22,1.2,6,0,0,0,'bark:#5a4030');                                                 // the Temple's cypress: a dark green flame
@@ -2210,7 +2210,7 @@ function dressHub(k,name){
 // ---- The Ferrin Quarter pilot, step 3: buildings modelled in Blender (tools/blender/ferrin_forge.py). Real geometry, CC0 PBR
 // textures (colour, normal, roughness) and weathering baked into vertex colours. Drawn instanced per material, a decimated
 // version beyond ~110 m. Loaded with the kit: the game starts once they are in (or gives up and keeps the grey-box).
-const DOORWAYS=[], DOOR_AT={FX_Forge:[2.575,0.6],FX_Shop:[2.25,0.55],FX_Smelter:[0,2.6],FX_Shrine:[0,0.8],FX_Narrow:[-1.275,0.53]};   // each model's front door (local x, half width): the street in front of it is kept clear
+const DOORWAYS=[], DOOR_AT={FX_Forge:[2.575,0.6],FX_Shop:[2.25,0.55],FX_Smelter:[0,2.6],FX_Shrine:[0,0.8],FX_Narrow:[-1.275,0.53],FX_Tool:[0,0.55],FX_Stair:[-1.25,1.25]};   // each model's front door (local x, half width): the street in front of it is kept clear
 const CANOPIES=[];   // iron canopies over the street (world): street lamps keep out from under them
 const FX={}, FX_SETS={W_ashlar:['medieval_blocks_03',[0.62,0.58,0.52],0.45],W_cope:['medieval_blocks_03',[0.76,0.72,0.64],0.4],W_rubble:['rock_wall_05',[0.62,0.57,0.5],0.4],F_stone:['rock_wall_05',[0.15,0.155,0.17],0.3],F_ashlar:['medieval_blocks_03',[0.25,0.255,0.27],0.3],F_brick:['castle_brick_07',[0.62,0.48,0.42],1],
   F_iron:['metal_plate_02',[0.22,0.22,0.24],1],F_rust:['rusty_metal_02',[0.30,0.24,0.20],1],F_wood:['dark_wooden_planks',[0.70,0.62,0.55],1],F_copper:['rusty_metal_02',[0.78,0.46,0.30],1]};
@@ -2238,7 +2238,9 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
     ['ferrin_shop','FX_Shop','FerrinShop',[7.8,10],[[2.7,11.7,-3.8,0.9]],[8.6,10.8],null],
     ['ferrin_smelter','FX_Smelter','FerrinSmelter',[12.4,12.4],[[4.1,19.6,-4.1,2.0],[1.3,8.55,0,1.1]],[13.2,13.2],null],
     ['ferrin_shrine','FX_Shrine','FerrinShrine',[6,6.6],[[0,7.3,0,0.6]],[7.6,8.2],null],
-    ['ferrin_narrow','FX_Narrow','FerrinNarrow',[5.6,9.6],[[-1.7,11.1,-3.7,0.8]],[6.4,10.4],null]];
+    ['ferrin_narrow','FX_Narrow','FerrinNarrow',[5.6,9.6],[[-1.7,11.1,-3.7,0.8]],[6.4,10.4],null],
+    ['ferrin_toolmaker','FX_Tool','FerrinToolmaker',[7.4,9],[[4.06,10.6,-1.2,0.8]],[9.0,9.8],null],
+    ['ferrin_stair','FX_Stair','FerrinStair',[6.4,9.4],[[-2.1,10.2,-3.5,0.8]],[9.0,10.2],null]];
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
     ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil']];
@@ -2337,7 +2339,7 @@ function buildCityHouses(){
   const [mx,mz]=marketPos(), lists={}, plinths=[], put=(name,x,z,ry,tint,y)=>{if(/^Shack2?$/.test(name)&&GEN.shack&&GEN.shack.length)name=GEN.shack[Math.floor(rnd()*GEN.shack.length)];if(y===undefined){const [lo,hi,front]=footY(name,x,z,ry);
       if(hi-lo>7&&!/Span|Well|Garden/.test(name))return false;
       if(DOOR_AT[name]){const DA=DOOR_AT[name],c=Math.cos(ry),sn=Math.sin(ry),lz=KIT.size[name][1]/2+1.6,f={x:x+DA[0]*c+lz*sn,z:z-DA[0]*sn+lz*c,hw:DA[1],hd:1.0,rot:ry};if(!footprintFree(f))return false;}   // a front door opens onto clear ground
-      const built=/^(FX_(Forge|Shop|Smelter|Shrine|Narrow)|FGB_(Forge|Shop|Narrow|Smelter)|Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
+      const built=/^(FX_(Forge|Shop|Smelter|Shrine|Narrow|Tool|Stair)|FGB_(Forge|Shop|Narrow|Smelter)|Gen_(row|tenement|timber|ferrin|temple|hrim|zarhim)|Row|Manor|Shopfront|Shop|Tenement|Timberframe|Chapel|Forge|Longhouse|Lodge|Adobe|Spire|Tavern|Foundry|Barracks|Laboratory|Arcade|Bank|Guild|Observatory|Granary|Waterworks|Clocktower)/.test(name);
       if(!built&&hi-lo>0.9&&!/Span|Well|Garden|Terrace/.test(name))return false;
       if(built&&hi-lo>0.35&&KIT.core[name]){   // the door is at the street's level; the uphill back is dug into the slope (no more than a storey's worth),
         y=Math.max(front-0.08,hi-2.2);                        // the downhill side shows a lower storey of its own
@@ -2421,7 +2423,7 @@ function buildCityHouses(){
     let t=0.5+rnd()*2,fails=0;
     while(t<L){let placed=false;const [qx,qz]=sample(Math.min(L,t+3)),qa=Math.atan2(qz-CITY.z,qx-CITY.x),qr=Math.hypot(qx-CITY.x,qz-CITY.z),w0=cityWealth(qa,qr),poor=w0<0.3;
       let first=pickHouse(qa,qr,rnd);if(KIT.size[first][1]>maxD)first=FILLERS.find(n=>KIT.size[n][1]<=maxD)||'Shack';
-      const inF=FERRIN_GB&&/^(FGB_|FX_)/.test(first),cands=inF?[first,...FGB_FILL.map(n=>n==='FGB_Shop'&&FX.FX_Shop?'FX_Shop':n==='FGB_Narrow'&&FX.FX_Narrow?'FX_Narrow':n).filter(n=>n!==first&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
+      const inF=FERRIN_GB&&/^(FGB_|FX_)/.test(first),cands=inF?[first,...(rnd()<0.5?FGB_FILL:FGB_FILL2).map(n=>n==='FGB_Shop'&&FX.FX_Shop?'FX_Shop':n==='FGB_Narrow'&&FX.FX_Narrow?'FX_Narrow':n).filter(n=>n!==first&&KIT.size[n]&&KIT.size[n][0]<KIT.size[first][0])]:[first,...FILLERS.filter(n=>KIT.size[n][0]<KIT.size[first][0]-0.4&&KIT.size[n][1]<=maxD&&(poor||!/Shack/.test(n)))];
       for(const name of cands){const [w,d]=KIT.size[name];if(t+w>L+0.3)continue;
         const [px,pz,nx,nz]=sample(t+w/2),jit=poor?(rnd()-0.5)*0.6:0,off=off0+d/2+jit,x=px+nx*off,z=pz+nz*off,ry=Math.atan2(-nx,-nz)+(poor?(rnd()-0.5)*0.1:0);
         const f={x,z,hw:w/2+0.15,hd:d/2+0.15,rot:ry};
@@ -2501,7 +2503,7 @@ function buildCityHouses(){
   // the Ferrin street fronts: what a smith keeps by the door, at fixed places on each kind of front (measured off the models:
   // clear of the doors, the forge bay under its canopy and the smelter's arch), one prop per place, some places left bare
   if(FERRIN_GB&&FX.FX_Barrels){let n=0;const SLOT={FX_Forge:[[4.4,['FX_Barrels','FX_Crates','FX_Ingots']]],FX_Shop:[[-2.2,['FX_Ingots','FX_Crates']],[3.8,['FX_Barrels']]],
-      FX_Smelter:[[-4.6,['FX_Cart','FX_Ingots','FX_Crates']],[4.6,['FX_Ingots','FX_Barrels','FX_Cart']]],FX_Narrow:[[1.15,['FX_Crates','FX_Ingots']],[2.25,['FX_Barrels']]]};
+      FX_Smelter:[[-4.6,['FX_Cart','FX_Ingots','FX_Crates']],[4.6,['FX_Ingots','FX_Barrels','FX_Cart']]],FX_Narrow:[[1.15,['FX_Crates','FX_Ingots']],[2.25,['FX_Barrels']]],FX_Tool:[[-2.6,['FX_Barrels','FX_Crates']]],FX_Stair:[[1.0,['FX_Cart','FX_Ingots','FX_Crates']]]};
     for(const bn in SLOT)for(const e of(lists[bn]||[])){const d0=KIT.size[bn][1]/2,c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);let lastX=-1e9;
       for(const [lx0,opts] of SLOT[bn]){if(rnd()<0.3)continue;const nm=opts[Math.floor(rnd()*opts.length)];if(!KIT.size[nm])continue;const [w,d]=KIT.size[nm];
         if(lx0-w/2<lastX)continue;const lz=d0+d/2+0.25,lx=lx0,x=e.x+lx*c+lz*sn,z=e.z-lx*sn+lz*c,f={x,z,hw:w/2,hd:d/2,rot:e.ry||0};
@@ -2510,12 +2512,12 @@ function buildCityHouses(){
     console.log('ferrin fronts',n);}
   // the Ferrin close the gaps between their houses: a basalt yard wall flush with the fronts, and where the gap is wide
   // enough for a cart, an iron gate into the yard behind. An alley that a lane runs down stays open.
-  if(FERRIN_GB&&FX.FX_FWall){const B=[];for(const bn of['FX_Forge','FX_Shop','FX_Smelter','FX_Narrow'])for(const e of(lists[bn]||[]))B.push({e,w:KIT.core[bn][0],d:KIT.core[bn][1]});
+  if(FERRIN_GB&&FX.FX_FWall){const B=[];for(const bn of['FX_Forge','FX_Shop','FX_Smelter','FX_Narrow','FX_Tool','FX_Stair'])for(const e of(lists[bn]||[]))B.push({e,bn,w:KIT.core[bn][0],d:KIT.core[bn][1]});
     let nw=0,ng=0;
     for(const A of B){const c=Math.cos(A.e.ry||0),sn=Math.sin(A.e.ry||0);let best=null,bu=1e9;
       for(const C of B){if(C===A||Math.abs(Math.atan2(Math.sin(C.e.ry-A.e.ry),Math.cos(C.e.ry-A.e.ry)))>0.12)continue;const dx=C.e.x-A.e.x,dz=C.e.z-A.e.z,du=dx*c-dz*sn,dv=dx*sn+dz*c;
         if(du<=0||Math.abs(dv+C.d/2-A.d/2)>1.3)continue;const gap=du-A.w/2-C.w/2;if(gap<-0.3)continue;if(du<bu){bu=du;best={C,du,dv,gap};}}
-      if(!best||best.gap<1.0||best.gap>12)continue;
+      if(!best||best.gap<1.0||best.gap>12||A.bn==='FX_Stair')continue;   // the stair house's stair climbs that side
       const u0=A.w/2-0.15,u1=best.du-best.C.w/2+0.15,L=u1-u0,v=Math.min(A.d/2,best.dv+best.C.d/2)-0.45,um=(u0+u1)/2,W2=(u,vv)=>[A.e.x+u*c+vv*sn,A.e.z-u*sn+vv*c];
       const [mx2,mz2]=W2(um,v);if(laneDist(mx2,mz2)<LANE_HALF+0.8||laneDist(...W2(um,v-4))<LANE_HALF+0.8)continue;   // a lane runs down this alley
       if(cityPaved(...W2(um,v-1.5))>0.5)continue;                                                                     // a street, not a yard

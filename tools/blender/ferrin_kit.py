@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 src = open(os.path.join(HERE, 'ferrin_forge.py')).read()
 exec(compile(src[:src.index('# ---------------------------------------------------------------- the forge-house')], 'ferrin_forge_head', 'exec'))
 BUILDING = os.environ.get('BUILDING', 'shop')
-random.seed({'shop': 21, 'smelter': 33, 'shrine': 45, 'narrow': 57}.get(BUILDING, 7))
+random.seed({'shop': 21, 'smelter': 33, 'shrine': 45, 'narrow': 57, 'toolmaker': 69, 'stair': 81}.get(BUILDING, 7))
 
 def smooth(a, b, x): t = max(0.0, min(1.0, (x - a) / (b - a))); return t * t * (3 - 2 * t)
 SOOT = []      # (x, y, z0, z1, radius, strength): plumes and stained places
@@ -18,11 +18,11 @@ LIGHT_SPOTS = []
 
 # ---------------------------------------------------------------- the Ferrin shell: thick basalt walls with true openings,
 # a battered base, quoins, a string course, a corbel table under an iron cornice, a coped parapet, a low iron roof
-def shell(W, D, H1, H2, PAR, T, front, sides=(), back=(), batter_gaps=(), course_at=None):
+def shell(W, D, H1, H2, PAR, T, front, sides=(), back=(), batter_gaps=(), course_at=None, lsides=None):
     fy = -D / 2; HT = H1 + H2 + PAR
     wall_panel((-W / 2, fy, 0), (1, 0, 0), (0, -1, 0), W, HT, T, front)
     wall_panel((W / 2, fy, 0), (0, 1, 0), (1, 0, 0), D, HT, T, list(sides))
-    wall_panel((-W / 2, D / 2, 0), (0, -1, 0), (-1, 0, 0), D, HT, T, list(sides))
+    wall_panel((-W / 2, D / 2, 0), (0, -1, 0), (-1, 0, 0), D, HT, T, list(sides if lsides is None else lsides))
     wall_panel((W / 2, D / 2, 0), (-1, 0, 0), (0, 1, 0), W, HT, T, list(back))
     def batter(x0, x1, face, n, along_x, hb=1.2, out=0.4):
         x = x0
@@ -333,6 +333,110 @@ if BUILDING == 'narrow':
     box((sx, sy, SH + 0.08), (1.14, 1.14, 0.15), 'F_brick', 0.012, tag='stack'); box((sx, sy, SH + 0.17), (0.7, 0.7, 0.05), 'F_glass', 0.0)
     SOOT += [(sx, sy, S['rz0'] + 1.5, SH + 0.5, 0.8, 0.7)]
     PLOT = (W + 0.8, D + 0.8); VENTS = [(sx, SH + 0.4, sy)]
+
+
+def plank_door(dx0, dx1, fy, z1, T, ajar=0.0, lintel=True):   # a boarded door, iron straps and rivets, a dressed lintel and step
+    box(((dx0 + dx1) / 2, fy + 0.28, z1 / 2), (dx1 - dx0, 0.08, z1), 'F_wood', 0.01, tag='door')
+    for z in (0.45, z1 - 0.45): box(((dx0 + dx1) / 2 - 0.1, fy + 0.235, z), (dx1 - dx0 - 0.2, 0.02, 0.09), 'F_iron', 0.005)
+    for j in range(4): rivet(((dx0 + dx1) / 2, fy + 0.235, 0.4 + j * (z1 - 0.8) / 3), (0, -1, 0))
+    if lintel: box(((dx0 + dx1) / 2, fy - 0.04, z1 + 0.2), (dx1 - dx0 + 0.55, T + 0.08, 0.4), 'F_ashlar', 0.035, tag='lintel')
+    box(((dx0 + dx1) / 2, fy + 0.05, 0.07), (dx1 - dx0 + 0.4, 0.5, 0.14), 'F_ashlar', 0.03)
+
+def stack(sx, sy, z0, SH, w=1.0):
+    box((sx, sy, (z0 + SH) / 2), (w, w, SH - z0), 'F_brick', 0.02, tag='stack')
+    box((sx, sy, SH + 0.08), (w + 0.14, w + 0.14, 0.15), 'F_brick', 0.012, tag='stack'); box((sx, sy, SH + 0.17), (w * 0.7, w * 0.7, 0.05), 'F_glass', 0.0)
+
+# ================================================================ the toolmaker's house: three bays, a hooded door, an oriel over it
+if BUILDING == 'toolmaker':
+    NAME = 'FerrinToolmaker'
+    W, D, T, H1, H2, PAR = 7.4, 9.0, 0.58, 3.9, 3.0, 0.8
+    FX = lambda u: -W / 2 + u
+    DOOR = dict(u0=3.15, u1=4.25, z0=0.0, z1=2.3)
+    WG = [(1.45, 0.9, 1.25, 0.95), (5.95, 0.9, 1.25, 0.95)]                     # ground windows: centre, width, height, sill
+    WU = [(1.45, 0.66, 0.95, H1 + 0.8), (5.95, 0.66, 0.95, H1 + 0.8)]
+    op = lambda c, w, h, z: dict(u0=c - w / 2, u1=c + w / 2, z0=z, z1=z + h)
+    S = shell(W, D, H1, H2, PAR, T, [DOOR] + [op(*w) for w in WG + WU], sides=[dict(u0=4.0, u1=4.66, z0=H1 + 0.8, z1=H1 + 1.75)], back=[dict(u0=3.2, u1=4.2, z0=0, z1=2.2)],
+              batter_gaps=[(FX(DOOR['u0']) - 0.3, FX(DOOR['u1']) + 0.3)], course_at=H1, lsides=[])
+    fy = S['fy']; dx0, dx1 = FX(DOOR['u0']), FX(DOOR['u1']); dc = (dx0 + dx1) / 2
+    plank_door(dx0, dx1, fy, DOOR['z1'], T)
+    box((dc, fy - 0.36, DOOR['z1'] + 0.62), (dx1 - dx0 + 1.0, 0.78, 0.16), 'F_ashlar', 0.03, tag='hood')            # a stone hood over the door on iron brackets
+    for sx2 in (-1, 1):
+        x = dc + sx2 * (dx1 - dx0 + 0.7) / 2
+        pipe((x, fy - 0.02, DOOR['z1'] - 0.05), (x, fy - 0.68, DOOR['z1'] + 0.54), 0.03, 'F_iron', seg=5); pipe((x, fy - 0.02, DOOR['z1'] + 0.54), (x, fy - 0.68, DOOR['z1'] + 0.54), 0.03, 'F_iron', seg=5)
+    for (c, w, h, z) in WG: iron_window(FX(c), fy, (0, -1, 0), (1, 0, 0), w, h, z)
+    for (c, w, h, z) in WU: iron_window(FX(c), fy, (0, -1, 0), (1, 0, 0), w, h, z)
+    # the oriel: a stone bay over the door, carried on stepped corbels, glazed on three sides, an iron cap
+    ow, od, oz0, oz1 = 2.3, 0.72, H1 + 0.35, H1 + 2.45
+    for k, (dz, out) in enumerate([(0.0, 0.25), (0.22, 0.5), (0.44, od)]):
+        box((dc, fy - out / 2, oz0 - 0.66 + dz), (ow * (0.55 + 0.22 * k), out, 0.22), 'F_ashlar', 0.025, tag='corbel')
+    box((dc, fy - od / 2, oz0 + 0.12), (ow + 0.1, od + 0.06, 0.24), 'F_ashlar', 0.03)
+    for sx2 in (-1, 1): box((dc + sx2 * (ow / 2 - 0.14), fy - od / 2, (oz0 + oz1) / 2), (0.28, od, oz1 - oz0), 'F_ashlar', 0.025)
+    box((dc, fy - od + 0.06, (oz0 + 0.24 + oz1 - 0.2) / 2), (ow - 0.56, 0.03, oz1 - oz0 - 0.44), 'F_glass', 0.0, tag='glass')
+    for k in range(4): box((dc - (ow - 0.56) / 2 + k * (ow - 0.56) / 3, fy - od + 0.02, (oz0 + oz1) / 2), (0.05, 0.05, oz1 - oz0 - 0.44), 'F_iron', 0.0)
+    box((dc, fy - od + 0.02, oz0 + (oz1 - oz0) * 0.62), (ow - 0.56, 0.04, 0.04), 'F_iron', 0.0)
+    box((dc, fy - od / 2, oz1 - 0.08), (ow + 0.1, od + 0.06, 0.18), 'F_ashlar', 0.03)
+    prism([Vector((dc - ow / 2 - 0.12, fy - od - 0.14, oz1)), Vector((dc + ow / 2 + 0.12, fy - od - 0.14, oz1)), Vector((dc + ow / 2 + 0.12, fy, oz1 + 0.55)), Vector((dc - ow / 2 - 0.12, fy, oz1 + 0.55))], 0.05, (0, 0, 1), 'F_iron', 0.0, tag='roof')
+    # the chimney breast on the gable: stone to the parapet, brick above
+    bx = W / 2 + 0.36; by = 1.2; SH = S['top'] + 3.3
+    box((bx, by, (S['HT'] + 0.3) / 2), (0.72, 1.3, S['HT'] + 0.3), 'F_stone', 0.02)
+    for z in (H1, S['HT'] + 0.15): box((bx, by, z), (0.84, 1.42, 0.2), 'F_ashlar', 0.03)
+    stack(bx, by, S['HT'] + 0.25, SH, 0.95)
+    pipe((-W / 2 + 0.25, fy + 0.3, S['rz0'] + 0.1), (-W / 2 + 0.25, fy - 0.3, S['rz0'] + 0.1), 0.06, 'F_iron', seg=8)
+    pipe((-W / 2 + 0.25, fy - 0.3, S['rz0']), (-W / 2 + 0.25, fy - 0.3, 0.3), 0.055, 'F_iron', seg=8, tag='downpipe')
+    SOOT += [(bx, by, S['HT'], SH + 0.5, 0.8, 0.7)]
+    PLOT = (W + 1.6, D + 0.8); VENTS = [(bx, SH + 0.4, by)]
+
+# ================================================================ the stair house: a workshop below, the family above, up a stone stair on the side
+if BUILDING == 'stair':
+    NAME = 'FerrinStair'
+    W, D, T, H1, H2, PAR = 6.4, 9.4, 0.56, 3.4, 3.0, 0.8
+    FX = lambda u: -W / 2 + u
+    WD = dict(u0=0.7, u1=3.2, z0=0.0, z1=2.6)                                  # the workshop's wide doors
+    WIN = dict(u0=4.1, u1=5.4, z0=0.9, z1=2.4)
+    SD = dict(u0=4.6, u1=5.6, z0=H1 + 0.05, z1=H1 + 2.25)                       # the house door, up the stair on the right-hand side
+    S = shell(W, D, H1, H2, PAR, T, [WD, WIN, dict(u0=1.6, u1=2.26, z0=H1 + 0.8, z1=H1 + 1.75), dict(u0=4.4, u1=5.06, z0=H1 + 0.8, z1=H1 + 1.75)],
+              sides=[SD, dict(u0=7.4, u1=8.06, z0=H1 + 0.8, z1=H1 + 1.75)], back=[dict(u0=2.7, u1=3.7, z0=0, z1=2.2)],
+              batter_gaps=[(FX(WD['u0']) - 0.3, FX(WD['u1']) + 0.3)], course_at=H1, lsides=[])
+    fy = S['fy']; x0, x1 = FX(WD['u0']), FX(WD['u1'])
+    box(((x0 + x1) / 2, fy - 0.06, WD['z1'] + 0.17), (x1 - x0 + 0.6, T + 0.14, 0.34), 'F_wood', 0.02, tag='lintel')   # a great timber lintel, iron-strapped
+    for k in (0.25, 0.75): box((x0 + (x1 - x0) * k, fy - 0.24, WD['z1'] + 0.17), (0.08, 0.02, 0.38), 'F_iron', 0.0)
+    hw = (x1 - x0) / 2
+    for leaf, ang in ((-1, 0.0), (1, 0.55)):                                    # two leaves, one standing open
+        hx = x0 if leaf < 0 else x1; d = Vector((-leaf * math.cos(ang), -math.sin(ang), 0)); c = Vector((hx, fy + 0.26, 0)) + d * (hw / 2)
+        box((c.x, c.y, WD['z1'] / 2), (hw - 0.02, 0.08, WD['z1'] - 0.02), 'F_wood', 0.01, rz=math.atan2(d.y, d.x), tag='door')
+        for z in (0.4, 1.3, 2.2):
+            c2 = Vector((hx, fy + 0.21, z)) + d * (hw / 2 - 0.05); box(c2, (hw - 0.2, 0.025, 0.08), 'F_iron', 0.004, rz=math.atan2(d.y, d.x))
+    box(((x0 + x1) / 2, fy + 0.6, 0.02), (x1 - x0, 1.2, 0.04), 'F_ashlar', 0.01)
+    wx0, wx1 = FX(WIN['u0']), FX(WIN['u1'])
+    box(((wx0 + wx1) / 2, fy - 0.04, WIN['z1'] + 0.2), (wx1 - wx0 + 0.5, T + 0.08, 0.4), 'F_ashlar', 0.035, tag='lintel')
+    box(((wx0 + wx1) / 2, fy + 0.11, WIN['z0'] - 0.07), (wx1 - wx0 + 0.4, 0.36, 0.14), 'F_ashlar', 0.025, tag='sill')
+    box(((wx0 + wx1) / 2, fy + 0.36, (WIN['z0'] + WIN['z1']) / 2), (wx1 - wx0, 0.03, WIN['z1'] - WIN['z0']), 'F_glass', 0.0, tag='glass')
+    for k in range(5): box((wx0 + 0.12 + k * (wx1 - wx0 - 0.24) / 4, fy + 0.12, (WIN['z0'] + WIN['z1']) / 2), (0.035, 0.035, WIN['z1'] - WIN['z0']), 'F_iron', 0.0)
+    for c in (1.93, 4.73): iron_window(FX(c), fy, (0, -1, 0), (1, 0, 0), 0.66, 0.95, H1 + 0.8)
+    # the stair: up the right-hand wall from the street to a landing at the house door, solid stone beneath, an iron rail
+    xs0, xs1 = W / 2, W / 2 + 1.05; ys0 = fy + 0.35; nst = 17; run = 0.235; rise = (H1 + 0.02) / nst; yl0 = ys0 + nst * run; yl1 = fy + SD['u1'] + 0.35
+    prism([Vector((xs0, ys0, 0)), Vector((xs0, yl0, 0)), Vector((xs0, yl0, H1 - 0.15)), Vector((xs0, ys0 + run, rise - 0.15))], -(xs1 - xs0 - 0.04), (1, 0, 0), 'F_stone', 0.02)
+    for k in range(nst):
+        box(((xs0 + xs1) / 2, ys0 + (k + 0.5) * run, (k + 1) * rise - 0.07), (xs1 - xs0, run + 0.04, 0.14), 'F_ashlar', 0.02, tag='step')
+    box(((xs0 + xs1) / 2, (yl0 + yl1) / 2, H1 / 2 - 0.05), (xs1 - xs0, yl1 - yl0, H1 - 0.1), 'F_stone', 0.02)
+    box(((xs0 + xs1 + 0.05) / 2, (yl0 + yl1) / 2, H1 - 0.04), (xs1 - xs0 + 0.08, yl1 - yl0 + 0.08, 0.16), 'F_ashlar', 0.03)
+    rail = []
+    for k in range(0, nst + 1, 2): rail.append(Vector((xs1 - 0.06, ys0 + k * run, k * rise + 0.02)))
+    rail += [Vector((xs1 - 0.06, (yl0 + yl1) / 2, H1 + 0.02)), Vector((xs1 - 0.06, yl1 - 0.06, H1 + 0.02)), Vector((xs0 + 0.06, yl1 - 0.06, H1 + 0.02))]
+    for p in rail: pipe(p, p + Vector((0, 0, 0.95)), 0.022, 'F_iron', seg=5)
+    for a, b in zip(rail, rail[1:]): pipe(a + Vector((0, 0, 0.95)), b + Vector((0, 0, 0.95)), 0.03, 'F_iron', seg=6); pipe(a + Vector((0, 0, 0.45)), b + Vector((0, 0, 0.45)), 0.016, 'F_iron', seg=4)
+    # the house door on the landing, a lantern by it
+    dy0, dy1 = fy + SD['u0'], fy + SD['u1']
+    box((W / 2 - 0.28, (dy0 + dy1) / 2, SD['z0'] + (SD['z1'] - SD['z0']) / 2), (0.08, dy1 - dy0, SD['z1'] - SD['z0']), 'F_wood', 0.01, tag='door')
+    box((W / 2 + 0.04, (dy0 + dy1) / 2, SD['z1'] + 0.2), (T + 0.08, dy1 - dy0 + 0.5, 0.4), 'F_ashlar', 0.035, tag='lintel')
+    pipe((W / 2 + 0.02, dy1 + 0.35, SD['z1'] + 0.1), (W / 2 + 0.4, dy1 + 0.35, SD['z1'] + 0.1), 0.025, 'F_iron', seg=5)
+    box((W / 2 + 0.4, dy1 + 0.35, SD['z1'] - 0.2), (0.2, 0.2, 0.32), 'F_glow', 0.0, tag='glow'); box((W / 2 + 0.4, dy1 + 0.35, SD['z1'] - 0.01), (0.26, 0.26, 0.06), 'F_iron', 0.0)
+    sx, sy, SH = -W / 2 + 1.1, D / 2 - 1.2, S['top'] + 3.4
+    stack(sx, sy, S['rz0'], SH)
+    pipe((-W / 2 + 0.25, fy + 0.3, S['rz0'] + 0.1), (-W / 2 + 0.25, fy - 0.3, S['rz0'] + 0.1), 0.06, 'F_iron', seg=8)
+    pipe((-W / 2 + 0.25, fy - 0.3, S['rz0']), (-W / 2 + 0.25, fy - 0.3, 0.3), 0.055, 'F_iron', seg=8, tag='downpipe')
+    SOOT += [(sx, sy, S['rz0'] + 1.5, SH + 0.5, 0.8, 0.7), ((x0 + x1) / 2, fy, WD['z1'] - 0.3, S['HT'], 1.4, 0.35)]
+    PLOT = (W + 2.6, D + 0.8); VENTS = [(sx, SH + 0.4, sy)]
 
 # ---------------------------------------------------------------- one mesh, UVs by world projection, weathering
 me = bpy.data.meshes.new(NAME); obj = bpy.data.objects.new(NAME, me); scene.collection.objects.link(obj)
