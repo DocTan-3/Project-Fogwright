@@ -203,6 +203,67 @@ def ostrak():   # Ostrak's Anvil: the god's anvil on a stepped basalt plinth, a 
         for k in range(7): lump((x + random.uniform(-0.22, 0.22), y + random.uniform(-0.22, 0.22), zb + 1.2), random.uniform(0.06, 0.1), 'F_glow' if k % 2 else 'F_glass', 0.6, sub=1)
 PROPS['FerrinAnvil'] = ostrak
 
+# ---- things fixed to the houses: their origin is the point on the wall face they hang from; the street is -y
+def wall_lamp():   # an iron lantern on a scrolled bracket
+    box((0, -0.03, 0), (0.22, 0.06, 0.4), 'F_iron', 0.01)
+    pipe((0, -0.05, 0.12), (0, -0.55, 0.12), 0.025, 'F_iron', seg=5); pipe((0, -0.05, -0.12), (0, -0.4, 0.1), 0.02, 'F_iron', seg=4)
+    cyl((0, -0.55, 0.05), 0.04, 0.04, 0.14, 'F_iron', seg=6)
+    cyl((0, -0.55, -0.05), 0.15, 0.15, 0.04, 'F_iron', seg=8); box((0, -0.55, -0.27), (0.22, 0.22, 0.36), 'F_glow', 0.0, tag='glow')
+    for (a2, c2) in [(-1, -1), (1, -1), (1, 1), (-1, 1)]: box((a2 * 0.12, -0.55 + c2 * 0.12, -0.27), (0.03, 0.03, 0.4), 'F_iron', 0.0)
+    cyl((0, -0.55, -0.48), 0.14, 0.08, 0.06, 'F_iron', seg=8)
+    bm = bmesh.new(); b = [bm.verts.new((a2 * 0.16, -0.55 + c2 * 0.16, -0.07)) for a2, c2 in [(-1, -1), (1, -1), (1, 1), (-1, 1)]]; t = bm.verts.new((0, -0.55, 0.12))
+    bm.faces.new(list(reversed(b)))
+    for i in range(4): bm.faces.new([b[i], b[(i + 1) % 4], t])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces); add_bm(bm, 'F_iron', '')
+PROPS['FerrinWallLamp'] = wall_lamp
+
+def sign(kind):
+    def make():   # a trade sign: an iron arm out from the wall, a plate hung on rings, the trade cut out of it
+        box((0, -0.03, 0), (0.16, 0.06, 0.5), 'F_iron', 0.01)
+        pipe((0, -0.04, 0.2), (0, -1.05, 0.2), 0.03, 'F_iron', seg=6); pipe((0, -0.04, -0.2), (0, -0.7, 0.2), 0.022, 'F_iron', seg=5)
+        cyl((0, -1.07, 0.2), 0.05, 0.05, 0.06, 'F_iron', seg=6)
+        for y in (-0.35, -0.9): box((0, y, 0.1), (0.02, 0.05, 0.18), 'F_iron', 0.0)
+        z0 = -0.55
+        if kind == 'anvil':
+            box((0, -0.62, z0 + 0.12), (0.06, 0.75, 0.2), 'F_rust', 0.01); box((0, -0.62, z0 - 0.05), (0.06, 0.3, 0.18), 'F_rust', 0.01)
+            box((0, -0.62, z0 - 0.2), (0.06, 0.55, 0.1), 'F_rust', 0.01)
+            bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=8, radius1=0.09, radius2=0.01, depth=0.3)
+            bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi / 2, 3, 'X')); bmesh.ops.translate(bm, verts=bm.verts, vec=(0, -1.12, z0 + 0.15)); add_bm(bm, 'F_rust', 'sign')
+        elif kind == 'tongs':
+            for sgn in (-1, 1):
+                pipe((0, -0.62 + sgn * 0.06, z0 + 0.3), (0, -0.62 - sgn * 0.12, z0 - 0.25), 0.025, 'F_rust', seg=5)
+                pipe((0, -0.62 - sgn * 0.12, z0 - 0.25), (0, -0.62 - sgn * 0.05, z0 - 0.36), 0.025, 'F_rust', seg=5)
+            cyl((0, -0.62, z0 + 0.12), 0.05, 0.05, 0.08, 'F_iron', seg=8, axis='X')
+        else:
+            cyl((0, -0.62, z0), 0.26, 0.26, 0.05, 'F_rust', seg=16, axis='X'); cyl((0, -0.62, z0), 0.1, 0.1, 0.07, 'F_iron', seg=10, axis='X')
+            for i in range(10):
+                a2 = i / 10 * 2 * math.pi; box((0, -0.62 + math.cos(a2) * 0.3, z0 + math.sin(a2) * 0.3), (0.05, 0.08, 0.08), 'F_rust', 0.0, rx=a2)
+    return make
+PROPS['FerrinSignAnvil'] = sign('anvil'); PROPS['FerrinSignTongs'] = sign('tongs'); PROPS['FerrinSignCog'] = sign('cog')
+
+def butt():   # a water butt under a downpipe: staves, iron hoops, a lid, a tap
+    cyl((0, 0, 0.55), 0.36, 0.36, 1.1, 'F_wood', seg=14); cyl((0, 0, 0.55), 0.39, 0.39, 0.55, 'F_wood', seg=14)
+    for z in (0.12, 0.55, 0.98): cyl((0, 0, z), 0.395, 0.395, 0.05, 'F_iron', seg=14)
+    cyl((0.05, 0.03, 1.12), 0.34, 0.34, 0.04, 'F_wood', seg=14); cyl((0, -0.38, 0.2), 0.03, 0.03, 0.12, 'F_copper', seg=6, axis='Y')
+    box((0, 0, 0.03), (0.9, 0.9, 0.06), 'F_ashlar', 0.02)
+PROPS['FerrinButt'] = butt
+
+def pump():   # the public pump: an iron column and handle over a stone trough
+    box((0, -0.55, 0.32), (2.2, 0.8, 0.64), 'F_ashlar', 0.03); box((0, -0.55, 0.6), (2.0, 0.6, 0.04), 'F_glass', 0.0)
+    box((0, 0.25, 0.2), (0.7, 0.7, 0.4), 'F_ashlar', 0.03)
+    cyl((0, 0.25, 1.05), 0.15, 0.13, 1.3, 'F_iron', seg=12); cyl((0, 0.25, 1.75), 0.2, 0.2, 0.12, 'F_iron', seg=12); cyl((0, 0.25, 1.88), 0.12, 0.02, 0.2, 'F_iron', seg=10)
+    for z in (0.55, 1.4): cyl((0, 0.25, z), 0.17, 0.17, 0.05, 'F_copper', seg=12)
+    pipe((0, 0.15, 1.3), (0, -0.25, 1.15), 0.05, 'F_iron', seg=8); cyl((0, -0.27, 1.08), 0.06, 0.04, 0.12, 'F_iron', seg=8)
+    pipe((0, 0.35, 1.7), (0, 1.05, 2.0), 0.035, 'F_iron', seg=6); pipe((0, 1.05, 2.0), (0, 1.2, 1.9), 0.035, 'F_iron', seg=6)
+PROPS['FerrinPump'] = pump
+
+def bollard():   # a cast-iron bollard, ringed, a chain eye at each side
+    cyl((0, 0, 0.45), 0.13, 0.16, 0.9, 'F_iron', seg=12); cyl((0, 0, 0.95), 0.17, 0.12, 0.12, 'F_iron', seg=12)
+    for z in (0.2, 0.75): cyl((0, 0, z), 0.18, 0.18, 0.05, 'F_iron', seg=12)
+    cyl((0, 0, 1.04), 0.09, 0.02, 0.1, 'F_iron', seg=10)
+    for sx in (-1, 1): cyl((sx * 0.17, 0, 0.8), 0.05, 0.05, 0.03, 'F_iron', seg=8, axis='X')
+PROPS['FerrinBollard'] = bollard
+
 def build(name, maker):
     PARTS.clear(); maker()
     me = bpy.data.meshes.new(name); obj = bpy.data.objects.new(name, me); scene.collection.objects.link(obj)

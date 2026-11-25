@@ -2244,7 +2244,7 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
     ['ferrin_foundry','FX_Foundry','FerrinFoundry',[16,14],[[-5,17.1,-5,1.6],[5,17.1,-5,1.6],[-9.3,3.3,2.0,0.7]],[21,17],null]];   // the Ironway Foundry (drawn at its hub's scale)
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
-    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil']];
+    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil'],['FerrinWallLamp','FX_WallLamp'],['FerrinSignAnvil','FX_SignAnvil'],['FerrinSignTongs','FX_SignTongs'],['FerrinSignCog','FX_SignCog'],['FerrinButt','FX_Butt'],['FerrinPump','FX_Pump'],['FerrinBollard','FX_Bollard']];
   let left=SETS.length+2;const one=()=>{if(--left<=0)done();};
   new THREE.GLTFLoader().load('models/ward_walls.gltf.json',g=>{for(const [node,nm] of[['WardWall','FX_WardWall'],['WardPier','FX_WardPier'],['WardEnd','FX_WardEnd'],['WardKnot','FX_WardKnot'],['WardGateA','FX_WardGate']]){
     try{if(registerFX(nm,g.scene,node,node+'_LOD1',null,[],null,null))FX[nm].far=900;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
@@ -2505,7 +2505,7 @@ function buildCityHouses(){
   // the Ferrin street fronts: what a smith keeps by the door, at fixed places on each kind of front (measured off the models:
   // clear of the doors, the forge bay under its canopy and the smelter's arch), one prop per place, some places left bare
   if(FERRIN_GB&&FX.FX_Barrels){let n=0;const SLOT={FX_Forge:[[4.4,['FX_Barrels','FX_Crates','FX_Ingots']]],FX_Shop:[[-2.2,['FX_Ingots','FX_Crates']],[3.8,['FX_Barrels']]],
-      FX_Smelter:[[-4.6,['FX_Cart','FX_Ingots','FX_Crates']],[4.6,['FX_Ingots','FX_Barrels','FX_Cart']]],FX_Narrow:[[1.15,['FX_Crates','FX_Ingots']],[2.25,['FX_Barrels']]],FX_Tool:[[-2.6,['FX_Barrels','FX_Crates']]],FX_Stair:[[1.0,['FX_Cart','FX_Ingots','FX_Crates']]]};
+      FX_Smelter:[[-4.6,['FX_Cart','FX_Ingots','FX_Crates']],[4.6,['FX_Ingots','FX_Barrels','FX_Cart']]],FX_Narrow:[[1.55,['FX_Crates','FX_Ingots']]],FX_Tool:[[2.6,['FX_Barrels','FX_Crates']]],FX_Stair:[[1.0,['FX_Cart','FX_Ingots','FX_Crates']]]};
     for(const bn in SLOT)for(const e of(lists[bn]||[])){const d0=KIT.size[bn][1]/2,c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);let lastX=-1e9;
       for(const [lx0,opts] of SLOT[bn]){if(rnd()<0.3)continue;const nm=opts[Math.floor(rnd()*opts.length)];if(!KIT.size[nm])continue;const [w,d]=KIT.size[nm];
         if(lx0-w/2<lastX)continue;const lz=d0+d/2+0.25,lx=lx0,x=e.x+lx*c+lz*sn,z=e.z-lx*sn+lz*c,f={x,z,hw:w/2,hd:d/2,rot:e.ry||0};
@@ -2531,6 +2531,15 @@ function buildCityHouses(){
         const [x,z]=W2(um,v);colliders.push({x,z,hw:1.15,hd:0.06,rot:A.e.ry||0});}   // the gates stand shut
       else colliders.push({x:cx,z:cz,hw:L/2,hd:0.3,rot:A.e.ry||0});nw++;}
     console.log('ferrin yard walls',nw,'with gates',ng);}
+  // and what each house wears: a lantern by the door, the trade's iron sign, a water butt under the downpipe (on the wall face, at
+  // places measured off each model: clear of doors, windows, the forge's canopy and the oriel)
+  if(FERRIN_GB&&FX.FX_WallLamp){const DR={FX_Forge:{lamp:[3.6],sign:[[4.65,'FX_SignAnvil',3.4]]},FX_Shop:{lamp:[3.3]},FX_Smelter:{lamp:[-3.45,3.45],sign:[[4.2,'FX_SignCog',4.6]]},
+      FX_Narrow:{lamp:[-0.35],butt:[2.55]},FX_Tool:{lamp:[1.45],sign:[[-2.95,'FX_SignTongs',3.3]],butt:[-3.45]},FX_Stair:{lamp:[0.35],sign:[[-2.85,'FX_SignCog',3.25]],butt:[-2.95]}};let n=0;
+    for(const bn in DR)for(const e of(lists[bn]||[])){const zf=KIT.core[bn][1]/2,c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0),W2=(lx,lz)=>[e.x+lx*c+lz*sn,e.z-lx*sn+lz*c],D2=DR[bn];
+      for(const lx of D2.lamp||[]){const [x,z]=W2(lx,zf);put('FX_WallLamp',x,z,e.ry||0,[1,1,1],e.y+2.6);n++;}
+      for(const [lx,nm,h] of D2.sign||[]){const [x,z]=W2(lx,zf);put(nm,x,z,e.ry||0,[1,1,1],e.y+h);n++;}
+      for(const lx of D2.butt||[]){const [x,z]=W2(lx,zf+0.8);if(laneDist(x,z)<LANE_HALF+0.8||!footprintFree({x,z,hw:0.42,hd:0.42,rot:e.ry||0}))continue;put('FX_Butt',x,z,e.ry||0,[1,1,1],heightAt(x,z)-0.04);colliders.push({type:'circle',x,z,r:0.42});n++;}}
+    console.log('ferrin house dressing',n);}
   {const YD={'Ferrin Quarter':FERRIN_GB?(FX.FX_YardForge?[['FX_YardForge',0.28],['FX_Coal',0.2],['FX_Slag',0.15],['FX_Cart',0.1],['FX_Workbench',0.1],['FX_Barrels',0.09],['FX_Ingots',0.08]]:[['FGB_YardForge',0.4],['FGB_Coal',0.25],['FGB_Slag',0.2],['Crates',0.15]]):null,'Temple Ward':[['Cypress',0.3],['FlowerBed',0.3],['Hedge',0.2],['Garden',0.2]],'Aurelan Quarter':[['Hedge',0.25],['FlowerBed',0.25],['YardTree',0.2],['Garden',0.15],['VegBed',0.15]],'Market Ward':[['FlowerBed',0.25],['YardTree',0.3],['Hedge',0.15],['VegBed',0.3]],rich:[['VegBed',0.3],['WashLine',0.25],['WoodPile',0.2],['Shed',0.15],['Crates',0.1]],mid:[['VegBed',0.3],['WashLine',0.3],['WoodPile',0.2],['Shed',0.2]],poor:[['WoodPile',0.3],['Shed',0.3],['WashLine',0.3],['Crates',0.1]]};
     let n=0;for(let gx=CITY.x-CITY.r;gx<=CITY.x+CITY.r;gx+=3.5)for(let gz=CITY.z-CITY.r;gz<=CITY.z+CITY.r;gz+=3.5){const x=gx+(rnd()-0.5)*2,z=gz+(rnd()-0.5)*2,dx=x-CITY.x,dz=z-CITY.z,r=Math.hypot(dx,dz),a=Math.atan2(dz,dx);
       if(r<CITY.core+28||r>CITY.r-10)continue;
@@ -2541,7 +2550,7 @@ function buildCityHouses(){
       if(!footprintFree(f)||footOnLane(f,LANE_HALF+0.6))continue;
       if(put(name,x,z,ry,[1,1,1])){colliders.push(name==='YardTree'?{type:'circle',x,z,r:0.5}:{x,z,hw:w/2+0.1,hd:d/2+0.1,rot:ry});n++;}}
     console.log('yards',n);}
-  {const EX=/StreetTree|Palm|Cypress|FWall|FGate|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat/,LM=new Set(LANDMARKS.map(L=>L.name)),all=[];
+  {const EX=/StreetTree|Palm|Cypress|FWall|FGate|WallLamp|SignAnvil|SignTongs|SignCog|FX_Butt|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat/,LM=new Set(LANDMARKS.map(L=>L.name)),all=[];
     const ext=n=>{const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox;return [Math.max(-b.min.x,b.max.x),Math.max(-b.min.z,b.max.z)];};
     for(const n in lists){if(EX.test(n)||!KIT.size[n])continue;const [ex,ez]=ext(n);for(const e of lists[n]){const [wx,wz,wry]=warpPose(e.x,e.z,e.ry||0),u=e.s||1;
       all.push({n,e,f:{x:wx,z:wz,hw:ex*u-0.15,hd:ez*u-0.15,rot:wry},pri:LM.has(n)?0:/Terrace|Well|Garden/.test(n)?0.5:/^FX_(YardForge|Coal|Slag|Cart|Barrels|Crates|Ingots|Workbench)$/.test(n)?2:1});}}
@@ -2574,7 +2583,7 @@ function buildCityHouses(){
         const kind=lo>8.5&&u<0.16+0.12*(w0<0.35)?(rnd()<0.5?'BridgeRoom':'BridgeRoomB'):lo>6.5&&u<0.4?'Walkway':u<0.85?'LaneLine':null;if(!kind)continue;
         put(kind,px,pz,ry,[1,1,1],y);}
       acc-=len;}}}
-  {const SK=/StreetTree|Palm|Cypress|FWall|FGate|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
+  {const SK=/StreetTree|Palm|Cypress|FWall|FGate|WallLamp|SignAnvil|SignTongs|SignCog|FX_Butt|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
     for(const n in lists){if(SK.test(n)||LM.has(n)||!KIT.geo[n])continue;const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
       lists[n]=lists[n].filter(e=>{const c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);for(let u=0;u<=1;u+=0.2)for(let v=0;v<=1;v+=0.2){const lx=(bb.min.x+(bb.max.x-bb.min.x)*u)*0.98,lz=(bb.min.z+(bb.max.z-bb.min.z)*v)*0.98;
         if(cityPaved(e.x+lx*c+lz*sn,e.z-lx*sn+lz*c)>0.5){gone.add(e.x+','+e.z);return false;}}return true;});}   // last sweep: nothing on a street
@@ -3025,7 +3034,8 @@ function buildCityInterior(parent){
       if(FX.FX_Anvil)landmarks.add(fxm('FX_Anvil',Q.x,y-0.04,Q.z,0.3));
       else parent.add(cyl(3.2,3.6,1.1,8,g2,Q.x,y+0.55,Q.z),box(3.4,1.3,1.4,g3,Q.x,y+1.75,Q.z,0.3),box(1.6,0.9,1.1,g3,Q.x,y+0.95+1.2,Q.z,0.3),box(4.6,0.4,0.6,g3,Q.x+Math.cos(0.3)*0,y+2.6,Q.z,0.3));   // the plinth and the great anvil
       colliders.push({type:'circle',x:Q.x,z:Q.z,r:3.7});
-      {const a=0.3+Math.PI/2,tx=Q.x+Math.cos(a)*6,tz=Q.z+Math.sin(a)*6;parent.add(box(5,0.9,1.4,g1,tx,heightAt(tx,tz)+0.45,tz,-a+Math.PI/2));colliders.push({x:tx,z:tz,hw:2.5,hd:0.7,rot:-a+Math.PI/2});}   // the quench trough
+      {const a=0.3+Math.PI/2,tx=Q.x+Math.cos(a)*6,tz=Q.z+Math.sin(a)*6;if(FX.FX_Pump){landmarks.add(fxm('FX_Pump',tx,heightAt(tx,tz)-0.04,tz,-a-Math.PI/2));colliders.push({x:tx,z:tz,hw:1.2,hd:0.9,rot:-a+Math.PI/2});}else{parent.add(box(5,0.9,1.4,g1,tx,heightAt(tx,tz)+0.45,tz,-a+Math.PI/2));colliders.push({x:tx,z:tz,hw:2.5,hd:0.7,rot:-a+Math.PI/2});}}   // the square's pump and its trough
+      if(FX.FX_Bollard)for(let k=0;k<8;k++){const a=k/8*Math.PI*2+0.3+Math.PI/8,bx=Q.x+Math.cos(a)*4.9,bz=Q.z+Math.sin(a)*4.9;landmarks.add(fxm('FX_Bollard',bx,heightAt(bx,bz)-0.03,bz,-a));colliders.push({type:'circle',x:bx,z:bz,r:0.22});}   // bollards round the anvil
       for(let k=0;k<5;k++){const a=k/5*Math.PI*2+1.2,bx=Q.x+Math.cos(a)*8.2,bz=Q.z+Math.sin(a)*8.2,by=heightAt(bx,bz),kind=k%3;
         if(FX.FX_Ingots){landmarks.add(fxm(['FX_Ingots','FX_Cart','FX_Workbench','FX_Crates','FX_Barrels'][k],bx,by-0.05,bz,-a+Math.PI/2));colliders.push({x:bx,z:bz,hw:1.3,hd:0.9,rot:-a+Math.PI/2});continue;}   // the forecourt's work: ingots, an ore cart, a bench, crates, barrels
         if(kind===0){parent.add(box(1.6,0.6,1.0,g2,bx,by+0.3,bz,-a),box(1.4,0.35,0.9,g2,bx,by+0.78,bz,-a+0.2));}            // ingots, stacked
