@@ -264,6 +264,36 @@ def bollard():   # a cast-iron bollard, ringed, a chain eye at each side
     for sx in (-1, 1): cyl((sx * 0.17, 0, 0.8), 0.05, 0.05, 0.03, 'F_iron', seg=8, axis='X')
 PROPS['FerrinBollard'] = bollard
 
+def lean_to():   # a smith's store against the city wall: rubble walls, an iron roof down to the lane, half shut, half an open bay
+    W, D, HB, HF = 4.8, 4.0, 3.1, 2.3
+    box((0, D / 2 - 0.25, HB / 2), (W, 0.5, HB), 'F_stone', 0.02)                                                     # the back wall
+    for sx in (-1, 1):
+        bm = bmesh.new(); x0, x1 = sx * W / 2 - (0.44 if sx > 0 else 0), sx * W / 2 + (0.44 if sx < 0 else 0)
+        pts = [(-D / 2, 0), (D / 2, 0), (D / 2, HB), (-D / 2, HF)]
+        v0 = [bm.verts.new((min(x0, x1), y, z)) for y, z in pts]; v1 = [bm.verts.new((max(x0, x1), y, z)) for y, z in pts]
+        bm.faces.new(list(reversed(v0))); bm.faces.new(v1)
+        for i in range(4): bm.faces.new([v0[i], v0[(i + 1) % 4], v1[(i + 1) % 4], v1[i]])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces); add_bm(bm, 'F_stone', 'wall')
+        for z in (0.0, 0.8, 1.6): box((sx * (W / 2 - 0.22), -D / 2 + 0.2, z + 0.4), (0.5, 0.42, 0.38 if z < 1.6 else 0.3), 'F_ashlar', 0.025)   # dressed quoins at the front
+    box((-W / 4 + 0.05, -D / 2 + 0.2, HF / 2 - 0.05), (W / 2 - 0.5, 0.24, HF - 0.1), 'F_stone', 0.01)                 # the shut half, a boarded door in it
+    box((-W / 4 + 0.05, -D / 2 + 0.06, 0.95), (0.95, 0.06, 1.9), 'F_wood', 0.01, tag='door')
+    for z in (0.4, 1.5): box((-W / 4 - 0.05, -D / 2 + 0.02, z), (0.75, 0.02, 0.08), 'F_iron', 0.0)
+    box((W / 4 - 0.05, -D / 2 + 0.12, HF - 0.15), (W / 2 - 0.4, 0.22, 0.25), 'F_wood', 0.01)                          # the open bay: a timber head, a post
+    box((0.05, -D / 2 + 0.15, HF / 2), (0.22, 0.22, HF), 'F_wood', 0.01)
+    bm = bmesh.new(); t = 0.06; c = [(-W / 2 - 0.25, -D / 2 - 0.45, HF - 0.05), (W / 2 + 0.25, -D / 2 - 0.45, HF - 0.05), (W / 2 + 0.25, D / 2 + 0.05, HB + 0.12), (-W / 2 - 0.25, D / 2 + 0.05, HB + 0.12)]
+    v0 = [bm.verts.new(p) for p in c]; v1 = [bm.verts.new((p[0], p[1], p[2] + t)) for p in c]
+    bm.faces.new(list(reversed(v0))); bm.faces.new(v1)
+    for i in range(4): bm.faces.new([v0[i], v0[(i + 1) % 4], v1[(i + 1) % 4], v1[i]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces); add_bm(bm, 'F_iron', 'roof')
+    for k in range(9): x = -W / 2 + 0.1 + k * (W + 0.3) / 8; pipe((x, -D / 2 - 0.45, HF + 0.03), (x, D / 2 + 0.05, HB + 0.2), 0.022, 'F_iron', seg=4)   # the sheets' standing seams
+    pipe((-W / 2 - 0.25, -D / 2 - 0.5, HF - 0.08), (W / 2 + 0.25, -D / 2 - 0.5, HF - 0.08), 0.06, 'F_iron', seg=6)     # a gutter
+    for k in range(3):                                                                                                   # inside the bay: racked bar iron, a coal heap
+        box((W / 4 + 0.1, D / 2 - 0.75 - k * 0.04, 0.6 + k * 0.45), (1.6, 0.5, 0.05), 'F_wood', 0.0)
+        for j in range(6): box((W / 4 - 0.5 + j * 0.24, D / 2 - 0.75, 0.66 + k * 0.45), (0.06, 1.5, 0.06), 'F_rust', 0.0, rz=1.5708)
+    mound((W / 4, -0.2, 0), 0.9, 0.7, 0.6, 'F_glass', 0.15, lumps=10, lr=(0.05, 0.09))
+    box((0, 0, 0.03), (W - 0.5, D - 0.4, 0.06), 'F_ashlar', 0.01)
+PROPS['FerrinLeanTo'] = lean_to
+
 def build(name, maker):
     PARTS.clear(); maker()
     me = bpy.data.meshes.new(name); obj = bpy.data.objects.new(name, me); scene.collection.objects.link(obj)

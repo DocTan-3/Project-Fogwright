@@ -2244,11 +2244,11 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
     ['ferrin_foundry','FX_Foundry','FerrinFoundry',[16,14],[[-5,17.1,-5,1.6],[5,17.1,-5,1.6],[-9.3,3.3,2.0,0.7]],[21,17],null]];   // the Ironway Foundry (drawn at its hub's scale)
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
-    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil'],['FerrinWallLamp','FX_WallLamp'],['FerrinSignAnvil','FX_SignAnvil'],['FerrinSignTongs','FX_SignTongs'],['FerrinSignCog','FX_SignCog'],['FerrinButt','FX_Butt'],['FerrinPump','FX_Pump'],['FerrinBollard','FX_Bollard']];
+    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate'],['FerrinAnvil','FX_Anvil'],['FerrinWallLamp','FX_WallLamp'],['FerrinSignAnvil','FX_SignAnvil'],['FerrinSignTongs','FX_SignTongs'],['FerrinSignCog','FX_SignCog'],['FerrinButt','FX_Butt'],['FerrinPump','FX_Pump'],['FerrinBollard','FX_Bollard'],['FerrinLeanTo','FX_LeanTo']];
   let left=SETS.length+2;const one=()=>{if(--left<=0)done();};
   new THREE.GLTFLoader().load('models/ward_walls.gltf.json',g=>{for(const [node,nm] of[['WardWall','FX_WardWall'],['WardPier','FX_WardPier'],['WardEnd','FX_WardEnd'],['WardKnot','FX_WardKnot'],['WardGateA','FX_WardGate']]){
     try{if(registerFX(nm,g.scene,node,node+'_LOD1',null,[],null,null))FX[nm].far=900;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
-  new THREE.GLTFLoader().load('models/ferrin_props.gltf.json',g=>{for(const [node,nm,v] of PROPS){try{if(registerFX(nm,g.scene,node,'-',null,v||[],null,null))FX[nm].far=/FWall|FGate/.test(nm)?300:/YardForge|Slag|Coal/.test(nm)?170:120;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
+  new THREE.GLTFLoader().load('models/ferrin_props.gltf.json',g=>{for(const [node,nm,v] of PROPS){try{if(registerFX(nm,g.scene,node,'-',null,v||[],null,null))FX[nm].far=/FWall|FGate|LeanTo/.test(nm)?300:/YardForge|Slag|Coal/.test(nm)?170:120;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
   for(const [file,nm,node,core,vents,plot,canopy] of SETS)new THREE.GLTFLoader().load('models/'+file+'.gltf.json',g=>{try{registerFX(nm,g.scene,node,node+'_LOD1',core,vents,plot,canopy);}catch(e){console.warn(file,e);}one();},undefined,()=>one());
   setTimeout(done,20000);})();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
@@ -2497,7 +2497,7 @@ function buildCityHouses(){
         while(t<len){const px=A[0]+(B[0]-A[0])*t/len,pz=A[1]+(B[1]-A[1])*t/len,tx=(B[0]-A[0])/len,tz=(B[1]-A[1])/len,a=Math.atan2(pz-CITY.z,px-CITY.x),rr=Math.hypot(px-CITY.x,pz-CITY.z);
           const nx=Math.cos(a),nz=Math.sin(a),w0=cityWealth(a,rr);
           if(wallLane&&w0>0.3){t+=8;continue;}
-          let name=wallLane?(HUT[quarterAR(a,rr).name]&&rnd()<0.2?HUT[quarterAR(a,rr).name]:rnd()<0.4?'Shack2':'Shack'):pickHouse(a,rr+side*8,rnd);
+          let name=wallLane?(FX.FX_LeanTo&&quarterAR(a,rr).name==='Ferrin Quarter'?'FX_LeanTo':HUT[quarterAR(a,rr).name]&&rnd()<0.2?HUT[quarterAR(a,rr).name]:rnd()<0.4?'Shack2':'Shack'):pickHouse(a,rr+side*8,rnd);   // the Ferrin keep their stores against the wall
           if(KIT.size[name][1]>maxD)name=SMALL.find(n=>KIT.size[n]&&KIT.size[n][1]<=maxD&&(w0<0.25||!/Shack|Hut/.test(n)))||'Shack';
           const [w,d]=KIT.size[name],off=LANE_HALF+0.9+d/2+(w0<0.25?rnd()*0.6:0),x=px+nx*side*off,z=pz+nz*side*off,ry=Math.atan2(-nx*side,-nz*side)+(w0<0.25?(rnd()-0.5)*0.12:0);
           const f={x,z,hw:w/2+0.3,hd:d/2+0.3,rot:ry};
