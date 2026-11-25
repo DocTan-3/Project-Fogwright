@@ -137,7 +137,7 @@ const EQ_ITEMS={
     {id:'argyle',name:'Argyle socks',paint:{kind:'wool',mat:'knit',pattern:'check',trim:0.006,a:[0.0,0.46],dyes:['#6a6e78','#a04a3a','#3a3e48']}},
     {id:'legwarmers',name:'Leg warmers',paint:{kind:'wool',mat:'knit',trim:0.01,a:[0.1,0.42],dyes:['#6a3a2a','#8a5a3a','#4a2a1a']}}],
   shoes:[
-    {id:'shoes',name:'Shoes',paint:{kind:'leather',a:[0.075],dyes:['#3e2a1c','#a08a6a','#2a1c12']},built:[{type:'foot'}]}],
+    {id:'shoes',name:'Shoes',paint:{kind:'leather',a:[0.075],dyes:['#3e2a1c','#a08a6a','#2a1c12']},built:[{type:'fitted',asset:'shoe'}]}],
   coat:[
     {id:'longcoat',dye:'leather',name:'Long coat',paint:{kind:'leather',trim:0.01,a:[0.97,1.86,1,0.07],b:[0.03],dyes:['#4a3424','#c8b48a','#2e2016']},
       built:[{type:'drape',asset:'longcoat',kind:1},{type:'collar',colour:0}]},
@@ -174,7 +174,7 @@ const EQ_ITEMS={
     {id:'leathergreaves',dye:'leather',name:'Leather greaves',paint:{kind:'leather',trim:0.008,a:[0.07,1.01],dyes:['#4e3826','#c8b48a','#2e2016']},built:[{type:'legplates',greavesOnly:1,leather:'#5a3a22'}],legPad:0.012}
 ],
   feet:[
-    {id:'boots',name:'Tall boots',replaces:['shoes'],paint:{kind:'leather',trim:0.008,a:[0.43],dyes:['#4a3020','#b09a76','#2a1a10']},built:[{type:'foot'},{type:'cuff',slot:'feet'}]}],
+    {id:'boots',name:'Tall boots',replaces:['shoes'],paint:{kind:'leather',trim:0.008,a:[0.43],dyes:['#4a3020','#b09a76','#2a1a10']},built:[{type:'fitted',asset:'boot'}]}],
   wrists:[
     {id:'vambraces',name:'Steel vambraces',dyes:['#9aa0a6','#5e6266','#c9a046'],built:[{type:'vambrace',metal:'#9aa0a6'}]},
     {id:'bracers',name:'Leather bracers',paint:{kind:'studded',trim:0.006,a:[1.45,1.88],dyes:['#5a3a22','#c8b48a','#b0904a']},built:[{type:'cuff',slot:'wrists'}]}],
@@ -576,6 +576,28 @@ const EQ_BUILD={
         if(leg?d<0.08:d<0.03)D.tuck[i]=Math.max(D.tuck[i],leg?0.028*(1-eqSm(0.05,0.08,d)):0.012*(1-eqSm(0.02,0.03,d)));}}
     if(spec.hideLegs&&D.hide)for(let i=0;i<D.n;i++){const z=D.rest[i*3+2];if(D.arm[i]<0.5&&z<0.93&&z>G.hem+0.14)D.hide[i]=1;}
   },
+  // a fitted piece made in Blender (tools/blender/shoes.py): shoes and boots shaped round the body's own foot and leg. Its
+  // points carry their own skin and parts (0 upper, 1 sole and heel, 2 collar or cuff); the body's people and build shapes
+  // reach it from the nearest body points; the body inside it (the foot, and in a boot the lower leg) is removed, as WoW's
+  // boots replace the feet; what goes on later (greaves, a coat) sits outside it.
+  fitted(pc,D,item,dy,spec,ctx){const G=(typeof EQ_FITTED!=='undefined'&&EQ_FITTED[ctx.sex||'m']||{})[spec.asset];if(!G)return;
+    pc.kind=eqMatOf(item,spec,3);
+    /* colours: upper, sole, collar or cuff (a darker turn of the upper unless a trim is named) */
+    const cols=[eqRGB(dy[0]),eqRGB(dy[2]).map(v=>v*0.55),spec.trim!=null?eqRGB(dy[spec.trim]):eqRGB(dy[0]).map(v=>v*0.72)],P=D.pos,legs=[],bi=G.bones.map(b=>ctx.bone(b)),base=pc.P.length/3,n=G.pos.length/3;
+    for(let i=0;i<D.n;i++)if(D.arm[i]<0.5&&D.rest[i*3+2]<0.6)legs.push(i);
+    for(let v=0;v<n;v++){const x=G.pos[v*3],y=G.pos[v*3+1],z=G.pos[v*3+2];
+      const near=[];for(const i of legs){const d=(P[i*3]-x)**2+(P[i*3+1]-y)**2+(P[i*3+2]-z)**2;if(near.length<4||d<near[3][1]){near.push([i,d]);near.sort((a,b)=>a[1]-b[1]);if(near.length>4)near.pop();}}
+      const ws=near.map(([i,d])=>[i,1/(Math.sqrt(d)+0.004)]),sw=ws.reduce((a,b)=>a+b[1],0),e=eqEval(D,ws.map(([i,w])=>[i,w/sw]));
+      e.p=[x,y,z];e.n=[G.nrm[v*3],G.nrm[v*3+1],G.nrm[v*3+2]];e.r=[G.rest[v*3],G.rest[v*3+1],G.rest[v*3+2]];
+      e.bones=new Map(G.skin[v].map(([b,w])=>[bi[b],w]));
+      if(G.morph&&ctx.morphNames)e.dl=ctx.morphNames.map(nm=>{const a=G.morph[nm];return a?[a[v*3],a[v*3+1],a[v*3+2]]:[0,0,0];});   // shapes worked out on the full body
+      eqVert(pc,e,0,cols[G.part[v]].map(c=>c*G.shade[v]));}
+    for(const i of G.idx)pc.I.push(base+i);
+    if(D.hide)for(const i of legs)if(D.rest[i*3+2]<G.hideZ)D.hide[i]=1;
+    if(D.tuck)for(const i of legs){const z=D.rest[i*3+2];if(z<G.hideZ+0.05)D.tuck[i]=Math.max(D.tuck[i],0.02*(1-eqSm(G.hideZ+0.02,G.hideZ+0.05,z)));}   // what is left of the leg at the top draws in under the rim
+    if(D.occ)for(const i of legs){if(D.rest[i*3+2]>G.hideZ+0.06)continue;let m=9;for(let v=0;v<n;v+=2){const d=Math.hypot(P[i*3]-G.pos[v*3],P[i*3+1]-G.pos[v*3+1],P[i*3+2]-G.pos[v*3+2]);if(d<m)m=d;}
+      if(m<0.04&&m+0.004>D.occ[i])D.occ[i]=m+0.004;}
+  },
   buttons(pc,D,item,dy,spec){pc.kind=12;const brass=eqRGB(dy[2]),xs=(spec&&spec.xs)||[0],z1=(spec&&spec.z1)||1.44;   // xs: columns (two for double-breasted)
     for(const x of xs)for(let z=(spec&&spec.z0)||0.98;z<z1;z+=0.055)eqStud(pc,D,eqNear(D,x,-0.2,z,2,i=>D.arm[i]<0.5&&D.rest[i*3+1]<0),0.012,0.006,brass);},
   furcollar(pc,D,item,dy){pc.kind=6;const fur=eqRGB('#7a6248');
@@ -816,7 +838,8 @@ const EQ_BUILD={
 // a character's whole set of built pieces, merged into one skinned mesh on the body's skeleton
 function eqBuiltMesh(body,outfit,src,maxBuilt,sex){
   const D=eqBodyData(src||body),pc=eqPiece(),bones=body.skeleton.bones,san=n=>n.replace(/[\s\.\[\]:\/]/g,''),drapes=[];
-  const ctx={sex,bone:n=>Math.max(0,bones.findIndex(b=>san(b.name)===san(n))),
+  const mdict=(src||body).morphTargetDictionary||{};
+  const ctx={sex,morphNames:Object.keys(mdict).sort((a,b)=>mdict[a]-mdict[b]),bone:n=>Math.max(0,bones.findIndex(b=>san(b.name)===san(n))),
     drapePiece:()=>{const d=eqPiece();drapes.push({pc:d});return d;},
     drapeGrid:(d,grid,closed,pinRows,reach,flat)=>{const e=drapes.find(x=>x.pc===d);e.grid=grid;e.closed=closed;e.pinRows=pinRows;e.reach=reach==null?1:reach;e.flat=!!flat;}};
   { const ch=eqItem('chest',outfit.chest),sh=eqItem('shirt',outfit.shirt),co=eqItem('coat',outfit.coat),low=it=>it&&(it.built||[]).some(sp=>sp.type==='skirt');

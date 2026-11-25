@@ -200,11 +200,154 @@ kn,knn=onhead(top,0.0)
 bun(M,kn+knn*0.04,0.042,0.85); ring(M,kn+knn*0.008,knn,0.024,0.014)
 STYLES['Topknot']=M
 
+# ---------- facial hair: beards and moustaches (the male body) ----------
+# Laid on the lower face from C2, a point inside the head level with the mouth. A beard is a shell from a natural top line
+# (under the lower lip, up round the mouth corners, along the cheeks, into the sideburns) down under the jaw to the throat;
+# long beards add a sheet hanging from the chin, cut from the lock shapes so the bottom ends in tapered clumps. Moustaches are
+# strips along the upper lip from the middle out, tapering to points.
+FACIAL=len(sys.argv)>3 and sys.argv[3]=='facial'
+def zt(t): return eyeZ+(t-1.69)/TS                       # a template height as an actual height on this body
+C2=Vector((0,C.y,zt(1.60)))
+def face_at(phi,el,off=0.0):
+    d=Vector((math.sin(phi)*math.cos(el),-math.cos(phi)*math.cos(el),math.sin(el)))
+    hit=bvh.ray_cast(C2+d*0.3,-d,0.4)
+    if hit[0] is None: return None,None
+    return hit[0]+hit[1]*off,hit[1]
+def face_el(phi,target,lo=-1.3,hi=0.6):   # the elevation at which the face, along phi, is at template height target
+    for _ in range(20):
+        mid=(lo+hi)/2; p,_=face_at(phi,mid)
+        if p is None or tz(p)>target: hi=mid
+        else: lo=mid
+    return (lo+hi)/2
+def piece(pts_by_row):   # helper not used
+    pass
+def beard_top(a):
+    for (a0,z0),(a1,z1) in zip(BT,BT[1:]):
+        if a<=a1: return z0+(z1-z0)*(a-a0)/(a1-a0)
+    return BT[-1][1]
+BT=[(0,1.586),(0.33,1.587),(0.5,1.622),(0.62,1.640),(1.0,1.645),(1.2,1.660),(1.32,1.676),(1.45,1.684)]
+def beard_bottom(a): return 1.515+0.07*sm(0.5,1.45,a)
+def face_column(phi,top,bottom,step=0.015):
+    """walk down the face along phi from template height top: points until bottom, or until the surface jumps (past the
+    jaw, rays would leap to the neck or chest)"""
+    e=face_el(phi,top); pts=[]; prev=None
+    while e>-1.4:
+        p,n=face_at(phi,e)
+        if p is None: break
+        if prev is not None and (p-prev).length>0.02: break
+        pts.append((p,n)); prev=p
+        if tz(p)<bottom: break
+        e-=step
+    return pts
+def resample(pts,rows):
+    L=[0.0]
+    for (a,_),(b,_) in zip(pts,pts[1:]): L.append(L[-1]+(b-a).length)
+    out=[]
+    for r in range(rows+1):
+        t=L[-1]*r/rows; j=next((i for i in range(1,len(L)) if L[i]>=t),len(L)-1); f=(t-L[j-1])/max(1e-6,L[j]-L[j-1]) if j>0 else 0
+        a,na=pts[max(0,j-1)]; b,nb=pts[j]; out.append((a.lerp(b,f),na.lerp(nb,f).normalized()))
+    return out
+def beard_shell(M,thick,cols=16,rows=7,span=1.42,edge='roots',hang=None,inner=False):
+    """the beard over the face, from its top line down under the jaw. hang(a): for the front of the face, where the chin
+    turns under, the beard leaves the face and hangs that far, straight down and a little forward - one continuous surface,
+    so pointed and forked beards are shaped by their length; the edge is a clean, groomed one. Thickness tapers to nothing
+    at the sides and top, so there is no slab edge."""
+    U0=0.25 if edge=='roots' else 0.0
+    grid=[]
+    for c in range(cols+1):
+        phi=-span+2*span*c/cols; a=abs(phi)
+        pts=face_column(phi,beard_top(a),beard_bottom(a))
+        L=hang(a) if hang else 0.0
+        if L>0.004 and len(pts)>2:
+            k=next((i for i,(p,n) in enumerate(pts) if n.z<-0.35 and i>1),len(pts)-1)   # where the chin turns under
+            pts=pts[:k+1]; p0,n0=pts[-1]; out=Vector((math.sin(phi),-math.cos(phi),0)).normalized()
+            for j in range(1,5): pts.append((p0+Vector((0,0,-L*j/4))+out*(0.008*j/4),(out*0.8+n0*0.2).normalized()))
+        if len(pts)<2: grid.append([None]*(rows+1)); continue
+        side=sm(0,0.18,1-a/span)   # 0 at the shell's side edges
+        col=[]
+        for r,(p,n) in enumerate(resample(pts,rows)):
+            t=r/rows; th=thick(phi,t)*(0.25+0.75*sm(0,0.2,t))*(0.2+0.8*side)*(0.45 if inner else 1)
+            q=p+n*th; col.append(M.v(q,(q-C2).normalized()*0.5+n*0.5,(U0+0.25*c/cols,0.95*t)))
+        grid.append(col)
+    for c in range(cols):
+        for r in range(rows):
+            a_,b_,c_,d_=grid[c][r],grid[c+1][r],grid[c+1][r+1],grid[c][r+1]
+            if None in (a_,b_,c_,d_): continue
+            M.quad(a_,d_,c_,b_)
+    return grid
+def beard_hang(M,length,cols=10,rows=5,span=0.75,lift=0.004):
+    """a sheet hanging from the front of the chin: length(a) metres below the chin at angle a"""
+    grid=[]
+    for c in range(cols+1):
+        phi=-span+2*span*c/cols; a=abs(phi); L=length(a)
+        e0=face_el(phi,1.578); p0,n0=face_at(phi,e0,0.009)   # it starts below the lower lip, over the beard shell
+        ec=face_el(phi,1.552); pc,nc=face_at(phi,ec,0.012)   # the front of the chin, where the beard leaves the face
+        if p0 is None or pc is None: grid.append([None]*(rows+1)); continue
+        out=Vector((math.sin(phi),-math.cos(phi),0)).normalized(); col=[]
+        for r in range(rows+1):
+            t=r/rows
+            if t<=0.4: q=p0.lerp(pc,t/0.4)                      # over the chin...
+            else: k=(t-0.4)/0.6; q=pc+Vector((0,0,-L*k))+out*(0.006*k)   # ...then hanging down, a little forward
+            col.append(M.v(q,out*0.7+Vector((0,0,0.3)),(0.5+0.5*c/cols,t)))
+        grid.append(col)
+    for c in range(cols):
+        for r in range(rows):
+            a_,b_,c_,d_=grid[c][r],grid[c+1][r],grid[c+1][r+1],grid[c][r+1]
+            if None in (a_,b_,c_,d_): continue
+            M.quad(a_,d_,c_,b_)
+def braid(M,top,length=0.13,segs=6,r0=0.013):
+    prev=None
+    for i in range(segs+1):
+        t=i/segs; c=top+Vector((0,-0.006*t,-length*t)); r=r0*(1-0.45*t)*(1.0 if i%2==0 else 0.8); ring_=[]
+        for m in range(7):
+            a=2*math.pi*m/6; d=Vector((math.cos(a),math.sin(a),0)); ring_.append(M.v(c+d*r,d,(0.5*m/6*0.5,0.3+0.6*t)))
+        if prev:
+            for m in range(6): M.quad(prev[m],ring_[m],ring_[m+1],prev[m+1])
+        prev=ring_
+    ring(M,top+Vector((0,-0.006,-length*0.92)),Vector((0,0,1)),r0*0.65,0.01)
+def stache(M,target,half,width,off,variant=0,droop=0.0,ends=None,rows=6):
+    """a strip each side from the philtrum along the upper lip; target: template height of its middle; width: its depth
+    down the face; droop: how far the lower edge falls over the lip; ends: extra points (relative) curling off the face"""
+    for sgn in (1,-1):
+        pts=[]
+        for i in range(rows+1):
+            t=i/rows; phi=sgn*(-0.03+(half+0.03)*t); e=face_el(phi,target+0.004*math.sin(t*math.pi)-0.006*t*t)
+            p,n=face_at(phi,e,off); pts.append((p,n))
+        if ends:
+            p,n=pts[-1]; side=Vector((sgn,0,0))
+            for dx,dz in ends: pts.append((p+side*dx+Vector((0,-0.004,dz)),n))
+        ids=[]
+        for i,(p,n) in enumerate(pts):
+            t=i/(len(pts)-1); w=width*(1-0.55*t)
+            up=Vector((0,0,1)); down=-(up-n*up.dot(n)).normalized()
+            top=p-down*w*0.35; bot=p+down*w*(0.65+droop)+n*0.004*droop
+            u0=0.5+0.125*variant
+            ids.append((M.v(top,n,(u0+0.005,t)),M.v(p+n*(0.003+0.25*w),n,(u0+0.0625,t)),M.v(bot,n,(u0+0.12,t))))
+        for i in range(len(ids)-1):
+            for c in range(2): M.quad(ids[i][c],ids[i+1][c],ids[i+1][c+1],ids[i][c+1])
+if FACIAL:
+    thin=lambda phi,t:0.003
+    M=Mesh(); beard_shell(M,lambda phi,t:0.004); STYLES['Beard_Short']=M
+    full=lambda a:0.045*max(0,1-(a/0.8)**2)**0.5
+    point=lambda a:0.10*max(0,1-a/0.8)**1.5
+    fork=lambda a:0.085*max(0,1-abs(a-0.2)/0.42)**1.1
+    for nm,hg,th in (('Beard_Full',full,0.008),('Beard_Pointed',point,0.007),('Beard_Forked',fork,0.007)):
+        M=Mesh(); beard_shell(M,lambda phi,t,th=th:th,rows=9,hang=hg); beard_shell(M,lambda phi,t:0.006,cols=8,span=0.8,inner=True); STYLES[nm]=M
+    M=Mesh(); beard_shell(M,lambda phi,t:0.005); e=face_el(0,1.548); p,n=face_at(0,e,0.006); braid(M,p); STYLES['Beard_Braided']=M
+    M=Mesh(); stache(M,1.612,0.34,0.009,0.003,variant=1); STYLES['Moustache_Pencil']=M
+    M=Mesh(); stache(M,1.614,0.46,0.026,0.005,variant=0,droop=0.15); STYLES['Moustache_Chevron']=M
+    M=Mesh(); stache(M,1.613,0.54,0.032,0.007,variant=2,droop=0.5); STYLES['Moustache_Walrus']=M
+    M=Mesh(); stache(M,1.614,0.44,0.024,0.005,variant=0,droop=0.12)
+    for sgn in (1,-1):   # the horseshoe's bars, down past the mouth corners
+        lock(M,sgn*0.47,0,0.055,0.014,3,(0,0,-1),g=0.0,off=0.005,rows=4,bulge=0.2,taper=0.2,start=face_at(sgn*0.47,face_el(sgn*0.47,1.612),0.005),hug=False)
+    STYLES['Moustache_Horseshoe']=M
+    M=Mesh(); stache(M,1.614,0.42,0.022,0.005,variant=1,ends=[(0.012,0.002),(0.022,0.01),(0.026,0.02),(0.02,0.026)]); STYLES['Moustache_Handlebar']=M
+
 # --- skin, shapes, rest, and out (glTF axes: x, z, -y)
 keys=[k for k in (me.shape_keys.key_blocks if me.shape_keys else []) if k.name!='Basis']
 out={}
 for name,M in STYLES.items():
-    o={'pos':[],'nrm':[],'uv':[],'rest':[],'idx':M.I,'bones':['head','neck','chest'],'skin':[],'morph':{k.name:[] for k in keys}}
+    o={'name':name if '_' in name else 'Hair_'+name,'pos':[],'nrm':[],'uv':[],'rest':[],'idx':M.I,'bones':['head','neck','chest'],'skin':[],'morph':{k.name:[] for k in keys}}
     for p,n,uv in zip(M.P,M.N,M.UV):
         o['pos']+=[round(p.x,4),round(p.z,4),round(-p.y,4)]; o['nrm']+=[round(n.x,3),round(n.z,3),round(-n.y,3)]; o['uv']+=[round(uv[0],4),round(1-uv[1],4)]
         near=kd.find_n(p,4); ws=[(i,1/(d+0.005)) for _,i,d in near]; s=sum(w for _,w in ws)

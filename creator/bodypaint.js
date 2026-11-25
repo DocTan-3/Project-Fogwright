@@ -340,7 +340,8 @@ function hairInstall(root,sex){
   if(typeof HAIR_CARDS==='undefined'||!HAIR_CARDS[sex]||root.userData.hairCards===sex)return;
   let body=null;root.traverse(o=>{if(!body&&o.isSkinnedMesh&&o.morphTargetDictionary&&'Lean' in o.morphTargetDictionary)body=o;});if(!body)return;
   const styles=HAIR_CARDS[sex],old=[];
-  root.traverse(o=>{if(o.isMesh&&(o.userData.hairCard||Object.keys(styles).some(k=>o.name.startsWith('Hair_'+k))))old.push(o);});
+  const nameOf=k=>styles[k].name||('Hair_'+k);   // 'Hair_Short', 'Beard_Full', 'Moustache_Walrus', ...
+  root.traverse(o=>{if(o.isMesh&&(o.userData.hairCard||Object.keys(styles).some(k=>o.name.startsWith(nameOf(k)))))old.push(o);});
   for(const o of old)o.parent.remove(o);
   const bones=body.skeleton.bones,san=n=>n.replace(/[\s\.\[\]:\/]/g,''),names=Object.keys(body.morphTargetDictionary).sort((a,b)=>body.morphTargetDictionary[a]-body.morphTargetDictionary[b]);
   for(const [style,H] of Object.entries(styles)){
@@ -352,7 +353,7 @@ function hairInstall(root,sex){
     g.setAttribute('skinIndex',new THREE.BufferAttribute(si,4));g.setAttribute('skinWeight',new THREE.BufferAttribute(sw,4));
     g.morphAttributes.position=names.map(k=>new THREE.Float32BufferAttribute(H.morph[k]||new Array(n*3).fill(0),3));g.morphTargetsRelative=true;
     g.setIndex(H.idx);g.computeBoundingSphere();g.userData.hairCard=true;g.userData.rest=true;
-    const m=new THREE.SkinnedMesh(g,new THREE.MeshBasicMaterial());m.name='Hair_'+style;m.userData.hairCard=true;m.frustumCulled=false;
+    const m=new THREE.SkinnedMesh(g,new THREE.MeshBasicMaterial());m.name=nameOf(style);m.userData.hairCard=true;m.frustumCulled=false;
     m.bind(body.skeleton,body.bindMatrix);m.morphTargetInfluences=body.morphTargetInfluences;body.parent.add(m);}
   root.userData.hairCards=sex;
 }
