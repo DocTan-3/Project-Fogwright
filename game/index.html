@@ -557,8 +557,8 @@ vec3 cityGround(vec2 w,vec2 wl,float paved,float wealth){
   vec3 pv=mix(stone,jc*tx,smoothstep(.25,.6,joint)*.5);
   pv*=1.-.3*lk.y*(.55+.45*gn(w*.12));                                                       // soot settles on the stone by the forges
   {float fer=(q<.5?1.-t:0.)+(q2<.5?t:0.);                                                    // the Ferrin lay their streets in basalt brought from home:
-   if(fer>.01){vec2 cb=cobble(w*2.3);vec3 bs=vec3(.20,.205,.22)*(.78+.44*cb.y)*(.85+.3*tx.r);        // small dark setts, tight black joints,
-     bs*=1.-.55*(1.-smoothstep(.03,.1,cb.x));bs=mix(vec3(.19,.19,.2),bs,aa);                        // worn paler down the middle where the carts run,
+   if(fer>.01){vec2 cb=bricks(w,vec2(.3,.19),.03);vec3 bs=vec3(.165,.17,.185)*(.75+.5*cb.y)*(.85+.3*tx.r);   // small dark setts in courses, tight black joints,
+     bs*=1.-.6*cb.x*aa;bs=mix(vec3(.15,.153,.165),bs,aa);                                              // worn paler down the middle where the carts run,
      bs*=1.+.18*smoothstep(.55,.85,gn(w*.09+3.))*(1.-paved*0.)  ;                                      // and a kerb of dressed grey stone where the street ends
      float kb=1.-abs(paved*2.-1.);bs=mix(bs,vec3(.36,.355,.35)*tS*(.9+.2*gh(floor(w/.9))),smoothstep(.55,.85,kb)*.8);
      pv=mix(pv,bs,fer);}}
@@ -2241,11 +2241,11 @@ function registerFX(name,root,n0,n1,core,vents,plot,canopy){root.updateMatrixWor
     ['ferrin_narrow','FX_Narrow','FerrinNarrow',[5.6,9.6],[[-1.7,11.1,-3.7,0.8]],[6.4,10.4],null]];
   // the yards and street fronts: one file, one object per prop, no far version (they are only drawn near)
   const PROPS=[['FerrinYardForge','FX_YardForge',[[-0.6,5.1,-0.5,0.5]]],['FerrinCoal','FX_Coal'],['FerrinSlag','FX_Slag'],['FerrinCart','FX_Cart'],
-    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench']];
+    ['FerrinBarrels','FX_Barrels'],['FerrinCrates','FX_Crates'],['FerrinIngots','FX_Ingots'],['FerrinWorkbench','FX_Workbench'],['FerrinYardWall','FX_FWall'],['FerrinYardGate','FX_FGate']];
   let left=SETS.length+2;const one=()=>{if(--left<=0)done();};
   new THREE.GLTFLoader().load('models/ward_walls.gltf.json',g=>{for(const [node,nm] of[['WardWall','FX_WardWall'],['WardPier','FX_WardPier'],['WardEnd','FX_WardEnd'],['WardKnot','FX_WardKnot'],['WardGateA','FX_WardGate']]){
     try{if(registerFX(nm,g.scene,node,node+'_LOD1',null,[],null,null))FX[nm].far=900;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
-  new THREE.GLTFLoader().load('models/ferrin_props.gltf.json',g=>{for(const [node,nm,v] of PROPS){try{if(registerFX(nm,g.scene,node,'-',null,v||[],null,null))FX[nm].far=/YardForge|Slag|Coal/.test(nm)?170:120;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
+  new THREE.GLTFLoader().load('models/ferrin_props.gltf.json',g=>{for(const [node,nm,v] of PROPS){try{if(registerFX(nm,g.scene,node,'-',null,v||[],null,null))FX[nm].far=/FWall|FGate/.test(nm)?300:/YardForge|Slag|Coal/.test(nm)?170:120;}catch(e){console.warn(node,e);}}one();},undefined,()=>one());
   for(const [file,nm,node,core,vents,plot,canopy] of SETS)new THREE.GLTFLoader().load('models/'+file+'.gltf.json',g=>{try{registerFX(nm,g.scene,node,node+'_LOD1',core,vents,plot,canopy);}catch(e){console.warn(file,e);}one();},undefined,()=>one());
   setTimeout(done,20000);})();
 // Instances are batched per block of the map, not per city: the far blocks and the ones behind the camera are skipped,
@@ -2508,6 +2508,25 @@ function buildCityHouses(){
         if(laneDist(x,z)<LANE_HALF+1.0+d/2||footOnLane(f,LANE_HALF+0.5)||!footprintFree(f))continue;
         if(put(nm,x,z,e.ry||0,[1,1,1])){colliders.push({x,z,hw:w/2,hd:d/2,rot:e.ry||0});lastX=lx0+w/2;n++;}}}
     console.log('ferrin fronts',n);}
+  // the Ferrin close the gaps between their houses: a basalt yard wall flush with the fronts, and where the gap is wide
+  // enough for a cart, an iron gate into the yard behind. An alley that a lane runs down stays open.
+  if(FERRIN_GB&&FX.FX_FWall){const B=[];for(const bn of['FX_Forge','FX_Shop','FX_Smelter','FX_Narrow'])for(const e of(lists[bn]||[]))B.push({e,w:KIT.core[bn][0],d:KIT.core[bn][1]});
+    let nw=0,ng=0;
+    for(const A of B){const c=Math.cos(A.e.ry||0),sn=Math.sin(A.e.ry||0);let best=null,bu=1e9;
+      for(const C of B){if(C===A||Math.abs(Math.atan2(Math.sin(C.e.ry-A.e.ry),Math.cos(C.e.ry-A.e.ry)))>0.12)continue;const dx=C.e.x-A.e.x,dz=C.e.z-A.e.z,du=dx*c-dz*sn,dv=dx*sn+dz*c;
+        if(du<=0||Math.abs(dv+C.d/2-A.d/2)>1.3)continue;const gap=du-A.w/2-C.w/2;if(gap<-0.3)continue;if(du<bu){bu=du;best={C,du,dv,gap};}}
+      if(!best||best.gap<1.0||best.gap>12)continue;
+      const u0=A.w/2-0.15,u1=best.du-best.C.w/2+0.15,L=u1-u0,v=Math.min(A.d/2,best.dv+best.C.d/2)-0.45,um=(u0+u1)/2,W2=(u,vv)=>[A.e.x+u*c+vv*sn,A.e.z-u*sn+vv*c];
+      const [mx2,mz2]=W2(um,v);if(laneDist(mx2,mz2)<LANE_HALF+0.8||laneDist(...W2(um,v-4))<LANE_HALF+0.8)continue;   // a lane runs down this alley
+      if(cityPaved(...W2(um,v-1.5))>0.5)continue;                                                                     // a street, not a yard
+      {const own=q=>(Math.abs(q.x-A.e.x)<0.01&&Math.abs(q.z-A.e.z)<0.01)||(Math.abs(q.x-best.C.e.x)<0.01&&Math.abs(q.z-best.C.e.z)<0.01),f={x:mx2,z:mz2,hw:L/2-0.4,hd:0.3,rot:A.e.ry||0};   // the two houses it joins may touch it, nothing else
+        if(colliders.some(q=>!own(q)&&!q.dead&&Math.abs(q.x-f.x)<20&&Math.abs(q.z-f.z)<20&&(q.type==='circle'?Math.hypot(q.x-f.x,q.z-f.z)<q.r+L/2:rectHit(f,q))))continue;}
+      const gate=L>4.6,parts=[];if(gate){const side=(L-3.6)/2;if(side>0.3){parts.push([u0,u0+side]);parts.push([u1-side,u1]);}ng++;const [gx,gz]=W2(um,v);put('FX_FGate',gx,gz,A.e.ry||0,[1,1,1],heightAt(gx,gz)-0.08);}else parts.push([u0,u1]);
+      for(const [a0,a1] of parts){const len=a1-a0,np=Math.max(1,Math.round(len/2)),pl=len/np;for(let k=0;k<np;k++){const [x,z]=W2(a0+pl*(k+0.5),v);const e=put('FX_FWall',x,z,A.e.ry||0,[1,1,1],heightAt(x,z)-0.1);if(e)e.sx=pl/2;}}
+      const [cx,cz]=W2(um,v);if(gate){for(const [a0,a1] of parts){const [x,z]=W2((a0+a1)/2,v);colliders.push({x,z,hw:(a1-a0)/2,hd:0.3,rot:A.e.ry||0});}for(const sd of[-1,1]){const [x,z]=W2(um+sd*1.48,v);colliders.push({x,z,hw:0.36,hd:0.36,rot:A.e.ry||0});}
+        const [x,z]=W2(um,v);colliders.push({x,z,hw:1.15,hd:0.06,rot:A.e.ry||0});}   // the gates stand shut
+      else colliders.push({x:cx,z:cz,hw:L/2,hd:0.3,rot:A.e.ry||0});nw++;}
+    console.log('ferrin yard walls',nw,'with gates',ng);}
   {const YD={'Ferrin Quarter':FERRIN_GB?(FX.FX_YardForge?[['FX_YardForge',0.28],['FX_Coal',0.2],['FX_Slag',0.15],['FX_Cart',0.1],['FX_Workbench',0.1],['FX_Barrels',0.09],['FX_Ingots',0.08]]:[['FGB_YardForge',0.4],['FGB_Coal',0.25],['FGB_Slag',0.2],['Crates',0.15]]):null,'Temple Ward':[['Cypress',0.3],['FlowerBed',0.3],['Hedge',0.2],['Garden',0.2]],'Aurelan Quarter':[['Hedge',0.25],['FlowerBed',0.25],['YardTree',0.2],['Garden',0.15],['VegBed',0.15]],'Market Ward':[['FlowerBed',0.25],['YardTree',0.3],['Hedge',0.15],['VegBed',0.3]],rich:[['VegBed',0.3],['WashLine',0.25],['WoodPile',0.2],['Shed',0.15],['Crates',0.1]],mid:[['VegBed',0.3],['WashLine',0.3],['WoodPile',0.2],['Shed',0.2]],poor:[['WoodPile',0.3],['Shed',0.3],['WashLine',0.3],['Crates',0.1]]};
     let n=0;for(let gx=CITY.x-CITY.r;gx<=CITY.x+CITY.r;gx+=3.5)for(let gz=CITY.z-CITY.r;gz<=CITY.z+CITY.r;gz+=3.5){const x=gx+(rnd()-0.5)*2,z=gz+(rnd()-0.5)*2,dx=x-CITY.x,dz=z-CITY.z,r=Math.hypot(dx,dz),a=Math.atan2(dz,dx);
       if(r<CITY.core+28||r>CITY.r-10)continue;
@@ -2518,7 +2537,7 @@ function buildCityHouses(){
       if(!footprintFree(f)||footOnLane(f,LANE_HALF+0.6))continue;
       if(put(name,x,z,ry,[1,1,1])){colliders.push(name==='YardTree'?{type:'circle',x,z,r:0.5}:{x,z,hw:w/2+0.1,hd:d/2+0.1,rot:ry});n++;}}
     console.log('yards',n);}
-  {const EX=/StreetTree|Palm|Cypress|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat/,LM=new Set(LANDMARKS.map(L=>L.name)),all=[];
+  {const EX=/StreetTree|Palm|Cypress|FWall|FGate|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat/,LM=new Set(LANDMARKS.map(L=>L.name)),all=[];
     const ext=n=>{const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox;return [Math.max(-b.min.x,b.max.x),Math.max(-b.min.z,b.max.z)];};
     for(const n in lists){if(EX.test(n)||!KIT.size[n])continue;const [ex,ez]=ext(n);for(const e of lists[n]){const [wx,wz,wry]=warpPose(e.x,e.z,e.ry||0),u=e.s||1;
       all.push({n,e,f:{x:wx,z:wz,hw:ex*u-0.15,hd:ez*u-0.15,rot:wry},pri:LM.has(n)?0:/Terrace|Well|Garden/.test(n)?0.5:/^FX_(YardForge|Coal|Slag|Cart|Barrels|Crates|Ingots|Workbench)$/.test(n)?2:1});}}
@@ -2551,7 +2570,7 @@ function buildCityHouses(){
         const kind=lo>8.5&&u<0.16+0.12*(w0<0.35)?(rnd()<0.5?'BridgeRoom':'BridgeRoomB'):lo>6.5&&u<0.4?'Walkway':u<0.85?'LaneLine':null;if(!kind)continue;
         put(kind,px,pz,ry,[1,1,1],y);}
       acc-=len;}}}
-  {const SK=/StreetTree|Palm|Cypress|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
+  {const SK=/StreetTree|Palm|Cypress|FWall|FGate|WardWall|WardGate|WardPost|WardPier|WardEnd|WardKnot|Span|LaneLine|Walkway|BridgeRoom|RoofShack|Plinth|Harpoon|Aqueduct|Quay|WaterGate|Pier|Boat|Terrace|Well|Garden|Stall|Crates/,LM=new Set(LANDMARKS.map(L=>L.name)),gone=new Set();
     for(const n in lists){if(SK.test(n)||LM.has(n)||!KIT.geo[n])continue;const g=KIT.geo[n];if(!g.boundingBox)g.computeBoundingBox();const bb=g.boundingBox;
       lists[n]=lists[n].filter(e=>{const c=Math.cos(e.ry||0),sn=Math.sin(e.ry||0);for(let u=0;u<=1;u+=0.2)for(let v=0;v<=1;v+=0.2){const lx=(bb.min.x+(bb.max.x-bb.min.x)*u)*0.98,lz=(bb.min.z+(bb.max.z-bb.min.z)*v)*0.98;
         if(cityPaved(e.x+lx*c+lz*sn,e.z-lx*sn+lz*c)>0.5){gone.add(e.x+','+e.z);return false;}}return true;});}   // last sweep: nothing on a street

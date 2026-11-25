@@ -132,6 +132,44 @@ def workbench():    # a heavy bench, a vice, tools, a grindstone on its frame
     for s2 in (-1, 1): pipe((-1.45, s2 * 0.15, 0.75), (-1.45 + s2 * 0.25, s2 * 0.15, 0.0), 0.04, 'F_wood', seg=5); pipe((-1.45, s2 * 0.15, 0.75), (-1.45 - s2 * 0.25, s2 * 0.15, 0.0), 0.04, 'F_wood', seg=5)
 PROPS['FerrinWorkbench'] = workbench
 
+def course(x0, x1, y0, y1, z0, z1, mat, n=None, gap=0.012, bev=0.025, jit=0.01):   # a run of separate dressed stones
+    L = x1 - x0; n = n or max(1, round(L / 0.7)); w = L / n
+    for i in range(n): box((x0 + w * (i + 0.5), (y0 + y1) / 2, (z0 + z1) / 2 + random.uniform(-jit, jit)), (w - gap, y1 - y0, z1 - z0), mat, bev)
+
+def yard_wall():   # 2 m of yard wall between two smiths' houses: basalt rubble on a dressed plinth, a ridged coping
+    box((0, 0, 0.12 - 0.6), (2.0, 0.62, 1.44), 'F_ashlar', 0.02)
+    box((0, 0, 0.24 + 0.9), (2.0, 0.5, 1.8), 'F_stone', 0.0)
+    course(-1.0, 1.0, -0.33, 0.33, 2.04, 2.2, 'F_ashlar', n=3)
+    for i in range(3): prism([Vector((-1.0 + i * 0.667 + 0.006, -0.3, 2.2)), Vector((-1.0 + i * 0.667 + 0.006, 0.3, 2.2)), Vector((-1.0 + i * 0.667 + 0.006, 0, 2.38))], 0.655, (-1, 0, 0), 'F_ashlar', 0.01)
+PROPS['FerrinYardWall'] = yard_wall
+
+def yard_gate():   # a cart gate into a yard: two dressed piers, a pair of iron gates, an iron overthrow with the cog of the Ferrin
+    W = 3.6; gw = 2.3
+    for sx in (-1, 1):
+        cx = sx * (gw / 2 + 0.33)
+        box((cx, 0, 0.12 - 0.6), (0.72, 0.72, 1.44), 'F_ashlar', 0.02)
+        for k in range(5): box((cx, 0, 0.12 + k * 0.5 + 0.25), (0.66 if k % 2 else 0.6, 0.66 if k % 2 == 0 else 0.6, 0.49), 'F_ashlar', 0.025)
+        box((cx, 0, 2.76), (0.8, 0.8, 0.16), 'F_ashlar', 0.03); prism([Vector((cx - 0.38, -0.38, 2.84)), Vector((cx + 0.38, -0.38, 2.84)), Vector((cx, 0, 3.12))], 0.0, (0, 0, 1), 'F_ashlar', 0.0) if False else None
+        bm = bmesh.new(); b = [bm.verts.new((cx + a * 0.38, c * 0.38, 2.84)) for a, c in [(-1, -1), (1, -1), (1, 1), (-1, 1)]]; t = bm.verts.new((cx, 0, 3.14))
+        bm.faces.new(list(reversed(b)))
+        for i in range(4): bm.faces.new([b[i], b[(i + 1) % 4], t])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces); add_bm(bm, 'F_ashlar', '')
+    for leaf in (-1, 1):   # the two leaves, standing a little ajar
+        x0 = leaf * 0.02; x1 = leaf * gw / 2
+        for z in (0.18, 1.0, 1.85): box(((x0 + x1) / 2, 0, z), (abs(x1 - x0), 0.06, 0.07), 'F_iron', 0.0)
+        for k in range(9):
+            x = x0 + (x1 - x0) * (k + 0.5) / 9; box((x, 0, 1.0), (0.03, 0.03, 1.75), 'F_iron', 0.0); cyl((x, 0, 1.92), 0.03, 0.0, 0.12, 'F_iron', seg=4)
+        box((x1 - leaf * 0.04, 0, 1.0), (0.07, 0.07, 1.9), 'F_iron', 0.0)
+        pipe((x0, 0, 0.25), (x1 - leaf * 0.05, 0, 1.8), 0.02, 'F_iron', seg=4)
+    pipe((-gw / 2, 0, 2.55), (gw / 2, 0, 2.55), 0.03, 'F_iron', seg=6)   # the overthrow
+    for i in range(12):
+        a0 = math.pi * i / 12; a1 = math.pi * (i + 1) / 12
+        pipe((math.cos(a0) * gw / 2, 0, 2.55 + math.sin(a0) * 0.45), (math.cos(a1) * gw / 2, 0, 2.55 + math.sin(a1) * 0.45), 0.025, 'F_iron', seg=4)
+    cyl((0, 0, 2.78), 0.26, 0.26, 0.06, 'F_rust', seg=12, axis='Y')
+    for i in range(8):
+        a = i / 8 * 2 * math.pi; box((math.cos(a) * 0.3, 0, 2.78 + math.sin(a) * 0.3), (0.09, 0.07, 0.09), 'F_rust', 0.0, rx=0)
+PROPS['FerrinYardGate'] = yard_gate
+
 def build(name, maker):
     PARTS.clear(); maker()
     me = bpy.data.meshes.new(name); obj = bpy.data.objects.new(name, me); scene.collection.objects.link(obj)
