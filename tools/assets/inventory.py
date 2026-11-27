@@ -55,6 +55,14 @@ used={}
 for key,ty in TYPES.items():
     for dd in ty['doodads']+ty['plot_doodads']: used.setdefault(dd[4],set()).add(ty['name'])
 used={k:', '.join(sorted(v)[:3]) for k,v in used.items()}
+# models brought in from elsewhere that must be checked against the new assets before any level uses them
+PENDING=[('Ferrin buildings (`godot/assets/buildings/ferrin`, `scripts/ferrin_kit.gd`): forge, shop, smelter, Ostrak\'s shrine, narrow house, '
+          'toolmaker\'s house, stair house, the Ironway Foundry',
+          'Ported from the three.js prototype (makehuman-bodies branch) with their own CC0 Poly Haven textures, tints and baked '
+          'weathering; preview: `tests/ferrin_sheet.tscn`. Not placed in any level. To check: Palette\'s library materials and the '
+          '"ember" palette, real sizes against the kit and the characters (tools/assets/model_sizes.py), their doors and plots '
+          'against the building-types floorplans, and the city-planning checker once placed.')]
+out+=['## Pending checks','','| Models | Status |','| --- | --- |']+['| %s | **pending:** %s |'%p for p in PENDING]+['']
 out+=table('Building parts for the Wayfolk types',BUILD,{})
 out+=table('Doodads used by the building types and Farhallow',NEED,used)
 open(os.path.join(HERE,'INVENTORY.md'),'w').write('\n'.join(out)+'\n')
