@@ -119,4 +119,37 @@ bm_stone=part('cyl','RockTrim',(0,0,0.25),r=0.42,r2=0.32,h=1.9,n=4); bm_stone.ro
 part('box','Iron_Dark',(0,-0.25,1.45),size=(0.26,0.12,0.3)); part('sphere','Glow',(0,-0.26,1.56),r=0.07,n=6)
 for z in (0.7,0.85,1.0): part('box','RockTrim_Dark',(0,-0.31+0.06*(z-0.7),z),size=(0.4,0.02,0.03))
 done('Waystone_Village')
+# dry-stone wall: a 2 m segment of rough fieldstones in four courses, no mortar, flat capstones on top (the well-off's
+# garden walls); seeded, so every build makes the same stones
+import random
+rnd=random.Random(11)
+z=0.0
+for course,(h,shade) in enumerate(((0.3,'RockTrim_Dark'),(0.28,'RockTrim'),(0.26,'RockTrim'),(0.24,'RockTrim_Light'))):
+    x=-1.0+(0.25 if course%2 else 0.0)*rnd.random()
+    while x<1.0:
+        w=min(rnd.uniform(0.32,0.55),1.0-x)
+        if w<0.12: break
+        d=0.55-course*0.05
+        part('box',rnd.choice([shade,'RockTrim','RockTrim_Dark']) if course<3 else shade,(x+w/2,rnd.uniform(-0.03,0.03),z),(rnd.uniform(-0.04,0.04),rnd.uniform(-0.05,0.05),rnd.uniform(-0.06,0.06)),size=(w-0.03,d,h-0.02))
+        x+=w
+    z+=h
+x=-1.0
+while x<1.0:
+    w=min(rnd.uniform(0.35,0.6),1.0-x)
+    part('box','RockTrim_Light',(x+w/2,0,z),(0,0,rnd.uniform(-0.05,0.05)),size=(w-0.02,0.5,0.1)); x+=w
+done('Drystone_Wall')
+# a wooden garden gate between two stone gateposts, 1.2 m opening
+for sx in (-0.8,0.8): part('box','RockTrim',(sx,0,0),size=(0.4,0.55,1.35)); part('box','RockTrim_Light',(sx,0,1.35),size=(0.46,0.6,0.1))
+for zz in (0.25,0.95): part('box','WoodTrim',(0,0,zz),size=(1.2,0.06,0.12))
+for k in range(6): part('box','WoodTrim_Wear',(-0.5+k*0.2,0,0.1),size=(0.1,0.05,1.0))
+part('box','WoodTrim_Dark',(0,0,0.55),(0,0.75,0),size=(1.3,0.05,0.09))
+done('Garden_Gate')
+# wattle hurdle: hazel rods woven between seven stakes, 2 m long, about 1 m tall (the poor's yards and plots)
+for k in range(7): part('cyl','WoodTrim_Wear',(-0.96+k*0.32,0,0),r=0.035,r2=0.025,h=1.1,n=4)
+for row in range(6):
+    zz=0.14+row*0.15
+    for k in range(6):
+        off=0.035*(1 if (k+row)%2 else -1)
+        part('box','Thatch_Dark' if row%3 else 'WoodTrim_Light',(-0.8+k*0.32,off,zz),(0,0,0.1*(1 if (k+row)%2 else -1)),size=(0.34,0.03,0.11))
+done('Wattle_Fence')
 print('done')

@@ -236,7 +236,7 @@ func _build(i: int) -> void:
 	for r in rooms:
 		if r[5] == "yard" and not str(r[4]).begins_with("arch"):
 			for e in _edges(r, roofs):
-				_fence_run(e, ty, L, b.zone == "rich", mir)
+				_fence_run(e, ty, L, b.zone, mir)
 	# wings and roofs
 	var wings := _wings(roofs)
 	for wg in wings: _roof(wg, storeys * STOREY * low, L, b.type in THATCH_TYPES or b.zone == "poor", kinds)
@@ -336,7 +336,7 @@ func _wall_run(e: Array, r: Array, ty: Dictionary, storeys: int, low: float, kin
 				var f := _piece(fill, pos + off, yaw)
 				if f and not fill.begins_with("Door"): f.scale = Vector3(1.0, low, 1.0)
 
-func _fence_run(e: Array, ty: Dictionary, L: Callable, wall: bool, mir: bool) -> void:
+func _fence_run(e: Array, ty: Dictionary, L: Callable, zone: String, mir: bool) -> void:
 	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
 	var length := a.distance_to(bb); var cnt := maxi(1, roundi(length / 2.0)); var seg := length / cnt
 	for k in cnt:
@@ -345,15 +345,21 @@ func _fence_run(e: Array, ty: Dictionary, L: Callable, wall: bool, mir: bool) ->
 		if op.size() > 0 and op[0] != "w": continue                # the gate
 		var pos: Vector3 = L.call(mid.x, mid.y)
 		var yaw := atan2(-n.x if mir else n.x, n.y)
-		if wall:
-			var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(seg, 1.7, 0.4); mi.mesh = bm
-			var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/RockTrim_detail.png"); m.albedo_color = Palette.col("RockTrim") / 0.78
-			m.uv1_triplanar = true; mi.material_override = m; mi.position = pos + Vector3(0, 0.85, 0); mi.rotation.y = yaw; _into.add_child(mi)
-			var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = bm.size; col.shape = bs
-			body.add_child(col); body.transform = mi.transform; _into.add_child(body)
-		else:
-			var f := _piece("Prop_WoodenFence_Single", pos, yaw)
-			if f: f.scale = Vector3(seg / 2.0, 1.0, 1.0)
+		var f := _piece_any(_fence_model(zone), pos, yaw)
+		if f: f.scale = Vector3(seg / 2.0, 1.0, 1.0)
+
+## who lives there decides the fence: dry stone for the well-off, woven wattle for the poor, the kit's rails for the rest
+func _fence_model(zone: String) -> String:
+	match zone:
+		"rich": return "res://assets/props/fogwright/Drystone_Wall.glb"
+		"poor": return "res://assets/props/fogwright/Wattle_Fence.glb"
+	return VILLAGE % "Prop_WoodenFence_Single"
+
+## a model by path inside the building being built (put() places it; the builder's frame is _into)
+func _piece_any(path: String, pos: Vector3, yaw: float) -> Node3D:
+	var n := put(path, pos, yaw, 1.0, true, "fixture", "a yard's wall or fence")
+	if n: placed[-1][1] = n.global_position          # placed holds world positions; pos was in the building's frame
+	return n
 
 ## roofed rooms merged into wings: two rooms that share a whole edge become one rectangle, until none do
 func _wings(roofs: Array) -> Array:
@@ -408,22 +414,18 @@ func _plot(pl: Dictionary) -> void:
 	var c := Vector2(pl.x, pl.y); var a: float = pl.a; var hw: float = pl.w * 0.5; var hh: float = pl.h * 0.5
 	var P := func(u: float, v: float) -> Vector2: return c + Vector2(u, v).rotated(a)
 	var walled: bool = pl.label == "walled garden"
+	var zone: String = BUILDINGS[int(pl.owner)].zone
 	var sides := [[P.call(-hw, -hh), P.call(-hw, hh)], [P.call(-hw, hh), P.call(hw, hh)], [P.call(hw, hh), P.call(hw, -hh)]]
 	for si in sides.size():
 		var e: Array = sides[si]; var p0: Vector2 = e[0]; var p1: Vector2 = e[1]; var length := p0.distance_to(p1); var cnt := maxi(1, roundi(length / 2.0))
 		for k in cnt:
 			var q0 := p0.lerp(p1, float(k) / cnt); var q1 := p0.lerp(p1, float(k + 1) / cnt); var mid := (q0 + q1) * 0.5
-			if si == 1 and k == cnt / 2: continue      # the back gate
 			var yaw := -atan2(q1.y - q0.y, q1.x - q0.x)
-			if walled:
-				var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(q0.distance_to(q1), 1.7, 0.4); mi.mesh = bm
-				var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/RockTrim_detail.png"); m.albedo_color = Palette.col("RockTrim") / 0.78
-				m.uv1_triplanar = true; mi.material_override = m; mi.position = W(mid, height(mid) + 0.75); mi.rotation.y = yaw; add_child(mi)
-				var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = bm.size; col.shape = bs
-				body.add_child(col); body.transform = mi.transform; add_child(body)
-			else:
-				var f := put(VILLAGE % "Prop_WoodenFence_Single", W(mid, height(mid)), yaw, 1.0, true, "fixture", "the plot's fence")
-				if f: f.scale = Vector3(q0.distance_to(q1) / 2.0, 1.0, 1.0)
+			var gate := si == 1 and k == cnt / 2                  # the back gate
+			if gate and not walled: continue
+			var path := "res://assets/props/fogwright/Garden_Gate.glb" if gate else _fence_model(zone)
+			var f := put(path, W(mid, height(mid)), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
+			if f: f.scale = Vector3(q0.distance_to(q1) / (2.06 if gate else 2.0), 1.0, 1.0)
 
 func _in_roofed(p: Vector2, grow := 0.0) -> bool:
 	for r in roofed:

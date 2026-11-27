@@ -295,6 +295,22 @@
       "repo": false,
       "note": "Idle, farming with plow, fishing (throw, wait, fight, pull), gathering, hammering, mining: villagers at work. Humanoid; needs retargeting to the Quaternius rig",
       "use": "animation"
+    },
+    {
+      "name": "Fences Walls PSX/PS1 (yugg0)",
+      "url": "https://yugg0.itch.io/fences-walls-psx-ps1",
+      "licence": "Free for personal and commercial games and to modify; may not be claimed or distributed under your own name (no standard licence named)",
+      "repo": false,
+      "use": "buildings",
+      "note": "PSX-style walls and fences with PNG textures. Not for the public repo; would need a private, uncommitted asset folder for builds"
+    },
+    {
+      "name": "Low Poly Fence Pack (Ami Polygon)",
+      "url": "https://amipolygon.itch.io/low-poly-fence-pack-free-complete",
+      "licence": "Free for personal and commercial games, modifiable, credit appreciated; no reselling or redistributing the files",
+      "repo": false,
+      "use": "buildings",
+      "note": "Stylized low-poly fences in three colours (FBX, GLB). Not for the public repo; Farhallow uses our own dry-stone wall, wattle hurdle and the kit's rail fence for now"
     }
   ]
 }
