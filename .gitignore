@@ -1,11 +1,13 @@
 # Blender exports before conversion, temp output, screenshots, node bits
 *.glb
 !assets/**/*.glb
+!godot/assets/**/*.glb
 _full.glb
 shots/
 node_modules/
 *.png
 !assets/**/*.png
+!godot/assets/**/*.png
 !docs/**/*.png
 
 # third-party source models (check their licenses before committing)
