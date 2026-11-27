@@ -3,6 +3,13 @@
 The village where every player begins, and which the Fog takes on the first evening (lore.md, "The start: the fall of
 Farhallow"). Planned with the city-planning skill: lore, logistics, building layout, paths, doodads.
 
+## 0. Who it is for
+
+Freefolk of every people, building mostly the Wayfolk way (`docs/peoples/wayfolk.md`), poorer and plainer: cottages
+and village street houses, thatch and shingles, few tiles, almost no pipes. Other peoples' family houses follow when
+their culture sheets are written. *(proposal)* An old waystone by the well, older than the village, its lamp kept lit by
+the shrine keeper.
+
 ## 1. Lore
 
 **Who lives here.** About 80 freefolk of every people: families who could not afford to move inward toward Aldrath, and a
