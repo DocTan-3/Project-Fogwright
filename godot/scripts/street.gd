@@ -37,8 +37,10 @@ func _ready() -> void:
 	for h in SOUTH:
 		_house(h, 1)
 	# the street's ends: a house across each end closes it, so it reads as a street, not a stage set
-	_house({"x": -22, "bays": 3, "deep": 4, "storeys": 2, "walls": ["UnevenBrick", "Plaster"], "door": [1]}, -1, -PI / 2, Vector3(-18, 0, 2))
-	_house({"x": 18, "bays": 3, "deep": 4, "storeys": 3, "walls": ["UnevenBrick", "Plaster", "Plaster"], "door": [1]}, -1, PI / 2, Vector3(18, 0, -4))
+	# (built facing +z in their own frame, then turned so the front faces back up the street, and moved so the front stands
+	# at the street's end: the west house's front at x = -18, the east house's at x = 18)
+	_house({"x": 0, "bays": 4, "deep": 4, "storeys": 2, "walls": ["UnevenBrick", "Plaster"], "door": [1]}, -1, PI / 2, Vector3(-14, 0, 0))
+	_house({"x": 0, "bays": 4, "deep": 4, "storeys": 3, "walls": ["UnevenBrick", "Plaster", "Plaster"], "door": [2]}, -1, -PI / 2, Vector3(14, 0, 0))
 	# beyond the cobbles: packed earth (one plane, so it costs nothing)
 	var earth := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = Vector2(160, 160); earth.mesh = pm
 	var mat := StandardMaterial3D.new(); mat.albedo_color = Palette.col("earth"); mat.roughness = 1.0; earth.material_override = mat

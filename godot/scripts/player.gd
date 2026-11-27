@@ -23,9 +23,6 @@ var _landing := 0.0
 
 func _ready() -> void:
 	_model = $Model
-	_anim = _find_anim_player()
-	if _anim:
-		_anim.playback_default_blend_time = 0.18
 
 func _find_anim_player() -> AnimationPlayer:
 	# the character model has no animations of its own; the library's AnimationPlayer is added beside it (see main.gd)
@@ -71,22 +68,41 @@ func _physics_process(delta: float) -> void:
 		_model.rotation.y = lerp_angle(_model.rotation.y, want, 1.0 - exp(-TURN_SPEED * delta))
 	_animate(Vector2(velocity.x, velocity.z).length())
 
+var _tree: AnimationTree
+var _blend := 0.0
+var _state := ""
+var _state_time := 0.0   # how long the animation state machine has been in its current state
+
+func setup_animation(ap: AnimationPlayer, tree: AnimationTree) -> void:
+	_anim = ap; _tree = tree
+
+## where the feet would naturally travel at a point of the blend space (the clips' own speeds, measured from root motion)
+func _natural(pos: float) -> float:
+	if pos <= WALK_SPEED: return lerpf(0.0, WALK_ANIM_SPEED, pos / WALK_SPEED)
+	if pos <= RUN_SPEED: return lerpf(WALK_ANIM_SPEED, RUN_SPEED, (pos - WALK_SPEED) / (RUN_SPEED - WALK_SPEED))
+	return lerpf(RUN_SPEED, SPRINT_SPEED, clampf((pos - RUN_SPEED) / (SPRINT_SPEED - RUN_SPEED), 0.0, 1.0))
+
 func _animate(ground_speed: float) -> void:
-	if not _anim:
+	if not _tree:
 		return
-	var clip := "Idle"
-	var rate := 1.0
+	var dt := get_physics_process_delta_time()
+	_blend = lerpf(_blend, ground_speed, 1.0 - exp(-12.0 * dt))       # eased, so the mix never jumps
+	_tree.set("parameters/ground/loco/blend_position", _blend)
+	var nat := _natural(_blend)
+	_tree.set("parameters/ground/rate/scale", clampf(_blend / nat, 0.7, 1.8) if _blend > 0.25 and nat > 0.01 else 1.0)
+	var pb: AnimationNodeStateMachinePlayback = _tree.get("parameters/playback")
+	var state := pb.get_current_node()
+	if state != _state:
+		_state = state; _state_time = 0.0
+	_state_time += dt
 	if not is_on_floor() and _air_time > 0.12:
-		clip = "Jump" if velocity.y < 1.0 else "Jump_Start"
-	elif _landing > 0.0:
-		clip = "Jump_Land"
-	elif ground_speed > (RUN_SPEED + SPRINT_SPEED) * 0.5:
-		clip = "Sprint"; rate = ground_speed / SPRINT_SPEED
-	elif ground_speed > (WALK_SPEED + RUN_SPEED) * 0.5:
-		clip = "Jog_Fwd"; rate = ground_speed / RUN_SPEED
-	elif ground_speed > 0.3:
-		clip = "Walk"; rate = ground_speed / WALK_ANIM_SPEED
-	var full := "ual/" + clip
-	if _anim.current_animation != full:
-		_anim.play(full)
-	_anim.speed_scale = clamp(rate, 0.5, 2.0)
+		if state == "ground" or state == "land":
+			pb.travel("takeoff" if velocity.y > 1.0 else "fall")
+		elif state == "takeoff" and (velocity.y < 0.5 or _state_time > 0.55):
+			pb.travel("fall")
+	elif is_on_floor():
+		if state == "fall" or state == "takeoff":
+			# landing standing still plays the landing; landing on the move runs straight on
+			pb.travel("land" if ground_speed < 1.0 and _landing > 0.0 else "ground")
+		elif state == "land" and (ground_speed > 1.0 or _state_time > 0.7):
+			pb.travel("ground")   # a short landing, cut as soon as you move on
