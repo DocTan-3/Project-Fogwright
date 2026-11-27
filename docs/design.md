@@ -189,7 +189,7 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 **What feeds it**
 
-- Distance from the gods: thinnest around the gods' cities and Aldrath's central land, thicker and more dangerous toward the outer coasts and the Sundering at the world's edge.
+- Distance from Aldrath and the gods: thinnest in Aldrath's heartland and around each god's city, thicker and more dangerous toward the far coasts and the Sundering at the world's edge. It weakens life itself there: poorer harvests, sicklier herds, harder winters.
 
 - Night and storms: surges roll in and press against walls.
 
@@ -225,7 +225,7 @@ Terrain and biomes are generated from a seed, but places, regions and cities are
 
 - **Terrain.** Layered noise for height, moisture and temperature produces biomes. Rivers trace downhill from mountains, which matters because waterwheels need them.
 
-- **Biomes by region, danger by distance.** Each shard of Erde has its own climate (see Geography): cold in the north, hot in the south, temperate in the east, volcanic in the west, forested in the north-west. Danger rises outward: lowest on Aldrath's central land, rising across each shard from its god's city to its outer coast, highest in the Sundering. Noise bends the bands so they feel natural.
+- **Biomes by region, danger by distance.** Each homeland has its own climate (see Geography): cold in the north, hot in the south, temperate in the east, volcanic in the west, forested in the west of the main continent. Danger and the Fog rise with distance from Aldrath: lowest in its heartland, rising toward each region's far coast, highest in the Sundering. Noise bends the bands so they feel natural.
 
 - **Ruins.** Placed by a second seeded pass, built from room templates assembled by rules (towers, vaults, aqueduct segments, villas). Loot tables depend on biome and ruin type, and ruins respawn their lesser loot over time so the world doesn't run dry.
 
@@ -241,7 +241,7 @@ Terrain and biomes are generated from a seed, but places, regions and cities are
 
 Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a village of twenty houses. Windhelm and Solitude are style references: dense, vertical, and built into dramatic geography.
 
-- **The gods' cities:** Aldrath's outer city, the greatest city of the third age and the trade hub where all players meet, and the city of each living god, each with a warp at its heart: Hollin's Cross (the starter port), Skarvhold, Solmere, Ashforge, Qaraseth and Dun Brannoch (working names; see the lore). Launch can begin with Aldrath's outer city and one neighbouring domain, opening the others in later updates.
+- **The gods' cities:** Aldrath's outer city, by far the greatest city of the third age and the trade hub where all players meet, and each people's hometown, smaller and harder-pressed the farther it lies from Aldrath, each with its god and a warp at its heart: Hollin's Cross (the starter port), Skarvhold, Solmere, Ashforge, Qaraseth and Dun Brannoch (working names; see the lore). Launch can begin with Aldrath's outer city and one neighbouring domain, opening the others in later updates.
 
 - **Ruined cities of the old empire:** huge, Fog-filled and half-collapsed exploration zones, with persistent dungeons under their towers.
 
@@ -264,15 +264,14 @@ Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a 
 
 The land must feel real at scale: mountains that feel like mountains, seas that feel like seas.
 
-**World layout (follows the lore).** Erde was broken outward from where Aldrath stood, so the world is a ring of shards around a central land, 20 km across in all:
+**World layout (follows the lore).** Continents and isles, like World of Warcraft's, 20 km across in all, with natural coastlines (old cliffs and chasms still show where Erde tore apart):
 
-- **The central land** holds Aldrath's outer city, the starting village about a kilometre to its south, and Hollin's Cross, the starter port, a kilometre further south, where ship routes leave like spokes.
-- **The inner sea** around it is the safe sea, wide enough to lose sight of land; it grows wilder toward the edges.
-- **The shards:** the northern continent (the Rimeholds' fjords and glaciers, the Redwold's forested hills in its west, and a mountain spine holding Animari ruins), the Sere's deserts in the south, the Aurelan Isles in the east and the volcanic Slag Isles in the west, which sit on the deepest crack of the split. Each shard is a few kilometres across, about the size of a Skyrim hold.
-- **Broken edges are cliffs:** every coast facing the centre is a torn cliff that still matches its neighbour like broken pottery; outer coasts are older and gentler. Rivers run from the inner ridges to the outer coasts, and cities stand where rivers cross or meet the sea.
-- **The Sundering** lies beyond the outer coasts: no man's land where the Fog thickens into the wall at the world's edge. The Last Bastion faces it from the north, and the Forsaken landed on the Sere's south-western coast.
+- **The main continent** holds Aldrath's heartland at its centre: the outer city, by far the biggest city, the starting village and Hollin's Cross, the starter port, where ship routes leave. The Redwold's forested hills (the Ruadhan) lie in its west.
+- **The other homelands:** the Rimeholds on the northern continent (fjords, glaciers, high peaks, a mountain spine with Animari ruins), the Sere's deserts on the southern continent, the Aurelan Isles in the east and the volcanic Slag Isles in the west.
+- **Life weakens with distance from Aldrath:** thinner harvests, sicklier herds, shorter seasons and thicker Fog toward the world's edge, so the hometowns are smaller and specialised, and food flows outward while ores, furs, timber, spices and relics flow inward. Each people fares differently (see the lore's table of hometowns).
+- **The Sundering** lies beyond the outer coasts: no man's land where the Fog thickens into the wall at the world's edge. The Last Bastion faces it from the north, and the Forsaken landed on the southern continent's far coast.
 
-The first sketch, drawn from the lore, is in `docs/references/world-sketch-v1.png`; placements marked as proposals in the lore are still open.
+A first sketch from the lore is in `docs/references/world-sketch-v2.png`; placements the lore marks as proposals are still open.
 
 **Mountains**
 

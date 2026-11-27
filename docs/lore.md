@@ -169,32 +169,31 @@ The Gods themselves are a race of higher power.
 
 ## Regions and cities (draft proposal)
 
-The world is a flat map of continents and islands, like World of Warcraft's: two great continents and smaller lands, with more for future releases. At the centre of the world stands the **city of the 1st God, Aldrath**. Its inner walls have been sealed by magic for so long that no one alive has seen inside. At the edges of the currently known world lies the **Sundering**, where Erde was broken: no man's land, where horror stories are born, sailors go missing and the Fog is strongest. It is the frontier for exploration. Some places are shared by several peoples. Each living god sits at the heart of a city, and each city has a warp at its centre. Which people lives on which continent is a proposal; names are working names.
+The world is a map of continents and isles, like World of Warcraft's. When the 1st God split Erde, the land broke into continents that drifted apart across the seas; their coasts have long since weathered into natural shapes, though old cliffs and chasms still show where the land tore. At the heart of the main continent stands the **city of the 1st God, Aldrath**, the greatest city of the third age. Its inner walls have been sealed by magic for so long that no one alive has seen inside. At the edges of the known world lies the **Sundering**, where Erde was broken: no man's land, where horror stories are born, sailors go missing and the Fog is strongest. Each living god sits at the heart of a city, and each city has a warp at its centre. Names are working names.
 
-*[Diagram: schematic world map · domains, warps and the Fog (proposal, not to scale). It lives in the online doc and does not export to Markdown.]*
+### Life and the Fog
 
-Not to scale: a schematic of where each domain sits relative to the others, for discussion.
+The Fog does not only breed monsters: it weakens life itself. The farther a place lies from Aldrath, the thinner its harvests, the sicklier its herds, the shorter its growing seasons and the harder its winters. Everyone believes this is **Aldrath's power**: the 1st God's sealed city radiates a protection that holds the Fog back, strongest at the centre and fading with distance, and each lesser god can only keep a smaller circle clear around their own city. So the centre is where life is easiest, and people have drifted toward it for generations.
 
-| Region | Where | People | God | City | Landscape |
+- **Aldrath is the biggest city by far:** a crowded refuge and melting pot where every people has a quarter, the trading hub of the world, as Stormwind or Orgrimmar are in their worlds.
+- **Each people still keeps a hometown,** its capital and the seat of its god, but these are smaller, fortified and specialised. How each one fares depends on its people (below).
+- **Trade holds the world together:** grain and food flow outward from the fertile centre; ores, furs, timber, spices, beasts and relics flow inward. No people can live alone, which is why the crafts interlock.
+- **The hidden truth:** the protection is real, but it also keeps the peoples gathered and dependent on Aldrath, exactly where he wants them. Players learn this late.
+
+### The hometowns
+
+| Region | Where | People | God | Hometown | How it fares |
 | --- | --- | --- | --- | --- | --- |
-| The Aurelan Isles | Islands to the east | Aurelans | Maelis | **Solmere**: walled river city on a stone crossing, like Windhelm *(proposal)* | Fields, manors, orchards |
-| The Rimeholds | Northern continent, north (proposal) | Hrimfolk | Hrothvar | **Skarvhold**: on a stone arch above a fjord, like Solitude *(proposal)* | Fjords, glaciers, high peaks |
-| The Slag Isles | Islands to the west (proposal) | Ferrin | Ostrak | **Ashforge**: carved into a volcano's flank *(proposal)* | Volcanoes, rolling hills, mines |
-| The Sere | Southern continent (proposal) | Zarhim | Khesra | **Qaraseth**: oasis city, a gathering place for caravans *(proposal)* | Dunes, canyons, oases |
-| The Redwold | Northern continent, west (proposal) | Ruadhan | Brannoch | **Dun Brannoch**: hill fort above the forest *(proposal)* | Forests, hills, rare metals |
-| Hollin's Cross | Central land, south of the starting village: the starter port | Wayfolk | Hollin | **Hollin's Cross**: crossroads trade city where all peoples meet *(proposal)* | Roads and rivers converge |
-| The Last Bastion | Northern continent, outer coast facing the Sundering (proposal) | The Lantern Vigil | Galeth | Fortress-monastery of the Vigil *(proposal)*; falls during the story | Walls against the Fog |
-| The Forsaken lands | Landed on the mainland; a landing on the southern continent's west coast (proposal) | The Forsaken | The 14th, hidden | Unknown | The evil lands |
-
-**How the land makes sense.**
-
-1. **The shards still fit together.** Erde was split outward from where Aldrath stood, so the continents and islands around his city have inner coastlines that match like broken pieces of one land.
-2. **Broken edges are cliffs.** Coasts facing the centre are sheer cliffs and torn ridges; outer coasts facing the Sundering are older and gentler.
-3. **The inner sea is the safe sea.** Ship routes run like spokes between the central land and each shard; the water grows wilder toward the Sundering.
-4. **Climate follows the map.** The Rimeholds lie coldest in the north, the Sere hottest in the south, the Aurelan Isles temperate in the east, the Redwold wet and forested in the west.
-5. **The Slag Isles sit on the deepest crack** of the split; their volcanoes are the world's wound still bleeding heat.
-6. **Danger comes from the edges.** The Forsaken landed on an outer coast; the Last Bastion stands on an outer coast, facing the Sundering.
-7. **Rivers run from the inner ridges to the outer coasts**, and cities stand where rivers cross or meet the sea.
+| Aldrath's heartland | Heart of the main continent | All peoples; Wayfolk most of all | Aldrath | **Aldrath**: the outer city, a quarter for each people around the plaza of the twelve | Thriving and crowded; the safest land in the world |
+| Hollin's Cross | Main continent, near Aldrath: the starter port | Wayfolk | Hollin | **Hollin's Cross**: crossroads and port where all peoples meet | Thriving: close to the centre, busy with trade |
+| The Redwold | Main continent, the western hills and forests | Ruadhan | Brannoch | **Dun Brannoch**: hill fort above the forest | Struggling: the forests sicken and the herds thin; many Ruadhan go to Aldrath as traders and beast-dealers |
+| The Aurelan Isles | Isles to the east | Aurelans | Maelis | **Solmere**: walled river city on a stone crossing | Declining: once the breadbasket of the world, now its fields fail; proud lords hold on to empty manors |
+| The Rimeholds | The northern continent | Hrimfolk | Hrothvar | **Skarvhold**: on a stone arch above a fjord | Enduring: crops never grew there; the Hrimfolk live by sea, hunt and trade, and the Fog has made little worse |
+| The Slag Isles | Isles to the west | Ferrin | Ostrak | **Ashforge**: carved into a volcano's flank | Thriving against the odds: volcanic heat and forge smoke keep the Fog thinner; they trade metal for food |
+| The Sere | The southern continent | Zarhim | Khesra | **Qaraseth**: oasis city, a gathering place for caravans | Holding: the Zarhim always lived with scarcity, and their ways still work |
+| The Last Bastion | The northern continent's far coast, facing the Sundering | The Lantern Vigil | Galeth | Fortress-monastery of the Vigil | Besieged: it stands at the edge of the Fog; it falls during the story |
+| The Forsaken lands | A landing on the southern continent's far coast | The Forsaken | The 14th, hidden | Unknown | The evil lands |
+| (none) | Everywhere | Ilvari | Seraveth | No hometown: enclaves and caravans | Fading: their numbers dwindle as their magic did |
 
 **The start.** Players begin in a starting village on the central land near Aldrath's outer city, where they learn the basics. Hollin's Cross is the starter port town about a kilometre to the village's south, where the first ship routes leave; Aldrath's outer city stands about a kilometre to the north. Like Riverwood, Whiterun and Falkreath, places sit a real journey apart. Quests lead onward without hand-holding: players find their own way.
 
@@ -218,7 +217,7 @@ Not to scale: a schematic of where each domain sits relative to the others, for 
 - **Verdane's groves**: shrines of nature magic scattered across every region, since she taught all peoples *(proposal)*.
 - **The Ilvari** have no city; they travel, with small enclaves and caravans.
 
-**Scale:** the world stays within the 20 km budget for now, spread across the continents and islands, so each domain spans a few kilometres. Following the plan to build a playable world first, launch could start with Aldrath's outer city and one neighbouring domain, then open further domains in later updates *(proposal)*.
+**Scale:** the world stays within the 20 km budget for now, spread across the continents and isles: Aldrath's heartland is the largest region, and each hometown's domain spans a few kilometres. Following the plan to build a playable world first, launch could start with Aldrath's outer city and one neighbouring domain, then open further domains in later updates *(proposal)*.
 
 **Open:** who lives in Aldrath's outer city and how it is reached; which peoples share which lands; where the Forsaken came from and where the shattered capital lies; which smaller lands are saved for future releases.
 
