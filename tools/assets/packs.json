@@ -181,6 +181,34 @@
       "licence": "CC0 1.0",
       "repo": true,
       "note": "Walls, doors, floors, stairs, traps, chests, props; separated by material. Saved for later (dungeons and Breaches); not downloaded yet"
+    },
+    {
+      "name": "Temple Modular Collection (Fertile Soil Productions)",
+      "url": "https://fertile-soil-productions.itch.io/temple-modular-collection",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Modular temple and palace pieces; saved for later (Aldrath's plaza, shrines). Not downloaded yet"
+    },
+    {
+      "name": "Free Stylized Food (NewLua Studios)",
+      "url": "https://newlua-studios.itch.io/free-stylized-food",
+      "licence": "Free for games incl. commercial, no credit required; no named licence (not stated as CC0)",
+      "repo": false,
+      "note": "Food props (taverns, markets, kitchens); keep out of the public repo until the licence is confirmed redistributable. Not downloaded yet"
+    },
+    {
+      "name": "Hit FX (Binbun)",
+      "url": "https://binbun3d.itch.io/hit-fx",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Godot hit and impact effects; the free version has 6 presets, the full pack is paid. Saved for combat"
+    },
+    {
+      "name": "Flame FX (Binbun)",
+      "url": "https://binbun3d.itch.io/flame-fx",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Godot flame effects (12 styles in the full pack); free version available. For forges, hearths, torches and the burning of Farhallow"
     }
   ]
 }
