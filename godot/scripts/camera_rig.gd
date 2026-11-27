@@ -35,6 +35,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		pitch = clamp(pitch - event.relative.y * SENSITIVITY, MIN_PITCH, MAX_PITCH)
 
 func _process(delta: float) -> void:
+	yaw += (Input.get_action_strength("turn_left") - Input.get_action_strength("turn_right")) * 2.2 * delta   # Q and E turn the view
 	if target:
 		var want := target.global_position + Vector3(0, 1.55, 0)   # about the shoulders
 		global_position = global_position.lerp(want, 1.0 - exp(-FOLLOW * delta))

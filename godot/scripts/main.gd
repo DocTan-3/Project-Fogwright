@@ -42,7 +42,17 @@ func _build_tree(model: Node3D, ap: AnimationPlayer) -> AnimationTree:
 	var mix := AnimationNodeBlend2.new(); fall.add_node("mix", mix)
 	fall.connect_node("mix", 0, "air"); fall.connect_node("mix", 1, "calm"); fall.connect_node("output", 0, "mix")
 	var sm := AnimationNodeStateMachine.new()
-	sm.add_node("ground", ground); sm.add_node("takeoff", clip.call("Jump_Start")); sm.add_node("fall", fall); sm.add_node("land", clip.call("Jump_Land"))
+	# the take-off clip pushes off in its first 0.07 s, holds a tucked air pose, then straightens up as if standing; a jump
+	# lasts about 0.7 s, so only the push-off and the tucked part play (0.06 to 0.68 s), and the landing follows from there
+	var tclip: AnimationNodeAnimation = clip.call("Jump_Start")
+	tclip.use_custom_timeline = true; tclip.start_offset = 0.06; tclip.timeline_length = 0.5; tclip.stretch_time_scale = false
+	tclip.loop_mode = Animation.LOOP_NONE
+	var takeoff := AnimationNodeBlendTree.new(); takeoff.add_node("clip", tclip)   # 0.5 s of clip over 0.72 s: the whole jump
+	var tr := AnimationNodeTimeScale.new(); takeoff.add_node("rate", tr); takeoff.connect_node("rate", 0, "clip"); takeoff.connect_node("output", 0, "rate")
+	# the landing dips in 0.2 s and is up again by 0.7 s: played at 1.6x and cut after its recovery
+	var land := AnimationNodeBlendTree.new(); land.add_node("clip", clip.call("Jump_Land"))
+	var lr := AnimationNodeTimeScale.new(); land.add_node("rate", lr); land.connect_node("rate", 0, "clip"); land.connect_node("output", 0, "rate")
+	sm.add_node("ground", ground); sm.add_node("takeoff", takeoff); sm.add_node("fall", fall); sm.add_node("land", land)
 	var link := func(a: String, b: String, fade: float, at_end := false):
 		var t := AnimationNodeStateMachineTransition.new(); t.xfade_time = fade
 		if at_end:
@@ -52,7 +62,7 @@ func _build_tree(model: Node3D, ap: AnimationPlayer) -> AnimationTree:
 	var start := AnimationNodeStateMachineTransition.new(); start.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO
 	sm.add_transition("Start", "ground", start)
 	link.call("ground", "takeoff", 0.08); link.call("ground", "fall", 0.25)
-	link.call("takeoff", "fall", 0.2); link.call("takeoff", "ground", 0.15)
+	link.call("takeoff", "fall", 0.3); link.call("takeoff", "ground", 0.15); link.call("takeoff", "land", 0.06)
 	link.call("fall", "ground", 0.12); link.call("fall", "land", 0.08); link.call("land", "ground", 0.22)
 	var tree := AnimationTree.new()
 	tree.name = "AnimationTree"
@@ -61,4 +71,6 @@ func _build_tree(model: Node3D, ap: AnimationPlayer) -> AnimationTree:
 	tree.tree_root = sm
 	tree.active = true
 	tree.set("parameters/fall/mix/blend_amount", 0.6)
+	tree.set("parameters/land/rate/scale", 1.6)
+	tree.set("parameters/takeoff/rate/scale", 0.7)
 	return tree

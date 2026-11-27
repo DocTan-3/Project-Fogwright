@@ -1,5 +1,5 @@
 ## Fogwright's controls, defined in code so they are easy to read and change: WASD or the arrows to move, Space to jump,
-## Shift to sprint, Ctrl to toggle walking; the mouse wheel zooms; the right mouse button (held) turns the camera.
+## Shift to sprint, Ctrl to toggle walking, Q and E to turn the camera, F2 to switch real-time shadows; the mouse wheel zooms; the right mouse button (held) turns the camera.
 extends Node
 
 const ACTIONS := {
@@ -10,6 +10,9 @@ const ACTIONS := {
 	"jump": [KEY_SPACE],
 	"sprint": [KEY_SHIFT],
 	"walk_toggle": [KEY_CTRL],
+	"turn_left": [KEY_Q],
+	"turn_right": [KEY_E],
+	"shadows_toggle": [KEY_F2],
 }
 
 func _enter_tree() -> void:

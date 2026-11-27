@@ -6,7 +6,7 @@ extends Node
 # the colour each surface should come out as (sRGB), per palette; plus the light that suits it
 const PALETTES := {
 	"hearth": {   # warm and sunlit: honey stone, cream plaster, terracotta roofs, bright brass
-		"Plaster": "e6d6b8", "WoodTrim": "86522e", "RockTrim": "b9a98c", "Brick": "b8694c", "RedBrick": "a4483a",
+		"Plaster": "e6d6b8", "WoodTrim": "86522e", "RockTrim": "b9a98c", "Brick": "a89c8a", "RedBrick": "a4483a",
 		"UnevenBrick": "a99f90", "RoundTiles": "b5532e", "MetalOrnaments": "c49a4a", "earth": "7a6448", "grass": "5f7a3a", "sand": "c2ad80", "sea": "2a6478", "path": "9a7d58",
 		"sun": "fff2dc", "sun_energy": 1.35, "sky_top": "5d8fd0", "sky_horizon": "c9d6e2"},
 	"fog": {      # cool and muted: grey-blue stone, pale plaster, weathered wood, slate roofs, verdigris copper

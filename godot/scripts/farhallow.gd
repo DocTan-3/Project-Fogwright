@@ -33,6 +33,14 @@ const BUILDINGS := [
 	[Vector2(66, 26), 4, 4, 0.1, 2, "house"], [Vector2(52, 24), 4, 6, -0.2, 1, "house"],
 ]
 const WELL := Vector2(64, 50)
+const PIER := [Vector2(87, 81), Vector2(87.5, 90), Vector2(87.5, 99), Vector2(96, 100.5)]
+# where villagers go: the well, the tavern, the cottages, the field, the gate road, the harbour, the pier, the smithy, the shrine
+const GOAL_POINTS := [Vector2(64, 50), Vector2(30, 64), Vector2(24, 70), Vector2(42, 26), Vector2(58, 26), Vector2(87.5, 99),
+	Vector2(96, 100.5), Vector2(92, 38), Vector2(103, 23), Vector2(62, 80), Vector2(70, 72), Vector2(40, 58)]
+var GOALS := []
+var graph := {}
+var shade_grid: PackedFloat32Array
+var trees := []        # [position (world), scale]
 
 var rng := RandomNumberGenerator.new()
 var noise := FastNoiseLite.new()
@@ -65,7 +73,11 @@ func _ready() -> void:
 	_field()
 	_woods()
 	_clutter()
+	_graph()
+	_villagers()
+	_dress_player()
 	call_deferred("_light")
+	_bake_when_ready()
 	var pl: Node3D = get_parent().get_node_or_null("Player")
 	if pl: pl.global_position = W(WELL + Vector2(2.5, 2.5), height(WELL + Vector2(2.5, 2.5)) + 0.1)
 
@@ -106,7 +118,7 @@ func _terrain() -> void:
 			var p := Vector2(x0 + i, y0 + j); var h := height(p); var c := _coast_signed(p)
 			var col := grass.lerp(grass.darkened(0.18), 0.5 + 0.5 * noise.get_noise_2d(p.x * 3.0, p.y * 3.0))
 			col = col.lerp(sand, 1.0 - smoothstep(2.5, 6.5, c)); if c < 0.5: col = wet
-			st.set_color(col); st.add_vertex(W(p, h))
+			st.set_color(col * shade(p)); st.add_vertex(W(p, h))
 	for j in ny:
 		for i in nx:
 			var a := j * (nx + 1) + i
@@ -115,7 +127,10 @@ func _terrain() -> void:
 	st.generate_normals()
 	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.name = "Terrain"
 	var mat := StandardMaterial3D.new(); mat.vertex_color_use_as_albedo = true; mat.roughness = 1.0; mi.material_override = mat
-	add_child(mi); mi.create_trimesh_collision()
+	add_child(mi)
+	if not has_node("TerrainBody"):
+		mi.create_trimesh_collision(); mi.get_child(0).name = "TerrainBody"; mi.get_child(0).reparent(self)
+	if not shade_grid.is_empty(): return
 	# land beyond the terrain's edges, to the horizon: four planes round it (north and west; the sea fills the south-east)
 	var fm := StandardMaterial3D.new(); fm.albedo_color = grass.darkened(0.15); fm.roughness = 1.0
 	var e0 := W(Vector2(x0, y0)); var e1 := W(Vector2(x0 + nx, y0 + ny))
@@ -147,13 +162,13 @@ func _path(pts: Array, width: float) -> void:
 		var hw := width * 0.5 * (1.0 + 0.18 * noise.get_noise_2d(p.x * 6.0, p.y * 6.0))   # ragged, worn edges
 		for s in [-1.0, 1.0]:
 			var q: Vector2 = p + side * hw * s
-			st.set_color(dirt.lerp(dirt.darkened(0.15), 0.5 + 0.5 * noise.get_noise_2d(q.x * 9.0, q.y * 9.0)))
+			st.set_color(dirt.lerp(dirt.darkened(0.15), 0.5 + 0.5 * noise.get_noise_2d(q.x * 9.0, q.y * 9.0)) * shade(q))
 			st.add_vertex(W(q, height(q) + 0.05))
 	for i in baked.size() - 1:
 		var a := i * 2
 		st.add_index(a); st.add_index(a + 2); st.add_index(a + 1); st.add_index(a + 1); st.add_index(a + 2); st.add_index(a + 3)
 	st.generate_normals()
-	var mi := MeshInstance3D.new(); mi.mesh = st.commit()
+	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.add_to_group("path_mesh")
 	var mat := StandardMaterial3D.new(); mat.vertex_color_use_as_albedo = true; mat.roughness = 1.0; mi.material_override = mat
 	add_child(mi)
 
@@ -339,10 +354,17 @@ func _field() -> void:
 	scatter(NATURE % "Plant_1", plots, Vector2(0.5, 0.7))
 
 func _woods() -> void:
-	var trees := _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0)
-	for i in trees.size():
+	var pts := _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0)
+	var by_kind := {}
+	for i in pts.size():
 		var kind := ("CommonTree_%d" % (i % 5 + 1)) if i % 3 != 0 else ("Pine_%d" % (i % 5 + 1))
-		put(NATURE % kind, trees[i], rng.randf() * TAU, rng.randf_range(0.9, 1.35), i % 4 == 0)
+		if not by_kind.has(kind): by_kind[kind] = []
+		by_kind[kind].append(pts[i])
+		trees.append([pts[i], 1.12])
+		var body := StaticBody3D.new(); body.collision_layer = 2; body.collision_mask = 0   # trunks block walking, not the shadow rays
+		var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 0.35; cyl.height = 4.0; col.shape = cyl
+		body.add_child(col); body.position = pts[i] + Vector3(0, 2.0, 0); add_child(body)
+	for kind in by_kind: scatter(NATURE % kind, by_kind[kind], Vector2(0.9, 1.35))
 	scatter(NATURE % "Grass_Common_Short", _ground_pts(1400, func(p): return _coast_signed(p) > 5.0 and not _near_built(p) and not (p.x > 14 and p.x < 42 and p.y > 14 and p.y < 47)))
 	scatter(NATURE % "Flower_3_Group", _ground_pts(140, func(p): return _in_clearing(p) and _coast_signed(p) > 6.0 and not _near_built(p, 1.5)), Vector2(0.28, 0.4))
 	scatter(NATURE % "Fern_1", _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0))
@@ -368,9 +390,120 @@ func _light() -> void:
 	var sun: DirectionalLight3D = get_parent().get_node_or_null("Sun")
 	if sun:
 		sun.rotation_degrees = Vector3(-17, -62, 0); sun.light_color = Color(1.0, 0.8, 0.58); sun.light_energy = 1.05
-		sun.directional_shadow_max_distance = 80.0
+		sun.directional_shadow_max_distance = 30.0
+		sun.shadow_enabled = false          # baked; F2 turns on live shadows for characters
 	var env: Environment = get_parent().get_node("WorldEnvironment").environment
 	env.tonemap_exposure = 0.9; env.ambient_light_energy = 0.45
 	var sky: ProceduralSkyMaterial = env.sky.sky_material
 	sky.sky_top_color = Color(0.42, 0.56, 0.74); sky.sky_horizon_color = Color(0.93, 0.78, 0.6)
 	sky.ground_horizon_color = Color(0.93, 0.78, 0.6); sky.sun_angle_max = 30.0
+
+
+# ---------------------------------------------------------------- villagers
+func _graph() -> void:
+	var key := func(p: Vector2) -> String: return "%d,%d" % [roundi(p.x), roundi(p.y)]
+	var ids := {}
+	var add := func(p: Vector2) -> int:
+		var k: String = key.call(p)
+		if not ids.has(k): ids[k] = ids.size(); graph[ids[k]] = [p, []]
+		return ids[k]
+	var runs := []
+	for path in PATHS: runs.append((path[0] as Array).slice(1) if (path[0][0] as Vector2).y < 0 else path[0])
+	runs.append(PIER)
+	for run in runs:
+		var prev := -1
+		for p in run:
+			var id: int = add.call(p)
+			if prev >= 0 and not (graph[prev][1] as Array).has(id): graph[prev][1].append(id); graph[id][1].append(prev)
+			prev = id
+	for g in GOAL_POINTS:
+		var k: String = key.call(g)
+		if ids.has(k): GOALS.append(ids[k])
+
+const LOOKS := [
+	{"body": "res://assets/characters/quaternius/Superhero_Male_Head.gltf", "outfit": "res://assets/characters/quaternius/outfits/Male_Peasant.gltf", "hair": "res://assets/characters/quaternius/hair/Hair_SimpleParted.gltf"},
+	{"body": "res://assets/characters/quaternius/Superhero_Female_Head.gltf", "outfit": "res://assets/characters/quaternius/outfits/Female_Peasant.gltf", "hair": "res://assets/characters/quaternius/hair/Hair_Long.gltf"},
+	{"body": "res://assets/characters/quaternius/Superhero_Male_Head.gltf", "outfit": "res://assets/characters/quaternius/outfits/Male_Peasant.gltf", "hair": "res://assets/characters/quaternius/hair/Hair_Buzzed.gltf"},
+	{"body": "res://assets/characters/quaternius/Superhero_Female_Head.gltf", "outfit": "res://assets/characters/quaternius/outfits/Female_Peasant.gltf", "hair": "res://assets/characters/quaternius/hair/Hair_Buns.gltf"},
+	{"body": "res://assets/characters/quaternius/Superhero_Male_Head.gltf", "outfit": "res://assets/characters/quaternius/outfits/Male_Peasant.gltf", "hair": "res://assets/characters/quaternius/hair/Hair_Beard.gltf"},
+]
+
+func _villagers() -> void:
+	var keys := graph.keys()
+	for i in 9:
+		var v := Node3D.new(); v.set_script(load("res://scripts/villager.gd")); v.name = "Villager%d" % i
+		add_child(v)
+		v.setup(self, graph, keys[(i * 5 + 3) % keys.size()], LOOKS[i % LOOKS.size()], 100 + i)
+
+func _dress_player() -> void:
+	var model: Node = get_parent().get_node_or_null("Player/Model")
+	if model == null: return
+	Dress.wear(model, "res://assets/characters/quaternius/outfits/Male_Peasant.gltf")
+	Dress.wear(model, "res://assets/characters/quaternius/hair/Hair_SimpleParted.gltf", Color(0.3, 0.19, 0.11))
+	var pl: Node3D = get_parent().get_node("Player")
+	pl.add_child(Dress.blob(1.0))
+	(pl as CollisionObject3D).collision_mask = 1 | 2
+
+# ---------------------------------------------------------------- shadows, baked once (the WoW way)
+const SHADE := 0.62    # how dark the ground is in shadow
+var _x0 := -MARGIN
+var _y0 := -MARGIN
+var _nx := int(140 + 2 * MARGIN)
+var _ny := int(110 + 2 * MARGIN)
+
+func shade(p: Vector2) -> float:
+	if shade_grid.is_empty(): return 1.0
+	var i := clampi(int(p.x - _x0), 0, _nx - 1); var j := clampi(int(p.y - _y0), 0, _ny - 1)
+	return shade_grid[j * _nx + i]
+
+func _bake_when_ready() -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var sun: DirectionalLight3D = get_parent().get_node("Sun")
+	var travel := -sun.global_transform.basis.z         # the direction the sunlight travels
+	var to_sun := -travel
+	var space := get_world_3d().direct_space_state
+	var raw := PackedFloat32Array(); raw.resize(_nx * _ny); raw.fill(1.0)
+	var q := PhysicsRayQueryParameters3D.new(); q.collision_mask = 1
+	for j in _ny:
+		for i in _nx:
+			var p := Vector2(_x0 + i + 0.5, _y0 + j + 0.5)
+			if _coast_signed(p) < -2.0: continue
+			var from := W(p, height(p) + 0.25)
+			q.from = from; q.to = from + to_sun * 70.0
+			if not space.intersect_ray(q).is_empty(): raw[j * _nx + i] = SHADE
+	var horiz := Vector2(travel.x, travel.z).normalized(); var stretch := 1.0 / maxf(0.2, -travel.y)
+	for t in trees:                                     # tree crowns: a soft oval along the light
+		var base: Vector3 = t[0]; var sc: float = t[1]; var top: Vector3 = base + Vector3(0, 4.0 * sc, 0)
+		var hit: Vector3 = top + travel * ((top.y - base.y) / -travel.y)
+		var c := Vector2(hit.x, hit.z) + Vector2(ORIGIN.x, ORIGIN.y)
+		for dj in range(-5, 6):
+			for di in range(-5, 6):
+				var off := Vector2(di, dj); var along := off.dot(horiz) / stretch; var across := off.dot(horiz.orthogonal())
+				if along * along + across * across < pow(2.0 * sc, 2):
+					var ii := int(c.x - _x0) + di; var jj := int(c.y - _y0) + dj
+					if ii >= 0 and jj >= 0 and ii < _nx and jj < _ny: raw[jj * _nx + ii] = minf(raw[jj * _nx + ii], 0.7)
+	shade_grid = raw.duplicate()                        # soften the edges a little
+	for j in range(1, _ny - 1):
+		for i in range(1, _nx - 1):
+			var acc := 0.0
+			for dj in [-1, 0, 1]: for di in [-1, 0, 1]: acc += raw[(j + dj) * _nx + i + di]
+			shade_grid[j * _nx + i] = acc / 9.0
+	get_node("Terrain").queue_free()
+	for m in get_tree().get_nodes_in_group("path_mesh"): m.queue_free()
+	await get_tree().process_frame
+	_terrain()
+	for p in PATHS: _path(p[0], p[1])
+	_world_casts_no_shadows(self)
+
+func _world_casts_no_shadows(n: Node) -> void:      # the world's shadows are baked; only characters may cast live ones
+	for c in n.get_children():
+		if c.name.begins_with("Villager"): continue
+		if c is GeometryInstance3D: (c as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_world_casts_no_shadows(c)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("shadows_toggle"):        # F2: live character shadows on or off (the world's stay baked)
+		var sun: DirectionalLight3D = get_parent().get_node("Sun")
+		sun.shadow_enabled = not sun.shadow_enabled
+		for b in get_tree().get_nodes_in_group("blob"): b.visible = not sun.shadow_enabled

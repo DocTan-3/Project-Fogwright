@@ -82,11 +82,15 @@ func _house_into(root: Node3D, h: Dictionary, side: int) -> void:
 			# what fills the opening: a shuttered window, or a door (its hinge is at its left edge, 0.53 m off centre)
 			var off := Vector3(-0.53, 0, 0).rotated(Vector3.UP, yaw) if fill.begins_with("Door") else Vector3.ZERO
 			_piece(fill, Vector3(cx, y, front_z) + off, yaw)
-			_piece("Wall_%s_Straight" % kind, Vector3(cx, y, back_z), yaw + PI)   # the back
+			_piece(_plain(kind), Vector3(cx, y, back_z), yaw + PI)   # the back
 		for b in h.deep:                                               # the sides
 			var cz: float = front_z + side * (b * 2 + 1)
-			_piece("Wall_%s_Straight" % kind, Vector3(float(h.x), y, cz), -PI / 2)
-			_piece("Wall_%s_Straight" % kind, Vector3(float(h.x) + w, y, cz), PI / 2)
+			_piece(_plain(kind), Vector3(float(h.x), y, cz), -PI / 2)
+			_piece(_plain(kind), Vector3(float(h.x) + w, y, cz), PI / 2)
+		# corners: a stone quoin on stone storeys, a timber post on plaster ones, covering where the walls meet
+		var corner := "Corner_Exterior_Brick" if kind == "UnevenBrick" else "Corner_Exterior_Wood"
+		for cxz in [[float(h.x), front_z, -1.0, -side], [float(h.x) + w, front_z, 1.0, -side], [float(h.x), back_z, -1.0, side], [float(h.x) + w, back_z, 1.0, side]]:
+			_piece(corner, Vector3(cxz[0], y, cxz[1]), _corner_yaw(cxz[2], cxz[3]))
 		if s > 0:                                                      # a floor between storeys, seen through windows
 			for b in h.bays:
 				for c in h.deep:
@@ -99,4 +103,19 @@ func _house_into(root: Node3D, h: Dictionary, side: int) -> void:
 	var r := _piece(roof, Vector3(cx, top, cz), PI / 2)
 	if r == null:
 		_piece("Roof_RoundTiles_6x8", Vector3(cx, top, cz), PI / 2)
+	# the gable ends: plaster and timber triangles closing the roof at both ends of its ridge
+	var gable := "Roof_Front_Brick%d" % clampi(d, 2, 8)
+	_piece(gable, Vector3(float(h.x), top, cz), -PI / 2)
+	_piece(gable, Vector3(float(h.x) + w, top, cz), PI / 2)
 	_into = null
+
+## the plain wall of a kind, matching its window and door pieces (the plaster ones stand on a stone base)
+func _plain(kind: String) -> String:
+	return "Wall_Plaster_Straight_Base" if kind == "Plaster" else "Wall_%s_Straight" % kind
+
+## the corner pieces point out toward (-x, +z); turn one to point toward (sx, sz)
+func _corner_yaw(sx: float, sz: float) -> float:
+	for t in [0.0, PI / 2, PI, -PI / 2]:
+		var x := -cos(t) + sin(t); var z := sin(t) + cos(t)   # (-1, 1) turned by t
+		if signf(x) == signf(sx) and signf(z) == signf(sz): return t
+	return 0.0

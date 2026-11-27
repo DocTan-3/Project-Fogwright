@@ -53,6 +53,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = JUMP_VELOCITY
+			if _tree: (_tree.get("parameters/playback") as AnimationNodeStateMachinePlayback).travel("takeoff")   # at once, not when airborne
 	else:
 		velocity.y -= GRAVITY * delta
 
@@ -98,11 +99,11 @@ func _animate(ground_speed: float) -> void:
 	if not is_on_floor() and _air_time > 0.12:
 		if state == "ground" or state == "land":
 			pb.travel("takeoff" if velocity.y > 1.0 else "fall")
-		elif state == "takeoff" and (velocity.y < 0.5 or _state_time > 0.55):
+		elif state == "takeoff" and _state_time > 0.72:   # only a real drop falls; a jump lands from its take-off
 			pb.travel("fall")
 	elif is_on_floor():
 		if state == "fall" or state == "takeoff":
 			# landing standing still plays the landing; landing on the move runs straight on
-			pb.travel("land" if ground_speed < 1.0 and _landing > 0.0 else "ground")
-		elif state == "land" and (ground_speed > 1.0 or _state_time > 0.7):
+			pb.travel("land" if ground_speed < 1.0 else "ground")
+		elif state == "land" and (ground_speed > 1.0 or _state_time > 0.45):
 			pb.travel("ground")   # a short landing, cut as soon as you move on
