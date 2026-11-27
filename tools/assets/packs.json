@@ -6,126 +6,145 @@
       "url": "https://quaternius.itch.io/universal-animation-library",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Standard (free) version; in assets/animations/quaternius"
+      "note": "Standard (free) version; in assets/animations/quaternius",
+      "use": "animation"
     },
     {
       "name": "Universal Animation Library 2",
       "url": "https://quaternius.itch.io/universal-animation-library-2",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Standard (free) version; in assets/animations/quaternius"
+      "note": "Standard (free) version; in assets/animations/quaternius",
+      "use": "animation"
     },
     {
       "name": "Universal Base Characters",
       "url": "https://quaternius.itch.io/universal-base-characters",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Standard (free) version; in assets/characters/quaternius"
+      "note": "Standard (free) version; in assets/characters/quaternius",
+      "use": "characters"
     },
     {
       "name": "Modular Character Outfits Fantasy",
       "url": "https://quaternius.itch.io/modular-character-outfits-fantasy",
       "licence": "CC0 1.0",
-      "repo": true
+      "repo": true,
+      "use": "characters"
     },
     {
       "name": "Fantasy Props MegaKit",
       "url": "https://quaternius.itch.io/fantasy-props-megakit",
       "licence": "CC0 1.0",
-      "repo": true
+      "repo": true,
+      "use": "props"
     },
     {
       "name": "Medieval Village MegaKit",
       "url": "https://quaternius.itch.io/medieval-village-megakit",
       "licence": "CC0 1.0",
-      "repo": true
+      "repo": true,
+      "use": "buildings"
     },
     {
       "name": "Stylized Nature MegaKit",
       "url": "https://quaternius.itch.io/stylized-nature-megakit",
       "licence": "CC0 1.0",
-      "repo": true
+      "repo": true,
+      "use": "nature"
     },
     {
       "name": "Textured Lowpoly Trees",
       "url": "https://quaternius.itch.io/textured-lowpoly-trees",
       "licence": "CC0 1.0",
-      "repo": true
+      "repo": true,
+      "use": "nature"
     },
     {
       "name": "150 Lowpoly Nature Models",
       "url": "https://quaternius.itch.io/150-lowpoly-nature-models",
       "licence": "CC0 1.0",
-      "repo": true
+      "repo": true,
+      "use": "nature"
     },
     {
       "name": "Lowpoly Medieval Weapons",
       "url": "https://quaternius.itch.io/lowpoly-medieval-weapons",
       "licence": "CC0 1.0 (stated on the itch.io page; no licence file in the zip)",
-      "repo": true
+      "repo": true,
+      "use": "weapons"
     },
     {
       "name": "Post-Apocalyptic World",
       "url": "https://atomicrealm.itch.io/post-apocalyptic-world",
       "licence": "Atomic Realm licence: commercial use and editing allowed; no repackaging, resale or redistribution, however modified; credit required (link https://atomicrealm.itch.io/)",
       "repo": false,
-      "note": "Free sample version; for the more modern, industrial elements"
+      "note": "Free sample version; for the more modern, industrial elements",
+      "use": "props"
     },
     {
       "name": "Modular Village Pack",
       "url": "https://fertile-soil-productions.itch.io/modular-village-pack",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Fertile Soil Productions; pairs with their Modular Terrain Pack"
+      "note": "Fertile Soil Productions; pairs with their Modular Terrain Pack",
+      "use": "buildings"
     },
     {
       "name": "Medieval Interior Asset Pack",
       "url": "https://soi.itch.io/medieval-interior-asset-pack",
       "licence": "No formal licence; the author (SOI) says 'free to use for any purpose' in the comments. Kept out of the repo to be safe.",
       "repo": false,
-      "note": "38 PBR tavern interior assets with collision meshes"
+      "note": "38 PBR tavern interior assets with collision meshes",
+      "use": "interiors"
     },
     {
       "name": "Horror Texture Pack",
       "url": "https://screamingbrainstudios.itch.io/horror-texture-pack",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Screaming Brain Studios; grime, rust and rot for darker, Fog-touched places"
+      "note": "Screaming Brain Studios; grime, rust and rot for darker, Fog-touched places",
+      "use": "textures"
     },
     {
       "name": "PSX Style Walls and Fences",
       "url": "https://valsekamerplant.itch.io/psx-style-walls-fences",
       "licence": "CC0 (stated on the page; its textures are CC0 too)",
       "repo": true,
-      "note": "Deliberately low-resolution PS1 style"
+      "note": "Deliberately low-resolution PS1 style",
+      "use": "buildings"
     },
     {
       "name": "Tiny Texture Pack 3",
       "url": "https://screamingbrainstudios.itch.io/tiny-texture-pack-3",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Screaming Brain Studios; small tiling textures (stone, ground)"
+      "note": "Screaming Brain Studios; small tiling textures (stone, ground)",
+      "use": "textures"
     },
     {
       "name": "Muzzle Flash VFX",
       "url": "https://binbun3d.itch.io/muzzle-flash-vfx",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Binbun; for firearms"
+      "note": "Binbun; for firearms",
+      "use": "vfx"
     },
     {
       "name": "Explosion FX",
       "url": "https://binbun3d.itch.io/explosion-fx",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Binbun; explosions, smoke"
+      "note": "Binbun; explosions, smoke",
+      "use": "vfx"
     },
     {
       "name": "Basic Motions FREE",
       "url": "https://kevdev.itch.io/basic-motions-free",
       "licence": "No licence stated on the page; the author (Kevin Iglesias) asks for credit as a link to www.keviniglesias.com. Kept out of the repo.",
       "repo": false,
-      "note": "Extra motions, e.g. for NPCs"
+      "note": "Extra motions, e.g. for NPCs",
+      "use": "animation"
     },
     {
       "name": "Western Props Pack",
@@ -133,7 +152,8 @@
       "direct": "http://devassets.com/downloads/assets/western-props-pack.zip",
       "licence": "Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo.",
       "repo": false,
-      "note": "Free tier; low poly, hand-painted, one atlas texture"
+      "note": "Free tier; low poly, hand-painted, one atlas texture",
+      "use": "props"
     },
     {
       "name": "Fantasy Frost Environment",
@@ -141,7 +161,8 @@
       "direct": "https://downloads.brackeys.com/devassets/fantasy-frost-environment.zip",
       "licence": "Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo.",
       "repo": false,
-      "note": "Free tier; low poly, hand-painted, one atlas texture"
+      "note": "Free tier; low poly, hand-painted, one atlas texture",
+      "use": "nature"
     },
     {
       "name": "Mayan Temple",
@@ -149,7 +170,8 @@
       "direct": "https://downloads.brackeys.com/devassets/mayan-temple.zip",
       "licence": "Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo.",
       "repo": false,
-      "note": "Free tier; low poly, hand-painted, one atlas texture"
+      "note": "Free tier; low poly, hand-painted, one atlas texture",
+      "use": "buildings"
     },
     {
       "name": "Steampunk Turret Pack",
@@ -157,7 +179,8 @@
       "licence": "CC0 1.0",
       "repo": true,
       "manual": true,
-      "note": "37 animated steampunk turrets (FBX, OBJ, Blend). Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser."
+      "note": "37 animated steampunk turrets (FBX, OBJ, Blend). Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser.",
+      "use": "machines"
     },
     {
       "name": "Medieval Village Pack",
@@ -165,7 +188,8 @@
       "licence": "CC0 1.0",
       "repo": true,
       "manual": true,
-      "note": "44 animated models; older than the MegaKit. Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser."
+      "note": "44 animated models; older than the MegaKit. Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser.",
+      "use": "buildings"
     },
     {
       "name": "Animated Mech Pack",
@@ -173,42 +197,104 @@
       "licence": "CC0 1.0",
       "repo": true,
       "manual": true,
-      "note": "4 animated mechs, glTF included; to rework toward steampunk. Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser."
+      "note": "4 animated mechs, glTF included; to rework toward steampunk. Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser.",
+      "use": "machines"
     },
     {
       "name": "Free Modular Low Poly Dungeon Pack (RGS_Dev)",
       "url": "https://rgsdev.itch.io/free-modular-low-poly-dungeon-pack-by-rgsdev",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Walls, doors, floors, stairs, traps, chests, props; separated by material. Saved for later (dungeons and Breaches); not downloaded yet"
+      "note": "Walls, doors, floors, stairs, traps, chests, props; separated by material. Saved for later (dungeons and Breaches); not downloaded yet",
+      "use": "dungeons"
     },
     {
       "name": "Temple Modular Collection (Fertile Soil Productions)",
       "url": "https://fertile-soil-productions.itch.io/temple-modular-collection",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Modular temple and palace pieces; saved for later (Aldrath's plaza, shrines). Not downloaded yet"
+      "note": "Modular temple and palace pieces; saved for later (Aldrath's plaza, shrines). Not downloaded yet",
+      "use": "buildings"
     },
     {
       "name": "Free Stylized Food (NewLua Studios)",
       "url": "https://newlua-studios.itch.io/free-stylized-food",
       "licence": "Free for games incl. commercial, no credit required; no named licence (not stated as CC0)",
       "repo": false,
-      "note": "Food props (taverns, markets, kitchens); keep out of the public repo until the licence is confirmed redistributable. Not downloaded yet"
+      "note": "Food props (taverns, markets, kitchens); keep out of the public repo until the licence is confirmed redistributable. Not downloaded yet",
+      "use": "props"
     },
     {
       "name": "Hit FX (Binbun)",
       "url": "https://binbun3d.itch.io/hit-fx",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Godot hit and impact effects; the free version has 6 presets, the full pack is paid. Saved for combat"
+      "note": "Godot hit and impact effects; the free version has 6 presets, the full pack is paid. Saved for combat",
+      "use": "vfx"
     },
     {
       "name": "Flame FX (Binbun)",
       "url": "https://binbun3d.itch.io/flame-fx",
       "licence": "CC0 1.0",
       "repo": true,
-      "note": "Godot flame effects (12 styles in the full pack); free version available. For forges, hearths, torches and the burning of Farhallow"
+      "note": "Godot flame effects (12 styles in the full pack); free version available. For forges, hearths, torches and the burning of Farhallow",
+      "use": "vfx"
+    },
+    {
+      "name": "Low Poly Medieval Weapons (Anker's Assets)",
+      "url": "https://ankersassets.itch.io/low-poly-medieval-weapons",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Medieval weapons and siege engines; candidates for the Wayfolk common iron set. Not downloaded yet",
+      "use": "weapons"
+    },
+    {
+      "name": "Magic Projectiles VFX (Binbun)",
+      "url": "https://binbun3d.itch.io/magic-projectiles-vfx",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Godot spell projectiles; free version. For gods' magic and caster foci",
+      "use": "vfx"
+    },
+    {
+      "name": "Magic Orb VFX (Binbun)",
+      "url": "https://binbun3d.itch.io/magic-orb-vfx",
+      "licence": "CC0 1.0 (the paid pack; the demo version is not covered)",
+      "repo": true,
+      "note": "Paid ($2.99 on sale until 2 Dec 2026, normally more); only the paid files are CC0",
+      "use": "vfx"
+    },
+    {
+      "name": "Fire VFX (Binbun)",
+      "url": "https://binbun3d.itch.io/fire",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Paid ($2.99 on sale until 2 Dec 2026, normally $5.99): 30 Godot fire effects (flames, fireballs, ground fire, candle flame). Overlaps Flame FX; pick one",
+      "use": "vfx"
+    },
+    {
+      "name": "Wooden Docks (loafbrr)",
+      "url": "https://loafbrr.itch.io/wooden-docks",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Godot-ready docks and a dock house: Farhallow's pier and Hollin's Cross harbour",
+      "use": "harbour"
+    },
+    {
+      "name": "Ceylon Blocks (bukkbeek)",
+      "url": "https://bukkbeek.itch.io/ceylonblocks",
+      "licence": "Not stated on the page (only '(c) bukkbeek'); a free version exists",
+      "repo": false,
+      "note": "Sri Lankan monastery and tropical plant modules, stupas, statues; check the licence file in the download before any use",
+      "use": "buildings"
+    },
+    {
+      "name": "Human Villager / Crafting Animations FREE (Kevin Iglesias)",
+      "url": "https://kevdev.itch.io/human-villager-animations-free",
+      "licence": "Kevin Iglesias asset terms: use in games, credit appreciated; not redistributable as files",
+      "repo": false,
+      "note": "Idle, farming with plow, fishing (throw, wait, fight, pull), gathering, hammering, mining: villagers at work. Humanoid; needs retargeting to the Quaternius rig",
+      "use": "animation"
     }
   ]
 }
