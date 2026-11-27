@@ -7,15 +7,15 @@ extends Node
 const PALETTES := {
 	"hearth": {   # warm and sunlit: honey stone, cream plaster, terracotta roofs, bright brass
 		"Plaster": "e6d6b8", "WoodTrim": "86522e", "RockTrim": "b9a98c", "Brick": "b8694c", "RedBrick": "a4483a",
-		"UnevenBrick": "a99f90", "RoundTiles": "b5532e", "MetalOrnaments": "c49a4a", "earth": "7a6448",
+		"UnevenBrick": "a99f90", "RoundTiles": "b5532e", "MetalOrnaments": "c49a4a", "earth": "7a6448", "grass": "5f7a3a", "sand": "c2ad80", "sea": "2a6478",
 		"sun": "fff2dc", "sun_energy": 1.35, "sky_top": "5d8fd0", "sky_horizon": "c9d6e2"},
 	"fog": {      # cool and muted: grey-blue stone, pale plaster, weathered wood, slate roofs, verdigris copper
 		"Plaster": "c9cbc6", "WoodTrim": "5b5752", "RockTrim": "8d9395", "Brick": "877870", "RedBrick": "7a645e",
-		"UnevenBrick": "7d8589", "RoundTiles": "4d5966", "MetalOrnaments": "6e8f84", "earth": "5d5d55",
+		"UnevenBrick": "7d8589", "RoundTiles": "4d5966", "MetalOrnaments": "6e8f84", "earth": "5d5d55", "grass": "6c7a5e", "sand": "b9b4a2", "sea": "33505e",
 		"sun": "e4ebf2", "sun_energy": 1.05, "sky_top": "7d93a8", "sky_horizon": "c3ccd3"},
 	"ember": {    # industrial: dark basalt, ochre plaster, dark timber, copper roofs gone green, blackened iron and brass
 		"Plaster": "c9a46c", "WoodTrim": "4a2f22", "RockTrim": "4d4b4f", "Brick": "7a3628", "RedBrick": "6a2c22",
-		"UnevenBrick": "58544f", "RoundTiles": "4f7f6c", "MetalOrnaments": "b07b3a", "earth": "3f362e",
+		"UnevenBrick": "58544f", "RoundTiles": "4f7f6c", "MetalOrnaments": "b07b3a", "earth": "3f362e", "grass": "6a6b45", "sand": "8f8470", "sea": "2e4a52",
 		"sun": "ffe0b8", "sun_energy": 1.25, "sky_top": "6f86a6", "sky_horizon": "d8c2a8"},
 }
 var current := "hearth"   # the district palette; Hearth for the first towns

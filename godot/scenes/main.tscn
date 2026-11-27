@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/input_setup.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/street.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/farhallow.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/camera_rig.gd" id="5"]
 [ext_resource type="PackedScene" path="res://assets/characters/quaternius/Superhero_Male_FullBody.gltf" id="6"]
@@ -51,10 +51,11 @@ light_energy = 1.3
 shadow_enabled = true
 directional_shadow_max_distance = 60.0
 
-[node name="Street" type="Node3D" parent="."]
+[node name="Level" type="Node3D" parent="."]
 script = ExtResource("3")
 
 [node name="Player" type="CharacterBody3D" parent="." node_paths=PackedStringArray("camera_rig")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
 script = ExtResource("4")
 camera_rig = NodePath("../CameraRig")
 
