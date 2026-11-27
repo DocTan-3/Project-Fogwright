@@ -42,7 +42,7 @@ The world is a fantasy realm 300 years after a magical collapse, being resettled
 
 - **The Fog.** Leftover magic that spreads, twists living things, and is drawn to spellcasting. It is the main threat and the reason the world is dangerous.
 
-- **The goal on the horizon.** The shattered capital is visible from almost anywhere, glowing inside the thickest Fog. Reaching it and finding out what happened is the long-term goal.
+- **The goal on the horizon.** The shattered capital of the first age lies somewhere in the Sundering, the thickest Fog at the world's edge (exactly where is still open). Reaching it and finding out what happened is the long-term goal.
 
 **Tone:** high fantasy on the surface, grimdark underneath. The world first looks like a medieval high-tech high fantasy: grand cities around their gods, proud peoples, steam and brass progress, and chosen heroes guided by a kind goddess. The story then peels it back layer by layer to reveal a grimdark reality: a betrayer at the head of the Gods, gods fading and hiding, protectors devoured by the Fog. Visually the game starts bright and grand, and darkness creeps in as the story goes on. The land itself shows the gods' power: areas near the gods and their cities are colourful, tended and alive; toward the Fog at the world's boundaries, colour drains away and the land turns bleak, untamed and overgrown, more relic and ruin than civilization. As a god fades during the story, colour retreats from their lands. The world was once peaceful and is now forgotten: players piece its history together slowly from ruins, inscriptions, relics, the writings of lost peoples, and the warps nobody understands. The full history is in the lore document. The sky is a single procedural dome rather than image skyboxes: a moving sun, clouds, stars and moons, clear and blue near the gods and washed grey toward the Fog, ready for weather later (the number of moons is a lore decision still open). Mounts, from horses to larger beasts, are planned, so roads and city streets are built wide for riders. Prototypes use placeholder buildings and props; each people's architectural style is important and will be designed in a later art pass, once the systems settle.
 
@@ -189,7 +189,7 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 **What feeds it**
 
-- Distance from the settlement: thicker and more dangerous toward the capital.
+- Distance from the gods: thinnest around the gods' cities and Aldrath's central land, thicker and more dangerous toward the outer coasts and the Sundering at the world's edge.
 
 - Night and storms: surges roll in and press against walls.
 
@@ -225,7 +225,7 @@ Terrain and biomes are generated from a seed, but places, regions and cities are
 
 - **Terrain.** Layered noise for height, moisture and temperature produces biomes. Rivers trace downhill from mountains, which matters because waterwheels need them.
 
-- **Biomes by distance.** Rings of rising difficulty around spawn, bent by noise so they feel natural: meadows, then old forest, marsh, highlands, ashlands, and the capital.
+- **Biomes by region, danger by distance.** Each shard of Erde has its own climate (see Geography): cold in the north, hot in the south, temperate in the east, volcanic in the west, forested in the north-west. Danger rises outward: lowest on Aldrath's central land, rising across each shard from its god's city to its outer coast, highest in the Sundering. Noise bends the bands so they feel natural.
 
 - **Ruins.** Placed by a second seeded pass, built from room templates assembled by rules (towers, vaults, aqueduct segments, villas). Loot tables depend on biome and ruin type, and ruins respawn their lesser loot over time so the world doesn't run dry.
 
@@ -239,9 +239,9 @@ Terrain and biomes are generated from a seed, but places, regions and cities are
 
 ### Cities
 
-Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a village of twenty houses. Windhelm and Solitude are the references: dense, vertical, and built into dramatic geography, a fortress on a river crossing and a city on a sea arch.
+Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a village of twenty houses. Windhelm and Solitude are style references: dense, vertical, and built into dramatic geography.
 
-- **Living cities (1 to 2):** survivor strongholds such as a walled river city, the trade hub and meeting point for all players.
+- **The gods' cities:** Aldrath's outer city, the greatest city of the third age and the trade hub where all players meet, and the city of each living god, each with a warp at its heart: Hollin's Cross (the starter port), Skarvhold, Solmere, Ashforge, Qaraseth and Dun Brannoch (working names; see the lore). Launch can begin with Aldrath's outer city and one neighbouring domain, opening the others in later updates.
 
 - **Ruined cities of the old empire:** huge, Fog-filled and half-collapsed exploration zones, with persistent dungeons under their towers.
 
@@ -264,7 +264,15 @@ Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a 
 
 The land must feel real at scale: mountains that feel like mountains, seas that feel like seas.
 
-**World layout:** a large island continent with a mountain spine, rivers running from the peaks to the sea, coastlines on at least two sides, and an inland sea wide enough to lose sight of land. A cliff city above the sea (Solitude-like) and a fortress on a river crossing (Windhelm-like) are the two living cities. The shattered capital lies deep in Fog-bound mountains.
+**World layout (follows the lore).** Erde was broken outward from where Aldrath stood, so the world is a ring of shards around a central land, 20 km across in all:
+
+- **The central land** holds Aldrath's outer city, the starting village about a kilometre to its south, and Hollin's Cross, the starter port, a kilometre further south, where ship routes leave like spokes.
+- **The inner sea** around it is the safe sea, wide enough to lose sight of land; it grows wilder toward the edges.
+- **The shards:** the northern continent (the Rimeholds' fjords and glaciers, the Redwold's forested hills in its west, and a mountain spine holding Animari ruins), the Sere's deserts in the south, the Aurelan Isles in the east and the volcanic Slag Isles in the west, which sit on the deepest crack of the split. Each shard is a few kilometres across, about the size of a Skyrim hold.
+- **Broken edges are cliffs:** every coast facing the centre is a torn cliff that still matches its neighbour like broken pottery; outer coasts are older and gentler. Rivers run from the inner ridges to the outer coasts, and cities stand where rivers cross or meet the sea.
+- **The Sundering** lies beyond the outer coasts: no man's land where the Fog thickens into the wall at the world's edge. The Last Bastion faces it from the north, and the Forsaken landed on the Sere's south-western coast.
+
+The first sketch, drawn from the lore, is in `docs/references/world-sketch-v1.png`; placements marked as proposals in the lore are still open.
 
 **Mountains**
 
