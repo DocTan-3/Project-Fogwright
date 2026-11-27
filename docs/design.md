@@ -103,17 +103,37 @@ Combat is tab-target, like Albion Online and World of Warcraft, with mobile cont
 
 - **Targeting:** tap an enemy or press Attack to select the nearest. The character walks into range and auto-attacks while standing still; moving with the joystick pauses attacks but keeps the target.
 
-- **Skills:** skill buttons arc around a large Attack button. In Classic, skills are skillshots: on touch screens press and drag to aim with a ground indicator and release to cast (a quick tap casts at the current target); on PC the keys cast toward the mouse cursor. In Action, skills cast at the crosshair. Skills themselves are unlocked through the skill tree; the five in the prototype are placeholders for testing the controls, not designed skills. Skills cost energy and have cooldowns shown on the buttons. Gear and the skill tree decide which skills a player has.
+- **Skills:** skill buttons arc around a large Attack button. In Classic, skills are skillshots: on touch screens press and drag to aim with a ground indicator and release to cast (a quick tap casts at the current target); on PC the keys cast toward the mouse cursor. In Action, skills cast at the crosshair. Skills cost energy and have cooldowns shown on the buttons. Where skills come from is set out under *Moves, the bar and defence* below; the five in the prototype are placeholders for testing the controls, not designed skills.
 
 - **Enemies:** levels rise with distance from camp, more spawn at night, and elites use telegraphed attacks marked on the ground.
 
-- **Loot:** creatures drop Fog shards and gear in four rarities (common, uncommon, rare, epic), with item power and stats. Gear can be equipped or salvaged into shards.
+- **Loot:** creatures drop Fog shards and gear by rarity (common, uncommon, rare, epic, and the one-of-a-kind legendaries in weapons.md), with item power and stats. Gear can be equipped or salvaged into shards.
 
 - **Quests:** quest givers at settlements offer chains that lead outward, ending in dungeons and elites.
 
 - **Layout:** landscape only on phones and tablets. Building has its own mode with its own controls.
 
-- **Two control styles on PC:** Classic (tab-target, auto-attack, skills on the target) or Action (WASD, mouse aim with a crosshair, left click attacks, right click blocks, 1 to 5 cast at the crosshair, Space jumps). Both use the same skills and balance; phones and tablets use Classic.
+- **Two control styles on PC:** Classic (tab-target, auto-attack, skills on the target) or Action (WASD, mouse aim with a crosshair, left click attacks, right click blocks, 1 to 6 cast at the crosshair, Space jumps). Both use the same skills and balance; phones and tablets use Classic.
+
+#### Moves, the bar and defence
+
+Decided with the user; items marked *(proposal)* are still open.
+
+- **Gear gives the moves.** A weapon's moves depend on its rarity (weapons.md): a common weapon only attacks, and rarer ones add traits and active moves that suit their type, such as a gun with a dash-reload or a sword with a magic slash. Armour works the same way: by its rarity a piece can add a special ability *(proposal: a chest piece that vents steam to knock enemies back, a helm that marks the target, boots that leap)*. Because the build is the gear, gear is what players trade (the player economy, later).
+
+- **The skill tree changes how moves work.** Nodes are mostly modifiers rather than new buttons: dash instead of a dodge roll, reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
+
+- **Every character has the basic verbs:** move, auto-attack and a defensive move. The defensive move is a dodge roll by default; the tree and gear can turn it into a dash, a blink, a block or a parry.
+
+- **Paths and gods' magic** add their own moves: a path's utility (Lanternbearers push back the Fog, Ironclads become cover) and, once claimed, the god's magic.
+
+- **The bar:** six skills, and a button that swaps to a second set of six. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. *(proposal: each set is a loadout with its own weapon, say a rifle and a sword, so swapping changes the weapon in hand; a short cooldown on the swap. The defensive move has its own button.)* Early on most slots are empty and fill as the gear gets better.
+
+- **Energy:** one energy pool for everyone, a cooldown on each skill, and one quirk per weapon family *(proposal: guns hold a shot or a few and must reload; heavy melee builds momentum while it keeps hitting; bows reward a longer draw; caster foci spend Fog shards, which raises Fog pressure as the lore says)*.
+
+- **Defence: the build decides.** Stepping out of telegraphs, dodging, dashing, blocking and parrying are all viable, and which one a character leans on comes from their gear and skill tree (a shield makes blocking strong, light armour suits dodging, plate suits holding ground). Enemy attacks are designed so no one answer wins everywhere *(proposal: an unblockable charge you step aside from, a fast combo you parry or block, a wide slam you roll or dash through)*.
+
+- **Open:** the numbers; how many moves each rarity gives for armour; what the second set holds; which pieces can carry abilities (chest, head, legs, back).
 
 ### Skill tree, paths and gods
 
@@ -142,7 +162,7 @@ There are no classes. Every character can fight and craft completely without the
 
 **Open:** none for now.
 
-- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, new abilities and armor proficiencies.
+- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, armour proficiencies, path moves and modifiers to the moves gear gives (see *Moves, the bar and defence*).
 
 - **Hybrid builds.** Walking the tree toward a neighbouring craft unlocks its abilities and armor, so a Tinkerer can path into plate, or a Smith into gadgets.
 
