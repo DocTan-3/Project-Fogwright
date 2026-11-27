@@ -18,15 +18,28 @@ const PALETTES := {
 		"UnevenBrick": "58544f", "RoundTiles": "4f7f6c", "MetalOrnaments": "b07b3a", "earth": "3f362e",
 		"sun": "ffe0b8", "sun_energy": 1.25, "sky_top": "6f86a6", "sky_horizon": "d8c2a8"},
 }
-var current := "original"   # until a palette is chosen, the kit keeps its own colours
+var current := "hearth"   # the district palette; Hearth for the first towns
+## how deep into the Fog this place lies, 0 (clear) .. 1 (deep): every colour fades toward a cold, grey-blue mute
+var fog := 0.0
+const FOG_TINT := Color(0.47, 0.5, 0.53)
 var _cache := {}
 
 func _enter_tree() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("palette="):
 			current = a.split("=")[1]
+		elif a.begins_with("fog="):
+			fog = clampf(float(a.split("=")[1]), 0.0, 1.0)
 
 func col(key: String) -> Color:
+	return _fogged(_raw(key))
+
+func _fogged(c: Color) -> Color:   # desaturate and cool toward the Fog's grey, keeping some of the colour's lightness
+	if fog <= 0.0: return c
+	var grey := Color(c.get_luminance(), c.get_luminance(), c.get_luminance())
+	return c.lerp(grey, fog * 0.7).lerp(FOG_TINT * (0.6 + 0.6 * c.get_luminance()), fog * 0.35)
+
+func _raw(key: String) -> Color:
 	if not PALETTES.has(current): return Color.html({"earth": "6b5e4a", "sun": "fff4e0", "sky_top": "5c8cd1", "sky_horizon": "b8c7d6"}.get(key, "808080"))
 	return Color.html(PALETTES.get(current, PALETTES.hearth).get(key, "808080"))
 
@@ -39,7 +52,7 @@ func material_for(name: String, original: Material) -> Material:
 	var key := name.trim_prefix("MI_").trim_suffix("_Wear")
 	if not PALETTES.has(current) or not PALETTES.hearth.has(key):   # an unknown palette ("original") keeps the kit's own
 		return null
-	var ck := current + ":" + name
+	var ck := current + ":" + str(fog) + ":" + name
 	if _cache.has(ck):
 		return _cache[ck]
 	var m: StandardMaterial3D = (original as StandardMaterial3D).duplicate() if original is StandardMaterial3D else StandardMaterial3D.new()
