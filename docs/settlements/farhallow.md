@@ -17,8 +17,7 @@ few who chose the edge of the world on purpose. Most fish; the rest farm the cle
 the harbour.
 
 **How they live.** The sea feeds the village. Fishers bring in herring and cod at dawn; it is gutted, salted and smoked
-on the shore, and twice a month a trader's ship carries the barrels to Hollin's Cross. Salt, iron, cloth and lamp oil come
-back. The fields give barley, beans and hay; hens and a few goats live by the cottages. The smith mends boat fittings,
+on the shore, and twice a month a trader's ship carries the barrels to Hollin's Cross. Iron, cloth, lamp oil and tools come back; the salt is their own, boiled from seawater on the shore. The fields give barley, beans and hay; hens and a few goats live by the cottages. The smith mends boat fittings,
 hooks, tools and the odd blade.
 
 **Rich and poor.** Uneven, as fishing villages are:
@@ -59,6 +58,36 @@ evening the Fog comes, the wind dies and swings round to blow in from the sea fo
 The ground rises from the harbour (south-east) to a rise in the north-east. The road from the interior enters through
 the north gate. Downwind means south-east, toward the harbour and the bay.
 
+### Supply: can Farhallow live on its own?
+
+It must: it lies at the far edge of the world, two days by sea from Hollin's Cross, and the coast road is long and
+unsafe. So it grows or catches its own food, burns its own wood, draws its own water and makes its own salt. The trader's
+ship brings only what the village cannot make, and Farhallow would survive a season without it.
+
+About 80 people × 2,000 kcal a day is about 58 million kcal a year:
+
+| Food | Share | How much | Where it comes from |
+| --- | --- | --- | --- |
+| Fish (herring, cod, mackerel; fresh, smoked, salted) | ~40% | ~19 t a year eaten, plus the surplus salted for trade | 4-5 boats from the pier; the smokehouse and salt house keep it |
+| Grain (barley, oats; bread, porridge, ale) | ~40% | ~7 t a year | **~10 ha sown each year, ~20-25 ha of open fields in two halves (one rests fallow)**, outside the palisade along the north road and west of it, worked in strips by every household |
+| Beans, peas, cabbage, onions, roots | ~8% | | the house plots and the small infield inside the palisade |
+| Hens, goats (milk, cheese), pigs | ~7% | | yards and the hen house; goats and pigs on the common at the wood's edge |
+| Foraging | ~5% | | shellfish and seaweed from the shore, berries, mushrooms, nuts and small game from the woods |
+
+- **Water:** the well (the old spring the village grew round), rain barrels.
+- **Fuel:** firewood and the smith's charcoal from the woods round the clearing; driftwood.
+- **Salt:** boiled from seawater in pans by a small salt-boiling hut on the shore, downwind; stored in the salt house.
+- **Winter stores:** the granary holds next year's seed and about three months of grain; smoked and salted fish in the
+  smokehouse and salt house; roots in house cellars. A bad harvest means a lean spring, not starvation.
+- **Imports** (the trader's ship, twice a month): iron bars, cloth, lamp oil, tools, and wine and spices for the
+  well-off. **Exports:** salted and smoked fish, some salt.
+- **If the ships stop:** Farhallow eats; it runs short of iron, oil and cloth. (On the night of the prologue the trader's
+  ship is the last ship out.)
+
+**Changes this made:** the fields inside the palisade are only the infield (beans and barley close to home); the real
+fields (~20-25 ha) lie outside, along the north road, beyond the edge of the plan. The salt comes from salt pans on the
+shore instead of the trader's ship.
+
 | Building or facility | Where | Why there | What sits with it |
 | --- | --- | --- | --- |
 | **The Gull & Lantern** (tavern with rooms) | West side of the well square, on the gate road | Locals gather at the square; travellers off the road walk straight in. Not at the edge | Benches, a sign, a lamp, barrels by the side door, a stable post |
@@ -77,7 +106,10 @@ the north gate. Downwind means south-east, toward the harbour and the bay.
 | **Guard post** | Inside the north gate | Watches the road and the woods | Bell (rings in beat 2), a brazier, a spear rack |
 | **Farming cottages** (middling) | West, between the square and the fields | Next to their fields and vegetable plots, upwind | Hen house, goat pen, hay, tools |
 | **Old core houses** (middling) | Round the square | The oldest houses, built round the spring | Pots, a bench, washing lines |
-| **Fields and vegetable plots** | North-west, inside the palisade | Flat, sunny, upwind; near the granary | Fence, scarecrow, hay stacks |
+| **Infield and vegetable plots** | North-west, inside the palisade | Flat, sunny, upwind, near the granary; safe inside the palisade | Fence, scarecrow, hay stacks |
+| **Open fields** (~20-25 ha) | Outside the palisade, along the north road and to the west | The village's grain; far too big to fit inside the walls | Strips, boundary stones, a field barn (beyond the plan's edge) |
+| **Common pasture and woodlot** | The wood's edge round the clearing | Goats and pigs, firewood, charcoal | A charcoal burner's clearing |
+| **Salt-boiling hut and pans** | On the shore east of the harbour, downwind | Seawater and driftwood at hand; smoke blows out to sea | Pans, a woodpile, sacks |
 | **Palisade and north gate** | Round the landward side | Built against wolves; the sea guards the rest | Gate torches |
 
 **Changes from plan v2:** the tavern moves from the west edge to the square; the smithy moves from the rise (upwind,
