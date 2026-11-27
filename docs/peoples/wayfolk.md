@@ -65,21 +65,25 @@ world, under **Hollin the Wayfarer**, god of the open road and the welcome at it
 
 ### Building types and floorplans
 
-Drawn in `wayfolk-plans.png` (made by `tools/map/wayfolk_plans.py`). Sizes on the 2 m kit grid.
+Drawn in `wayfolk-plans.png` (made by `tools/map/wayfolk_plans.py`, which checks that every room can be reached through
+doors and that no stairs block a way or a door). Sizes on the 2 m kit grid; every door, window, hearth and stair is drawn.
 
-1. **Street house** (the common town house), 6 × 10 m, 2-3 storeys. Ground floor: shop or workshop at the front with the
-   street door and shop window, a passage down one side to the yard, a kitchen with the hearth at the back. Upper
-   floors: hall (living room) over the shop, jettied over the street; bedrooms behind. Long plot behind: yard,
-   outbuilding, garden, privy, back gate.
+1. **Street house** (the common town house), 6 × 10 m, 2-3 storeys. The street door opens into a side passage that runs
+   right through to the yard; the shop or workshop (with its shop window on the street) and the kitchen open off it, and
+   share a back-to-back hearth. Stairs rise from the kitchen. Upper floors: hall (living room) over the shop, jettied
+   over the street; bedrooms behind. Long plot behind: yard, store, privy and hens, garden, back gate.
 2. **Cottage** (villages, the poor), 6 × 8 m, 1 storey and a loft. One main room with the hearth in the middle of the back
    wall, a sleeping alcove, a loft over half the room by ladder; a lean-to store at the back. The door faces the street or
    lane, with a bench beside it.
-3. **Merchant's house**, 10 × 12 m, 3 storeys. Wide front with a central door, the counting room and a shop on either side,
-   a coach gate to a yard with a stable and store; a hall and parlour upstairs, bedrooms above; a walled garden behind.
-4. **Inn**, 12 × 16 m round a yard. Taproom with a big hearth and the bar on the street front, kitchen behind, a stable
-   and coach yard through an archway, guest rooms on the floor above and in a gallery round the yard.
-5. **Waylodge**, 8 × 12 m. A single long common room with benches, a hearth and a long table; sleeping lofts or
-   bunks at one end; the priest's room and the store at the other. The road lamp over the door. It always shares a
+3. **Merchant's house**, 10 × 12 m, 3 storeys. The front door opens into a stair hall between the counting room and the shop
+   (which also has its own street door); the kitchen and stores run across the back, opening onto the coach yard and the
+   walled garden with its own well. A coach gate leads from the street to the yard and stable. Hall and parlour upstairs,
+   bedrooms above.
+4. **Inn**, 12 × 16 m round a yard. Taproom with a big hearth and the bar counter on the street front, the kitchen behind
+   it; an archway beside the taproom takes coaches to the yard, with the cellar store off the archway and the stable
+   across the back. Stairs from the taproom and from the yard gallery up to the guest rooms.
+5. **Waylodge**, 8 × 12 m. A single long common room with benches, a hearth and a long table; bunks behind it with a
+   ladder to the sleeping lofts; the priest's room and the store (with a back door) at the end. The road lamp over the door. It always shares a
    square with the waystone.
 6. **Waystone shrine**: a standing stone about 2.5 m tall on a stepped base, carved with roads and distances, a lamp
    niche facing the main road, an offering ledge; in towns, under a small open roof on four posts.
@@ -98,12 +102,12 @@ Drawn in `wayfolk-plans.png` (made by `tools/map/wayfolk_plans.py`). Sizes on th
 
 - **Hollin's Cross** is Hollin's own town: fully Wayfolk, the greatest waystone of all at the crossroads by the harbour.
 - **Farhallow** lies outside any god's circle, but its freefolk mostly build the Wayfolk way, poorer and plainer: cottages
-  and village street houses, thatch and shingles, few tiles, almost no pipes. *(proposal)* An old waystone stands by the
-  well, older than the village, its lamp kept lit by the shrine keeper; a few families of other peoples built in their
+  and village street houses, thatch and shingles, few tiles, almost no pipes. An old waystone stands by the
+  well, older than the village, its lamp kept lit by the shrine keeper; no waylodge, since Farhallow lies outside
+  Hollin's circle **(chosen)**; a few families of other peoples built in their
   own style, to be decided when those culture sheets are written.
 
 ## Open
 
 - Wayfolk names (first names and family names) and how they mix across peoples.
 - Their festivals (a feast of the roads?) and their funeral customs in more detail.
-- Whether Farhallow has a waylodge (it is outside Hollin's circle) or only the waystone.

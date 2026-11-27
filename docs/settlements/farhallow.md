@@ -7,8 +7,8 @@ Farhallow"). Planned with the city-planning skill: lore, logistics, building lay
 
 Freefolk of every people, building mostly the Wayfolk way (`docs/peoples/wayfolk.md`), poorer and plainer: cottages
 and village street houses, thatch and shingles, few tiles, almost no pipes. Other peoples' family houses follow when
-their culture sheets are written. *(proposal)* An old waystone by the well, older than the village, its lamp kept lit by
-the shrine keeper.
+their culture sheets are written. An old waystone by the well, older than the village, its lamp kept lit by the shrine
+keeper; no waylodge, since Farhallow lies outside Hollin's circle (chosen).
 
 ## 1. Lore
 
