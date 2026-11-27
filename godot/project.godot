@@ -7,6 +7,10 @@ config/description="A co-op MMO of crafts, inventions and the Fog."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
+[autoload]
+
+Palette="*res://scripts/palette.gd"
+
 [display]
 window/size/viewport_width=1600
 window/size/viewport_height=900

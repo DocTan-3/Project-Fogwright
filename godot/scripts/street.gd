@@ -41,7 +41,7 @@ func _ready() -> void:
 	_house({"x": 18, "bays": 3, "deep": 4, "storeys": 3, "walls": ["UnevenBrick", "Plaster", "Plaster"], "door": [1]}, -1, PI / 2, Vector3(18, 0, -4))
 	# beyond the cobbles: packed earth (one plane, so it costs nothing)
 	var earth := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = Vector2(160, 160); earth.mesh = pm
-	var mat := StandardMaterial3D.new(); mat.albedo_color = Color(0.42, 0.37, 0.29); mat.roughness = 1.0; earth.material_override = mat
+	var mat := StandardMaterial3D.new(); mat.albedo_color = Palette.col("earth"); mat.roughness = 1.0; earth.material_override = mat
 	earth.position.y = -0.02; add_child(earth)
 	var ground := StaticBody3D.new()    # one flat collider under the whole street
 	var col := CollisionShape3D.new(); var box := BoxShape3D.new(); box.size = Vector3(80, 1, 80)
@@ -61,6 +61,7 @@ func _piece(name: String, pos: Vector3, yaw: float) -> Node3D:
 	var n: Node3D = s.instantiate()
 	n.position = pos; n.rotation.y = yaw
 	(_into if _into else self).add_child(n)
+	Palette.apply(n)
 	if not name.begins_with("Floor_"):   # walls, roofs and doors block; the kit has no colliders, so make them from the meshes
 		for m in n.find_children("*", "MeshInstance3D", true, false):
 			(m as MeshInstance3D).create_trimesh_collision()

@@ -5,6 +5,10 @@ extends Node3D
 const ANIMS := "res://assets/animations/quaternius/UAL1_Standard.glb"
 
 func _ready() -> void:
+	var sun: DirectionalLight3D = $Sun   # the palette's light
+	sun.light_color = Palette.col("sun"); sun.light_energy = float(Palette.value("sun_energy"))
+	var sky: ProceduralSkyMaterial = $WorldEnvironment.environment.sky.sky_material
+	sky.sky_top_color = Palette.col("sky_top"); sky.sky_horizon_color = Palette.col("sky_horizon"); sky.ground_horizon_color = Palette.col("sky_horizon")
 	var model: Node3D = $Player/Model
 	var lib_scene: Node = load(ANIMS).instantiate()
 	var src: AnimationPlayer = lib_scene.find_child("AnimationPlayer", true, false)
