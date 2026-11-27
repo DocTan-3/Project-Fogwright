@@ -10,6 +10,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 Palette="*res://scripts/palette.gd"
+Fps="*res://scripts/fps.gd"
 
 [display]
 window/size/viewport_width=1600
