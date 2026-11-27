@@ -38,3 +38,9 @@ Universal Animation Library 1 and 2 (Standard) by Quaternius, CC0 1.0 (public do
 https://quaternius.itch.io/universal-animation-library, https://quaternius.itch.io/universal-animation-library-2
 Universal Base Characters (Standard) by Quaternius, CC0 1.0 (public domain), in assets/characters/quaternius (textures
 scaled to 1024 px): https://quaternius.itch.io/universal-base-characters
+
+## Asset packs (tools/assets/packs.json)
+
+Third-party packs are listed with their licences in tools/assets/packs.json and downloaded by tools/assets/fetch.py; only
+CC0 packs may be committed here. Packs that forbid redistribution ship only inside the game. Credit required for any use:
+Post-Apocalyptic World by Atomic Realm, https://atomicrealm.itch.io/
