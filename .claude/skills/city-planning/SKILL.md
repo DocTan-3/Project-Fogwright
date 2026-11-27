@@ -66,6 +66,11 @@ short table: each building or facility, why it is where it is, what it needs nex
 
 ## 3. Building layout
 
+**Plan with the real floorplans.** Every building on the plan must be a type from `tools/map/building_types.py` (the
+culture sheet's floorplans), placed whole: rooms, yards, doors and plot. Never draw a building as a free-sized box: the
+plan, the floorplan sheet and the 3D builder all read the same types, so nothing overlaps when it is built. A new size or
+shape is a new type with its own floorplan first.
+
 Draw a top-down plan (tools/map/farhallow_plan.py is the pattern): north up, metres, terrain contours, and every building
 from the logistics table with its size, angle and use. Show it to the user before building in 3D.
 
