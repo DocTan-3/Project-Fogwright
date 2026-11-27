@@ -36,3 +36,5 @@ velour_velvet, floral_jacquard, quatrefoil_jacquard_fabric, knitted_fleece, wool
 
 Universal Animation Library 1 and 2 (Standard) by Quaternius, CC0 1.0 (public domain):
 https://quaternius.itch.io/universal-animation-library, https://quaternius.itch.io/universal-animation-library-2
+Universal Base Characters (Standard) by Quaternius, CC0 1.0 (public domain), in assets/characters/quaternius (textures
+scaled to 1024 px): https://quaternius.itch.io/universal-base-characters

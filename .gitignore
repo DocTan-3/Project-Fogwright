@@ -5,6 +5,7 @@ _full.glb
 shots/
 node_modules/
 *.png
+!assets/**/*.png
 !docs/**/*.png
 
 # third-party source models (check their licenses before committing)
