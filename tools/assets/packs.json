@@ -84,6 +84,48 @@
       "licence": "No formal licence; the author (SOI) says 'free to use for any purpose' in the comments. Kept out of the repo to be safe.",
       "repo": false,
       "note": "38 PBR tavern interior assets with collision meshes"
+    },
+    {
+      "name": "Horror Texture Pack",
+      "url": "https://screamingbrainstudios.itch.io/horror-texture-pack",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Screaming Brain Studios; grime, rust and rot for darker, Fog-touched places"
+    },
+    {
+      "name": "PSX Style Walls and Fences",
+      "url": "https://valsekamerplant.itch.io/psx-style-walls-fences",
+      "licence": "CC0 (stated on the page; its textures are CC0 too)",
+      "repo": true,
+      "note": "Deliberately low-resolution PS1 style"
+    },
+    {
+      "name": "Tiny Texture Pack 3",
+      "url": "https://screamingbrainstudios.itch.io/tiny-texture-pack-3",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Screaming Brain Studios; small tiling textures (stone, ground)"
+    },
+    {
+      "name": "Muzzle Flash VFX",
+      "url": "https://binbun3d.itch.io/muzzle-flash-vfx",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Binbun; for firearms"
+    },
+    {
+      "name": "Explosion FX",
+      "url": "https://binbun3d.itch.io/explosion-fx",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Binbun; explosions, smoke"
+    },
+    {
+      "name": "Basic Motions FREE",
+      "url": "https://kevdev.itch.io/basic-motions-free",
+      "licence": "No licence stated on the page; the author (Kevin Iglesias) asks for credit as a link to www.keviniglesias.com. Kept out of the repo.",
+      "repo": false,
+      "note": "Extra motions, e.g. for NPCs"
     }
   ]
 }
