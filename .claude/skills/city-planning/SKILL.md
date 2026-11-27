@@ -163,6 +163,19 @@ Every path is in `PATHS` with a width and a **purpose** ("the well west to the t
 4. **Is it redundant?** Two paths running side by side for a long stretch, or joining the same two places, merge into one
    (`PATH-DUP`).
 
+### Ground check: paths never clip
+
+A path is a strip laid on the terrain, but the terrain is drawn as flat triangles on its own grid, so between the
+strip's vertices the ground can rise through it on slopes and bends. In 3D:
+
+- Lay every path vertex at the **highest drawn ground** round it (the terrain mesh's real surface, sampled within about
+  half a metre), plus a few centimetres, with a vertex in the middle of the strip as well as at its edges.
+- **Check it** (`check_ground()` in the level, run by `tests/check.tscn`): sample every path triangle across its face
+  and compare with the terrain mesh's surface underneath; any point where the ground is above the path is a
+  `GROUND-CLIP` problem, and the checker must report none.
+- The same applies to anything laid flat on the ground (squares, floors, docks' landward ends): check it against the
+  drawn surface, not the smooth height function.
+
 ## Check every placement
 
 Every object goes through `put()` with a **role** and a **purpose**, and the checker (`check_plan()` on the level, run

@@ -32,6 +32,7 @@ var trees := []        # [position (world), scale]
 var houses := []       # [kind, centre (plan), door (plan), roof]
 
 var rng := RandomNumberGenerator.new()
+var path_surfaces := []   # [vertices (world), triangles] of every path strip, for the ground check
 var noise := FastNoiseLite.new()
 var pads := []          # [centre (plan), half extents, angle, level]
 
@@ -160,21 +161,26 @@ func _path(pts: Array, width: float) -> void:
 		var prev: Vector2 = pts[max(i - 1, 0)]; var next: Vector2 = pts[min(i + 1, pts.size() - 1)]
 		var tan := (next - prev) * 0.25
 		curve.add_point(p, -tan, tan)
-	curve.bake_interval = 0.6
+	curve.bake_interval = 0.5
 	var baked := curve.get_baked_points()
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var dirt := Palette.col("path")
+	var verts := []; var tris := []
 	for i in baked.size():
 		var p: Vector2 = baked[i]; var d: Vector2 = (baked[min(i + 1, baked.size() - 1)] - baked[max(i - 1, 0)]).normalized()
 		var side := Vector2(-d.y, d.x)
 		var hw := width * 0.5 * (1.0 + 0.18 * noise.get_noise_2d(p.x * 6.0, p.y * 6.0))   # ragged, worn edges
-		for s in [-1.0, 1.0]:
+		for s in [-1.0, 0.0, 1.0]:
 			var q: Vector2 = p + side * hw * s
 			st.set_color(dirt.lerp(dirt.darkened(0.15), 0.5 + 0.5 * noise.get_noise_2d(q.x * 9.0, q.y * 9.0)) * shade(q))
-			st.add_vertex(W(q, height(q) + 0.05))
+			var v := W(q, _ground_top(q, 0.6) + 0.04)        # above the highest ground round it, so the terrain never shows through
+			st.add_vertex(v); verts.append(v)
 	for i in baked.size() - 1:
-		var a := i * 2
-		st.add_index(a); st.add_index(a + 2); st.add_index(a + 1); st.add_index(a + 1); st.add_index(a + 2); st.add_index(a + 3)
+		var a := i * 3
+		for k in 2:
+			for t in [[a + k, a + 3 + k, a + k + 1], [a + k + 1, a + 3 + k, a + 4 + k]]:
+				st.add_index(t[0]); st.add_index(t[1]); st.add_index(t[2]); tris.append(t)
+	path_surfaces.append([verts, tris])
 	st.generate_normals()
 	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.add_to_group("path_mesh")
 	var mat := StandardMaterial3D.new(); mat.vertex_color_use_as_albedo = true; mat.roughness = 1.0; mi.material_override = mat
@@ -807,7 +813,7 @@ func ground_at(p: Vector2) -> String:
 ## the city-planning check: every clutter prop has a purpose, stands on sensible ground, keeps paths and doorways clear;
 ## every flora instance grows on open ground; every building has a roof. Returns the problems found.
 func check_plan() -> Array:
-	var issues := check_paths()
+	var issues := check_paths() + check_ground()
 	var doors := []
 	for h in houses:
 		if h[3] == "": issues.append("ROOF   %s at %s has no roof" % [h[0], h[1]])
@@ -879,3 +885,35 @@ func _on_pier(p: Vector2) -> bool:   # the pier's deck (the plan's pier rectangl
 	for r in PLAN.rects:
 		if r.name == "pier" and p.x >= r.x0 and p.x <= r.x1 and p.y >= r.y0 and p.y <= r.y1: return true
 	return false
+
+# ---------------------------------------------------------------- the ground check: paths lie on the ground, never under it
+## the terrain mesh's own height at a plan point: its 1 m grid of flat triangles, exactly as drawn (not the smooth height())
+func terrain_surface(p: Vector2) -> float:
+	var gx := p.x + MARGIN; var gy := p.y + MARGIN; var i := floorf(gx); var j := floorf(gy); var fx := gx - i; var fy := gy - j
+	var o := Vector2(i - MARGIN, j - MARGIN)
+	var h00 := height(o); var h10 := height(o + Vector2(1, 0)); var h01 := height(o + Vector2(0, 1)); var h11 := height(o + Vector2(1, 1))
+	if fx + fy <= 1.0: return h00 + (h10 - h00) * fx + (h01 - h00) * fy
+	return h11 + (h01 - h11) * (1.0 - fx) + (h10 - h11) * (1.0 - fy)
+
+## the highest the drawn ground gets within r of a point (sampled), so a path laid there stays above it
+func _ground_top(p: Vector2, r: float) -> float:
+	var top := terrain_surface(p)
+	for k in 8: top = maxf(top, terrain_surface(p + Vector2(r, 0).rotated(k * TAU / 8.0)))
+	for k in 4: top = maxf(top, terrain_surface(p + Vector2(r * 0.5, 0).rotated(k * TAU / 4.0 + 0.4)))
+	return top
+
+## every path triangle, sampled across its face: the path's surface must stay above the drawn ground (no clipping)
+func check_ground() -> Array:
+	var issues := []
+	for pi in path_surfaces.size():
+		var verts: Array = path_surfaces[pi][0]; var worst := 0.0; var at := Vector2.ZERO
+		for t in path_surfaces[pi][1]:
+			var a: Vector3 = verts[t[0]]; var b: Vector3 = verts[t[1]]; var c: Vector3 = verts[t[2]]
+			for w in [[1, 0, 0], [0, 1, 0], [0, 0, 1], [0.5, 0.5, 0], [0, 0.5, 0.5], [0.5, 0, 0.5], [0.34, 0.33, 0.33], [0.6, 0.2, 0.2], [0.2, 0.6, 0.2], [0.2, 0.2, 0.6]]:
+				var q: Vector3 = a * w[0] + b * w[1] + c * w[2]
+				var pp := Vector2(q.x, q.z) + ORIGIN
+				var under := terrain_surface(pp) - q.y
+				if under > worst: worst = under; at = pp
+		if worst > 0.005:
+			issues.append("GROUND-CLIP %s: the ground shows through by %.0f cm at %s" % [PATHS[pi][2] if pi < PATHS.size() else "path %d" % pi, worst * 100.0, at.round()])
+	return issues
