@@ -29,8 +29,9 @@ truly unique. *(proposal for the steps between:)*
 | **Epic** | plus a second ability or a stronger trait, and a mechanism (a spring blade, a twin-shot crossbow) | working parts: gauges, pipes, faintly glowing vials |
 | **Legendary** | a unique named weapon with its own story, look and kit that nothing else has; very rare | glows and moves |
 
-*Open:* how this sits with the skill tree (which still gives "how you fight"): perhaps the skill tree trains each
-family's handling (damage, speed, defence) while the weapon's rarity brings its abilities.
+**With the skill tree (chosen):** the weapon brings the moves, by its rarity; the skill tree changes how they work (a
+dash-reload instead of a standing reload, a wider cleave, a second charge) and trains each family's handling. Armour
+brings abilities by rarity the same way. See design.md, *Moves, the bar and defence*.
 
 ## Guns (chosen: rare, more common higher up, several types, crude early ones)
 
