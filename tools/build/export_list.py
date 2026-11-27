@@ -5,7 +5,7 @@
 import os,re,glob
 G=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','godot'); os.chdir(G)
 src=''.join(open(f).read() for f in glob.glob('scripts/*.gd')+glob.glob('data/*.json'))
-names=set(re.findall(r'"([A-Za-z][A-Za-z0-9_]+)"',src))
+names=set(re.findall(r'"([A-Za-z][A-Za-z0-9_]+)"',src))|set(re.findall(r'/([A-Za-z][A-Za-z0-9_]+)\.(?:gltf|glb)"',src))   # bare names and full model paths
 for pat in re.findall(r'"([A-Za-z_]+)%d"',src): names|={pat+str(i) for i in range(1,10)}   # CommonTree_%d and the like
 keep=['res://'+f for d in ['assets/props/quaternius','assets/nature/quaternius'] for f in sorted(glob.glob(d+'/*.gltf'))
       if os.path.splitext(os.path.basename(f))[0] in names]
