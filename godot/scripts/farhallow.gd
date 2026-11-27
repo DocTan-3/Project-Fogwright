@@ -458,7 +458,7 @@ func _nearest_path_point(p: Vector2) -> Vector2:
 	return best
 
 func _well() -> void:   # the village well in the square (the Modular Village Pack's, in our palette), solid
-	put("res://assets/props/village2/Prop_Well_1.glb", W(WELL, height(WELL)), 0.3, 1.0, true, "fixture", "the village well, the old spring")
+	put("res://assets/props/village2/Prop_Well_1.glb", W(WELL, height(WELL)), 0.3, 1.3, true, "fixture", "the village well, the old spring")
 
 # ---------------------------------------------------------------- the harbour: sea wall, breakwater, lighthouse, pier, boats
 ## a stone causeway along a smooth curve through the points: a level top and sloping sides down to the seabed, one mesh
@@ -696,44 +696,32 @@ func _woods() -> void:
 		if _coast_signed(p) < -1.0 and _coast_signed(p) > -9.0: put(NATURE % ("Rock_Medium_%d" % (i % 3 + 1)), W(p, height(p)), rng.randf() * TAU, rng.randf_range(1.2, 2.2), true, "fixture", "rocks in the shallows")
 
 # ---------------------------------------------------------------- life: the plan's doodads, each with its purpose
-const FW := "res://assets/props/fogwright/%s.glb"
 const DOCK := "res://assets/props/docks/%s.glb"
-const V2 := "res://assets/props/village2/%s.glb"
-## kind -> [model, scale, extra height (for things hung on walls or posts), solid]
-const DOODAD_MODELS := {
-	"bench": [PROPS % "Bench", 1.0, 0.0, true], "barrel": [PROPS % "Barrel", 1.0, 0.0, true], "crate": [PROPS % "Crate_Wooden", 1.0, 0.0, true],
-	"woodpile": [FW % "Woodpile", 1.0, 0.0, true], "washing line": [FW % "Washing_Line", 1.0, 0.0, false],
-	"well": [V2 % "Prop_Well_1", 0.8, 0.0, true], "fruit tree": [NATURE % "CommonTree_2", 0.55, 0.0, true],
-	"flower bed": [NATURE % "Flower_4_Group", 0.9, 0.0, false], "lamp": [PROPS % "Lantern_Wall", 1.0, 2.1, false],
-	"sign": [V2 % "Wall_Prop_Sign_1", 0.8, 2.4, false], "trough": [FW % "Trough", 1.0, 0.0, true], "cart": [V2 % "Prop_Cart_1", 0.9, 0.0, true],
-	"net rack": [FW % "Net_Rack", 1.0, 0.0, true], "lobster pots": [FW % "Lobster_Pots", 1.0, 0.0, true],
-	"gutting table": [DOCK % "Props_Table_1", 1.0, 0.0, true], "scarecrow": [FW % "Scarecrow", 1.0, 0.0, false],
-	"haystack": [V2 % "Prop_Hay_1", 1.3, 0.0, true], "notice post": [FW % "Notice_Post", 1.0, 0.0, true],
-	"torch": [PROPS % "Torch_Metal", 1.0, 2.6, false], "bell frame": [FW % "Bell_Frame", 1.0, 0.0, true],
-	"anvil": [PROPS % "Anvil", 1.0, 0.0, true], "quench trough": [FW % "Quench_Trough", 1.0, 0.0, true],
-	"grindstone": [PROPS % "Whetstone", 1.4, 0.0, false], "charcoal": [FW % "Charcoal_Heap", 1.0, 0.0, false],
-	"candles": [PROPS % "CandleStick_Triple", 1.0, 0.0, false], "sacks": [PROPS % "Bag", 1.2, 0.0, false],
-	"manure heap": [FW % "Manure_Heap", 1.0, 0.0, false], "drying rack": [DOCK % "Props_Rack_Fish", 1.0, 0.0, true],
-	"hen coop": [FW % "Hen_Coop", 1.0, 0.0, true], "boat hull": [DOCK % "Boat_Stand", 0.7, 0.0, true],
-	"chopping block": [PROPS % "Anvil_Log", 1.0, 0.0, true],
-}
+## kind -> model, scale, extra height (for things hung on walls or posts), solid: godot/data/doodad_models.json, shared with
+## the plan (which reserves each prop's real size, measured in godot/data/model_sizes.json)
+var DOODAD_MODELS := {}
+var doodad_nodes := []   # [node, kind, purpose], for the collision check
 
 func _doodads() -> void:
+	DOODAD_MODELS = JSON.parse_string(FileAccess.get_file_as_string("res://data/doodad_models.json"))
 	for dd in PLAN.doodads:
-		var m: Array = DOODAD_MODELS.get(dd.kind, [])
-		if m.is_empty(): push_warning("no model for " + dd.kind); continue
+		var md: Dictionary = DOODAD_MODELS.get(dd.kind, {})
+		if md.is_empty(): push_warning("no model for " + dd.kind); continue
+		var m := [md.model, md.scale, md.lift, md.solid]
 		var p := Vector2(dd.x, dd.y)
 		var owner: int = int(dd.owner)
 		# hung on a wall or post, or standing inside its own open workshop: a fixture, not clutter in the way
 		var role := "fixture" if dd.mounted or (owner >= 0 and _in_roofed(p, -0.1)) else "clutter"
-		var y: float = (1.0 if _on_pier(p) else height(p)) + float(m[2])   # on the pier's deck, or on the ground
+		var y: float = (1.12 if _on_pier(p) else height(p)) + float(m[2])   # on the pier's planks, or on the ground
 
-		var n := put(m[0], W(p, y), -float(dd.a), m[1], m[3], role, dd.purpose)
+		var yaw := -float(dd.a) + (PI / 2.0 if dd.get("turn", false) else 0.0)   # turned so its long side lies along its spot
+		var n := put(m[0], W(p, y), yaw, m[1], m[3], role, dd.purpose)
 		if n == null: continue
+		if not dd.mounted and not dd.kind in ["fruit tree", "flower bed"]: doodad_nodes.append([n, dd.kind, dd.purpose])
 		if dd.kind == "boat hull":   # a hull, half built, on its trestles
-			put(DOCK % "Boat_B_1", W(p, y + 0.45), -float(dd.a), 0.7, false, "fixture", "the hull on its trestles")
+			put(DOCK % "Boat_B_1", W(p, y + 0.45), yaw, 0.7, false, "fixture", "the hull on its trestles")
 		if dd.kind == "chopping block":   # beat B: the first weapon waits here
-			put(PROPS % "Axe_Bronze", W(p, y + 0.5), -float(dd.a) + 0.6, 1.0, false, "fixture", "the hatchet in the chopping block: the first weapon")
+			put(PROPS % "Axe_Bronze", W(p, y + 0.5), yaw + 0.6, 1.0, false, "fixture", "the hatchet in the chopping block: the first weapon")
 
 # ---------------------------------------------------------------- late afternoon
 func _light() -> void:
@@ -965,7 +953,7 @@ func ground_at(p: Vector2) -> String:
 ## the city-planning check: every clutter prop has a purpose, stands on sensible ground, keeps paths and doorways clear;
 ## every flora instance grows on open ground; every building has a roof. Returns the problems found.
 func check_plan() -> Array:
-	var issues := check_paths() + check_ground()
+	var issues := check_paths() + check_ground() + check_clip()
 	var doors := []
 	for h in houses:
 		if h[3] == "": issues.append("ROOF   %s at %s has no roof" % [h[0], h[1]])
@@ -1069,4 +1057,34 @@ func check_ground() -> Array:
 				if under > worst: worst = under; at = pp
 		if worst > 0.005:
 			issues.append("GROUND-CLIP %s: the ground shows through by %.0f cm at %s" % [PATHS[pi][2] if pi < PATHS.size() else "path %d" % pi, worst * 100.0, at.round()])
+	return issues
+
+## the collision check: each prop's real box (from its meshes, a few centimetres smaller) asked of the physics world:
+## anything solid it reaches into (a wall, a fence, another prop) other than itself and the ground is a clip
+func check_clip() -> Array:
+	var issues := []
+	var space := get_world_3d().direct_space_state
+	var ground_rids := []
+	for b in find_children("TerrainBody*", "CollisionObject3D", true, false): ground_rids.append((b as CollisionObject3D).get_rid())
+	for d in doodad_nodes:
+		var n: Node3D = d[0]
+		var own := ground_rids.duplicate()
+		for b in n.find_children("*", "CollisionObject3D", true, false): own.append((b as CollisionObject3D).get_rid())
+		var box := AABB(); var first := true
+		for mi in n.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var bb: AABB = n.global_transform.affine_inverse() * m.global_transform * m.get_aabb()
+			box = bb if first else box.merge(bb); first = false
+		if first: continue
+		var gt := n.global_transform; var sc := gt.basis.get_scale()
+		var shape := BoxShape3D.new(); shape.size = (box.size * sc - Vector3(0.1, 0.1, 0.1)).max(Vector3(0.04, 0.04, 0.04))
+		var q := PhysicsShapeQueryParameters3D.new(); q.shape = shape; q.collision_mask = 1; q.exclude = own
+		q.transform = Transform3D(gt.basis.orthonormalized(), gt * (box.get_center() + Vector3(0, 0.05, 0)))   # lifted off the ground a hair
+		for hit in space.intersect_shape(q, 4):
+			var other: Node = hit.collider
+			var what := str(other.get_parent().get_parent().name) if other.get_parent() and other.get_parent().get_parent() else str(other.name)
+			var p := Vector2(gt.origin.x, gt.origin.z) + ORIGIN
+			var where := ""
+			if other is Node3D: where = " (%s, its origin %s)" % [other.get_path(), ((other as Node3D).global_position).round()]
+			issues.append("CLIP   the %s (%s) reaches into %s at %s%s" % [d[1], d[2], what, p.round(), where])
 	return issues

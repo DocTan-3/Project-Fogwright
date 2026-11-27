@@ -77,7 +77,7 @@ for i in range(7): part('sphere','WoodTrim_Light',(-1.1+i*0.37,0.2,0.55+0.1*(i%2
 done('Net_Rack')
 # lobster pots: three domed creels, stacked
 for (x,y,z) in ((-0.32,0,0),(0.32,0,0),(0,0,0.42)):
-    part('cyl','Rope_Dark',(x,y,z),r=0.28,h=0.08,n=10); part('sphere','Rope',(x,y,z+0.08),r=0.28,n=10,sz=1.1)
+    part('cyl','Rope_Dark',(x,y,z),r=0.28,h=0.08,n=10); part('sphere','Rope',(x,y,z+0.22),r=0.28,n=10,sz=0.75)   # a dome on its base, nothing below
 done('Lobster_Pots')
 # scarecrow: post, crossbar, coat, sack head, hat
 part('cyl','WoodTrim_Wear',(0,0,0),r=0.05,h=2.1,n=6); part('box','WoodTrim_Wear',(0,0,1.55),size=(1.5,0.08,0.08))

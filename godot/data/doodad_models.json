@@ -1,0 +1,188 @@
+{
+ "bench": {
+  "model": "res://assets/props/quaternius/Bench.gltf",
+  "scale": 0.6,
+  "lift": 0.0,
+  "solid": true
+ },
+ "barrel": {
+  "model": "res://assets/props/quaternius/Barrel.gltf",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "crate": {
+  "model": "res://assets/props/quaternius/Crate_Wooden.gltf",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "woodpile": {
+  "model": "res://assets/props/fogwright/Woodpile.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "washing line": {
+  "model": "res://assets/props/fogwright/Washing_Line.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": false
+ },
+ "well": {
+  "model": "res://assets/props/village2/Prop_Well_1.glb",
+  "scale": 1.3,
+  "lift": 0.0,
+  "solid": true
+ },
+ "fruit tree": {
+  "model": "res://assets/nature/quaternius/CommonTree_2.gltf",
+  "scale": 0.55,
+  "lift": 0.0,
+  "solid": true
+ },
+ "flower bed": {
+  "model": "res://assets/nature/quaternius/Flower_4_Group.gltf",
+  "scale": 0.9,
+  "lift": 0.0,
+  "solid": false
+ },
+ "lamp": {
+  "model": "res://assets/props/quaternius/Lantern_Wall.gltf",
+  "scale": 1.0,
+  "lift": 2.1,
+  "solid": false
+ },
+ "sign": {
+  "model": "res://assets/props/village2/Wall_Prop_Sign_1.glb",
+  "scale": 0.8,
+  "lift": 2.4,
+  "solid": false
+ },
+ "trough": {
+  "model": "res://assets/props/fogwright/Trough.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "cart": {
+  "model": "res://assets/props/village2/Prop_Cart_1.glb",
+  "scale": 0.8,
+  "lift": 0.0,
+  "solid": true
+ },
+ "net rack": {
+  "model": "res://assets/props/fogwright/Net_Rack.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "lobster pots": {
+  "model": "res://assets/props/fogwright/Lobster_Pots.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "gutting table": {
+  "model": "res://assets/props/docks/Props_Table_1.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "scarecrow": {
+  "model": "res://assets/props/fogwright/Scarecrow.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": false
+ },
+ "haystack": {
+  "model": "res://assets/props/village2/Prop_Hay_1.glb",
+  "scale": 1.3,
+  "lift": 0.0,
+  "solid": true
+ },
+ "notice post": {
+  "model": "res://assets/props/fogwright/Notice_Post.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "torch": {
+  "model": "res://assets/props/quaternius/Torch_Metal.gltf",
+  "scale": 1.0,
+  "lift": 2.6,
+  "solid": false
+ },
+ "bell frame": {
+  "model": "res://assets/props/fogwright/Bell_Frame.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "anvil": {
+  "model": "res://assets/props/quaternius/Anvil.gltf",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "quench trough": {
+  "model": "res://assets/props/fogwright/Quench_Trough.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "grindstone": {
+  "model": "res://assets/props/quaternius/Whetstone.gltf",
+  "scale": 1.4,
+  "lift": 0.0,
+  "solid": false
+ },
+ "charcoal": {
+  "model": "res://assets/props/fogwright/Charcoal_Heap.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": false
+ },
+ "candles": {
+  "model": "res://assets/props/quaternius/CandleStick_Triple.gltf",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": false
+ },
+ "sacks": {
+  "model": "res://assets/props/quaternius/Bag.gltf",
+  "scale": 1.2,
+  "lift": 0.0,
+  "solid": false
+ },
+ "manure heap": {
+  "model": "res://assets/props/fogwright/Manure_Heap.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": false
+ },
+ "drying rack": {
+  "model": "res://assets/props/docks/Props_Rack_Fish.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "hen coop": {
+  "model": "res://assets/props/fogwright/Hen_Coop.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "boat hull": {
+  "model": "res://assets/props/docks/Boat_Stand.glb",
+  "scale": 0.7,
+  "lift": 0.0,
+  "solid": true
+ },
+ "chopping block": {
+  "model": "res://assets/props/quaternius/Anvil_Log.gltf",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ }
+}

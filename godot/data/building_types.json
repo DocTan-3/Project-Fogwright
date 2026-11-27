@@ -200,17 +200,17 @@
   ],
   "plot_doodads": [
    [
-    0.3,
-    0.4,
+    0.45,
+    0.45,
     1.2,
     2.0,
     "woodpile",
     "fuel for the kitchen hearth"
    ],
    [
-    3.5,
-    1.0,
-    2.0,
+    1.4,
+    3.2,
+    3.6,
     0.2,
     "washing line",
     "drying the wash"
@@ -346,8 +346,8 @@
   ],
   "plot_doodads": [
    [
-    0.3,
-    0.3,
+    0.45,
+    0.45,
     1.0,
     1.8,
     "woodpile",
@@ -557,10 +557,10 @@
   ],
   "plot_doodads": [
    [
-    8.0,
-    4.8,
-    1.4,
-    1.4,
+    7.2,
+    3.4,
+    1.8,
+    1.8,
     "well",
     "their own well"
    ],
@@ -752,10 +752,10 @@
   ],
   "plot_doodads": [
    [
-    8.0,
-    4.8,
-    1.4,
-    1.4,
+    7.2,
+    3.4,
+    1.8,
+    1.8,
     "well",
     "their own well"
    ],
@@ -1420,28 +1420,28 @@
   ],
   "doodads": [
    [
-    4.3,
-    2.0,
+    4.45,
+    4.6,
     1.4,
-    2.6,
+    2.7,
     "cart",
-    "the farm cart"
+    "the farm cart, out of the gateway"
    ],
    [
-    6.6,
-    6.6,
-    1.0,
-    1.0,
+    6.25,
+    5.5,
+    1.3,
+    1.3,
     "manure heap",
     "for the fields"
    ],
    [
-    6.4,
-    2.4,
-    1.2,
-    0.6,
+    6.75,
+    0.8,
+    0.8,
+    2.2,
     "trough",
-    "water for the beasts"
+    "water for the beasts, along the yard side"
    ]
   ],
   "note": "all doors face the yard; the yard gate faces the road; ladder to the loft",
@@ -1595,9 +1595,9 @@
   ],
   "doodads": [
    [
-    0.3,
-    3.8,
-    1.6,
+    2.2,
+    2.8,
+    3.7,
     1.6,
     "boat hull",
     "a hull on trestles, half built"
@@ -1771,12 +1771,12 @@
   ],
   "doodads": [
    [
-    4.3,
-    0.4,
-    1.2,
-    1.4,
+    5.3,
+    0.3,
+    0.9,
+    1.7,
     "bell frame",
-    "the alarm bell (rung in beat 2)"
+    "the alarm bell (rung in beat 2), clear of the eaves"
    ]
   ],
   "note": "the alarm bell hangs in a frame beside it (rung in beat 2)",
@@ -1826,10 +1826,10 @@
   ],
   "doodads": [
    [
-    0.4,
+    0.9,
     4.0,
-    1.2,
-    0.5,
+    2.2,
+    0.8,
     "trough",
     "water for the goats"
    ]
@@ -1881,14 +1881,6 @@
    ]
   ],
   "doodads": [
-   [
-    0.1,
-    -0.9,
-    1.2,
-    0.45,
-    "bench",
-    "a stone bench for the shrine keeper and mourners"
-   ],
    [
     3.4,
     -0.6,

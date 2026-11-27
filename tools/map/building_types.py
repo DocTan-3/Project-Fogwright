@@ -24,7 +24,7 @@ t('street_house',name="Street house",size="6 × 10 m, 2-3 storeys, plot behind 4
   plot_rooms=[(0,10,6,7,'yard','yard'),(0,17,2.5,3,'store','out'),(2.5,17,1,3,'','yard'),(3.5,17,2.5,3,'privy,\nhens','out'),(0,20,6,6,'garden','garden')],
   plot_doors=[(1.25,17,'h',1,'d'),(4.75,17,'h',1,'d'),(3,17,'h',1,'o'),(3,20,'h',1,'o'),(3,26,'h',1,'g')],
   doodads=[(1.0,-0.6,1.6,0.5,'bench','sitting out by the shop in the evening'),(4.0,-0.5,0.6,0.3,'sign','the shop sign on its bracket')],
-  plot_doodads=[(0.3,0.4,1.2,2.0,'woodpile','fuel for the kitchen hearth'),(3.5,1.0,2.0,0.2,'washing line','drying the wash'),(0.5,4.2,1.4,1.0,'hen coop','eggs')],
+  plot_doodads=[(0.45,0.45,1.2,2.0,'woodpile','fuel for the kitchen hearth'),(1.4,3.2,3.6,0.2,'washing line','drying the wash'),(0.5,4.2,1.4,1.0,'hen coop','eggs')],
   note="street door into the side passage to the yard; the shop and kitchen open off it; stairs in the kitchen to the hall over the shop (jettied) and bedrooms behind; back-to-back hearth")
 t('cottage',name="Cottage",size="6 × 8 m, one storey and a loft, yard behind 2-10 m",
   rooms=[(0,0,6,6,'main room','room'),(3.6,3.4,2.4,2.6,'bed\nalcove','room'),(0,6,6,2,'lean-to','out')],
@@ -32,7 +32,7 @@ t('cottage',name="Cottage",size="6 × 8 m, one storey and a loft, yard behind 2-
   hearths=[(2.4,5.6)],stairs=[(0.2,4.2,0.8,1.6,'ladder')],windows=[(4.2,0,'h',1.4),(0,2.5,'v',1.2)],
   plot=(0,6,2,10,'yard and garden'),plot_rooms=[(0,8,6,6,'yard and garden','garden')],plot_doors=[(3,14,'h',1,'g')],
   doodads=[(3.2,-0.55,1.4,0.45,'bench','sitting out by the door, mending')],
-  plot_doodads=[(0.3,0.3,1.0,1.8,'woodpile','fuel for the hearth'),(2.0,0.6,3.4,0.2,'washing line','drying the wash')],
+  plot_doodads=[(0.45,0.45,1.0,1.8,'woodpile','fuel for the hearth'),(2.0,0.6,3.4,0.2,'washing line','drying the wash')],
   note="ladder to the loft over the back half; the lean-to opens to the yard; bench by the front door")
 t('merchant_house',name="Merchant's house",size="14 × 16 m with coach yard and stable, walled garden 6-10 m",
   rooms=[(0,0,3.6,6,'counting\nroom','shop'),(3.6,0,2.8,6,'','room'),(6.4,0,3.6,6,'shop','shop'),(0,6,10,6,'kitchen and stores','room'),
@@ -42,7 +42,7 @@ t('merchant_house',name="Merchant's house",size="14 × 16 m with coach yard and 
   hearths=[(0,9),(0,4.2)],stairs=[(5.2,1.0,1.1,3.2,'stairs')],windows=[(1.8,0,'h',1.4),(9.3,0,'h',1),(7,12,'h',2),(0,1.6,'v',1.2)],
   plot=(0,10,6,10,'walled garden'),plot_rooms=[(0,12,10,8,'walled garden','garden')],
   doodads=[(3.6,-0.5,0.4,0.4,'lamp','a brass lamp by the front door: the well-off light their doors')],
-  plot_doodads=[(8.0,4.8,1.4,1.4,'well','their own well'),(1.0,1.0,3.0,1.2,'flower bed','a garden for show'),(6.5,1.2,2.2,2.2,'fruit tree','apples'),(1.0,4.6,1.8,0.5,'bench','sitting in the garden')],
+  plot_doodads=[(7.2,3.4,1.8,1.8,'well','their own well'),(1.0,1.0,3.0,1.2,'flower bed','a garden for show'),(6.5,1.2,2.2,2.2,'fruit tree','apples'),(1.0,4.6,1.8,0.5,'bench','sitting in the garden')],
   note="front door into the stair hall between counting room and shop; hall and parlour upstairs, bedrooms above; coach gate to the yard; own well in the garden")
 t('merchant_house_small',name="Well-off house",size="10 × 12 m, 3 storeys, walled garden 6-10 m",
   rooms=[(0,0,3.6,6,'study','shop'),(3.6,0,2.8,6,'','room'),(6.4,0,3.6,6,'parlour','room'),(0,6,10,6,'kitchen and stores','room')],
@@ -50,7 +50,7 @@ t('merchant_house_small',name="Well-off house",size="10 × 12 m, 3 storeys, wall
   hearths=[(0,9),(0,4.2),(10,3)],stairs=[(5.2,1.0,1.1,3.2,'stairs')],windows=[(1.8,0,'h',1.4),(8.2,0,'h',1.4),(7,12,'h',2),(0,1.6,'v',1.2)],
   plot=(0,10,6,10,'walled garden'),plot_rooms=[(0,12,10,8,'walled garden','garden')],
   doodads=[(3.6,-0.5,0.4,0.4,'lamp','a brass lamp by the front door')],
-  plot_doodads=[(8.0,4.8,1.4,1.4,'well','their own well'),(1.0,1.0,3.0,1.2,'flower bed','a garden for show'),(6.5,1.2,2.2,2.2,'fruit tree','pears'),(1.0,4.6,1.8,0.5,'bench','sitting in the garden')],
+  plot_doodads=[(7.2,3.4,1.8,1.8,'well','their own well'),(1.0,1.0,3.0,1.2,'flower bed','a garden for show'),(6.5,1.2,2.2,2.2,'fruit tree','pears'),(1.0,4.6,1.8,0.5,'bench','sitting in the garden')],
   note="the merchant's house without the coach yard: for the well-off who trade by ship or office, not by cart; a side door to the lane")
 t('inn',name="Inn",size="12 × 16 m round a coach yard",
   rooms=[(0,0,7,6,'taproom\n(bar counter)','room'),(7,0,2,6,'arch-\nway','yard'),(9,0,3,6,'cellar\nstore','shop'),(0,6,4,6,'kitchen','room'),
@@ -83,7 +83,7 @@ t('farmstead',name="Farmstead",size="12 × 12 m: house, byre and barn round a ya
   rooms=[(0,0,4,8,'house','room'),(4,0,4,8,'yard','yard'),(8,0,4,8,'byre','out'),(0,8,12,4,'barn','out')],
   doors=[(6,0,'h',2.4,'g'),(4,4,'v',1,'d'),(8,4,'v',1.6,'d'),(6,8,'h',2.4,'d')],
   hearths=[(0,5)],stairs=[(0.2,0.3,0.8,1.6,'ladder')],windows=[(2,0,'h',1.4),(0,2.5,'v',1)],
-  doodads=[(4.3,2.0,1.4,2.6,'cart','the farm cart'),(6.6,6.6,1.0,1.0,'manure heap','for the fields'),(6.4,2.4,1.2,0.6,'trough','water for the beasts')],
+  doodads=[(4.45,4.6,1.4,2.7,'cart','the farm cart, out of the gateway'),(6.25,5.5,1.3,1.3,'manure heap','for the fields'),(6.75,0.8,0.8,2.2,'trough','water for the beasts, along the yard side')],
   note="all doors face the yard; the yard gate faces the road; ladder to the loft")
 # plain buildings any people might put up
 t('store',people='any',name="Store or salt house",size="8 × 6 m, one room",
@@ -96,7 +96,7 @@ t('smokehouse',people='any',name="Smokehouse",size="6 × 6 m",
   note="the fire is fed from below; fish hang on racks up into the roof; louvres under the ridge")
 t('boat_shed',people='any',name="Boatwright's shed",size="8 × 6 m, open to the shore",
   rooms=[(0,0,8,6,'slipway\nand bench','out')],doors=[(4,0,'h',6,'s')],
-  doodads=[(0.3,3.8,1.6,1.6,'boat hull','a hull on trestles, half built')],
+  doodads=[(2.2,2.8,3.7,1.6,'boat hull','a hull on trestles, half built')],
   note="open along the front for hulls; tools along the back wall; a slipway down to the water")
 t('salt_works',people='any',name="Salt-boiling hut",size="6 × 9 m with its pans",
   rooms=[(0,0,6,5,'boiling hut','out'),(0,5,6,4,'salt pans','yard')],doors=[(3,0,'h',1.2,'d'),(3,5,'h',1.2,'d')],
@@ -108,15 +108,15 @@ t('granary',people='any',name="Granary",size="8 × 6 m on staddle stones",
   note="raised on mushroom-shaped stones against rats; loose wooden steps up to the door, outside, taken away at night")
 t('guard_post',people='any',name="Guard post",size="4 × 4 m with the bell frame",
   rooms=[(0,0,4,4,'guard\nroom','room')],doors=[(2,0,'h',1,'d')],hearths=[(4,2)],windows=[(0,2,'v',0.8)],
-  doodads=[(4.3,0.4,1.2,1.4,'bell frame','the alarm bell (rung in beat 2)')],
+  doodads=[(5.3,0.3,0.9,1.7,'bell frame','the alarm bell (rung in beat 2), clear of the eaves')],
   note="the alarm bell hangs in a frame beside it (rung in beat 2)")
 t('hen_house',people='any',name="Hen house and goat pen",size="4 × 7 m",
   rooms=[(0,0,4,3,'hen house','out'),(0,3,4,4,'goat pen','yard')],doors=[(2,0,'h',1,'d'),(2,3,'h',1,'o')],
-  doodads=[(0.4,4.0,1.2,0.5,'trough','water for the goats')],
+  doodads=[(0.9,4.0,2.2,0.8,'trough','water for the goats')],
   note="a pop-hole for the hens; the pen fenced with wattle")
 t('merrith_shrine',people='any',name="Shrine of Merrith",size="5 × 5 m",
   rooms=[(0,0,5,5,'altar','room')],doors=[(2.5,0,'h',1.2,'d')],windows=[(0,2.5,'v',1),(5,2.5,'v',1)],
-  doodads=[(0.1,-0.9,1.2,0.45,'bench','a stone bench for the shrine keeper and mourners'),(3.4,-0.6,0.5,0.5,'candles','candles and offerings at the door')],
+  doodads=[(3.4,-0.6,0.5,0.5,'candles','candles and offerings at the door')],
   note="Farhallow's small shrine to the merciful goddess: candles, offerings, a stone bench by the door")
 
 def footprint(k):   # the fixed part's width (along the street) and depth

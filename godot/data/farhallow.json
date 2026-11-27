@@ -253,18 +253,18 @@
   {
    "type": "granary",
    "mirror": false,
-   "x": 53.92894301056987,
-   "y": 13.321490501761645,
+   "x": 54.287688647516156,
+   "y": 11.457537729503231,
    "w": 8,
    "h": 6,
-   "a": 1.7359450042095235,
+   "a": 1.7681918866447774,
    "zone": "trade",
    "n": 11,
    "name": "Granary, by the gate and fields",
    "doors": [
     [
-     56.8881247820663,
-     13.814687463677716
+     57.22943067458892,
+     12.045886134917783
     ]
    ]
   },
@@ -325,26 +325,26 @@
   {
    "type": "hen_house",
    "mirror": false,
-   "x": 34.5,
-   "y": 40,
+   "x": 34,
+   "y": 38.5,
    "w": 4,
    "h": 7,
-   "a": 1.57,
+   "a": 3.14,
    "zone": "middling",
    "n": 14,
    "name": "Hen house and goat pen",
    "doors": [
     [
-     37.99999889026142,
-     39.997212856512434
+     34.00557428520771,
+     41.99999556104639
     ]
    ]
   },
   {
    "type": "street_house",
    "mirror": false,
-   "x": 46.286174631099485,
-   "y": 20.565904426806185,
+   "x": 41.32065738972017,
+   "y": 20.152111323357907,
    "w": 6.0,
    "h": 10,
    "a": -3.058451421701352,
@@ -353,8 +353,8 @@
    "name": "Old street house by the fields",
    "doors": [
     [
-     43.57889198786756,
-     25.35762861436698
+     38.61337474648824,
+     24.943835510918703
     ]
    ]
   }
@@ -390,10 +390,10 @@
   {
    "owner": 18,
    "label": "yard and garden",
-   "x": 47.03358394978314,
-   "y": 11.596992602602269,
+   "x": 42.02654396847696,
+   "y": 11.681472378276432,
    "w": 6,
-   "h": 8.0,
+   "h": 7.0,
    "a": -3.058451421701352
   },
   {
@@ -802,12 +802,12 @@
   {
    "owner": 13,
    "door": [
-    56.8881247820663,
-    13.814687463677716
+    57.22943067458892,
+    12.045886134917783
    ],
    "to": [
-    59.945945945945944,
-    14.324324324324325
+    60.26923076923077,
+    12.653846153846152
    ],
    "street": "gate road"
   },
@@ -850,24 +850,24 @@
   {
    "owner": 17,
    "door": [
-    37.99999889026142,
-    39.997212856512434
+    34.00557428520771,
+    41.99999556104639
    ],
    "to": [
-    36.999508388519246,
-    45.49991061609441
+    33.485395126825225,
+    44.86098093215004
    ],
    "street": "farm lane"
   },
   {
    "owner": 18,
    "door": [
-    43.57889198786756,
-    25.35762861436698
+    38.61337474648824,
+    24.943835510918703
    ],
    "to": [
-    43.4044964801747,
-    27.450374706681224
+    38.43897923879539,
+    27.03658160323295
    ],
    "street": "field lane"
   }
@@ -994,12 +994,16 @@
   {
    "pts": [
     [
-     47.432202253081094,
-     6.813572963026847
+     42.38363953184804,
+     7.39632561782345
     ],
     [
-     60.898628362997954,
-     9.50685818501022
+     53.449173645050685,
+     -0.5886065867215908
+    ],
+    [
+     60.59238505548964,
+     11.038074722551771
     ]
    ],
    "width": 1.0,
@@ -1025,9 +1029,10 @@
    "kind": "bench",
    "x": 55.38384163566212,
    "y": 30.667861838197656,
-   "w": 1.8,
-   "h": 0.5,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 1.4288992721907328,
+   "turn": false,
    "purpose": "drinkers sitting out front",
    "owner": 0,
    "mounted": false
@@ -1039,6 +1044,7 @@
    "w": 0.6,
    "h": 0.3,
    "a": 1.4288992721907328,
+   "turn": false,
    "purpose": "the Gull & Lantern sign on its bracket",
    "owner": 0,
    "mounted": true
@@ -1050,6 +1056,7 @@
    "w": 0.4,
    "h": 0.4,
    "a": 1.4288992721907328,
+   "turn": true,
    "purpose": "the lantern by the inn door",
    "owner": 0,
    "mounted": true
@@ -1059,8 +1066,9 @@
    "x": 45.03179835909107,
    "y": 36.69241161390704,
    "w": 2.2,
-   "h": 0.7,
+   "h": 0.8,
    "a": 1.4288992721907328,
+   "turn": false,
    "purpose": "water for horses in the coach yard",
    "owner": 0,
    "mounted": false
@@ -1069,9 +1077,10 @@
    "kind": "barrel",
    "x": 49.26736797839848,
    "y": 40.53200143574999,
-   "w": 1.0,
-   "h": 1.0,
+   "w": 0.698,
+   "h": 0.698,
    "a": 1.4288992721907328,
+   "turn": false,
    "purpose": "ale barrels by the cellar",
    "owner": 0,
    "mounted": false
@@ -1083,17 +1092,19 @@
    "w": 0.4,
    "h": 0.4,
    "a": 2.543173760111256,
+   "turn": true,
    "purpose": "a brass lamp by the front door",
    "owner": 1,
    "mounted": true
   },
   {
    "kind": "well",
-   "x": 84.18572540864318,
-   "y": 17.773737230819215,
-   "w": 1.4,
-   "h": 1.4,
+   "x": 85.35746600389753,
+   "y": 18.427207947403367,
+   "w": 1.7706000000000002,
+   "h": 1.4170000000000003,
    "a": 2.543173760111256,
+   "turn": false,
    "purpose": "their own well",
    "owner": 1,
    "mounted": false
@@ -1105,6 +1116,7 @@
    "w": 3.0,
    "h": 1.2,
    "a": 2.543173760111256,
+   "turn": false,
    "purpose": "a garden for show",
    "owner": 1,
    "mounted": false
@@ -1116,6 +1128,7 @@
    "w": 2.2,
    "h": 2.2,
    "a": 2.543173760111256,
+   "turn": false,
    "purpose": "pears",
    "owner": 1,
    "mounted": false
@@ -1124,9 +1137,10 @@
    "kind": "bench",
    "x": 90.1702402757515,
    "y": 14.480094596081853,
-   "w": 1.8,
-   "h": 0.5,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 2.543173760111256,
+   "turn": false,
    "purpose": "sitting in the garden",
    "owner": 1,
    "mounted": false
@@ -1138,17 +1152,19 @@
    "w": 0.4,
    "h": 0.4,
    "a": 2.7069224384405484,
+   "turn": true,
    "purpose": "a brass lamp by the front door: the well-off light their doors",
    "owner": 2,
    "mounted": true
   },
   {
    "kind": "well",
-   "x": 67.73805806935991,
-   "y": 21.9342932830423,
-   "w": 1.4,
-   "h": 1.4,
+   "x": 68.78759701775452,
+   "y": 22.770037260467646,
+   "w": 1.7706000000000002,
+   "h": 1.4170000000000003,
    "a": 2.7069224384405484,
+   "turn": false,
    "purpose": "their own well",
    "owner": 2,
    "mounted": false
@@ -1160,6 +1176,7 @@
    "w": 3.0,
    "h": 1.2,
    "a": 2.7069224384405484,
+   "turn": false,
    "purpose": "a garden for show",
    "owner": 2,
    "mounted": false
@@ -1171,6 +1188,7 @@
    "w": 2.2,
    "h": 2.2,
    "a": 2.7069224384405484,
+   "turn": false,
    "purpose": "apples",
    "owner": 2,
    "mounted": false
@@ -1179,22 +1197,12 @@
    "kind": "bench",
    "x": 74.17944139924475,
    "y": 19.660292228187302,
-   "w": 1.8,
-   "h": 0.5,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 2.7069224384405484,
+   "turn": false,
    "purpose": "sitting in the garden",
    "owner": 2,
-   "mounted": false
-  },
-  {
-   "kind": "bench",
-   "x": 107.1327361426993,
-   "y": 23.94590836446021,
-   "w": 1.2,
-   "h": 0.45,
-   "a": -2.58,
-   "purpose": "a stone bench for the shrine keeper and mourners",
-   "owner": 3,
    "mounted": false
   },
   {
@@ -1204,6 +1212,7 @@
    "w": 0.5,
    "h": 0.5,
    "a": -2.58,
+   "turn": false,
    "purpose": "candles and offerings at the door",
    "owner": 3,
    "mounted": true
@@ -1212,9 +1221,10 @@
    "kind": "anvil",
    "x": 84.02045814642447,
    "y": 62.10086219713516,
-   "w": 1.0,
-   "h": 0.6,
+   "w": 1.082,
+   "h": 0.402,
    "a": 3.9269908169872414,
+   "turn": false,
    "purpose": "the smith works here",
    "owner": 4,
    "mounted": false
@@ -1223,9 +1233,10 @@
    "kind": "quench trough",
    "x": 84.16187950266179,
    "y": 59.6966991411009,
-   "w": 1.6,
-   "h": 0.6,
+   "w": 1.4,
+   "h": 0.64,
    "a": 3.9269908169872414,
+   "turn": false,
    "purpose": "quenching hot iron",
    "owner": 4,
    "mounted": false
@@ -1234,9 +1245,10 @@
    "kind": "grindstone",
    "x": 86.99030662740797,
    "y": 62.666547622084394,
-   "w": 0.8,
-   "h": 0.8,
+   "w": 1.5974,
+   "h": 1.2628,
    "a": 3.9269908169872414,
+   "turn": false,
    "purpose": "sharpening",
    "owner": 4,
    "mounted": false
@@ -1245,9 +1257,10 @@
    "kind": "charcoal",
    "x": 80.90918830920367,
    "y": 59.555277784863584,
-   "w": 1.8,
-   "h": 1.8,
+   "w": 1.522,
+   "h": 1.447,
    "a": 3.9269908169872414,
+   "turn": true,
    "purpose": "fuel for the forge",
    "owner": 4,
    "mounted": false
@@ -1256,9 +1269,10 @@
    "kind": "woodpile",
    "x": 83.34870670429727,
    "y": 55.20657108056632,
-   "w": 1.3,
-   "h": 3.4,
+   "w": 0.9,
+   "h": 0.934,
    "a": 3.9269908169872414,
+   "turn": true,
    "purpose": "firewood for the forge",
    "owner": 4,
    "mounted": false
@@ -1267,9 +1281,10 @@
    "kind": "chopping block",
    "x": 86.28319984622145,
    "y": 55.02979438526968,
-   "w": 0.6,
-   "h": 0.6,
+   "w": 0.929,
+   "h": 0.821,
    "a": 3.9269908169872414,
+   "turn": false,
    "purpose": "the hatchet in the block: the first weapon (beat B)",
    "owner": 4,
    "mounted": false
@@ -1278,9 +1293,10 @@
    "kind": "woodpile",
    "x": 90.30385720498002,
    "y": 70.75274561073647,
-   "w": 1.6,
-   "h": 0.6,
+   "w": 0.934,
+   "h": 0.9,
    "a": -2.21,
+   "turn": false,
    "purpose": "oak and alder for the smoke",
    "owner": 5,
    "mounted": false
@@ -1289,9 +1305,10 @@
    "kind": "barrel",
    "x": 79.97756987645033,
    "y": 71.32170289890018,
-   "w": 0.8,
-   "h": 0.7,
+   "w": 0.698,
+   "h": 0.698,
    "a": 1.1071487177940904,
+   "turn": false,
    "purpose": "salt fish barrels waiting for the ship",
    "owner": 6,
    "mounted": false
@@ -1300,20 +1317,22 @@
    "kind": "barrel",
    "x": 80.42478347195029,
    "y": 72.2161300899001,
-   "w": 0.8,
-   "h": 0.7,
+   "w": 0.698,
+   "h": 0.698,
    "a": 1.1071487177940904,
+   "turn": false,
    "purpose": "salt fish barrels",
    "owner": 6,
    "mounted": false
   },
   {
    "kind": "boat hull",
-   "x": 70.45109661411296,
-   "y": 86.92760965656073,
-   "w": 1.6,
-   "h": 1.6,
+   "x": 72.37063749457089,
+   "y": 84.47447639310953,
+   "w": 3.6491,
+   "h": 1.5232,
    "a": -0.58,
+   "turn": true,
    "purpose": "a hull on trestles, half built",
    "owner": 7,
    "mounted": false
@@ -1322,9 +1341,10 @@
    "kind": "woodpile",
    "x": 99.85011173328321,
    "y": 49.60370251751489,
-   "w": 1.6,
-   "h": 0.6,
+   "w": 0.934,
+   "h": 0.9,
    "a": -0.64,
+   "turn": false,
    "purpose": "driftwood for the pans",
    "owner": 8,
    "mounted": false
@@ -1333,9 +1353,10 @@
    "kind": "sacks",
    "x": 103.41856258045814,
    "y": 47.19618127123346,
-   "w": 1.0,
-   "h": 0.6,
+   "w": 0.786,
+   "h": 0.6528,
    "a": -0.64,
+   "turn": false,
    "purpose": "salt in sacks",
    "owner": 8,
    "mounted": false
@@ -1344,9 +1365,10 @@
    "kind": "bench",
    "x": 71.64436801463134,
    "y": 69.12910542718035,
-   "w": 1.4,
-   "h": 0.45,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 2.5829933382462307,
+   "turn": false,
    "purpose": "sitting out by the door, mending",
    "owner": 9,
    "mounted": false
@@ -1355,20 +1377,22 @@
    "kind": "bench",
    "x": 63.015,
    "y": 75.52000000000001,
-   "w": 1.4,
-   "h": 0.45,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 2.498091544796509,
+   "turn": false,
    "purpose": "sitting out by the door, mending",
    "owner": 10,
    "mounted": false
   },
   {
    "kind": "woodpile",
-   "x": 59.78,
-   "y": 66.04000000000002,
-   "w": 1.0,
-   "h": 1.8,
+   "x": 59.57,
+   "y": 66.01,
+   "w": 0.9,
+   "h": 0.934,
    "a": 2.498091544796509,
+   "turn": true,
    "purpose": "fuel for the hearth",
    "owner": 10,
    "mounted": false
@@ -1377,9 +1401,10 @@
    "kind": "washing line",
    "x": 57.76,
    "y": 68.18,
-   "w": 3.4,
-   "h": 0.2,
+   "w": 3.487,
+   "h": 0.1,
    "a": 2.498091544796509,
+   "turn": false,
    "purpose": "drying the wash",
    "owner": 10,
    "mounted": false
@@ -1388,9 +1413,10 @@
    "kind": "bench",
    "x": 53.83392696468518,
    "y": 80.56558375205704,
-   "w": 1.4,
-   "h": 0.45,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 2.6387494426619322,
+   "turn": false,
    "purpose": "sitting out by the door, mending",
    "owner": 11,
    "mounted": false
@@ -1399,76 +1425,83 @@
    "kind": "bench",
    "x": 55.64400009865456,
    "y": 83.62155636310611,
-   "w": 1.4,
-   "h": 0.45,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 5.780342096251726,
+   "turn": false,
    "purpose": "sitting out by the door, mending",
    "owner": 12,
    "mounted": false
   },
   {
    "kind": "sacks",
-   "x": 57.710119718593084,
-   "y": 11.315822856636286,
-   "w": 2.2,
-   "h": 0.7,
-   "a": 1.7359450042095235,
+   "x": 58.13156489622456,
+   "y": 9.574822832176666,
+   "w": 0.786,
+   "h": 0.6528,
+   "a": 1.7681918866447774,
+   "turn": false,
    "purpose": "grain going in at harvest",
    "owner": 13,
    "mounted": false
   },
   {
    "kind": "barrel",
-   "x": 56.89634473143157,
-   "y": 16.198472779605396,
-   "w": 0.7,
-   "h": 0.7,
-   "a": 1.7359450042095235,
+   "x": 57.16079002729055,
+   "y": 14.42869717684672,
+   "w": 0.698,
+   "h": 0.698,
+   "a": 1.7681918866447774,
+   "turn": false,
    "purpose": "water barrel in case of fire",
    "owner": 13,
    "mounted": false
   },
   {
    "kind": "bell frame",
-   "x": 65.4948679374949,
-   "y": 7.941542269615167,
-   "w": 1.2,
-   "h": 1.4,
+   "x": 65.7105956861469,
+   "y": 7.117854502034794,
+   "w": 0.894,
+   "h": 1.7,
    "a": 4.90978454023457,
-   "purpose": "the alarm bell (rung in beat 2)",
+   "turn": true,
+   "purpose": "the alarm bell (rung in beat 2), clear of the eaves",
    "owner": 14,
    "mounted": false
   },
   {
    "kind": "cart",
-   "x": 35.119238354238355,
-   "y": 58.105513482028634,
-   "w": 1.4,
-   "h": 2.6,
+   "x": 33.99578155826719,
+   "y": 55.70075885263581,
+   "w": 1.4400000000000002,
+   "h": 2.692,
    "a": 2.761086276477428,
-   "purpose": "the farm cart",
+   "turn": false,
+   "purpose": "the farm cart, out of the gateway",
    "owner": 15,
    "mounted": false
   },
   {
    "kind": "manure heap",
-   "x": 31.758152733233718,
-   "y": 55.357222477008264,
-   "w": 1.0,
-   "h": 1.0,
+   "x": 32.29666921394717,
+   "y": 56.16499719807844,
+   "w": 1.28,
+   "h": 1.261,
    "a": 2.761086276477428,
+   "turn": false,
    "purpose": "for the fields",
    "owner": 15,
    "mounted": false
   },
   {
    "kind": "trough",
-   "x": 33.485119378280295,
-   "y": 59.40538084926799,
-   "w": 1.2,
-   "h": 0.6,
+   "x": 33.6429604157308,
+   "y": 60.20387080342932,
+   "w": 0.8,
+   "h": 2.2,
    "a": 2.761086276477428,
-   "purpose": "water for the beasts",
+   "turn": true,
+   "purpose": "water for the beasts, along the yard side",
    "owner": 15,
    "mounted": false
   },
@@ -1476,20 +1509,22 @@
    "kind": "bench",
    "x": 41.09167960493588,
    "y": 64.30587484912915,
-   "w": 1.4,
-   "h": 0.45,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 5.902678930067221,
+   "turn": false,
    "purpose": "sitting out by the door, mending",
    "owner": 16,
    "mounted": false
   },
   {
    "kind": "woodpile",
-   "x": 41.75089805546441,
-   "y": 74.30092642650897,
-   "w": 1.0,
-   "h": 1.8,
+   "x": 41.94587816055032,
+   "y": 74.38448932868864,
+   "w": 0.9,
+   "h": 0.934,
    "a": 5.902678930067221,
+   "turn": true,
    "purpose": "fuel for the hearth",
    "owner": 16,
    "mounted": false
@@ -1498,75 +1533,82 @@
    "kind": "washing line",
    "x": 44.25778512085461,
    "y": 72.75965511963943,
-   "w": 3.4,
-   "h": 0.2,
+   "w": 3.487,
+   "h": 0.1,
    "a": 5.902678930067221,
+   "turn": false,
    "purpose": "drying the wash",
    "owner": 16,
    "mounted": false
   },
   {
    "kind": "trough",
-   "x": 33.74920391109039,
-   "y": 39.00059756210121,
-   "w": 1.2,
-   "h": 0.5,
-   "a": 1.57,
+   "x": 33.998566612375164,
+   "y": 37.60000114144521,
+   "w": 2.2,
+   "h": 0.8,
+   "a": 3.14,
+   "turn": false,
    "purpose": "water for the goats",
    "owner": 17,
    "mounted": false
   },
   {
    "kind": "bench",
-   "x": 47.03773622377583,
-   "y": 25.997078809240776,
-   "w": 1.6,
-   "h": 0.5,
+   "x": 42.072218982396514,
+   "y": 25.5832857057925,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": -3.058451421701352,
+   "turn": false,
    "purpose": "sitting out by the shop in the evening",
    "owner": 18,
    "mounted": false
   },
   {
    "kind": "sign",
-   "x": 44.546371828163636,
-   "y": 25.789465109606425,
+   "x": 39.58085458678432,
+   "y": 25.375672006158148,
    "w": 0.6,
    "h": 0.3,
    "a": -3.058451421701352,
+   "turn": false,
    "purpose": "the shop sign on its bracket",
    "owner": 18,
    "mounted": true
   },
   {
    "kind": "woodpile",
-   "x": 48.910411794477675,
-   "y": 14.36240708173181,
-   "w": 1.2,
-   "h": 2.0,
+   "x": 43.79956496335431,
+   "y": 13.88632986839323,
+   "w": 0.9,
+   "h": 0.934,
    "a": -3.058451421701352,
+   "turn": true,
    "purpose": "fuel for the kitchen hearth",
    "owner": 18,
    "mounted": false
   },
   {
    "kind": "washing line",
-   "x": 45.29793342083998,
-   "y": 14.36240708173181,
-   "w": 2.0,
-   "h": 0.2,
+   "x": 41.81062572085723,
+   "y": 11.86417243395466,
+   "w": 3.487,
+   "h": 0.1,
    "a": -3.058451421701352,
+   "turn": false,
    "purpose": "drying the wash",
    "owner": 18,
    "mounted": false
   },
   {
    "kind": "hen coop",
-   "x": 48.88549815052154,
-   "y": 11.048892435567586,
-   "w": 1.4,
-   "h": 1.0,
+   "x": 43.919980909142225,
+   "y": 10.635099332119308,
+   "w": 1.588,
+   "h": 1.3,
    "a": -3.058451421701352,
+   "turn": true,
    "purpose": "eggs",
    "owner": 18,
    "mounted": false
@@ -1575,9 +1617,10 @@
    "kind": "notice post",
    "x": 60.6,
    "y": 53.4,
-   "w": 0.4,
-   "h": 0.4,
+   "w": 1.05,
+   "h": 0.389,
    "a": 0.0,
+   "turn": false,
    "purpose": "the harbour master's notices: when the trader's ship is due",
    "owner": -1,
    "mounted": false
@@ -1586,9 +1629,10 @@
    "kind": "bench",
    "x": 69.0,
    "y": 43.4,
-   "w": 1.6,
-   "h": 0.5,
+   "w": 1.6662000000000001,
+   "h": 0.3204,
    "a": 0.4,
+   "turn": false,
    "purpose": "old folk sitting by the well",
    "owner": -1,
    "mounted": false
@@ -1600,6 +1644,7 @@
    "w": 0.4,
    "h": 0.4,
    "a": 0.0,
+   "turn": true,
    "purpose": "gate torch on the gate post, lit at dusk",
    "owner": -1,
    "mounted": true
@@ -1611,6 +1656,7 @@
    "w": 0.4,
    "h": 0.4,
    "a": 0.0,
+   "turn": true,
    "purpose": "gate torch on the gate post, lit at dusk",
    "owner": -1,
    "mounted": true
@@ -1619,9 +1665,10 @@
    "kind": "scarecrow",
    "x": 25,
    "y": 24,
-   "w": 0.8,
-   "h": 0.8,
+   "w": 1.614,
+   "h": 0.64,
    "a": 0.0,
+   "turn": false,
    "purpose": "keeping crows off the infield",
    "owner": -1,
    "mounted": false
@@ -1630,9 +1677,10 @@
    "kind": "haystack",
    "x": 32,
    "y": 30,
-   "w": 2.0,
-   "h": 2.0,
+   "w": 1.0842,
+   "h": 0.7592,
    "a": 0.0,
+   "turn": false,
    "purpose": "winter hay for the goats",
    "owner": -1,
    "mounted": false
@@ -1641,9 +1689,10 @@
    "kind": "net rack",
    "x": 77.2,
    "y": 85.3,
-   "w": 2.6,
-   "h": 0.4,
+   "w": 2.704,
+   "h": 0.371,
    "a": -0.32,
+   "turn": false,
    "purpose": "fishers drying their nets by the boats",
    "owner": -1,
    "mounted": false
@@ -1652,9 +1701,10 @@
    "kind": "net rack",
    "x": 64.8,
    "y": 88.4,
-   "w": 2.6,
-   "h": 0.4,
+   "w": 2.704,
+   "h": 0.371,
    "a": -0.58,
+   "turn": false,
    "purpose": "fishers drying their nets",
    "owner": -1,
    "mounted": false
@@ -1663,9 +1713,10 @@
    "kind": "drying rack",
    "x": 99.5,
    "y": 62.0,
-   "w": 2.4,
-   "h": 0.5,
+   "w": 2.416,
+   "h": 1.146,
    "a": 0.9,
+   "turn": false,
    "purpose": "fish drying in the wind before smoking",
    "owner": -1,
    "mounted": false
@@ -1674,9 +1725,10 @@
    "kind": "gutting table",
    "x": 82.0,
    "y": 83.0,
-   "w": 1.6,
-   "h": 0.8,
+   "w": 1.759,
+   "h": 1.125,
    "a": -0.4,
+   "turn": false,
    "purpose": "gutting the catch as it lands",
    "owner": -1,
    "mounted": false
@@ -1685,9 +1737,10 @@
    "kind": "lobster pots",
    "x": 87.5,
    "y": 92,
-   "w": 1.2,
-   "h": 1.2,
+   "w": 1.173,
+   "h": 0.56,
    "a": 0.0,
+   "turn": false,
    "purpose": "pots stacked on the pier",
    "owner": -1,
    "mounted": false
@@ -1696,9 +1749,10 @@
    "kind": "barrel",
    "x": 88.4,
    "y": 84,
-   "w": 1.0,
-   "h": 1.0,
+   "w": 0.698,
+   "h": 0.698,
    "a": 0.0,
+   "turn": false,
    "purpose": "barrels being rolled to the boats",
    "owner": -1,
    "mounted": false
@@ -1707,9 +1761,10 @@
    "kind": "crate",
    "x": 100.5,
    "y": 99.0,
-   "w": 1.6,
-   "h": 1.2,
+   "w": 0.908,
+   "h": 0.842,
    "a": 0.0,
+   "turn": true,
    "purpose": "cargo waiting for the trader's ship (the last ship)",
    "owner": -1,
    "mounted": false

@@ -2,6 +2,9 @@
 # building from the logistics table (docs/settlements/farhallow.md) with its zone, door and the main roads.
 #   python3 farhallow_plan.py out.png
 import math,random,sys
+GAP=2.0   # the least room between two buildings (their rooms and yards), metres
+
+
 from PIL import Image,ImageDraw,ImageFont
 MW,H=1400,1100; W=MW+470; S=10.0
 def P(x,y): return (x*S, y*S)            # metres from the top-left corner
@@ -108,11 +111,11 @@ B=[('gate road',52,36,'inn',1.5,PUB,1,'The Gull & Lantern, tavern with rooms'),
    ('shore lane',72,68,'cottage',1.0,POOR,9,"Net-mender's cottage"),
    ('shore lane',63,74,'cottage',1.0,POOR,10,"Fishers' cottages"),('shore lane',54,79,'cottage',1.0,POOR,10,''),
    ('shore lane',52,87,'cottage',1.0,POOR,10,''),
-   ('gate road',52,13,'granary',1.0,TRADE,11,'Granary, by the gate and fields'),
+   ('gate road',52,11,'granary',1.0,TRADE,11,'Granary, by the gate and fields'),
    ('gate road',66,11,'guard_post',1.0,PUB,12,'Guard post and bell'),
    ('west road',34,58,'farmstead',1.0,MID,13,'Farmstead and farming cottage'),('west road',42,69,'cottage',1.0,MID,13,''),
-   (None,34.5,40,'hen_house',1.57,MID,14,'Hen house and goat pen'),
-('field lane',46,24,'street_house',1.0,MID,15,'Old street house by the fields')]
+   (None,34,38.5,'hen_house',3.14,MID,14,'Hen house and goat pen'),
+('field lane',41,24,'street_house',1.0,MID,15,'Old street house by the fields')]
 def corners(x,y,w,h,a):
     ca,sa=math.cos(a),math.sin(a); return [(x+u*ca-v*sa,y+u*sa+v*ca) for u,v in [(-w/2,-h/2),(w/2,-h/2),(w/2,h/2),(-w/2,h/2)]]
 def overlap(A,Bq,pad=0.5):   # separating axis test, with a little elbow room
@@ -196,7 +199,7 @@ if shared: print('%d poor cottages share a yard instead of their own plot (Wayfo
 for i,(n,nm,geo) in enumerate(things):
     for j in range(i+1,len(things)):
         if things[j][0]==n and n>=0: continue    # rooms of one building and its plot
-        if overlap(corners(*geo),corners(*things[j][2]),0.4): problems.append('%s overlaps %s'%(nm,things[j][1]))
+        if overlap(corners(*geo),corners(*things[j][2]),GAP if not any(w_ in nm+things[j][1] for w_ in PLOTNAMES) else 0.4): problems.append('%s overlaps %s'%(nm,things[j][1]))
     problems+=ground_clash(n,nm,geo)
 # trees: none on a building, garden, yard, road or lane
 def clear(x,y,r):
@@ -355,6 +358,23 @@ for k in range(len(placed)):
         for u,v,w_,h_,kind,why in ty['plot_doodads']:
             if v+h_<=dep-0.3: DOODADS.append(room_geo(k,(px+u,placed[k][3]+v,w_,h_))+(kind,why,k))
 DOODADS+=[t_+(-1,) for t_ in VILLAGE]
+# every doodad takes its model's real size (godot/data/model_sizes.json, measured from the models), turned so its long
+# side lies along the long side of the spot the plan gave it: the checks below run on what will really stand there
+import json as _json, os as _os
+_GD=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'..','..','godot','data')
+MODELS=_json.load(open(_os.path.join(_GD,'doodad_models.json'))); SIZES=_json.load(open(_os.path.join(_GD,'model_sizes.json')))
+LOOSE={'fruit tree','flower bed'}   # canopies and flowers may spill over their spot
+MOUNTED={'lamp','sign','candles','torch'}   # hung on a wall or post: only where they hang matters, and they block nothing
+TURN={}
+for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
+    m=MODELS[kind]; sz=SIZES[m['model']]; mw,mh=sz[0]*m['scale'],sz[1]*m['scale']
+    turn=(mw>=mh)!=(w_>=h_)
+    if turn: mw,mh=mh,mw
+    TURN[i]=turn
+    if kind not in MOUNTED and kind not in LOOSE: DOODADS[i]=(x,y,mw,mh,a_,kind,why,k)
+def _near_edge(p,geo,m):   # within m of a rectangle's edge (from inside)
+    x,y,w,h,a=geo; ca,sa=math.cos(a),math.sin(a); dx,dy=p[0]-x,p[1]-y; u,v=dx*ca+dy*sa,-dx*sa+dy*ca
+    return w/2-abs(u)<m or h/2-abs(v)<m
 def ground(p):   # what a point stands on
     for k in range(len(placed)):
         ty=TYPES[PTYPE[k]]
@@ -363,9 +383,12 @@ def ground(p):   # what a point stands on
                 if PTYPE[k]=='workshop' and r[5] in ('shop','yard'): return 'workshop'
                 if PTYPE[k]=='boat_shed': return 'workshop'
                 if PTYPE[k]=='hen_house' and r[5]=='yard': return 'pen'
+                if _near_edge(p,room_geo(k,r),0.35): return 'wall'   # the room's wall, or the yard's fence
                 return {'yard':'yard','garden':'garden'}.get(r[5],'indoor')
     for pl in PLOTS:
-        if inside(p,corners(*pl[2:])): return 'garden' if pl[1]=='walled garden' else 'yard'
+        if inside(p,corners(*pl[2:])):
+            if _near_edge(p,pl[2:],0.35): return 'wall'   # its wall or fence runs round the edge
+            return 'garden' if pl[1]=='walled garden' else 'yard'
     for r,rn in RECTS:   # the pier stands over the sea, so it comes first
         if rect_hit(p,r,0): return {'field':'field','vegetable plots':'field','pier':'pier'}[rn]
     if inside(p,coast): return 'sea'
@@ -394,6 +417,7 @@ for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     if not why: dproblems.append('%s: no purpose'%nm)                     # 1. does it need to be there?
     pts=[(x,y)]+corners(x,y,w_,h_,a_)
     gs={ground(q) for q in ([(x,y)] if kind in MOUNTED else pts)}
+    if kind in MOUNTED: gs-={'path'}   # hung up high on a wall or post: a path may run beneath it
     bad=gs-KINDS[kind]
     if 'path' in bad: dproblems.append('%s at (%.0f,%.0f) blocks a path'%(nm,x,y)); bad-= {'path'}        # 3. blocks a path?
     if bad: dproblems.append('%s at (%.0f,%.0f) stands on %s'%(nm,x,y,'/'.join(sorted(bad))))              # 2. ground that makes sense?
@@ -476,7 +500,7 @@ data={'buildings':[dict(type=PTYPE[k],mirror=PMIR[k],x=b_[0],y=b_[1],w=b_[2],h=b
       'lanes':[dict(name=nm,pts=[list(q) for q in pts],width=w) for pts,w,nm in LANES],
       'spurs':[dict(owner=k,door=list(dp),to=list(q),street=ln) for k,dp,q,ln in SPURS],
       'trails':[dict(pts=[list(q) for q in lp],width=w,purpose=why) for lp,w,why in TRAILS],
-      'doodads':[dict(kind=kind,x=x,y=y,w=w_,h=h_,a=a_,purpose=why,owner=k,mounted=kind in MOUNTED) for x,y,w_,h_,a_,kind,why,k in DOODADS],
+      'doodads':[dict(kind=kind,x=x,y=y,w=w_,h=h_,a=a_,turn=TURN[i],purpose=why,owner=k,mounted=kind in MOUNTED) for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS)],
       'waystone':dict(x=WAYSTONE[0],y=WAYSTONE[1],a=WAYSTONE[4]),'square':dict(x=64,y=50,r=8.2),
       'rects':[dict(name=rn,x0=r[0],y0=r[1],x1=r[2],y1=r[3]) for r,rn in RECTS],
       'walls':[dict(name=ln,pts=[list(q) for q in lp]) for lp,cl,ln in LINES],
