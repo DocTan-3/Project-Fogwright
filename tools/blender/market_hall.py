@@ -189,6 +189,6 @@ if RENDER:
     g = bpy.data.objects.new('sq', bpy.data.meshes.new('sq')); scene.collection.objects.link(g)
     gb = bmesh.new(); bmesh.ops.create_grid(gb, x_segments=2, y_segments=2, size=60); gb.to_mesh(g.data); gb.free()
     cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam')); scene.collection.objects.link(cam); scene.camera = cam; cam.data.lens = 26
-    cp = Vector(tuple(float(v) for v in os.environ.get('CAM', '17,-24,7').split(','))); tgt = Vector((0, 0, 5.5)); cam.location = cp; cam.rotation_euler = (tgt - cp).to_track_quat('-Z', 'Y').to_euler()
+    cp = Vector(tuple(float(v) for v in os.environ.get('CAM', '17,-24,7').split(','))); tgt = Vector(tuple(float(v) for v in os.environ.get('TGT', '0,0,5.5').split(','))); cam.location = cp; cam.rotation_euler = (tgt - cp).to_track_quat('-Z', 'Y').to_euler()
     scene.render.resolution_x, scene.render.resolution_y = 1280, 800; scene.cycles.samples = 48; scene.view_settings.view_transform = 'AgX'; scene.render.filepath = RENDER
     bpy.ops.render.render(write_still=True); print('RENDERED', RENDER)
