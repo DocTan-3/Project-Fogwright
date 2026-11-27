@@ -1,12 +1,35 @@
 ---
 name: city-planning
-description: Plan and dress a Fogwright town, village, city district or other settlement in Godot, in five stages - lore, logistics, building layout, paths, doodads - and check every path and placement makes sense. Use whenever building or changing a settlement, placing buildings or props, or reviewing a settlement's layout.
+description: Plan and dress a Fogwright town, village, city district or other settlement in Godot, in six stages - who it is for (people, culture, architecture), lore, logistics, building layout, paths, doodads - and check every path and placement makes sense. Use whenever building or changing a settlement, placing buildings or props, or reviewing a settlement's layout.
 ---
 
 # City planning for Fogwright
 
-Settlements are built in five stages, each finished and shown to the user before the next: **lore, logistics, building
-layout, paths, doodads.** Then the checks, a look, and the performance budget. Every object placed must earn its place.
+Settlements are built in six stages, each finished and shown to the user before the next: **who it is for, lore,
+logistics, building layout, paths, doodads.** Then the checks, a look, and the performance budget. Every object placed must earn its place.
+
+## 0. Who it is for: people, culture, architecture
+
+Before anything else, settle whose place this is. A people's culture decides how its towns are arranged, and its
+architecture decides the floorplans; a Zarhim oasis town and a Hrimfolk fjord hold are planned differently from the
+ground up. Each people has a **culture sheet** in the docs (`docs/peoples/<people>.md`), written once with the user and
+reused for every settlement of theirs. If the sheet is missing or thin, write it (with the user's choices) first.
+
+A culture sheet covers:
+
+- **How they live together:** family and household (nuclear, clan, extended), who holds power (elders, a lord, a guild,
+  priests), what they value and what they hide.
+- **How their towns are arranged:** what stands at the centre (hall, temple, market, well, the lord's house), whether
+  houses face the street or turn inward round courtyards, the street pattern (organic, ring, grid, terraces), walls and
+  gates, where the dead are buried, what is sacred and where it goes, how they use water, wind and slope.
+- **How rich and poor show:** in size, height, material, distance from the centre, walls, decoration.
+- **Their architecture:** building types and their floorplans (rooms, sizes, storeys, where the hearth is, where animals
+  sleep, where the door is and what it opens onto), materials, roofs, windows, ornament and colour, how they build on
+  slopes. Sketch a plan of each common building type; these become the kit pieces and layouts in 3D.
+- **What a stranger notices first:** the two or three things that make one of their towns unmistakable.
+
+For a mixed settlement (a port, Aldrath's outer city), say whose culture shapes which part: the common building style,
+and where other peoples' families built in their own way.
 
 ## 1. Lore
 
@@ -47,8 +70,14 @@ Draw a top-down plan (tools/map/farhallow_plan.py is the pattern): north up, met
 from the logistics table with its size, angle and use. Show it to the user before building in 3D.
 
 - **Terrain that makes sense:** high and low ground, water and shore, and why. Elevation only where real geography puts it.
-- **Buildings at varied angles,** dense in the core, looser outward, sized to their use (a tavern is big, a hen house
-  small), with room left for the paths between them. Not everything faces a cardinal direction.
+- **Buildings face the street they serve** (unless the people's culture turns them inward): the front runs along the
+  road, the door opens onto it, and houses on one street share a setback, so streets read as streets. A corner building
+  faces the more important street. The angles come from the roads, which bend with the ground, so not everything faces
+  a cardinal direction. Only workshops with yards, sheds, barns and the like face their yard or the shore instead; the
+  well-off may sit back behind a front garden, still facing the road with a gate onto it.
+- **Dense in the core, looser outward,** sized to their use (a tavern is big, a hen house small), with room left for
+  the paths and yards between them. Buildings that sit off the main roads face the lane that will reach them, so draw
+  those lanes as dashed lines on the layout.
 - **Edges:** walls or palisades with gates where roads enter; fields and woods around; the place should feel enclosed.
 - **Gameplay marks:** where each quest beat happens, with room to fight, flee and gather.
 

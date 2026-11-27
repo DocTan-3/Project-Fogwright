@@ -46,7 +46,7 @@ def zone(poly,c,label,at):
     img.paste(Image.alpha_composite(img.convert('RGBA'),z).convert('RGB')); 
     ImageDraw.Draw(img).text(P(*at),label,font=F(20,True),fill=(255,255,245),stroke_width=3,stroke_fill=(40,30,20))
 zone([(68,28),(80,20),(98,10),(112,14),(110,30),(96,40),(84,44),(68,44)],(255,215,120,70),'WELL-OFF (upwind, uphill)',(71,12.5))
-zone([(48,66),(62,62),(80,62),(100,64),(100,74),(86,84),(74,88),(60,92),(46,84)],(70,60,90,70),'POOR (downwind, by the shore)',(32,88))
+zone([(48,66),(62,62),(80,62),(100,64),(100,74),(86,84),(74,88),(60,92),(46,84)],(70,60,90,70),'POOR (downwind, by the shore)',(14,95))
 d=ImageDraw.Draw(img)
 for pts,w,_ in ROADS:
     d.line([P(x,y) for x,y in pts],fill=(170,140,100),width=int(w*S),joint='curve')
@@ -62,44 +62,92 @@ def boat(x,y,l,w,a,c=(140,98,62)):
     pts=[(-l/2,0),(-l/2+1,-w/2),(l/2-l*0.25,-w/2),(l/2,0),(l/2-l*0.25,w/2),(-l/2+1,w/2)]
     ca,sa=math.cos(a),math.sin(a); d.polygon([P(x+u*ca-v*sa,y+u*sa+v*ca) for u,v in pts],fill=c,outline=(60,40,26))
 boat(96,92,8,2.8,-0.3); boat(76,94,6,2.2,0.4); boat(120,100,16,5,0.05,(110,76,50))
-# walled gardens of the well-off
-for x,y,w,h,a in ((92,23,17,13,0.12),(78,35,16,13,-0.2)):
-    ca,sa=math.cos(a),math.sin(a); pts=[(-w/2,-h/2),(w/2,-h/2),(w/2,h/2),(-w/2,h/2),(-w/2,-h/2)]
-    d.line([P(x+u*ca-v*sa,y+u*sa+v*ca) for u,v in pts],fill=(170,164,150),width=6)
-    d.ellipse([P(x-w/2+1.2+0.5,y+h/2-3.2),P(x-w/2+3.2+0.5,y+h/2-1.2)],fill=(130,150,170),outline=(80,80,80),width=2)   # own well
 RICH,MID,POOR,TRADE,PUB=(214,170,108),(166,122,84),(124,100,80),(112,100,96),(150,96,64)
-# (x, y, w, h, angle, colour, number, name)
-B=[(51,46,12,8,-0.08,PUB,1,'The Gull & Lantern, tavern with rooms'),
-   (92,23,9,7,0.12,RICH,2,"Harbour master's house"),
-   (78,35,9,7,-0.2,RICH,3,'Dunmore house (fish merchants)'),
-   (107,20,5,5,-0.1,(200,196,186),4,'Shrine of Merrith, on the rise'),
-   (86,57,10,7,0.62,TRADE,5,'Smithy: forge, furnace, charcoal'),
-   (95,70,6,5,0.9,TRADE,6,'Smokehouse'),
-   (79,76,9,6,0.45,TRADE,7,'Salt house and fish store'),
-   (69,85,8,5,0.55,TRADE,8,"Boatwright's shed"),
-   (72,73,6,5,-0.4,POOR,9,"Net-mender's house"),
-   (66,67,5,4,-0.5,POOR,10,"Fishers' cottages"),(60,74,5,4,0.3,POOR,10,''),(55,81,5,4,-0.2,POOR,10,''),
-   (70,81,5,4,0.7,POOR,10,''),(77,67,5,4,0.8,POOR,10,''),(50,74,5,4,-0.1,POOR,10,''),
-   (48,12,8,5,0.05,TRADE,11,'Granary, by the gate and fields'),
-   (66,11,4,4,0.1,PUB,12,'Guard post and bell'),
-   (38,50,6,5,-0.2,MID,13,'Farming cottages'),(30,57,6,5,0.3,MID,13,''),(42,69,6,5,-0.1,MID,13,''),
-   (34,42,4,3,0.2,MID,14,'Hen house and goat pen'),
-   (56,61,5,5,0.5,MID,15,'Old core houses round the square'),(66,40,5,6,-0.25,MID,15,''),(76,52,5,5,0.75,MID,15,''),
-   (53,35,6,5,-0.15,MID,15,''),(66,28,5,5,0.1,MID,15,''),(52,24,5,6,-0.2,MID,15,'')]
-road_pts=[pts for pts,_,_ in ROADS]
-def near_road(p):
-    best=1e9
-    for pts in road_pts:
-        for a,b in zip(pts,pts[1:]): best=min(best,segd(p,a,b))
-    return min(best,max(0,math.hypot(p[0]-64,p[1]-50)-8))
-for x,y,w,h,a,c,n,_ in B:
-    ca,sa=math.cos(a),math.sin(a); R=lambda u,v:(x+u*ca-v*sa,y+u*sa+v*ca)
-    poly=[P(*R(u,v)) for u,v in [(-w/2,-h/2),(w/2,-h/2),(w/2,h/2),(-w/2,h/2)]]
+# lanes (dashed): only so the buildings off the main roads know which way to face; drawn properly in stage 4
+LANES=[([(80,66),(72,71),(64,77),(55,82),(46,86)],2.2,'shore lane'),
+       ([(60,30),(50,29),(42,27)],2.2,'field lane'),
+       ([(46,60),(40,52),(37,45)],2.0,'farm lane')]
+for pts,w,_ in LANES:
+    for (x0,y0),(x1,y1) in zip(pts,pts[1:]):
+        L=math.hypot(x1-x0,y1-y0); n=int(L/2)
+        for k in range(0,n,2): d.line([P(x0+(x1-x0)*k/n,y0+(y1-y0)*k/n),P(x0+(x1-x0)*(k+1)/n,y0+(y1-y0)*(k+1)/n)],fill=(170,140,100),width=int(w*S*0.6))
+STREETS={nm:(pts,w) for pts,w,nm in ROADS+LANES}
+def front(street,x,y,w,h,gap=1.0,flip=False):
+    """Set a building along a street: long side parallel to it, the door side facing it, `gap` metres back from its edge.
+    (x, y) only says roughly where along the street and on which side."""
+    pts,rw=STREETS[street]; best=None
+    for a_,b_ in zip(pts,pts[1:]):
+        dx,dy=b_[0]-a_[0],b_[1]-a_[1]; L2=dx*dx+dy*dy; t=max(0,min(1,((x-a_[0])*dx+(y-a_[1])*dy)/L2))
+        q=(a_[0]+t*dx,a_[1]+t*dy); dd=math.hypot(x-q[0],y-q[1])
+        if best is None or dd<best[0]: best=(dd,q,(dx,dy))
+    _,q,(dx,dy)=best; L=math.hypot(dx,dy); tx,ty=dx/L,dy/L; nx,ny=-ty,tx
+    if (x-q[0])*nx+(y-q[1])*ny<0: nx,ny=-nx,-ny          # the side of the street the building is on
+    off=rw/2+gap+h/2; cx,cy=q[0]+nx*off,q[1]+ny*off
+    ang=math.atan2(ty,tx)
+    # local -y is the front: make it point back at the street
+    if -math.sin(ang)*0+(-1)*0: pass
+    fx,fy=math.sin(ang),-math.cos(ang)                     # world direction of local (0,-1)
+    if fx*(-nx)+fy*(-ny)<0: ang+=math.pi
+    return cx,cy,ang
+# (street, rough x, rough y, w, h, gap, colour, number, name); street None = placed by hand (x, y, angle) facing a yard
+B=[('gate road',53,46,12,8,1.5,PUB,1,'The Gull & Lantern, tavern with rooms'),
+   ('rise road',95,33,9,7,5.0,RICH,2,"Harbour master's house"),
+   ('rise road',75,40,9,7,4.0,RICH,3,'Dunmore house (fish merchants)'),
+   ('rise road',107,20,5,5,0.5,(200,196,186),4,'Shrine of Merrith, on the rise'),
+   ('harbour road',87,57,10,7,1.5,TRADE,5,'Smithy: forge, furnace, charcoal'),
+   (None,95,70,6,5,0.9,TRADE,6,'Smokehouse'),
+   ('harbour road',80,77,9,6,1.0,TRADE,7,'Salt house and fish store'),
+   (None,69,86,8,5,0.55,TRADE,8,"Boatwright's shed"),
+   ('shore lane',72,68,6,5,1.0,POOR,9,"Net-mender's house"),
+   ('shore lane',63,74,5,4,0.6,POOR,10,"Fishers' cottages"),('shore lane',54,79,5,4,0.6,POOR,10,''),('shore lane',45,83,5,4,0.6,POOR,10,''),
+   ('shore lane',68,77,5,4,0.6,POOR,10,''),('shore lane',60,83,5,4,0.6,POOR,10,''),('shore lane',52,87,5,4,0.6,POOR,10,''),
+   ('gate road',52,13,8,5,1.0,TRADE,11,'Granary, by the gate and fields'),
+   ('gate road',66,11,4,4,1.0,PUB,12,'Guard post and bell'),
+   ('farm lane',44,52,6,5,1.0,MID,13,'Farming cottages'),('west road',34,58,6,5,1.0,MID,13,''),('west road',42,69,6,5,1.0,MID,13,''),
+   (None,34,42,4,3,0.2,MID,14,'Hen house and goat pen'),
+   ('west road',55,61,5,5,1.0,MID,15,'Old core houses along the roads'),('rise road',82,47,5,5,1.0,MID,15,''),
+   ('gate road',53,35,6,5,1.0,MID,15,''),('gate road',65,27,5,5,1.0,MID,15,''),('field lane',45,24,5,6,1.0,MID,15,''),
+   ('harbour road',62,60,5,5,1.0,MID,15,''),('gate road',54,24,5,5,1.0,MID,15,'')]
+def corners(x,y,w,h,a):
+    ca,sa=math.cos(a),math.sin(a); return [(x+u*ca-v*sa,y+u*sa+v*ca) for u,v in [(-w/2,-h/2),(w/2,-h/2),(w/2,h/2),(-w/2,h/2)]]
+def overlap(A,Bq,pad=0.5):   # separating axis test, with a little elbow room
+    for poly in (A,Bq):
+        for i in range(4):
+            x0,y0=poly[i]; x1,y1=poly[(i+1)%4]; nx,ny=y0-y1,x1-x0; L=math.hypot(nx,ny); nx/=L; ny/=L
+            pa=[px*nx+py*ny for px,py in A]; pb=[px*nx+py*ny for px,py in Bq]
+            if max(pa)+pad<=min(pb) or max(pb)+pad<=min(pa): return False
+    return True
+placed=[]
+for st,x,y,w,h,g,c,n,name in B:
+    if st: x,y,a=front(st,x,y,w,h,g); door=True
+    else: a=g; door=False
+    placed.append((x,y,w,h,a,c,n,name,st))
+problems=[]
+blocks=list(placed)   # the well-off houses' walled front gardens count as part of them
+for k,(x,y,w,h,a,c,n,_,st) in enumerate(placed):
+    if c==RICH:
+        ca,sa=math.cos(a),math.sin(a); blocks[k]=(x+1.25*sa,y-1.25*ca,w+6,h+6.5,a,c,n,_,st)
+for i in range(len(placed)):
+    for j in range(i+1,len(placed)):
+        if overlap(corners(*blocks[i][:5]),corners(*blocks[j][:5])): problems.append('%s %d overlaps %d at (%.0f,%.0f)'%('',placed[i][6],placed[j][6],placed[j][0],placed[j][1]))
+    for pts,rw,nm in ROADS+LANES:      # a building may not sit on any street
+        for p0,p1 in zip(pts,pts[1:]):
+            if any(segd(q,p0,p1)<rw/2 for q in corners(*placed[i][:5])+[placed[i][:2]]): problems.append('%d (%.0f,%.0f) on the %s'%(placed[i][6],placed[i][0],placed[i][1],nm)); break
+print('\n'.join(problems) or 'no overlaps')
+for x,y,w,h,a,c,n,_,st in placed:
+    poly=[P(*q) for q in corners(x,y,w,h,a)]
     d.polygon([(px+6,py+6) for px,py in poly],fill=(60,80,48)); d.polygon(poly,fill=c,outline=(60,40,26))
-    # the door on the side facing the nearest road (the smokehouse, sheds and hen house face their yard instead)
-    sides=[(0,-h/2),(w/2,0),(0,h/2),(-w/2,0)]; m=min(sides,key=lambda s:near_road(R(*s)))
-    dx,dy=R(*m); d.rectangle([P(dx-0.8,dy-0.8),P(dx+0.8,dy+0.8)],fill=(250,240,200),outline=(60,40,26))
+    if st:   # the door in the middle of the front (local -y), facing the street
+        ca,sa=math.cos(a),math.sin(a); dx,dy=x+(h/2)*sa,y-(h/2)*ca
+        d.rectangle([P(dx-0.8,dy-0.8),P(dx+0.8,dy+0.8)],fill=(250,240,200),outline=(60,40,26))
     d.text(P(x,y),str(n),font=F(24,True),fill=(255,250,235),anchor='mm',stroke_width=3,stroke_fill=(40,30,20))
+# walled gardens of the well-off, in front of the house down to the road, with a gate
+for x,y,w,h,a,c,n,_,st in placed:
+    if c!=RICH: continue
+    ca,sa=math.cos(a),math.sin(a); R=lambda u,v:(x+u*ca-v*sa,y+u*sa+v*ca)
+    wall=[R(-1.4,-h/2-4.5),R(-w/2-3,-h/2-4.5),R(-w/2-3,h/2+2),R(w/2+3,h/2+2),R(w/2+3,-h/2-4.5),R(1.4,-h/2-4.5)]
+    d.line([P(*q) for q in wall],fill=(170,164,150),width=6)
+    wx,wy=R(w/2+1.5,h/2+0.5); d.ellipse([P(wx-1,wy-1),P(wx+1,wy+1)],fill=(130,150,170),outline=(80,80,80),width=2)   # own well
 # the smithy's yard: furnace, quench trough, charcoal heap, woodpile
 d.ellipse([P(91.5,60),P(94.5,63)],fill=(90,70,60),outline=(40,30,26),width=3); d.text(P(95,60.5),'furnace',font=F(15,True),fill=(255,255,240),stroke_width=2,stroke_fill=(40,30,20))
 d.rectangle([P(88,63.4),P(91,64.6)],fill=(100,130,150)); d.ellipse([P(78.5,61),P(81,63.5)],fill=(40,36,34)); d.rectangle([P(90,50.5),P(94,52.5)],fill=(120,86,52))
@@ -113,17 +161,17 @@ d.text(P(cx,cy-7.5),'N',font=F(18,True),fill=(40,30,20),anchor='mm'); d.text(P(c
 def beat(x,y,t):
     d.ellipse([P(x-1.6,y-1.6),P(x+1.6,y+1.6)],fill=(200,60,50),outline=(255,255,255),width=3)
     d.text(P(x+2.3,y-1.2),t,font=F(19,True),fill=(255,255,255),stroke_width=3,stroke_fill=(60,20,20))
-beat(61,56,'A  start'); beat(90,54,'B  first weapon'); beat(26,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
+beat(67,54,'A  start'); beat(90,54,'B  first weapon'); beat(26,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
 d.text(P(124,88),'THE SEA',font=F(30,True),fill=(220,235,240)); d.text(P(114,44),'WOODS',font=F(24,True),fill=(200,220,190))
 L=Image.new('RGBA',(440,1060),(250,246,236,240)); ld=ImageDraw.Draw(L); yy=12
-for x,y,w,h,a,c,n,name in B:
+for x,y,w,h,a,c,n,name,_ in placed:
     if not name: continue
     ld.rectangle((14,yy+3,32,yy+21),fill=c,outline=(60,40,26)); ld.text((40,yy),'%d  %s'%(n,name),font=F(17),fill=(30,28,26)); yy+=27
 yy+=8
-for t in ('□ door, facing the road it opens onto','yellow: well-off · purple: poor','grey rings: smoke blowing downwind','',
+for t in ('□ door, on the front, facing its street','yellow: well-off · purple: poor','grey rings: smoke blowing downwind','',
           'A  you begin at the well','B  hatchet at the smithy woodpile,','    the blade above the smithy door','C  a Fog-warped wolf by the field',
           'D  something huge breaks the gate','E  the half-changed Vey son','F  the last ship at the pier\'s end','',
-          'Main roads only; lanes are stage 4.'):
+          'Dashed: lanes, only to show which way','the houses off the main roads face;','paths are drawn properly in stage 4.'):
     ld.text((14,yy),t,font=F(17,t[:1] in 'ABCDEF' and t[1:2]==' '),fill=(30,28,26) if t[:1] not in 'ABCDEF' or t[1:2]!=' ' else (140,40,30)); yy+=25
 img.paste(L,(MW+15,15),L)
 d.text((20,H-44),'FARHALLOW · plan v3: building layout (north up · 140 m × 110 m · ground rises to the north-east)',font=F(26,True),fill=(255,255,250),stroke_width=4,stroke_fill=(30,30,30))
