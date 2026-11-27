@@ -1,0 +1,20 @@
+; Fogwright, built with Godot 4.7
+config_version=5
+
+[application]
+config/name="Fogwright"
+config/description="A co-op MMO of crafts, inventions and the Fog."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1600
+window/size/viewport_height=900
+
+[rendering]
+; one renderer for PC and phones alike (OpenGL ES 3 / WebGL 2 class), so both look the same
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=2
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
