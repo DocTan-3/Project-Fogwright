@@ -115,7 +115,7 @@ func _base(p: Vector2) -> float:          # the land before any terraces
 func height(p: Vector2) -> float:          # with the terraces cut in
 	var h := _base(p)
 	for pad in pads:
-		var q: Vector2 = (p - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1]
+		var q: Vector2 = (p - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1] + Vector2(1.5, 1.5)   # a level apron round it
 		var out := Vector2(maxf(absf(q.x) - e.x, 0.0), maxf(absf(q.y) - e.y, 0.0)).length()
 		var w := 1.0 - smoothstep(0.0, 3.5, out)
 		if w > 0.0: h = lerpf(h, pad[3], w)
@@ -164,7 +164,7 @@ func _path(pts: Array, width: float, trail := false) -> void:
 		var prev: Vector2 = pts[max(i - 1, 0)]; var next: Vector2 = pts[min(i + 1, pts.size() - 1)]
 		var tan := (next - prev) * 0.25
 		curve.add_point(p, -tan, tan)
-	curve.bake_interval = 0.5
+	curve.bake_interval = 0.4
 	var baked := curve.get_baked_points()
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var dirt := Palette.col("path")
@@ -174,16 +174,16 @@ func _path(pts: Array, width: float, trail := false) -> void:
 		var p: Vector2 = baked[i]; var d: Vector2 = (baked[min(i + 1, baked.size() - 1)] - baked[max(i - 1, 0)]).normalized()
 		var side := Vector2(-d.y, d.x)
 		var hw := width * 0.5 * (1.0 + 0.18 * noise.get_noise_2d(p.x * 6.0, p.y * 6.0))   # ragged, worn edges
-		for s in [-1.0, 0.0, 1.0]:
+		for s in [-1.0, -0.5, 0.0, 0.5, 1.0]:
 			var q: Vector2 = p + side * hw * s
 			st.set_color(dirt.lerp(dirt.darkened(0.15), 0.5 + 0.5 * noise.get_noise_2d(q.x * 9.0, q.y * 9.0)) / 0.8)
 			st.set_uv(_light_uv(q)); st.set_uv2(q * 0.4)
-			var v := W(q, _ground_top(q, 0.6) + 0.04)        # above the highest ground round it, so the terrain never shows through
+			var v := W(q, _ground_top(q, 0.3) + 0.03)        # draped on the drawn ground, just above its highest point close by
 			st.add_vertex(v); verts.append(v)
 	for i in baked.size() - 1:
-		var a := i * 3
-		for k in 2:
-			for t in [[a + k, a + 3 + k, a + k + 1], [a + k + 1, a + 3 + k, a + 4 + k]]:
+		var a := i * 5
+		for k in 4:
+			for t in [[a + k, a + 5 + k, a + k + 1], [a + k + 1, a + 5 + k, a + 6 + k]]:
 				st.add_index(t[0]); st.add_index(t[1]); st.add_index(t[2]); tris.append(t)
 	path_surfaces.append([verts, tris])
 	st.generate_normals()
@@ -244,6 +244,13 @@ func _build(i: int) -> void:
 	# wings and roofs
 	var wings := _wings(roofs)
 	for wg in wings: _roof(wg, storeys * STOREY * low, L, b.type in THATCH_TYPES or b.zone == "poor", kinds)
+	for wg in wings:   # corner posts or quoins: the walls overlap at the corners, and these cover the join
+		for cn in [[wg[0], wg[1]], [wg[0] + wg[2], wg[1]], [wg[0], wg[1] + wg[3]], [wg[0] + wg[2], wg[1] + wg[3]]]:
+			var sx := signf(cn[0] - (wg[0] + wg[2] * 0.5)) * (-1.0 if mir else 1.0); var sz := signf(cn[1] - (wg[1] + wg[3] * 0.5))
+			for st in storeys:
+				var kind: String = kinds[mini(st, kinds.size() - 1)]
+				var cp := _piece("Corner_Exterior_Brick" if kind == "UnevenBrick" else "Corner_Exterior_Wood", L.call(cn[0], cn[1], st * STOREY * low), _corner_yaw(sx, sz))
+				if cp: cp.scale = Vector3(1.0, low, 1.0)
 	_into = null
 	if b.type == "granary":
 		for k in 6:
@@ -262,7 +269,7 @@ func _build(i: int) -> void:
 			var plinth := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(r[2] + 0.3, level - lowest + 0.4, r[3] + 0.3)
 			plinth.mesh = bm; var pmat := StandardMaterial3D.new(); pmat.albedo_texture = load("res://assets/library/UnevenBrick_detail.png")
 			pmat.albedo_color = Palette.col("UnevenBrick") / 0.78; pmat.uv1_triplanar = true; pmat.uv1_scale = Vector3(0.5, 0.5, 0.5); plinth.material_override = pmat
-			plinth.position = L.call(r[0] + r[2] * 0.5, r[1] + r[3] * 0.5, -(level - lowest + 0.4) * 0.5 + 0.0)
+			plinth.position = L.call(r[0] + r[2] * 0.5, r[1] + r[3] * 0.5, -(level - lowest + 0.4) * 0.5 - 0.03)   # its top just under the floor: no flicker
 			root.add_child(plinth)
 
 ## the outside parts of a room's four edges: [from (x,y), to (x,y), outward normal (x,y)], minus where another roofed room
@@ -337,8 +344,8 @@ func _wall_run(e: Array, r: Array, ty: Dictionary, storeys: int, low: float, kin
 			if piece: piece.scale = Vector3(seg / 2.0, low, 1.0)
 			if fill != "":
 				var off := Vector3(-0.53, 0, 0).rotated(Vector3.UP, yaw) if fill.begins_with("Door") else Vector3.ZERO
-				var f := _piece(fill, pos + off, yaw)
-				if f and not fill.begins_with("Door"): f.scale = Vector3(1.0, low, 1.0)
+				var f := _piece(fill, pos + off * (seg / 2.0), yaw)
+				if f: f.scale = Vector3(seg / 2.0, low, 1.0)            # the door or window fits its (stretched or squeezed) wall piece
 
 func _fence_run(e: Array, ty: Dictionary, L: Callable, zone: String, mir: bool) -> void:
 	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
@@ -429,7 +436,7 @@ func _plot(pl: Dictionary) -> void:
 			if gate and not walled: continue
 			var path := "res://assets/props/fogwright/Garden_Gate.glb" if gate else _fence_model(zone)
 			var h0 := terrain_surface(q0); var h1 := terrain_surface(q1); var len := q0.distance_to(q1)
-			var f := put(path, W(mid, (h0 + h1) * 0.5 - 0.08), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
+			var f := put(path, W(mid, (h0 + h1) * 0.5 - 0.15), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
 			if f:
 				f.rotation.z = atan2(h1 - h0, len)            # tilted with the slope, so neighbours meet without steps
 				f.scale = Vector3((len + (0.0 if gate else 0.35)) / (2.06 if gate else 2.0), 1.0, 1.0)   # a little overlap closes the corners
@@ -450,17 +457,8 @@ func _nearest_path_point(p: Vector2) -> Vector2:
 			if p.distance_to(q) < bd: bd = p.distance_to(q); best = q
 	return best
 
-func _well() -> void:
-	var y := height(WELL)
-	var ring := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 1.0; cm.bottom_radius = 1.1; cm.height = 0.9
-	ring.mesh = cm; var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/UnevenBrick_detail.png")
-	m.albedo_color = Palette.col("UnevenBrick") / 0.78; m.uv1_triplanar = true; ring.material_override = m
-	ring.position = W(WELL, y + 0.45); add_child(ring)
-	var water := MeshInstance3D.new(); var wm := CylinderMesh.new(); wm.top_radius = 0.85; wm.bottom_radius = 0.85; wm.height = 0.05
-	water.mesh = wm; var wmat := StandardMaterial3D.new(); wmat.albedo_color = Palette.col("sea").darkened(0.4); wmat.roughness = 0.05
-	water.material_override = wmat; water.position = W(WELL, y + 0.7); add_child(water)
-	var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 1.1; cyl.height = 1.0
-	col.shape = cyl; body.add_child(col); body.position = W(WELL, y + 0.5); add_child(body)
+func _well() -> void:   # the village well in the square (the Modular Village Pack's, in our palette), solid
+	put("res://assets/props/village2/Prop_Well_1.glb", W(WELL, height(WELL)), 0.3, 1.0, true, "fixture", "the village well, the old spring")
 
 # ---------------------------------------------------------------- the harbour: sea wall, breakwater, lighthouse, pier, boats
 ## a stone causeway along a smooth curve through the points: a level top and sloping sides down to the seabed, one mesh
@@ -763,13 +761,28 @@ func _graph() -> void:
 	var runs := []
 	for path in PATHS: runs.append((path[0] as Array).slice(1) if (path[0][0] as Vector2).y < 0 else path[0])
 	runs.append(PIER)
+	# the roads meet at the well: villagers walk round it on a ring, never through it
+	var ring := []
+	for k in 10: ring.append(add.call(WELL + Vector2(3.2, 0).rotated(k * TAU / 10.0)))
+	for k in 10:
+		var a_: int = ring[k]; var b_: int = ring[(k + 1) % 10]
+		graph[a_][1].append(b_); graph[b_][1].append(a_)
+	for ri in runs.size():
+		var run: Array = runs[ri].duplicate()
+		for pi in run.size():
+			var p: Vector2 = run[pi]
+			if p.distance_to(WELL) < 3.0:   # a point at the well moves out to the nearest spot on the ring
+				var best: Vector2 = graph[ring[0]][0]
+				for r_ in ring: if p.distance_to(graph[r_][0]) < p.distance_to(best): best = graph[r_][0]
+				run[pi] = best
+		runs[ri] = run
 	for run in runs:
 		var prev := -1
 		for p in run:
 			var id: int = add.call(p)
 			if prev >= 0 and not (graph[prev][1] as Array).has(id): graph[prev][1].append(id); graph[id][1].append(prev)
 			prev = id
-	for g in [WELL, Vector2(87.5, 99), Vector2(96, 100.5)] + bdoors.reduce(func(acc, ds): return acc + ds, []):
+	for g in [WELL + Vector2(3.2, 0), Vector2(87.5, 99), Vector2(96, 100.5)] + bdoors.reduce(func(acc, ds): return acc + ds, []):
 		var k: String = key.call(g)
 		if ids.has(k) and not GOALS.has(ids[k]): GOALS.append(ids[k])
 
