@@ -31,3 +31,8 @@ terry_cloth (greyscale), aerial_rocks_02.
 CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, turned into greyscale detail and packed into one 4x4 sheet at 256 px each by `tools/textures/gearsheet.py`:
 rough_linen, caban, poly_wool_herringbone, brown_leather, leather_red_02, scuba_suede, curly_teddy_natural, hessian_230,
 velour_velvet, floral_jacquard, quatrefoil_jacquard_fabric, knitted_fleece, wool_boucle. Brushed steel and mail are drawn by the script.
+
+## Animations (assets/animations/quaternius)
+
+Universal Animation Library 1 and 2 (Standard) by Quaternius, CC0 1.0 (public domain):
+https://quaternius.itch.io/universal-animation-library, https://quaternius.itch.io/universal-animation-library-2

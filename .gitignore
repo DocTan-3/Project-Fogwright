@@ -1,5 +1,6 @@
 # Blender exports before conversion, temp output, screenshots, node bits
 *.glb
+!assets/**/*.glb
 _full.glb
 shots/
 node_modules/
