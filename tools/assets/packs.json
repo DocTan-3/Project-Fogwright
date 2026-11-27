@@ -311,6 +311,22 @@
       "repo": false,
       "use": "buildings",
       "note": "Stylized low-poly fences in three colours (FBX, GLB). Not for the public repo; Farhallow uses our own dry-stone wall, wattle hurdle and the kit's rail fence for now"
+    },
+    {
+      "name": "Low Poly Viking Ship (Glory Asset)",
+      "url": "https://glory-asset.itch.io/low-poly-viking-ship",
+      "licence": "Free for any purpose, personal or commercial, no credit; credits Quaternius as the maker (likely CC0, not stated)",
+      "repo": false,
+      "use": "harbour",
+      "note": "OBJ/FBX longship. Keep out of the public repo until the licence is confirmed as CC0 (if it is Quaternius's, it is)"
+    },
+    {
+      "name": "Stylized Sailboat (noremi111)",
+      "url": "https://noremi111.itch.io/stylized-sailboat-game-ready-asset",
+      "licence": "Not stated on the page; check the download for a licence file",
+      "repo": false,
+      "use": "harbour",
+      "note": "A small brig with swappable sail and flag textures (.blend, .fbx): a candidate for the last ship"
     }
   ]
 }

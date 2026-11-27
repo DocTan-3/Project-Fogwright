@@ -525,18 +525,10 @@ func _pier_run(a: Vector2, b: Vector2, y: float) -> void:
 	var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(L + 2.0, 0.3, 2.2)
 	col.shape = bs; body.add_child(col); body.position = W((a + b) * 0.5, y - 0.15); body.rotation.y = -atan2(d.y, d.x); add_child(body)
 
+## a boat on the water: the sailboat remade from the reference (tools/blender/make_boat.py), its hull `length` metres
+## long; the last ship is, for now, the same boat built larger
 func _boat(c: Vector2, a: float, length: float, ship := false) -> void:
-	var root := Node3D.new(); root.position = W(c, 0.05); root.rotation.y = -a; add_child(root)
-	var wood := StandardMaterial3D.new(); wood.albedo_texture = load("res://assets/library/WoodTrim_detail.png"); wood.albedo_color = Palette.col("WoodTrim") / 0.78
-	wood.uv1_triplanar = true
-	var hull := MeshInstance3D.new(); var pm := PrismMesh.new(); pm.size = Vector3(length * 0.32, length * (0.13 if ship else 0.12), length)
-	hull.mesh = pm; hull.rotation.z = PI; hull.position.y = pm.size.y * 0.35; hull.material_override = wood; root.add_child(hull)
-	if ship:
-		var mast := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 0.12; cm.bottom_radius = 0.18; cm.height = length * 0.9
-		mast.mesh = cm; mast.material_override = wood; mast.position.y = cm.height * 0.5; root.add_child(mast)
-		var sail := MeshInstance3D.new(); var qm := QuadMesh.new(); qm.size = Vector2(length * 0.42, length * 0.5); sail.mesh = qm
-		var sm := StandardMaterial3D.new(); sm.albedo_color = Color(0.86, 0.82, 0.72); sm.cull_mode = BaseMaterial3D.CULL_DISABLED; sail.material_override = sm
-		sail.position = Vector3(0, length * 0.5, 0.2); sail.rotation.y = PI / 2; root.add_child(sail)
+	put("res://assets/props/fogwright/Sailboat.glb", W(c, 0.0), -a, length / 6.0, ship, "fixture", "the last ship out" if ship else "a fishing boat at anchor")
 
 # ---------------------------------------------------------------- the palisade and its north gate
 func _palisade() -> void:
