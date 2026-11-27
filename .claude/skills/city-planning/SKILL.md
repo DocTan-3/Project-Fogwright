@@ -39,7 +39,33 @@ building in 3D. It must have:
   resize the building to a size with a roof if neither fits), and gable ends closing the roof.
 - Paths are curves laid on the terrain with worn edges, not tiles.
 
-## 4. Check every placement
+## Reference images: remake them faithfully
+
+When the user sends a reference (a house, a floor plan, a town map, a prop), the job is to bring **that** design into
+Fogwright's art direction - not to make something that only resembles it, and never to drop parts until it is easy.
+
+1. **Take it apart first, in writing:** count the walls, storeys, bays, windows and doors per wall; note roof shape and
+   pitch, chimneys, dormers, balconies, overhangs, stairs, materials per part, trims, signs, and every prop. For a plan or
+   map: every building (with its size and angle), every path and where it goes, terrain features, walls, water, landmarks.
+2. **Rebuild all of it,** part for part, at the same proportions, in our kit, palette and lighting. Where the kit lacks a
+   part, build or model it - do not leave it out.
+3. **Compare** a render against the reference side by side and list what still differs; keep going until the list is
+   empty or the user accepts a difference. Say plainly which parts, if any, could not be matched yet and why.
+
+## 4. Check every path
+
+Every path is in `PATHS` with a width and a **purpose** ("the well west to the tavern's door"). The checker tests:
+
+1. **Does it lead somewhere?** Both ends must arrive at a destination - a door, the plaza, a gate, the pier's head, a
+   field's gate - or join another path (`PATH-END`).
+2. **Does it hit a building anywhere but an entrance?** A path may touch a building only at its door; otherwise move the
+   building or the path (`PATH-WALL`).
+3. **Does it have to exist?** It needs a purpose: who walks it, from where to where (`PATH-WHY`). Paths come from where
+   people go, not decoration.
+4. **Is it redundant?** Two paths running side by side for a long stretch, or joining the same two places, merge into one
+   (`PATH-DUP`).
+
+## 5. Check every placement
 
 Every object goes through `put()` with a **role** and a **purpose**, and the checker (`check_plan()` on the level, run
 with `godot --path godot res://tests/check.tscn`) must report **0 problems** before anything is committed. For each
@@ -56,16 +82,16 @@ object, ask:
    beside paths and beside doors, never in front of them.
 4. **Is every building complete?** The checker flags any building without a roof.
 
-The checker reports: `WHY` (no purpose), `GROUND` (wrong ground), `PATH` (in a walkway), `DOOR` (blocks a doorway),
+The checker reports: `PATH-END`, `PATH-WALL`, `PATH-WHY`, `PATH-DUP` (paths, above), `WHY` (no purpose), `GROUND` (wrong ground), `PATH` (in a walkway), `DOOR` (blocks a doorway),
 `INSIDE` (inside a building), `ROOF` (no roof). Fix each by moving or removing the object - never by weakening the check.
 
-## 5. Look at it
+## 6. Look at it
 
 Render it (`res://tests/look.tscn -- out=<prefix> "at=x,y,dist,yaw,pitch;..."` takes plan coordinates) from street level
 at several places, plus a top-down view, and look for what the checker cannot see: odd silhouettes, open gaps, repeated
 buildings, empty or over-cluttered spots, things that don't read at a glance. Show the user the renders.
 
-## 6. Performance budget
+## 7. Performance budget
 
 Batch repeated small things (grass, flowers, trees) with MultiMesh; bake static shadows (no live shadows on the world);
 keep a settlement within the frame budget in docs/design.md. Measure the FPS counter after each step.

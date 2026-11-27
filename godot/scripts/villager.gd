@@ -22,6 +22,8 @@ func setup(lv, g: Dictionary, start: int, look: Dictionary, seed_: int) -> void:
 		Dress.wear(model, look.hair, cols[rng.randi() % cols.size()])
 	ap = Dress.animate(model); ap.playback_default_blend_time = 0.3
 	blob = Dress.blob(); add_child(blob)
+	var fl := Node.new(); fl.set_script(load("res://scripts/foot_lift.gd")); add_child(fl)
+	fl.setup(model, func(p: Vector3) -> float: return level.height(Vector2(p.x, p.z) + level.ORIGIN))
 
 	position = _w(graph[here][0]); wait = rng.randf_range(0.5, 6.0)
 	ap.play("ual/Idle" if rng.randf() < 0.6 else "ual/Idle_Talking")

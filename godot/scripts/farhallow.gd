@@ -14,21 +14,22 @@ const MARGIN := 45.0                   # terrain beyond the plan on every side
 const COAST := [Vector2(48, 200), Vector2(55, 110), Vector2(62, 96), Vector2(74, 88), Vector2(86, 84), Vector2(96, 76),
 	Vector2(104, 64), Vector2(112, 58), Vector2(124, 56), Vector2(140, 52), Vector2(220, 40)]
 # paths: (points, width)
+# paths: (points, width, purpose); each must lead somewhere, avoid walls but at doors, and not duplicate another
 const PATHS := [
-	[[Vector2(62, -20), Vector2(62, 0), Vector2(61, 8), Vector2(60, 16), Vector2(58, 26), Vector2(60, 40), Vector2(64, 50)], 4.0],
-	[[Vector2(64, 50), Vector2(72, 58), Vector2(80, 66), Vector2(84, 74), Vector2(87, 81)], 3.4],
-	[[Vector2(64, 50), Vector2(52, 54), Vector2(40, 58), Vector2(30, 64), Vector2(24, 70)], 2.8],
-	[[Vector2(60, 30), Vector2(48, 30), Vector2(42, 26)], 2.2],
-	[[Vector2(64, 50), Vector2(78, 44), Vector2(92, 38), Vector2(100, 30), Vector2(103, 23)], 2.6],
-	[[Vector2(80, 66), Vector2(70, 72), Vector2(62, 80)], 2.0],
+	[[Vector2(62, -20), Vector2(62, 0), Vector2(61, 8), Vector2(60, 16), Vector2(58, 26), Vector2(60, 40), Vector2(64, 50)], 4.0, "the road from the north gate to the well"],
+	[[Vector2(64, 50), Vector2(72, 58), Vector2(80, 66), Vector2(84, 74), Vector2(87, 81)], 3.4, "the well down to the harbour and the pier"],
+	[[Vector2(64, 50), Vector2(52, 54), Vector2(40, 58), Vector2(37.8, 61.0)], 2.8, "the well west to the tavern's door"],
+	[[Vector2(60, 30), Vector2(48, 30), Vector2(42, 26)], 2.2, "the road to the field's gate"],
+	[[Vector2(64, 50), Vector2(78, 44), Vector2(92, 38), Vector2(100, 30), Vector2(103, 23)], 2.6, "the well east up to the smithy and the shrine"],
+	[[Vector2(80, 66), Vector2(70, 71.5), Vector2(63, 73.5)], 2.0, "the harbour lane past the fish store to the lower cottage"],
 ]
 # buildings: centre (plan m), width, depth, plan angle (rad), storeys, kind
 const BUILDINGS := [
-	[Vector2(30, 62), 12, 8, -0.12, 2, "tavern"], [Vector2(46, 70), 6, 6, 0.25, 1, "house"], [Vector2(36, 78), 6, 6, -0.3, 1, "house"],
-	[Vector2(72, 63), 6, 4, 0.5, 2, "house"], [Vector2(74, 72), 6, 4, -0.4, 1, "store"], [Vector2(92, 64), 8, 6, 0.35, 2, "house"],
-	[Vector2(52, 40), 6, 6, -0.15, 2, "house"], [Vector2(70, 36), 6, 6, 0.2, 1, "house"], [Vector2(96, 34), 8, 6, 0.15, 1, "smithy"],
+	[Vector2(29.7, 62.1), 12, 8, -0.12, 2, "tavern"], [Vector2(46, 70), 6, 6, 0.25, 1, "house"], [Vector2(36, 78), 6, 6, -0.3, 1, "house"],
+	[Vector2(70.7, 64.6), 6, 4, 0.5, 2, "house"], [Vector2(74.7, 73.4), 6, 4, -0.4, 1, "store"], [Vector2(92, 64), 8, 6, 0.35, 2, "house"],
+	[Vector2(52, 40), 6, 6, -0.15, 2, "house"], [Vector2(70, 36), 6, 6, 0.2, 1, "house"], [Vector2(91.5, 27.9), 8, 6, 0.15, 1, "smithy"],
 	[Vector2(104, 22), 4, 4, -0.1, 1, "shrine"], [Vector2(44, 12), 6, 4, 0.05, 1, "granary"], [Vector2(30, 48), 4, 4, 0.3, 1, "shed"],
-	[Vector2(56, 46), 4, 4, 0.1, 2, "house"], [Vector2(70, 45), 4, 6, -0.25, 1, "house"], [Vector2(56, 57), 4, 4, 0.6, 1, "house"],
+	[Vector2(55.9, 46.1), 4, 4, 0.1, 2, "house"], [Vector2(69, 41.9), 4, 6, -0.25, 1, "house"], [Vector2(55.7, 58.5), 4, 4, 0.6, 1, "house"],
 	[Vector2(78, 52), 4, 4, 0.4, 2, "house"], [Vector2(84, 58), 4, 4, 0.5, 1, "house"], [Vector2(62, 68), 4, 4, -0.5, 1, "house"],
 	[Vector2(66, 26), 4, 4, 0.1, 2, "house"], [Vector2(52, 24), 4, 6, -0.2, 1, "house"],
 ]
@@ -387,7 +388,7 @@ func _clutter() -> void:
 	# round the well: things set down by people drawing water and trading, at the plaza's edge, not in the walkways
 	_at(Vector2(60.2, 54.6), "Stall_Cart_Empty", 0.9, "a trader's cart at the plaza's edge")
 	_at(Vector2(59.0, 56.4), "FarmCrate_Apple", 0.2, "the trader's apples")
-	_at(Vector2(67.6, 45.4), "Bench", 0.75, "a bench under the house wall, facing the well")
+	_at(Vector2(68.6, 51.1), "Bench", 1.4, "a bench at the plaza's edge, facing the well")
 	_at(Vector2(66.4, 47.0), "Bucket_Wooden_1", 0.3, "a bucket by the well")
 	_at(Vector2(57.6, 48.6), "Barrel", 0.0, "rainwater barrel against a house")
 	# the smithy: tools of the trade beside the forge, and the woodpile with its hatchet (beat B: the first weapon)
@@ -463,6 +464,12 @@ func _dress_player() -> void:
 	Dress.wear(model, "res://assets/characters/quaternius/hair/Hair_SimpleParted.gltf", Color(0.3, 0.19, 0.11))
 	var pl: Node3D = get_parent().get_node("Player")
 	pl.add_child(Dress.blob(1.0))
+	var fl := Node.new(); fl.set_script(load("res://scripts/foot_lift.gd")); pl.add_child(fl)
+	fl.setup(model, func(p: Vector3) -> float:   # the player can stand on anything solid: ask the physics world
+		var q := PhysicsRayQueryParameters3D.create(p + Vector3(0, 0.6, 0), p - Vector3(0, 1.0, 0), 1)
+		q.exclude = [pl.get_rid()]
+		var hit := get_world_3d().direct_space_state.intersect_ray(q)
+		return hit.position.y if not hit.is_empty() else -1000.0)
 	(pl as CollisionObject3D).collision_mask = 1 | 2
 
 # ---------------------------------------------------------------- shadows, baked once (the WoW way)
@@ -565,7 +572,7 @@ func ground_at(p: Vector2) -> String:
 ## the city-planning check: every clutter prop has a purpose, stands on sensible ground, keeps paths and doorways clear;
 ## every flora instance grows on open ground; every building has a roof. Returns the problems found.
 func check_plan() -> Array:
-	var issues := []
+	var issues := check_paths()
 	var doors := []
 	for h in houses:
 		if h[3] == "": issues.append("ROOF   %s at %s has no roof" % [h[0], h[1]])
@@ -582,4 +589,49 @@ func check_plan() -> Array:
 				for d in doors:
 					if p.distance_to(d) < 1.3 + r: issues.append("DOOR   %s blocks a doorway at %s" % [it[0], p.round()])
 				if _in_pad(p, -0.4, true): issues.append("INSIDE %s is inside a building at %s" % [it[0], p.round()])
+	return issues
+
+
+# ---------------------------------------------------------------- the path check (part of the city-planning skill)
+## places a path may lead to: doors, the plaza, the gate, the pier's head, the field's gate, or another path
+func _destinations() -> Array:
+	var out := [[WELL, "the plaza", 5.5], [Vector2(62, -20), "beyond the gate", 2.0], [Vector2(87, 81), "the pier's head", 2.5], [Vector2(42, 27), "the field's gate", 2.5]]
+	for h in houses: out.append([h[2], "the door of the %s at %s" % [h[0], (h[1] as Vector2).round()], 2.5])
+	return out
+
+func _path_points(path: Array, step := 0.5) -> Array:
+	var pts: Array = path[0]; var out := []
+	for i in pts.size() - 1:
+		var a: Vector2 = pts[i]; var b: Vector2 = pts[i + 1]; var n := maxi(1, int(a.distance_to(b) / step))
+		for k in n: out.append(a.lerp(b, float(k) / n))
+	out.append(pts[-1]); return out
+
+func check_paths() -> Array:
+	var issues := []
+	var dests := _destinations()
+	for pi in PATHS.size():
+		var path: Array = PATHS[pi]; var pts: Array = path[0]; var name := "path %d (%s)" % [pi, path[2] if path.size() > 2 else "?"]
+		if path.size() < 3 or path[2] == "": issues.append("PATH-WHY  %s has no purpose" % name)
+		for end in [pts[0], pts[-1]]:   # (1) does it lead somewhere: both ends at a destination or on another path
+			var ok := false
+			for d in dests:
+				if (end as Vector2).distance_to(d[0]) <= d[2]: ok = true
+			for pj in PATHS.size():
+				if pj == pi: continue
+				for q in _path_points(PATHS[pj]):
+					if (end as Vector2).distance_to(q) < (PATHS[pj][1] as float) * 0.5 + 0.5: ok = true
+			if not ok: issues.append("PATH-END  %s ends at %s, which leads nowhere" % [name, (end as Vector2).round()])
+		var hw: float = path[1] * 0.5
+		for q in _path_points(path):   # (2) does it run into a building other than at its door
+			for k in houses.size():
+				var pad: Array = pads[k]; var r: Vector2 = ((q as Vector2) - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1]
+				if absf(r.x) < e.x + hw * 0.6 and absf(r.y) < e.y + hw * 0.6 and (q as Vector2).distance_to(houses[k][2]) > 2.6:
+					issues.append("PATH-WALL %s runs into the %s at %s" % [name, houses[k][0], (q as Vector2).round()]); break
+	for pi in PATHS.size():   # (4) is it redundant: running alongside another path for a long stretch
+		for pj in range(pi + 1, PATHS.size()):
+			var close := 0; var a_pts := _path_points(PATHS[pi]); var b_pts := _path_points(PATHS[pj])
+			for q in a_pts:
+				for r in b_pts:
+					if (q as Vector2).distance_to(r) < 4.0: close += 1; break
+			if close * 0.5 > 12.0: issues.append("PATH-DUP  paths %d and %d run side by side for %.0f m" % [pi, pj, close * 0.5])
 	return issues
