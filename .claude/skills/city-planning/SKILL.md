@@ -48,6 +48,12 @@ Write it down before anything is drawn (`docs/settlements/<name>.md` in the docs
 From the lore, work out what the place needs and where each thing must be, *before* placing a single building. Write a
 short table: each building or facility, why it is where it is, what it needs next to it.
 
+- **The vegetation of the region** (it belongs to the land, not to the people): which trees make the woods and in what
+  mix (a coastal pine-and-oak wood, a desert's date palms and scrub, a northern spruce taiga), the undergrowth, the
+  grass and flowers, what grows on the shore, the crops in the fields, how far into the Fog the plants are sickening.
+  Note it in the settlement's lore, then make or pick the forest trees, undergrowth and ground textures for that
+  region (cheap trees for the woods' wall, a few detailed ones for the edge) before building; the inventory lists what
+  each region still lacks.
 - **Supply first: can the place live?** Work out what it eats, drinks and burns, and where each comes from, with rough
   numbers (people × about 2,000 kcal a day; grain about 700 kg per hectare a year after seed, so roughly a quarter to a
   third of a hectare of grain per person fed on bread, doubled for fallow; fish, gardens, herds and foraging cover the
