@@ -123,7 +123,11 @@ Decided with the user; items marked *(proposal)* are still open.
 
 - **The skill tree gives movement and changes how moves work.** Movement modifiers and the moves that come with them (dashing instead of a dodge roll, a leap, a slide) are skill-tree nodes. Most other nodes are modifiers rather than new buttons: reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
 
-- **Every character has the basic verbs:** move, auto-attack and a defensive move. The defensive move is a dodge roll by default; skill-tree nodes can turn it into a dash, a blink, a block or a parry.
+- **Every character has the basic verbs:** move, auto-attack, a dodge, a block and a parry. The dodge is a roll by default; skill-tree nodes can turn it into a dash or a blink.
+
+- **Block and parry share one button.** Held, it blocks: damage is reduced (35% gets through). Pressed just before a hit lands (a fifth of a second), it parries: only 5% gets through and the attacker reels, but a parry drains three times the stamina of a block. Only melee weapons can parry; with any other weapon a timed press is a block. Blocking without the stamina for it breaks the guard and staggers. *(Numbers from the first playable, to tune.)*
+
+- **Stamina and energy.** Stamina pays for defence (dodge, block, parry) and recovers quickly once no defence is used; energy pays for skills. *(The user asked for parries to drain stamina; keeping it a pool apart from energy is our reading, to confirm.)*
 
 - **Paths and gods' magic** add their own moves: a path's utility (Lanternbearers push back the Fog, Ironclads become cover) and, once claimed, the god's magic.
 
@@ -135,9 +139,23 @@ Decided with the user; items marked *(proposal)* are still open.
   - **Bows** reward a longer draw.
   - **Caster foci** spend Fog shards, which raises Fog pressure, as the lore says magic does.
 
-- **Defence: telegraphs, and the build decides.** Enemy attacks are telegraphed on the ground and each kind has a natural counter: dodge the unblockable, parry the undodgeable, step out of what is too wide for either *(proposal: a fast combo you block or parry, a wide slam you dodge or dash through, projectiles a shield stops)*. Every defence works, but only for a character who builds toward it: perks change the rules, so with the right node an unblockable attack becomes blockable, or a dodge goes through what it normally cannot. Without those perks, a character answers each attack with its natural counter.
+- **Defence: telegraphs, and the build decides.** Enemy attacks are telegraphed on the ground, coloured by kind, and each kind has a natural counter: dodge the unblockable, parry the undodgeable, step out of what is too wide for either. The kinds come from the animations we have (the Quaternius libraries; tools/assets/INVENTORY.md):
 
-- **Open:** the numbers; how many moves each rarity gives; whether every character has a basic parry or it comes from the tree; the list of attack kinds and their counters.
+  | Kind | Animations | Natural counter |
+  | --- | --- | --- |
+  | Strike | jab, a single sword cut, the zombie scratch | anything: block, parry, dodge |
+  | Combo | the sword combo, jab and cross | block or parry (it cannot be dodged) |
+  | Heavy blow | the heavy combo, the hook | dodge (unblockable; it knocks you down) |
+  | Charge | the sword dash, the shield dash | dodge or step aside (unblockable; it knocks you down) |
+  | Shield bash | the shield strike | parry (it cannot be dodged; it stuns) |
+  | Projectile | the overhand throw, a spell, a pistol shot | dodge, step aside or block (no parry) |
+ Every defence works, but only for a character who builds toward it: perks change the rules, so with the right node an unblockable attack becomes blockable, or a dodge goes through what it normally cannot. Without those perks, a character answers each attack with its natural counter.
+
+- **Perks that change the rules** (first set): iron guard (heavy blows and charges can be blocked), slip (a dodge also slips through combos and bashes), deflect (a melee parry also turns projectiles), steady guard (blocks cost less stamina), dash (the dodge becomes a dash), dash reload (a dodge reloads a gun).
+
+- **PC keys in the first playable** *(placeholders; touch controls later)*: Tab targets, R attacks, 1 to 6 cast, X swaps the page, F blocks (a tap parries), C dodges.
+
+- **Open:** the numbers; how many moves each rarity gives; clips still missing (a bow draw, two-handed weapons, a parry of its own).
 
 ### Skill tree, paths and gods
 
