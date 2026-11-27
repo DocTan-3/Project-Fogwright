@@ -1,0 +1,122 @@
+# Fogwright's own props, the ones no pack has (tools/assets/INVENTORY.md lists them): built from simple shapes, real-world
+# sizes, origin at the base centre, a few hundred triangles each, palette materials by name.
+#   python3 make_props.py <out dir>      (godot/assets/props/fogwright)
+import bpy,bmesh,math,os,sys
+from mathutils import Vector,Matrix
+OUT=os.path.abspath(sys.argv[-1]); os.makedirs(OUT,exist_ok=True)
+PAL={}
+def clear():
+    for o in list(bpy.data.objects): bpy.data.objects.remove(o)
+    for m in list(bpy.data.meshes): bpy.data.meshes.remove(m)
+    for m in list(bpy.data.materials): bpy.data.materials.remove(m)
+    PAL.clear()
+def mat(name):
+    if name not in PAL: PAL[name]=bpy.data.materials.new(name)
+    return PAL[name]
+PARTS=[]
+def part(kind,m,loc=(0,0,0),rot=(0,0,0),**k):
+    """a primitive: box (size), cyl (r, h, n, r2), sphere (r, n, sz), cone (r, h, n)"""
+    bm=bmesh.new()
+    if kind=='box':
+        bmesh.ops.create_cube(bm,size=1); sx,sy,sz=k['size']
+        for v in bm.verts: v.co=Vector((v.co.x*sx,v.co.y*sy,v.co.z*sz+sz/2))
+    elif kind=='cyl':
+        bmesh.ops.create_cone(bm,cap_ends=k.get('caps',True),segments=k.get('n',8),radius1=k['r'],radius2=k.get('r2',k['r']),depth=k['h'])
+        if rot==(0,0,0):   # standing cylinders sit on their base; turned ones are centred on loc
+            for v in bm.verts: v.co.z+=k['h']/2
+    elif kind=='sphere':
+        bmesh.ops.create_uvsphere(bm,u_segments=k.get('n',8),v_segments=max(3,k.get('n',8)//2),radius=k['r'])
+        for v in bm.verts: v.co.z*=k.get('sz',1.0)
+    elif kind=='plane':
+        sx,sy=k['size']; bmesh.ops.create_grid(bm,x_segments=1,y_segments=1,size=0.5)
+        for v in bm.verts: v.co=Vector((v.co.x*sx,0,v.co.y*sy+sy/2))
+    R=Matrix.Rotation(rot[2],4,'Z')@Matrix.Rotation(rot[1],4,'Y')@Matrix.Rotation(rot[0],4,'X')
+    bmesh.ops.transform(bm,matrix=Matrix.Translation(Vector(loc))@R,verts=bm.verts)
+    me=bpy.data.meshes.new('p'); bm.to_mesh(me); bm.free(); me.materials.append(mat(m))
+    o=bpy.data.objects.new('p',me); bpy.context.scene.collection.objects.link(o); PARTS.append(o); return o
+def done(name):
+    global PARTS
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in PARTS: o.select_set(True)
+    bpy.context.view_layer.objects.active=PARTS[0]; bpy.ops.object.join(); o=bpy.context.view_layer.objects.active; o.name=name
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.uv.cube_project(cube_size=1.0)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.export_scene.gltf(filepath=os.path.join(OUT,name+'.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=True)
+    t=sum(len(p.vertices)-2 for p in o.data.polygons); print('  %-16s %4d tris  %s'%(name,t,tuple(round(v,2) for v in o.dimensions)))
+    PARTS=[]; clear()
+TAU=math.pi*2
+clear()
+# woodpile: split logs stacked in a pyramid against nothing, ends showing
+for row,(n,z) in enumerate(((4,0.11),(3,0.31),(2,0.5))):
+    for i in range(n):
+        x=(i-(n-1)/2)*0.24; part('cyl','WoodTrim_Dark',(x,0,z),(math.pi/2,0,0),r=0.11,h=0.9,n=7)
+done('Woodpile')
+# washing line: two posts, a sagging line, three cloths
+for x in (-1.7,1.7): part('cyl','WoodTrim_Wear',(x,0,0),r=0.05,h=1.9,n=6)
+for i in range(6):
+    a,b=-1.7+i*3.4/6,-1.7+(i+1)*3.4/6; za=1.85-0.18*math.sin(math.pi*(a+1.7)/3.4); zb=1.85-0.18*math.sin(math.pi*(b+1.7)/3.4)
+    part('box','Rope',((a+b)/2,0,(za+zb)/2-0.01),(0,-math.atan2(zb-za,b-a),0),size=(math.hypot(b-a,zb-za),0.02,0.02))
+for x,w,h,m in ((-0.9,0.7,0.8,'Cloth'),(0.05,0.9,0.6,'Cloth_Light'),(0.95,0.5,0.7,'Cloth_Dark')):
+    z=1.85-0.18*math.sin(math.pi*(x+1.7)/3.4); part('box',m,(x,0,z-h),size=(w,0.02,h))
+done('Washing_Line')
+# trough: a wooden box with water
+part('box','WoodTrim_Wear',(0,-0.36,0),size=(2.2,0.08,0.5)); part('box','WoodTrim_Wear',(0,0.36,0),size=(2.2,0.08,0.5))
+part('box','WoodTrim_Wear',(-1.06,0,0),size=(0.08,0.64,0.5)); part('box','WoodTrim_Wear',(1.06,0,0),size=(0.08,0.64,0.5))
+part('box','WoodTrim_Dark',(0,0,0),size=(2.1,0.64,0.08)); part('box','sea_Dark',(0,0,0.36),size=(2.04,0.64,0.02))
+done('Trough')
+# quench trough: smaller, stone
+part('box','RockTrim',(0,-0.26,0),size=(1.4,0.12,0.6)); part('box','RockTrim',(0,0.26,0),size=(1.4,0.12,0.6))
+part('box','RockTrim',(-0.64,0,0),size=(0.12,0.4,0.6)); part('box','RockTrim',(0.64,0,0),size=(0.12,0.4,0.6))
+part('box','RockTrim_Dark',(0,0,0),size=(1.3,0.42,0.1)); part('box','sea_Dark',(0,0,0.48),size=(1.18,0.42,0.02))
+done('Quench_Trough')
+# net rack: two posts and a bar, a net hanging over it with cork floats
+for x in (-1.3,1.3): part('cyl','WoodTrim_Wear',(x,0,0),r=0.06,h=1.9,n=6)
+part('cyl','WoodTrim_Wear',(0,0,1.82),(0,math.pi/2,0),r=0.04,h=2.7,n=6)
+for s in (-1,1): part('box','Rope',(0,s*0.12,0.45),(s*0.12,0,0),size=(2.4,0.015,1.35))
+for i in range(7): part('sphere','WoodTrim_Light',(-1.1+i*0.37,0.2,0.55+0.1*(i%2)),r=0.05,n=6)
+done('Net_Rack')
+# lobster pots: three domed creels, stacked
+for (x,y,z) in ((-0.32,0,0),(0.32,0,0),(0,0,0.42)):
+    part('cyl','Rope_Dark',(x,y,z),r=0.28,h=0.08,n=10); part('sphere','Rope',(x,y,z+0.08),r=0.28,n=10,sz=1.1)
+done('Lobster_Pots')
+# scarecrow: post, crossbar, coat, sack head, hat
+part('cyl','WoodTrim_Wear',(0,0,0),r=0.05,h=2.1,n=6); part('box','WoodTrim_Wear',(0,0,1.55),size=(1.5,0.08,0.08))
+part('box','Cloth_Dark',(0,0,0.95),size=(0.55,0.28,0.7)); part('box','Cloth_Dark',(0,0,1.5),size=(1.2,0.22,0.16))
+part('sphere','Cloth',(0,0,1.95),r=0.17,n=8); part('cyl','Thatch_Dark',(0,0,2.08),r=0.32,h=0.04,n=10); part('cyl','Thatch_Dark',(0,0,2.1),r=0.14,r2=0.11,h=0.18,n=8)
+for s in (-1,1): part('cyl','Thatch',(s*0.75,0,1.48),r=0.06,r2=0.02,h=0.12,n=5)   # straw at the cuffs
+done('Scarecrow')
+# notice post: a post with a small roofed board and pinned notices
+part('box','WoodTrim_Wear',(0,0,0),size=(0.12,0.12,1.9)); part('box','WoodTrim',(0,-0.07,1.0),size=(0.9,0.04,0.65))
+part('box','WoodTrim_Dark',(0,-0.02,1.7),(0.35,0,0),size=(1.05,0.4,0.04))
+for (x,z,w,h) in ((-0.22,1.3,0.3,0.25),(0.18,1.25,0.26,0.3),(-0.05,1.05,0.4,0.18)): part('box','Cloth_Light',(x,-0.095,z),size=(w,0.005,h))
+done('Notice_Post')
+# charcoal heap and manure heap: low mounds
+part('sphere','Iron_Dark',(0,0,0),r=0.8,n=10,sz=0.45); done('Charcoal_Heap')
+part('sphere','earth_Dark',(0,0,0),r=0.65,n=9,sz=0.5); part('sphere','Thatch_Dark',(0.25,0.1,0.15),r=0.25,n=6,sz=0.5); done('Manure_Heap')
+# hen coop: a small house on legs with a ramp
+for (x,y) in ((-0.5,-0.4),(0.5,-0.4),(-0.5,0.4),(0.5,0.4)): part('box','WoodTrim_Wear',(x,y,0),size=(0.07,0.07,0.4))
+part('box','WoodTrim',(0,0,0.4),size=(1.15,0.95,0.55))
+for s in (-1,1): part('box','Thatch',(0,s*0.27,0.97),(s*0.75,0,0),size=(1.3,0.68,0.05))
+part('box','WoodTrim_Wear',(0,-0.75,0.02),(-0.55,0,0),size=(0.3,0.75,0.03))
+done('Hen_Coop')
+# bell frame: two posts, a beam, a roof, the alarm bell
+for x in (-0.6,0.6): part('box','WoodTrim_Wear',(x,0,0),size=(0.16,0.16,2.5))
+part('box','WoodTrim',(0,0,2.4),size=(1.5,0.2,0.18))
+for s in (-1,1): part('box','WoodTrim_Dark',(0,s*0.22,2.62),(s*0.6,0,0),size=(1.7,0.55,0.04))
+part('cyl','MetalOrnaments',(0,0,1.85),r=0.26,r2=0.13,h=0.42,n=12); part('cyl','MetalOrnaments_Dark',(0,0,1.83),r=0.29,r2=0.26,h=0.05,n=12)
+part('cyl','Rope',(0.35,0,0.9),r=0.012,h=1.5,n=4)
+done('Bell_Frame')
+# staddle stone: the mushroom stone a granary stands on
+part('cyl','RockTrim',(0,0,0),r=0.2,r2=0.11,h=0.5,n=8); part('cyl','RockTrim_Light',(0,0,0.5),r=0.32,r2=0.3,h=0.1,n=10)
+done('Staddle_Stone')
+# salt pan: a shallow iron pan on a stone firebox, open at the front, white salt crust
+part('box','RockTrim',(0,0,0),size=(1.9,1.3,0.5)); part('box','Iron_Dark',(0,-0.66,0.05),size=(0.6,0.02,0.3))
+part('box','Iron',(0,0,0.5),size=(1.8,1.2,0.12)); part('box','Plaster_Light',(0,0,0.6),size=(1.66,1.06,0.02))
+done('Salt_Pan')
+# village waystone: one step, a tapering stone with a lamp niche and carved road lines
+part('box','RockTrim_Dark',(0,0,0),size=(2.0,2.0,0.25))
+bm_stone=part('cyl','RockTrim',(0,0,0.25),r=0.42,r2=0.32,h=1.9,n=4); bm_stone.rotation_euler.z=math.pi/4
+part('box','Iron_Dark',(0,-0.25,1.45),size=(0.26,0.12,0.3)); part('sphere','Glow',(0,-0.26,1.56),r=0.07,n=6)
+for z in (0.7,0.85,1.0): part('box','RockTrim_Dark',(0,-0.31+0.06*(z-0.7),z),size=(0.4,0.02,0.03))
+done('Waystone_Village')
+print('done')

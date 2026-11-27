@@ -15,13 +15,13 @@ Read it before building: use what we have, and know what must still be made or f
 | [Mayan Temple](https://devassets.com/assets/mayan-temple/) | buildings | Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo. | **no** (game builds only) | not yet |
 | [Medieval Village MegaKit](https://quaternius.itch.io/medieval-village-megakit) | buildings | CC0 1.0 | yes | imported: `godot/assets/village/quaternius` |
 | [Medieval Village Pack](https://quaternius.com/packs/medievalvillage.html) | buildings | CC0 1.0 | yes | not yet |
-| [Modular Village Pack](https://fertile-soil-productions.itch.io/modular-village-pack) | buildings | CC0 1.0 | yes | not yet |
+| [Modular Village Pack](https://fertile-soil-productions.itch.io/modular-village-pack) | buildings | CC0 1.0 | yes | imported: `godot/assets/props/village2 (10 props, repainted)` |
 | [PSX Style Walls and Fences](https://valsekamerplant.itch.io/psx-style-walls-fences) | buildings | CC0 (stated on the page; its textures are CC0 too) | yes | not yet |
 | [Temple Modular Collection (Fertile Soil Productions)](https://fertile-soil-productions.itch.io/temple-modular-collection) | buildings | CC0 1.0 | yes | not yet |
 | [Modular Character Outfits Fantasy](https://quaternius.itch.io/modular-character-outfits-fantasy) | characters | CC0 1.0 | yes | imported: `godot/assets/characters/quaternius/outfits` |
 | [Universal Base Characters](https://quaternius.itch.io/universal-base-characters) | characters | CC0 1.0 | yes | imported: `godot/assets/characters/quaternius` |
 | [Free Modular Low Poly Dungeon Pack (RGS_Dev)](https://rgsdev.itch.io/free-modular-low-poly-dungeon-pack-by-rgsdev) | dungeons | CC0 1.0 | yes | not yet |
-| [Wooden Docks (loafbrr)](https://loafbrr.itch.io/wooden-docks) | harbour | CC0 1.0 | yes | not yet |
+| [Wooden Docks (loafbrr)](https://loafbrr.itch.io/wooden-docks) | harbour | CC0 1.0 | yes | imported: `godot/assets/props/docks (27 pieces, repainted)` |
 | [Medieval Interior Asset Pack](https://soi.itch.io/medieval-interior-asset-pack) | interiors | No formal licence; the author (SOI) says 'free to use for any purpose' in the comments. Kept out of the repo to be safe. | **no** (game builds only) | not yet |
 | [Animated Mech Pack](https://quaternius.com/packs/animatedmech.html) | machines | CC0 1.0 | yes | not yet |
 | [Steampunk Turret Pack](https://quaternius.com/packs/turretpack.html) | machines | CC0 1.0 | yes | not yet |
@@ -55,7 +55,7 @@ Notes on each pack are in `packs.json`.
 
 **nature** (68): Bush_Common, Bush_Common_Flowers, Clover_1, Clover_2, CommonTree_1, CommonTree_2, CommonTree_3, CommonTree_4, CommonTree_5, DeadTree_1, DeadTree_2, DeadTree_3, DeadTree_4, DeadTree_5, Fern_1, Flower_3_Group, Flower_3_Single, Flower_4_Group, Flower_4_Single, Grass_Common_Short, Grass_Common_Tall, Grass_Wispy_Short, Grass_Wispy_Tall, Mushroom_Common, Mushroom_Laetiporus, Pebble_Round_1, Pebble_Round_2, Pebble_Round_3, Pebble_Round_4, Pebble_Round_5, Pebble_Square_1, Pebble_Square_2, Pebble_Square_3, Pebble_Square_4, Pebble_Square_5, Pebble_Square_6, Petal_1, Petal_2, Petal_3, Petal_4, Petal_5, Pine_1, Pine_2, Pine_3, Pine_4, Pine_5, Plant_1, Plant_1_Big, Plant_7, Plant_7_Big, RockPath_Round_Small_1, RockPath_Round_Small_2, RockPath_Round_Small_3, RockPath_Round_Thin, RockPath_Round_Wide, RockPath_Square_Small_1, RockPath_Square_Small_2, RockPath_Square_Small_3, RockPath_Square_Thin, RockPath_Square_Wide, Rock_Medium_1, Rock_Medium_2, Rock_Medium_3, TwistedTree_1, TwistedTree_2, TwistedTree_3, TwistedTree_4, TwistedTree_5
 
-**props** (94): Anvil, Anvil_Log, Axe_Bronze, Bag, Banner_1, Banner_1_Cloth, Banner_2, Banner_2_Cloth, Barrel, Barrel_Apples, Barrel_Holder, Bed_Twin1, Bed_Twin2, Bench, BookGroup_Medium_1, BookGroup_Medium_2, BookGroup_Medium_3, BookGroup_Small_1, BookGroup_Small_2, BookGroup_Small_3, BookStand, Book_5, Book_7, Book_Simplified_Single, Book_Stack_1, Book_Stack_2, Bookcase_2, Bottle_1, Bucket_Metal, Bucket_Wooden_1, Cabinet, Cage_Small, CandleStick, CandleStick_Stand, CandleStick_Triple, Candle_1, Candle_2, Carrot, Cauldron, Chain_Coil, Chair_1, Chalice, Chandelier, Chest_Wood, Coin, Coin_Pile, Coin_Pile_2, Crate_Metal, Crate_Wooden, Dummy, FarmCrate_Apple, FarmCrate_Carrot, FarmCrate_Empty, Key_Gold, Key_Metal, Lantern_Wall, Mug, Nightstand_Shelf, Peg_Rack, Pickaxe_Bronze, Pot_1, Pot_1_Lid, Potion_1, Potion_2, Potion_4, Pouch_Large, Rope_1, Rope_2, Rope_3, Scroll_1, Scroll_2, Shelf_Arch, Shelf_Simple, Shelf_Small_Bottles, Shield_Wooden, SmallBottle, SmallBottles_1, Stall_Cart_Empty, Stall_Empty, Stool, Sword_Bronze, Table_Fork, Table_Knife, Table_Large, Table_Plate, Table_Spoon, Torch_Metal, Vase_2, Vase_4, Vase_Rubble_Medium, WeaponStand, Whetstone, Workbench, Workbench_Drawers
+**props** (146): Anvil, Anvil_Log, Axe_Bronze, Bag, Banner_1, Banner_1_Cloth, Banner_2, Banner_2_Cloth, Barrel, Barrel_Apples, Barrel_Holder, Bed_Twin1, Bed_Twin2, Bell_Frame, Bench, Boat_A_1, Boat_A_2, Boat_B_1, Boat_B_2, Boat_Stand, BookGroup_Medium_1, BookGroup_Medium_2, BookGroup_Medium_3, BookGroup_Small_1, BookGroup_Small_2, BookGroup_Small_3, BookStand, Book_5, Book_7, Book_Simplified_Single, Book_Stack_1, Book_Stack_2, Bookcase_2, Bottle_1, Bucket_Metal, Bucket_Wooden_1, Cabinet, Cage_Small, CandleStick, CandleStick_Stand, CandleStick_Triple, Candle_1, Candle_2, Carrot, Cauldron, Chain_Coil, Chair_1, Chalice, Chandelier, Charcoal_Heap, Chest_Wood, Coin, Coin_Pile, Coin_Pile_2, Crate_Metal, Crate_Wooden, Dock_Bollard_1, Dock_Bollard_3, Dummy, FarmCrate_Apple, FarmCrate_Carrot, FarmCrate_Empty, Floor_Dock, Floor_Dock_End, Floor_Dock_End_Half, Floor_Dock_Half, Floor_Support, Floor_Support_Half, Floor_Support_VHalf, Harpoon_1, Hen_Coop, Key_Gold, Key_Metal, Lantern_Wall, Lobster_Pots, Manure_Heap, Mug, Net_Rack, Nightstand_Shelf, Notice_Post, Paddle_1, Peg_Rack, Pickaxe_Bronze, Pot_1, Pot_1_Lid, Potion_1, Potion_2, Potion_4, Pouch_Large, Prop_Barrel_1_Open, Prop_Broom, Prop_Cart_1, Prop_Cart_1_Hay, Prop_Hay_1, Prop_Ladder_1, Prop_Lamp_Street, Prop_Well_1, Props_Barrel, Props_Box, Props_Crate, Props_Fish_1, Props_Rack, Props_Rack_Fish, Props_Table_1, Props_Table_3, Quench_Trough, Rope_1, Rope_2, Rope_3, Rope_Coil, Salt_Pan, Scarecrow, Scroll_1, Scroll_2, Shelf_Arch, Shelf_Simple, Shelf_Small_Bottles, Shield_Wooden, SmallBottle, SmallBottles_1, Staddle_Stone, Stall_Cart_Empty, Stall_Empty, Stool, Support_Post, Support_Post_Half, Sword_Bronze, Table_Fork, Table_Knife, Table_Large, Table_Plate, Table_Spoon, Torch_Metal, Trough, Vase_2, Vase_4, Vase_Rubble_Medium, Wall_Prop_Bell_1, Wall_Prop_Sign_1, Washing_Line, Waystone_Village, WeaponStand, Whetstone, Woodpile, Workbench, Workbench_Drawers
 
 **village** (176): Balcony_Cross_Corner, Balcony_Cross_Straight, Balcony_Simple_Corner, Balcony_Simple_Straight, Corner_ExteriorWide_Brick, Corner_ExteriorWide_Wood, Corner_Exterior_Brick, Corner_Exterior_TopDown, Corner_Exterior_TopOnly, Corner_Exterior_Wood, Corner_Interior_Big, Corner_Interior_Small, DoorFrame_Flat_Brick, DoorFrame_Flat_WoodDark, DoorFrame_Round_Brick, DoorFrame_Round_WoodDark, Door_1_Flat, Door_1_Round, Door_2_Flat, Door_2_Round, Door_4_Flat, Door_4_Round, Door_8_Flat, Door_8_Round, Floor_Brick, Floor_RedBrick, Floor_UnevenBrick, Floor_WoodDark, Floor_WoodDark_Half1, Floor_WoodDark_Half2, Floor_WoodDark_Half3, Floor_WoodDark_OverhangCorner, Floor_WoodDark_OverhangCorner2, Floor_WoodLight, Floor_WoodLight_OverhangCorner, Floor_WoodLight_OverhangCorner2, HoleCover_90Angle, HoleCover_90Half, HoleCover_90Stairs, HoleCover_Straight, HoleCover_StraightHalf, Overhang_Plaster_Corner, Overhang_Plaster_Corner_Front, Overhang_Plaster_Long, Overhang_Plaster_Short, Overhang_RoofIncline_Plaster, Overhang_RoofIncline_UnevenBricks, Overhang_Roof_Plaster, Overhang_Roof_UnevenBricks, Overhang_Side_Plaster_Long_L, Overhang_Side_Plaster_Long_R, Overhang_Side_Plaster_Short_L, Overhang_Side_Plaster_Short_R, Overhang_Side_UnevenBrick_Long_L, Overhang_Side_UnevenBrick_Long_R, Overhang_Side_UnevenBrick_Short_L, Overhang_Side_UnevenBrick_Short_R, Overhang_UnevenBrick_Corner, Overhang_UnevenBrick_Corner_Front, Overhang_UnevenBrick_Long, Overhang_UnevenBrick_Short, Prop_Brick1, Prop_Brick2, Prop_Brick3, Prop_Brick4, Prop_Chimney, Prop_Chimney2, Prop_Crate, Prop_ExteriorBorder_Corner, Prop_ExteriorBorder_Straight1, Prop_ExteriorBorder_Straight2, Prop_MetalFence_Ornament, Prop_MetalFence_Simple, Prop_Support, Prop_Vine1, Prop_Vine2, Prop_Vine4, Prop_Vine5, Prop_Vine6, Prop_Vine9, Prop_Wagon, Prop_WoodenFence_Extension1, Prop_WoodenFence_Extension2, Prop_WoodenFence_Single, Roof_2x4_RoundTile, Roof_Dormer_RoundTile, Roof_FrontSupports, Roof_Front_Brick2, Roof_Front_Brick4, Roof_Front_Brick4_Half_L, Roof_Front_Brick4_Half_R, Roof_Front_Brick6, Roof_Front_Brick6_Half_L, Roof_Front_Brick6_Half_R, Roof_Front_Brick8, Roof_Front_Brick8_Half_L, Roof_Front_Brick8_Half_R, Roof_Log, Roof_Modular_RoundTiles, Roof_RoundTile_2x1, Roof_RoundTile_2x1_Long, Roof_RoundTiles_4x4, Roof_RoundTiles_4x6, Roof_RoundTiles_4x8, Roof_RoundTiles_6x10, Roof_RoundTiles_6x12, Roof_RoundTiles_6x14, Roof_RoundTiles_6x4, Roof_RoundTiles_6x6, Roof_RoundTiles_6x8, Roof_RoundTiles_8x10, Roof_RoundTiles_8x12, Roof_RoundTiles_8x14, Roof_RoundTiles_8x8, Roof_Support2, Roof_Tower_RoundTiles, Roof_Wooden_2x1, Roof_Wooden_2x1_Center, Roof_Wooden_2x1_Center_Mirror, Roof_Wooden_2x1_Corner, Roof_Wooden_2x1_L, Roof_Wooden_2x1_Middle, Roof_Wooden_2x1_R, Stair_Interior_Rails, Stair_Interior_Simple, Stair_Interior_Solid, Stair_Interior_SolidExtended, Stairs_Exterior_NoFirstStep, Stairs_Exterior_Platform, Stairs_Exterior_Platform45, Stairs_Exterior_Platform45Clean, Stairs_Exterior_PlatformU, Stairs_Exterior_SidePlatform, Stairs_Exterior_Sides, Stairs_Exterior_Sides45, Stairs_Exterior_SidesU, Stairs_Exterior_SingleSide, Stairs_Exterior_SingleSideThick, Stairs_Exterior_Straight, Stairs_Exterior_Straight_Center, Stairs_Exterior_Straight_L, Stairs_Exterior_Straight_R, Wall_Arch, Wall_BottomCover, Wall_Plaster_Door_Flat, Wall_Plaster_Door_Round, Wall_Plaster_Door_RoundInset, Wall_Plaster_Straight, Wall_Plaster_Straight_Base, Wall_Plaster_Straight_L, Wall_Plaster_Straight_R, Wall_Plaster_Window_Thin_Round, Wall_Plaster_Window_Wide_Flat, Wall_Plaster_Window_Wide_Flat2, Wall_Plaster_Window_Wide_Round, Wall_Plaster_WoodGrid, Wall_UnevenBrick_Door_Flat, Wall_UnevenBrick_Door_Round, Wall_UnevenBrick_Straight, Wall_UnevenBrick_Window_Thin_Round, Wall_UnevenBrick_Window_Wide_Flat, Wall_UnevenBrick_Window_Wide_Round, WindowShutters_Thin_Flat_Closed, WindowShutters_Thin_Flat_Open, WindowShutters_Thin_Round_Closed, WindowShutters_Thin_Round_Open, WindowShutters_Wide_Flat_Closed, WindowShutters_Wide_Flat_Open, WindowShutters_Wide_Round_Closed, WindowShutters_Wide_Round_Open, Window_Roof_Thin, Window_Roof_Wide, Window_Thin_Flat1, Window_Thin_Round1, Window_Wide_Flat1, Window_Wide_Round1
 
@@ -69,17 +69,17 @@ Notes on each pack are in `packs.json`.
 | windows and shutters | WindowShutters_Thin_Flat_Closed, WindowShutters_Thin_Flat_Open, WindowShutters_Thin_Round_Closed, WindowShutters_Thin_Round_Open, WindowShutters_Wide_Flat_Closed, WindowShutters_Wide_Flat_Open … | ok |
 | tile roofs | Roof_RoundTile_2x1, Roof_RoundTile_2x1_Long, Roof_RoundTiles_4x4, Roof_RoundTiles_4x6, Roof_RoundTiles_4x8, Roof_RoundTiles_6x10 … | ok |
 | wooden roofs (shingle look) | Roof_Wooden_2x1, Roof_Wooden_2x1_Center, Roof_Wooden_2x1_Center_Mirror, Roof_Wooden_2x1_Corner, Roof_Wooden_2x1_L, Roof_Wooden_2x1_Middle … | ok |
-| thatch roofs | - | **missing: make or find** |
+| thatch roofs | - | later: the kit's roof pieces with the Thatch palette material (no new meshes) |
 | chimneys | Prop_Chimney, Prop_Chimney2 | ok |
 | stairs | HoleCover_90Stairs, Stair_Interior_Rails, Stair_Interior_Simple, Stair_Interior_Solid, Stair_Interior_SolidExtended, Stairs_Exterior_NoFirstStep … | ok |
 | fences | Prop_MetalFence_Ornament, Prop_MetalFence_Simple, Prop_WoodenFence_Extension1, Prop_WoodenFence_Extension2, Prop_WoodenFence_Single | ok |
 | palisade | - | stand-in in code: log posts and gate towers (_palisade) |
-| staddle stones (granary) | - | **missing: make or find** |
-| waystone | - | **missing: make or find** |
+| staddle stones (granary) | Staddle_Stone | ok |
+| waystone | Waystone_Village | ok |
 | statues of the gods | - | later: make: prompts in docs/art/statues.md (looks to approve) |
-| pier and docks | - | stand-in in code: plank T on posts (_pier_run); later: Wooden Docks (loafbrr) |
-| boats | - | stand-in in code: simple hulls and the ship (_boat); later: make in Blender (Farhallow builds simple ones in code now) |
-| salt pans | - | **missing: make or find** |
+| pier and docks | Floor_Dock, Floor_Dock_End, Floor_Dock_End_Half, Floor_Dock_Half | ok |
+| boats | Boat_A_1, Boat_A_2, Boat_B_1, Boat_B_2, Boat_Stand | ok |
+| salt pans | Salt_Pan | ok |
 
 ## Doodads used by the building types and Farhallow
 
@@ -87,32 +87,32 @@ Notes on each pack are in `packs.json`.
 | --- | --- | --- |
 | bench (Cottage, Inn, Merchant's house) | Bench | ok |
 | barrel (Granary, Inn, Store or salt house) | Barrel, Barrel_Apples, Barrel_Holder | ok |
-| crate (Store or salt house) | Crate_Metal, Crate_Wooden, FarmCrate_Apple, FarmCrate_Carrot, FarmCrate_Empty, Prop_Crate | ok |
-| woodpile (Cottage, Salt-boiling hut, Smokehouse) | - | later: make in Blender (logs, simple) |
-| washing line (Cottage, Street house) | - | **missing: make or find** |
-| well (Merchant's house, Well-off house) | - | stand-in in code: stone ring and water (_well) |
+| crate (Store or salt house) | Crate_Metal, Crate_Wooden, FarmCrate_Apple, FarmCrate_Carrot, FarmCrate_Empty, Prop_Crate … | ok |
+| woodpile (Cottage, Salt-boiling hut, Smokehouse) | Woodpile | ok |
+| washing line (Cottage, Street house) | Washing_Line | ok |
+| well (Merchant's house, Well-off house) | Prop_Well_1 | ok |
 | fruit tree (Merchant's house, Well-off house) | CommonTree_1, CommonTree_2, CommonTree_3, CommonTree_4, CommonTree_5 | ok |
 | flower bed (Merchant's house, Well-off house) | Bush_Common_Flowers, Flower_3_Group, Flower_3_Single, Flower_4_Group, Flower_4_Single | ok |
 | lamp (Inn, Merchant's house, Well-off house) | Lantern_Wall | ok |
-| sign (Inn, Street house) | - | **missing: make or find** |
-| trough (Farmstead, Hen house and goat pen, Inn) | - | **missing: make or find** |
+| sign (Inn, Street house) | Wall_Prop_Sign_1 | ok |
+| trough (Farmstead, Hen house and goat pen, Inn) | Trough | ok |
 | cart (Farmstead) | Prop_Wagon, Stall_Cart_Empty | ok |
-| net rack | - | **missing: make or find** |
-| lobster pots | - | **missing: make or find** |
+| net rack | Net_Rack | ok |
+| lobster pots | Lobster_Pots | ok |
 | gutting table | Table_Large | ok |
-| scarecrow | - | **missing: make or find** |
-| haystack | - | **missing: make or find** |
-| notice post | - | **missing: make or find** |
+| scarecrow | Scarecrow | ok |
+| haystack | Prop_Hay_1 | ok |
+| notice post | Notice_Post | ok |
 | torch | Torch_Metal | ok |
-| bell frame (Guard post) | - | **missing: make or find** |
+| bell frame (Guard post) | Bell_Frame | ok |
 | anvil (Workshop with yard) | Anvil, Anvil_Log | ok |
-| quench trough (Workshop with yard) | - | **missing: make or find** |
+| quench trough (Workshop with yard) | Quench_Trough | ok |
 | grindstone (Workshop with yard) | Whetstone | ok |
-| charcoal (Workshop with yard) | - | **missing: make or find** |
+| charcoal (Workshop with yard) | Charcoal_Heap | ok |
 | candles (Shrine of Merrith) | CandleStick, CandleStick_Stand, CandleStick_Triple, Candle_1, Candle_2 | ok |
 | sacks (Granary, Salt-boiling hut) | Bag, Pouch_Large | ok |
-| manure heap (Farmstead) | - | **missing: make or find** |
-| drying rack | - | **missing: make or find** |
-| hen coop (Street house) | - | **missing: make or find** |
-| boat hull (Boatwright's shed) | - | later: make in Blender |
+| manure heap (Farmstead) | Manure_Heap | ok |
+| drying rack | Props_Rack, Props_Rack_Fish | ok |
+| hen coop (Street house) | Hen_Coop | ok |
+| boat hull (Boatwright's shed) | Boat_B_1, Boat_B_2, Boat_Stand | ok |
 

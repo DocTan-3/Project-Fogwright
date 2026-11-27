@@ -8,26 +8,27 @@ packs=json.load(open(os.path.join(HERE,'packs.json')))['packs']
 # packs already imported into godot/assets, and where
 IMPORTED={'Universal Animation Library':'animations/quaternius','Universal Animation Library 2':'animations/quaternius',
  'Universal Base Characters':'characters/quaternius','Modular Character Outfits Fantasy':'characters/quaternius/outfits',
- 'Fantasy Props MegaKit':'props/quaternius','Medieval Village MegaKit':'village/quaternius','Stylized Nature MegaKit':'nature/quaternius'}
+ 'Fantasy Props MegaKit':'props/quaternius','Medieval Village MegaKit':'village/quaternius','Stylized Nature MegaKit':'nature/quaternius',
+ 'Wooden Docks (loafbrr)':'props/docks (27 pieces, repainted)','Modular Village Pack':'props/village2 (10 props, repainted)'}
 models={}
 for dp,_,fs in os.walk(os.path.join(ROOT,'godot','assets')):
     for f in fs:
         if f.endswith(('.gltf','.glb')): models[os.path.splitext(f)[0]]=os.path.relpath(dp,os.path.join(ROOT,'godot','assets')).split('/')[0]
 # what each kind of thing needs, and the model names that serve it (regex on imported model names)
-NEED={'bench':r'^Bench$','barrel':r'^Barrel','crate':r'Crate','woodpile':None,'washing line':None,'well':None,
- 'fruit tree':r'^CommonTree','flower bed':r'^Flower|Bush_Common_Flowers','lamp':r'Lantern','sign':None,'trough':None,
- 'cart':r'Wagon|Stall_Cart','net rack':None,'lobster pots':None,'gutting table':r'^Table_Large$','scarecrow':None,
- 'haystack':None,'notice post':None,'torch':r'^Torch','bell frame':None,'anvil':r'^Anvil','quench trough':None,
- 'grindstone':r'Whetstone','charcoal':None,'candles':r'Candle','sacks':r'^Bag$|Pouch','manure heap':None,'drying rack':None,
- 'hen coop':None,'boat hull':None}
+NEED={'bench':r'^Bench$','barrel':r'^Barrel','crate':r'Crate','woodpile':r'^Woodpile$','washing line':r'^Washing_Line$','well':r'^Prop_Well',
+ 'fruit tree':r'^CommonTree','flower bed':r'^Flower|Bush_Common_Flowers','lamp':r'Lantern','sign':r'Sign','trough':r'^Trough$',
+ 'cart':r'Wagon|Stall_Cart','net rack':r'^Net_Rack$','lobster pots':r'^Lobster_Pots$','gutting table':r'^Table_Large$','scarecrow':r'^Scarecrow$',
+ 'haystack':r'^Prop_Hay','notice post':r'^Notice_Post$','torch':r'^Torch','bell frame':r'^Bell_Frame$','anvil':r'^Anvil','quench trough':r'^Quench_Trough$',
+ 'grindstone':r'Whetstone','charcoal':r'^Charcoal_Heap$','candles':r'Candle','sacks':r'^Bag$|Pouch','manure heap':r'^Manure_Heap$','drying rack':r'^Props_Rack',
+ 'hen coop':r'^Hen_Coop$','boat hull':r'^Boat_B_|^Boat_Stand$'}
 BUILD={'walls: plaster, timber frame, brick':r'^Wall_(Plaster|UnevenBrick)','jettied upper floors':r'^Overhang_','doors and frames':r'^Door',
  'windows and shutters':r'^Window','tile roofs':r'^Roof_RoundTile','wooden roofs (shingle look)':r'^Roof_Wooden','thatch roofs':None,
- 'chimneys':r'Chimney','stairs':r'Stair','fences':r'Fence','palisade':None,'staddle stones (granary)':None,'waystone':None,
- 'statues of the gods':None,'pier and docks':None,'boats':None,'salt pans':None}
+ 'chimneys':r'Chimney','stairs':r'Stair','fences':r'Fence','palisade':None,'staddle stones (granary)':r'^Staddle_Stone$','waystone':r'^Waystone',
+ 'statues of the gods':None,'pier and docks':r'^Floor_Dock','boats':r'^Boat_','salt pans':r'^Salt_Pan$'}
 # stand-ins made from simple shapes in the current level script (godot/scripts/farhallow.gd): fine for now, to be modelled
 STANDIN={'well':'stone ring and water (_well)','palisade':'log posts and gate towers (_palisade)','pier and docks':'plank T on posts (_pier_run)',
  'boats':'simple hulls and the ship (_boat)'}
-LATER={'pier and docks':'Wooden Docks (loafbrr)','statues of the gods':'make: prompts in docs/art/statues.md (looks to approve)',
+LATER={'thatch roofs':'the kit\'s roof pieces with the Thatch palette material (no new meshes)','pier and docks':'Wooden Docks (loafbrr)','statues of the gods':'make: prompts in docs/art/statues.md (looks to approve)',
  'woodpile':'make in Blender (logs, simple)','boat hull':'make in Blender','boats':'make in Blender (Farhallow builds simple ones in code now)'}
 def have(rx):
     if not rx: return []
