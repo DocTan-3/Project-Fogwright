@@ -19,4 +19,18 @@ save('Fish',np.sin(x*2*np.pi*64+np.sin(y*2*np.pi*64)*1.5)+noise(1,2)*0.5,0.08)  
 save('Glow',noise(1,6),0.02)
 save('sea',noise(1,8),0.03)                                                     # still water: almost plain
 save('earth',noise(1,3)+noise(1,8)*1.5,0.1)                                       # clods
-print('saved 8 detail maps')
+# ground: grass clumps and blades; paths: packed dirt with pebbles, wheel ruts and footworn patches
+blades=np.zeros((N,N))
+for _ in range(9000):
+    cx,cy=R.integers(0,N,2); L=R.integers(4,14); dx=R.normal(0,0.35)
+    for t in range(L): blades[(cy-t)%N,int(cx+dx*t)%N]+=R.uniform(0.5,1.0)
+save('Grass',smooth(blades,1)*0.6+noise(1,6)*1.2+noise(1,18)*1.6,0.14)
+peb=np.zeros((N,N))
+for _ in range(1400):
+    cx,cy=R.integers(0,N,2); r=R.integers(1,4)
+    for dy in range(-r,r+1):
+        for dx in range(-r,r+1):
+            if dx*dx+dy*dy<=r*r: peb[(cy+dy)%N,(cx+dx)%N]=R.uniform(0.6,1.0)
+ruts=0   # no ruts: the detail tiles in world space, so stripes would run across paths, not along them
+save('Path',smooth(peb,1)*0.9+noise(1,3)*0.5+noise(1,14)*1.4-ruts,0.12)
+print('saved 10 detail maps')

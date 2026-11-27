@@ -127,7 +127,7 @@ func _terrain() -> void:
 			var p := Vector2(x0 + i, y0 + j); var h := height(p); var c := _coast_signed(p)
 			var col := grass.lerp(grass.darkened(0.18), 0.5 + 0.5 * noise.get_noise_2d(p.x * 3.0, p.y * 3.0))
 			col = col.lerp(sand, 1.0 - smoothstep(2.5, 6.5, c)); if c < 0.5: col = wet
-			st.set_color(col * shade(p)); st.add_vertex(W(p, h))
+			st.set_color(col / 0.8); st.set_uv(_light_uv(p)); st.set_uv2(p * 0.45); st.add_vertex(W(p, h))
 	for j in ny:
 		for i in nx:
 			var a := j * (nx + 1) + i
@@ -135,7 +135,7 @@ func _terrain() -> void:
 			st.add_index(a + 1); st.add_index(a + nx + 2); st.add_index(a + nx + 1)
 	st.generate_normals()
 	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.name = "Terrain"
-	var mat := StandardMaterial3D.new(); mat.vertex_color_use_as_albedo = true; mat.roughness = 1.0; mi.material_override = mat
+	mi.material_override = _ground_material("Grass")
 	add_child(mi)
 	if not has_node("TerrainBody"):
 		mi.create_trimesh_collision(); mi.get_child(0).name = "TerrainBody"; mi.get_child(0).reparent(self)
@@ -172,7 +172,8 @@ func _path(pts: Array, width: float) -> void:
 		var hw := width * 0.5 * (1.0 + 0.18 * noise.get_noise_2d(p.x * 6.0, p.y * 6.0))   # ragged, worn edges
 		for s in [-1.0, 0.0, 1.0]:
 			var q: Vector2 = p + side * hw * s
-			st.set_color(dirt.lerp(dirt.darkened(0.15), 0.5 + 0.5 * noise.get_noise_2d(q.x * 9.0, q.y * 9.0)) * shade(q))
+			st.set_color(dirt.lerp(dirt.darkened(0.15), 0.5 + 0.5 * noise.get_noise_2d(q.x * 9.0, q.y * 9.0)) / 0.8)
+			st.set_uv(_light_uv(q)); st.set_uv2(q * 0.4)
 			var v := W(q, _ground_top(q, 0.6) + 0.04)        # above the highest ground round it, so the terrain never shows through
 			st.add_vertex(v); verts.append(v)
 	for i in baked.size() - 1:
@@ -183,7 +184,7 @@ func _path(pts: Array, width: float) -> void:
 	path_surfaces.append([verts, tris])
 	st.generate_normals()
 	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.add_to_group("path_mesh")
-	var mat := StandardMaterial3D.new(); mat.vertex_color_use_as_albedo = true; mat.roughness = 1.0; mi.material_override = mat
+	mi.material_override = _ground_material("Path")
 	add_child(mi)
 
 # ---------------------------------------------------------------- buildings, built from their floorplans
@@ -719,11 +720,27 @@ var _y0 := -MARGIN
 var _nx := int(140 + 2 * MARGIN)
 var _ny := int(110 + 2 * MARGIN)
 
-func shade(p: Vector2) -> float:
+func shade(p: Vector2) -> float:   # the baked light at a plan point (1 before the bake)
 	if shade_grid.is_empty(): return 1.0
-	var i := clampi(int(p.x - _x0), 0, _nx - 1); var j := clampi(int(p.y - _y0), 0, _ny - 1)
-	return shade_grid[j * _nx + i]
+	var i := clampi(int((p.x - _x0) * TEXELS), 0, _nx * TEXELS - 1); var j := clampi(int((p.y - _y0) * TEXELS), 0, _ny * TEXELS - 1)
+	return shade_grid[j * _nx * TEXELS + i]
 
+const TEXELS := 2                  # light-map texels per metre
+var light_tex: ImageTexture        # the baked light: sun shadows, tree shade and ambient occlusion, white where lit
+
+func _light_uv(p: Vector2) -> Vector2:   # plan metres to the light map
+	return (p - Vector2(_x0, _y0)) / Vector2(_nx, _ny)
+
+func _ground_material(detail: String) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new(); m.vertex_color_use_as_albedo = true; m.roughness = 1.0
+	if light_tex: m.albedo_texture = light_tex
+	m.detail_enabled = true; m.detail_albedo = load("res://assets/library/%s_detail.png" % detail)
+	m.detail_uv_layer = BaseMaterial3D.DETAIL_UV_2; m.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MUL
+	return m
+
+## baked once at load, the WoW way: a ray toward the sun from every texel of the village (shadow or not), soft ovals
+## under tree crowns, and near buildings and props a few short rays round the sky (how much of it walls and things hide:
+## the ground darkens where it meets them, so nothing looks pasted on)
 func _bake_when_ready() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
@@ -731,34 +748,66 @@ func _bake_when_ready() -> void:
 	var travel := -sun.global_transform.basis.z         # the direction the sunlight travels
 	var to_sun := -travel
 	var space := get_world_3d().direct_space_state
-	var raw := PackedFloat32Array(); raw.resize(_nx * _ny); raw.fill(1.0)
+	var W_ := _nx * TEXELS; var H_ := _ny * TEXELS; var t0 := Time.get_ticks_msec()
+	var raw := PackedFloat32Array(); raw.resize(W_ * H_); raw.fill(1.0)
 	var q := PhysicsRayQueryParameters3D.new(); q.collision_mask = 1
-	for j in _ny:
-		for i in _nx:
-			var p := Vector2(_x0 + i + 0.5, _y0 + j + 0.5)
-			if _coast_signed(p) < -2.0: continue
-			var from := W(p, height(p) + 0.25)
+	var near := {}                                      # props, fences and fixtures (not plants), by 2 m cell: where to bake occlusion
+	for it in placed:
+		if it[3] == "flora": continue
+		var np := Vector2(it[1].x, it[1].z) + ORIGIN
+		near[Vector2i(floori(np.x / 2.0), floori(np.y / 2.0))] = true
+	var sky := []
+	for k in 8: sky.append(Vector3(cos(k * TAU / 8.0), 0.85, sin(k * TAU / 8.0)).normalized())
+	for j in H_:
+		for i in W_:
+			var p := Vector2(_x0 + (i + 0.5) / TEXELS, _y0 + (j + 0.5) / TEXELS)
+			if p.x < -6 or p.x > 146 or p.y < -6 or p.y > 112 or _coast_signed(p) < -2.0: continue
+			var from := W(p, terrain_surface(p) + 0.15)
+			var light := 1.0
 			q.from = from; q.to = from + to_sun * 70.0
-			if not space.intersect_ray(q).is_empty(): raw[j * _nx + i] = SHADE
+			if not space.intersect_ray(q).is_empty(): light = SHADE
+			var close := _in_pad(p, 3.0)
+			if not close:
+				var cell := Vector2i(floori(p.x / 2.0), floori(p.y / 2.0))
+				for dj in [-1, 0, 1]:
+					for di in [-1, 0, 1]:
+						if near.has(cell + Vector2i(di, dj)): close = true
+			if close:                                   # ambient occlusion: how much of the sky is hidden
+				var hidden := 0
+				for d in sky:
+					q.from = from; q.to = from + d * 2.5
+					if not space.intersect_ray(q).is_empty(): hidden += 1
+				light *= 1.0 - 0.5 * hidden / 8.0
+			raw[j * W_ + i] = light
 	var horiz := Vector2(travel.x, travel.z).normalized(); var stretch := 1.0 / maxf(0.2, -travel.y)
 	for t in trees:                                     # tree crowns: a soft oval along the light
 		var base: Vector3 = t[0]; var sc: float = t[1]; var top: Vector3 = base + Vector3(0, 4.0 * sc, 0)
 		var hit: Vector3 = top + travel * ((top.y - base.y) / -travel.y)
 		var c := Vector2(hit.x, hit.z) + Vector2(ORIGIN.x, ORIGIN.y)
-		for dj in range(-5, 6):
-			for di in range(-5, 6):
-				var off := Vector2(di, dj); var along := off.dot(horiz) / stretch; var across := off.dot(horiz.orthogonal())
+		var R := int(ceil(2.0 * sc * stretch * TEXELS)) + 1
+		for dj in range(-R, R + 1):
+			for di in range(-R, R + 1):
+				var off := Vector2(di, dj) / float(TEXELS); var along := off.dot(horiz) / stretch; var across := off.dot(horiz.orthogonal())
 				if along * along + across * across < pow(2.0 * sc, 2):
-					var ii := int(c.x - _x0) + di; var jj := int(c.y - _y0) + dj
-					if ii >= 0 and jj >= 0 and ii < _nx and jj < _ny: raw[jj * _nx + ii] = minf(raw[jj * _nx + ii], 0.7)
-	shade_grid = raw.duplicate()                        # soften the edges a little
-	for j in range(1, _ny - 1):
-		for i in range(1, _nx - 1):
-			var acc := 0.0
-			for dj in [-1, 0, 1]: for di in [-1, 0, 1]: acc += raw[(j + dj) * _nx + i + di]
-			shade_grid[j * _nx + i] = acc / 9.0
+					var ii := int((c.x - _x0) * TEXELS) + di; var jj := int((c.y - _y0) * TEXELS) + dj
+					if ii >= 0 and jj >= 0 and ii < W_ and jj < H_: raw[jj * W_ + ii] = minf(raw[jj * W_ + ii], 0.72)
+	var img := Image.create(W_, H_, false, Image.FORMAT_L8)   # soften the edges a little
+	for j in H_:
+		for i in W_:
+			var acc := 0.0; var n := 0
+			for dj in [-1, 0, 1]:
+				for di in [-1, 0, 1]:
+					var ii: int = i + di; var jj: int = j + dj
+					if ii >= 0 and jj >= 0 and ii < W_ and jj < H_: acc += raw[jj * W_ + ii]; n += 1
+			var v := acc / n
+			img.set_pixel(i, j, Color(v, v, v))
+	light_tex = ImageTexture.create_from_image(img)
+	print("baked the light in %d ms" % (Time.get_ticks_msec() - t0))
+	if OS.get_cmdline_user_args().has("dump_light"): img.save_png("user://light.png")
+	shade_grid = raw                                    # (kept for anything still asking shade())
 	get_node("Terrain").queue_free()
 	for m in get_tree().get_nodes_in_group("path_mesh"): m.queue_free()
+	path_surfaces.clear()
 	await get_tree().process_frame
 	_terrain()
 	for p in PATHS: _path(p[0], p[1])
