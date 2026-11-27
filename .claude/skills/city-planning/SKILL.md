@@ -35,7 +35,7 @@ and where other peoples' families built in their own way.
 
 Write it down before anything is drawn (`docs/settlements/<name>.md` in the docs):
 
-- **Who lives here** (peoples, how many), **how they live** (trades, what they make, eat, sell and buy), **how rich or poor**
+- **Who lives here** (peoples, how many), **how it feeds itself** (see Supply in stage 2), **how they live** (trades, what they make, eat, sell and buy), **how rich or poor**
   they are and how unevenly, and **how close to Aldrath** (farther means harder lives and more muted colours: lore.md,
   "Life and the Fog").
 - **Its history:** why it was founded here, what changed, who holds power, a few named people and a story or two that
@@ -48,6 +48,17 @@ Write it down before anything is drawn (`docs/settlements/<name>.md` in the docs
 From the lore, work out what the place needs and where each thing must be, *before* placing a single building. Write a
 short table: each building or facility, why it is where it is, what it needs next to it.
 
+- **Supply first: can the place live?** Work out what it eats, drinks and burns, and where each comes from, with rough
+  numbers (people × about 2,000 kcal a day; grain about 700 kg per hectare a year after seed, so roughly a quarter to a
+  third of a hectare of grain per person fed on bread, doubled for fallow; fish, gardens, herds and foraging cover the
+  rest). **The farther a place is from Aldrath and safe roads, the more it must feed itself:** a far village or town grows
+  or catches its own food, cuts its own fuel, draws its own water and keeps winter stores (granary, smokehouse, salt);
+  only places on safe, short routes near the heartland (a port like Hollin's Cross, Aldrath itself) may live on imported
+  food, and then the lore must say what they export to pay for it and what happens when the ships stop. Imports for a far
+  place are things it cannot make (iron, cloth, lamp oil, tools), never its daily bread.
+- **Land for it:** put the fields, pastures, fishing grounds and woodlots on the plan or say where they lie beyond its
+  edge (most farmland lies outside the walls); a settlement whose food land does not fit anywhere needs fewer people or
+  more land.
 - **Trades sit with what they need:** the smithy with its forge and furnace, charcoal and a water trough for quenching,
   on a road for customers and deliveries; a mill on running water or the wind; the bakery near the granary and the
   ovens' fuel; the fishmonger, smokehouse, net-menders and boatwright at the harbour; the tannery and the slaughterhouse

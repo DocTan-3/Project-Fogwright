@@ -79,6 +79,9 @@ t('smokehouse',people='any',name="Smokehouse",size="6 × 6 m",
 t('boat_shed',people='any',name="Boatwright's shed",size="8 × 6 m, open to the shore",
   rooms=[(0,0,8,6,'slipway\nand bench','out')],doors=[(4,0,'h',6,'s')],
   note="open along the front for hulls; tools along the back wall; a slipway down to the water")
+t('salt_works',people='any',name="Salt-boiling hut",size="6 × 9 m with its pans",
+  rooms=[(0,0,6,5,'boiling hut','out'),(0,5,6,4,'salt pans','yard')],doors=[(3,0,'h',1.2,'d'),(3,5,'h',1.2,'d')],
+  hearths=[(3,2.6)],note="seawater boiled down in iron pans over a driftwood fire; the drying pans outside face the sea")
 t('granary',people='any',name="Granary",size="8 × 6 m on staddle stones",
   rooms=[(0,0,8,6,'grain bins','out')],doors=[(4,0,'h',1.4,'d')],
   note="raised on mushroom-shaped stones against rats; loose wooden steps up to the door, outside, taken away at night")

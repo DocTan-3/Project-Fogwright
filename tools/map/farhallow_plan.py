@@ -68,7 +68,8 @@ RICH,MID,POOR,TRADE,PUB=(214,170,108),(166,122,84),(124,100,80),(112,100,96),(15
 # lanes (dashed): only so the buildings off the main roads know which way to face; drawn properly in stage 4
 LANES=[([(80,66),(72,71),(64,77),(55,82),(46,86)],2.2,'shore lane'),
        ([(58.3,28),(50,28),(38,27)],2.2,'field lane'),
-       ([(46,60),(40,52),(37,45.5),(31.5,44.5)],2.0,'farm lane')]
+       ([(46,60),(40,52),(37,45.5),(31.5,44.5)],2.0,'farm lane'),
+       ([(84,41.3),(95,46),(101,46.5)],1.8,'salt path')]
 for pts,w,_ in LANES:
     for (x0,y0),(x1,y1) in zip(pts,pts[1:]):
         d.line([P(x0,y0),P(x1,y1)],fill=(178,150,110),width=int(w*S))
@@ -103,6 +104,7 @@ B=[('gate road',52,36,'inn',1.5,PUB,1,'The Gull & Lantern, tavern with rooms'),
    (None,92,67,'smokehouse',-2.21,TRADE,6,'Smokehouse'),
    ('harbour road',80,75,'store',1.0,TRADE,7,'Salt house and fish store'),
    (None,72,84,'boat_shed',-0.58,TRADE,8,"Boatwright's shed"),
+   (None,104.5,52.5,'salt_works',-0.64,TRADE,16,'Salt-boiling hut and pans'),
    ('shore lane',72,68,'cottage',1.0,POOR,9,"Net-mender's cottage"),
    ('shore lane',63,74,'cottage',0.6,POOR,10,"Fishers' cottages"),('shore lane',54,79,'cottage',0.6,POOR,10,''),('shore lane',45,83,'cottage',0.6,POOR,10,''),
    ('shore lane',60,83,'cottage',0.6,POOR,10,''),('shore lane',52,87,'cottage',0.6,POOR,10,''),
@@ -157,7 +159,7 @@ def rect_hit(p,r,pad): return r[0]-pad<=p[0]<=r[2]+pad and r[1]-pad<=p[1]<=r[3]+
 LINES=[(pal,1.5,'palisade'),(pal2,1.5,'palisade'),([(10,8),(6,40),(8,70),(20,92)],1.5,'palisade'),
        ([(80,82),(92,76),(100,70),(106,62)],1.6,'sea wall'),([(106,62),(116,64),(126,70),(132,80)],1.8,'breakwater')]
 RECTS=[((14,14,37,34),'field'),((16,38,30,46),'vegetable plots'),((85,80,90,100),'pier'),((78,98,104,103),'pier')]
-SHORE_OK={6,7,8}   # the smokehouse and the boatwright's shed belong on the shore
+SHORE_OK={6,7,8,16}   # the smokehouse and the boatwright's shed belong on the shore
 things=[(k,'%d %s'%(placed[k][6],(r[4] or 'passage').replace('\n',' ')),room_geo(k,r)) for k in range(len(placed)) for r in TYPES[PTYPE[k]]['rooms']]+\
        [(pl[0],'%d %s'%(placed[pl[0]][6],pl[1]),pl[2:]) for pl in PLOTS]+[(-1,'waystone',WAYSTONE)]
 def ground_clash(n,nm,geo):   # everything but other buildings: streets, square, walls, fields, sea, beach
@@ -288,7 +290,12 @@ d.text(P(cx,cy-7.5),'N',font=F(18,True),fill=(40,30,20),anchor='mm'); d.text(P(c
 def beat(x,y,t):
     d.ellipse([P(x-1.6,y-1.6),P(x+1.6,y+1.6)],fill=(200,60,50),outline=(255,255,255),width=3)
     d.text(P(x+2.3,y-1.2),t,font=F(19,True),fill=(255,255,255),stroke_width=3,stroke_fill=(60,20,20))
-beat(67,54,'A  start'); beat(96,52,'B  first weapon'); beat(11,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
+beat(67,54,'A  start'); beat(77,52,'B  first weapon'); beat(11,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
+d.text(P(17,22),'INFIELD',font=F(20,True),fill=(120,96,50))
+for (ax,ay,tx,ty,lab) in ((62,1.5,66,0.6,'north road to the OPEN FIELDS (~22 ha) and the common'),(6,24,1,18,'')):
+    pass
+d.text(P(66,0.8),'↑ to the open fields (~22 ha), the common pasture and woods',font=F(16,True),fill=(255,255,240),stroke_width=2,stroke_fill=(40,30,20))
+d.text(P(1,3),'← open fields west',font=F(16,True),fill=(255,255,240),stroke_width=2,stroke_fill=(40,30,20))
 d.text(P(124,88),'THE SEA',font=F(30,True),fill=(220,235,240)); d.text(P(114,44),'WOODS',font=F(24,True),fill=(200,220,190))
 L=Image.new('RGBA',(440,1060),(250,246,236,240)); ld=ImageDraw.Draw(L); yy=12
 for x,y,w,h,a,c,n,name,_ in placed:
