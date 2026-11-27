@@ -65,7 +65,8 @@ world, under **Hollin the Wayfarer**, god of the open road and the welcome at it
 
 ### Building types and floorplans
 
-Drawn in `wayfolk-plans.png` (made by `tools/map/wayfolk_plans.py`, which checks that every room can be reached through
+All types live in `tools/map/building_types.py`, the one source for the floorplans, the settlement plans and the 3D
+builder. Drawn in `wayfolk-plans.png` (made by `tools/map/wayfolk_plans.py`, which checks that every room can be reached through
 doors and that no stairs block a way or a door). Sizes on the 2 m kit grid; every door, window, hearth and stair is drawn.
 
 1. **Street house** (the common town house), 6 × 10 m, 2-3 storeys. The street door opens into a side passage that runs
@@ -79,6 +80,7 @@ doors and that no stairs block a way or a door). Sizes on the 2 m kit grid; ever
    (which also has its own street door); the kitchen and stores run across the back, opening onto the coach yard and the
    walled garden with its own well. A coach gate leads from the street to the yard and stable. Hall and parlour upstairs,
    bedrooms above.
+3b. **Well-off house** (merchant's house without the coach yard), 10 × 12 m: for the well-off who trade by ship or office.
 4. **Inn**, 12 × 16 m round a yard. Taproom with a big hearth and the bar counter on the street front, the kitchen behind
    it; an archway beside the taproom takes coaches to the yard, with the cellar store off the archway and the stable
    across the back. Stairs from the taproom and from the yard gallery up to the guest rooms.
@@ -110,6 +112,8 @@ the same), within what the owner's wealth and the distance from Aldrath allow:
   end or in the middle, a small boiler and pipes near Aldrath.
 - **Condition:** new, weathered, sagging or patched, by wealth and by how far into the Fog; colours more muted far out.
 - **Plots:** different outbuildings (woodshed, hen house, workshop, a well) and gardens.
+- **Floorplan variants:** a variation that changes the footprint (a wider house, no coach yard) is its own type in
+  `building_types.py` with its own floorplan, so the plans always know the real size; mirroring needs none.
 - **Rule:** neighbouring houses must differ in at least two of width, storeys, roof direction and colour, so a street
   never shows a copy next to its original.
 

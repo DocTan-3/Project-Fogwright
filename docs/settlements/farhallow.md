@@ -92,9 +92,20 @@ the fishers' cottages crowd the shore lanes; the fish store moves to the pier.
 Drawn by `tools/map/farhallow_plan.py` on the characters branch, which checks every building, plot, yard and the
 waystone against each other, the roads and lanes, the square, the palisade, the fields, the sea and the beach.
 
-Following the Wayfolk sheet: every house faces its street, with its plot behind (walled gardens for the well-off, the
-inn's coach yard, short fenced yards for the fishers), each plot as deep as the room behind allows; the old waystone
-stands in the square facing the gate road. Two crowded houses were dropped and the salt house has no plot.
+**Every building on the plan is a real floorplan** from `tools/map/building_types.py`, the same file the floorplan sheet
+and (later) the 3D builder read, so what is planned is exactly what gets built and nothing overlaps later. The clash
+check runs on every room, yard and plot. Placing the real sizes changed the village:
+
+- The inn is the full 12 × 16 m inn with its coach yard and stable; the field was narrowed by 2 m to fit it.
+- The Dunmores have the merchant's house with coach yard (they cart barrels); the harbour master has the smaller
+  well-off house without one; both now face the rise road from its uphill side, with walled gardens behind. The rise
+  road was straightened a little for their fronts.
+- The smithy is the workshop type, with anvil and quench trough in the work bay and charcoal and woodpile in its yard.
+- The farms are one farmstead (house, byre and barn round a yard) and one farming cottage.
+- Only one old street house remains (by the fields): the street-house type is 6 × 10 m with a plot, and there was no
+  room for the others by the square or on the west road. The fishers' cottages are the cottage type; where they have no
+  room for a plot they share a yard, as the Wayfolk poor do.
+- The village waystone (3 × 3 m) stands in the square facing the gate road.
 
 ## 4. Paths
 
