@@ -89,4 +89,16 @@ the fishers' cottages crowd the shore lanes; the fish store moves to the pier.
 
 ![Farhallow plan v3](farhallow-plan-v3.png)
 
-Drawn by `tools/map/farhallow_plan.py` on the characters branch. Main roads only; lanes come in stage 4.
+Drawn by `tools/map/farhallow_plan.py` on the characters branch, which checks every building, plot, yard and the
+waystone against each other, the roads and lanes, the square, the palisade, the fields, the sea and the beach.
+
+Following the Wayfolk sheet: every house faces its street, with its plot behind (walled gardens for the well-off, the
+inn's coach yard, short fenced yards for the fishers), each plot as deep as the room behind allows; the old waystone
+stands in the square facing the gate road. Two crowded houses were dropped and the salt house has no plot.
+
+## 4. Paths
+
+The main roads (gate, harbour, west and rise roads) and three lanes (the shore lane through the fishers' quarter, the
+field lane to the field gate, the farm lane to the hen house and vegetable plots), plus a short path from every door to
+its street. The plan script checks that every door reaches a path without crossing anything, that every lane starts and
+ends on another path, at a door or at a named place (the field gate, the plots), and that every lane is used.

@@ -92,10 +92,31 @@ doors and that no stairs block a way or a door). Sizes on the 2 m kit grid; ever
 8. **Farmstead** (outside towns), a house like the cottage but longer, with a barn and byre across a yard, all facing
    the yard, and the yard gate facing the road.
 
+### Variations: no two houses alike
+
+Each building type is a template, not a copy. The 3D builder picks these per house (seeded, so a town always rebuilds
+the same), within what the owner's wealth and the distance from Aldrath allow:
+
+- **Width and depth:** street houses 2 to 4 bays wide (4-8 m on the kit grid), cottages 6-8 m long; plots as deep as the
+  ground behind allows.
+- **Storeys:** 1-3 by wealth; a loft or attic rooms under the roof.
+- **Roof:** gable end to the street or eaves to the street, steep or very steep; hipped for the well-off; dormers;
+  thatch, shingles or tiles by wealth.
+- **Front:** jettied upper floor or flush, one jetty or two; the side passage left or right (mirrored plans); door and
+  windows shifted a bay; a bay window or oriel for the rich.
+- **Materials and colour:** stone, brick or timber ground floor; limewash tints (white, cream, ochre, pale pink, pale
+  blue-grey) and each family's beam colour.
+- **Additions:** a lean-to, an outside stair, a porch bench, a shop sign and awning, flower boxes, a chimney at either
+  end or in the middle, a small boiler and pipes near Aldrath.
+- **Condition:** new, weathered, sagging or patched, by wealth and by how far into the Fog; colours more muted far out.
+- **Plots:** different outbuildings (woodshed, hen house, workshop, a well) and gardens.
+- **Rule:** neighbouring houses must differ in at least two of width, storeys, roof direction and colour, so a street
+  never shows a copy next to its original.
+
 ## What a stranger notices first
 
 1. A **carved waystone** at every crossroads, with a lamp burning in its niche, telling you how far everything is.
-2. **Lanterns by every door** at dusk, and the road lamp of the waylodge.
+2. **The waylodge's road lamp,** burning all night beside the waystone, and travellers sleeping there for free.
 3. **Jettied, painted timber houses** crowding a busy street, with every people's face in the crowd.
 
 ## For mixed places (Farhallow, Hollin's Cross)
