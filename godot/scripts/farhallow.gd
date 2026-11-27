@@ -24,7 +24,7 @@ const PATHS := [
 ]
 # buildings: centre (plan m), width, depth, plan angle (rad), storeys, kind
 const BUILDINGS := [
-	[Vector2(30, 62), 14, 10, -0.12, 2, "tavern"], [Vector2(46, 70), 6, 6, 0.25, 1, "house"], [Vector2(36, 78), 6, 6, -0.3, 1, "house"],
+	[Vector2(30, 62), 12, 8, -0.12, 2, "tavern"], [Vector2(46, 70), 6, 6, 0.25, 1, "house"], [Vector2(36, 78), 6, 6, -0.3, 1, "house"],
 	[Vector2(72, 63), 6, 4, 0.5, 2, "house"], [Vector2(74, 72), 6, 4, -0.4, 1, "store"], [Vector2(92, 64), 8, 6, 0.35, 2, "house"],
 	[Vector2(52, 40), 6, 6, -0.15, 2, "house"], [Vector2(70, 36), 6, 6, 0.2, 1, "house"], [Vector2(96, 34), 8, 6, 0.15, 1, "smithy"],
 	[Vector2(104, 22), 4, 4, -0.1, 1, "shrine"], [Vector2(44, 12), 6, 4, 0.05, 1, "granary"], [Vector2(30, 48), 4, 4, 0.3, 1, "shed"],
@@ -41,6 +41,7 @@ var GOALS := []
 var graph := {}
 var shade_grid: PackedFloat32Array
 var trees := []        # [position (world), scale]
+var houses := []       # [kind, centre (plan), door (plan), roof]
 
 var rng := RandomNumberGenerator.new()
 var noise := FastNoiseLite.new()
@@ -190,6 +191,8 @@ func _building(i: int) -> void:
 	var w := []; for s in storeys: w.append(walls[min(s, walls.size() - 1)])
 	var front := c + facing * (deep * 1.0)
 	place_house({"bays": bays, "deep": deep, "storeys": storeys, "walls": w, "door": [bays / 2]}, W(front, level), Vector3(facing.x, 0, facing.y))
+	var door_off := float(-bays + (bays / 2) * 2 + 1)   # the door bay's centre along the front, from the front's middle
+	houses.append([b[5], c, front + facing * 1.2 - facing.orthogonal() * door_off, last_roof])
 	# a stone foundation where the ground falls away below the terrace
 	var low := level
 	for k in 4:
@@ -221,7 +224,6 @@ func _well() -> void:
 	var water := MeshInstance3D.new(); var wm := CylinderMesh.new(); wm.top_radius = 0.85; wm.bottom_radius = 0.85; wm.height = 0.05
 	water.mesh = wm; var wmat := StandardMaterial3D.new(); wmat.albedo_color = Palette.col("sea").darkened(0.4); wmat.roughness = 0.05
 	water.material_override = wmat; water.position = W(WELL, y + 0.7); add_child(water)
-	put(PROPS % "Bucket_Wooden_1", W(WELL + Vector2(1.6, 0.8), y), 0.3)
 	var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 1.1; cyl.height = 1.0
 	col.shape = cyl; body.add_child(col); body.position = W(WELL, y + 0.5); add_child(body)
 
@@ -248,7 +250,7 @@ func _harbour() -> void:
 		t.position = W(lh, 0.9 + 1.6 + k * 3.2); add_child(t)
 	var lamp := OmniLight3D.new(); lamp.light_color = Color(1, 0.8, 0.5); lamp.light_energy = 2.0; lamp.omni_range = 18
 	lamp.position = W(lh, 15.0); add_child(lamp)
-	put(VILLAGE % "Roof_Tower_RoundTiles", W(lh, 13.7), 0.0, 0.9, false)
+	put(VILLAGE % "Roof_Tower_RoundTiles", W(lh, 13.7), 0.0, 0.9, false, "fixture", "the lighthouse's roof")
 	# the pier: a T of planks on posts, its deck above the water
 	var deck_y := 1.0
 	_pier_run(Vector2(87.5, 80), Vector2(87.5, 100), deck_y); _pier_run(Vector2(78, 100.5), Vector2(106, 100.5), deck_y)
@@ -301,12 +303,17 @@ func _palisade() -> void:
 	for x in [57.5, 66.5]:   # the gate's towers
 		var p := Vector2(x, 4.0); var t := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(2.0, 6.0, 2.0); t.mesh = bm
 		t.material_override = mat; t.position = W(p, height(p) + 3.0); add_child(t)
-		put(VILLAGE % "Roof_Tower_RoundTiles", W(p, height(p) + 6.0), 0.0, 0.55, false)
+		put(VILLAGE % "Roof_Tower_RoundTiles", W(p, height(p) + 6.0), 0.0, 0.55, false, "fixture", "a gate tower's roof")
 	var gate := MeshInstance3D.new(); var gm := BoxMesh.new(); gm.size = Vector3(8.0, 3.6, 0.3); gate.mesh = gm; gate.material_override = mat
 	gate.position = W(Vector2(62, 4), height(Vector2(62, 4)) + 1.8); add_child(gate)
 
 # ---------------------------------------------------------------- the field, the plots and the woods (batched)
-func scatter(path: String, points: Array, scale_range := Vector2(0.9, 1.1)) -> void:
+func scatter(path: String, points: Array, scale_range := Vector2(0.9, 1.1), ground := ["grass"]) -> void:
+	var kept := []
+	for p in points:   # flora only grows on the ground it belongs on: never on paths, the plaza, terraces or stone
+		if ground.has(ground_at(Vector2(p.x, p.z) + ORIGIN)): kept.append(p)
+	points = kept
+	for p in points: placed.append([path.get_file().get_basename(), p, 0.3, "flora", "scattered"])
 	var s: PackedScene = load(path)
 	if s == null or points.is_empty(): return
 	var proto: Node3D = s.instantiate()
@@ -341,17 +348,17 @@ func _field() -> void:
 	var wheat := []
 	for i in 34: for j in 24:
 		var p := Vector2(15 + i * 0.8 + rng.randf_range(-0.2, 0.2), 15 + j * 0.8 + rng.randf_range(-0.2, 0.2)); wheat.append(W(p, height(p)))
-	scatter(NATURE % "Grass_Wispy_Tall", wheat, Vector2(1.1, 1.5))
+	scatter(NATURE % "Grass_Wispy_Tall", wheat, Vector2(1.1, 1.5), ["field"])
 	for edge in [[Vector2(14, 14), Vector2(42, 14)], [Vector2(42, 14), Vector2(42, 34)], [Vector2(42, 34), Vector2(14, 34)], [Vector2(14, 34), Vector2(14, 14)]]:
 		var a: Vector2 = edge[0]; var b: Vector2 = edge[1]; var n := int(a.distance_to(b) / 2.0)
 		for k in n:
 			var p := a.lerp(b, (k + 0.5) / n)
 			if absf(p.x - 42) < 0.1 and absf(p.y - 27) < 2.5: continue        # the gap where the path comes in
-			put(VILLAGE % "Prop_WoodenFence_Single", W(p, height(p)), -atan2(b.y - a.y, b.x - a.x), 1.0, true)
+			put(VILLAGE % "Prop_WoodenFence_Single", W(p, height(p)), -atan2(b.y - a.y, b.x - a.x), 1.0, true, "fixture", "the field's fence")
 	var plots := []
 	for i in 5: for j in 9:
 		var p := Vector2(17.5 + i * 3.0, 39.5 + j * 0.75); plots.append(W(p, height(p)))
-	scatter(NATURE % "Plant_1", plots, Vector2(0.5, 0.7))
+	scatter(NATURE % "Plant_1", plots, Vector2(0.5, 0.7), ["plots"])
 
 func _woods() -> void:
 	var pts := _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0)
@@ -364,26 +371,40 @@ func _woods() -> void:
 		var body := StaticBody3D.new(); body.collision_layer = 2; body.collision_mask = 0   # trunks block walking, not the shadow rays
 		var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 0.35; cyl.height = 4.0; col.shape = cyl
 		body.add_child(col); body.position = pts[i] + Vector3(0, 2.0, 0); add_child(body)
-	for kind in by_kind: scatter(NATURE % kind, by_kind[kind], Vector2(0.9, 1.35))
+	for kind in by_kind: scatter(NATURE % kind, by_kind[kind], Vector2(0.9, 1.35), ["grass", "woods"])
 	scatter(NATURE % "Grass_Common_Short", _ground_pts(1400, func(p): return _coast_signed(p) > 5.0 and not _near_built(p) and not (p.x > 14 and p.x < 42 and p.y > 14 and p.y < 47)))
 	scatter(NATURE % "Flower_3_Group", _ground_pts(140, func(p): return _in_clearing(p) and _coast_signed(p) > 6.0 and not _near_built(p, 1.5)), Vector2(0.28, 0.4))
-	scatter(NATURE % "Fern_1", _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0))
+	scatter(NATURE % "Fern_1", _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0), Vector2(0.9, 1.1), ["woods"])
 	for i in 14:
 		var p := Vector2(rng.randf_range(60, 130), rng.randf_range(70, 105))
-		if _coast_signed(p) < -1.0 and _coast_signed(p) > -9.0: put(NATURE % ("Rock_Medium_%d" % (i % 3 + 1)), W(p, height(p)), rng.randf() * TAU, rng.randf_range(1.2, 2.2))
+		if _coast_signed(p) < -1.0 and _coast_signed(p) > -9.0: put(NATURE % ("Rock_Medium_%d" % (i % 3 + 1)), W(p, height(p)), rng.randf() * TAU, rng.randf_range(1.2, 2.2), true, "fixture", "rocks in the shallows")
 
 # ---------------------------------------------------------------- life: around the well, the smithy, the shore
-func _at(p: Vector2, name: String, yaw := 0.0, path := PROPS) -> void:
-	put(path % name, W(p, height(p)), yaw)
+func _at(p: Vector2, name: String, yaw: float, purpose: String, path := PROPS) -> void:
+	put(path % name, W(p, height(p)), yaw, 1.0, true, "clutter", purpose)
 
 func _clutter() -> void:
-	_at(Vector2(68, 54), "Barrel"); _at(Vector2(68.8, 54.8), "Barrel"); _at(Vector2(55, 52), "Crate_Wooden", 0.4); _at(Vector2(66, 46), "Bench", 0.3)
-	_at(Vector2(60, 53.5), "Stall_Cart_Empty", 0.9); _at(Vector2(61.5, 55.5), "FarmCrate_Apple", 0.2); _at(Vector2(69.5, 49.5), "Barrel_Apples")
-	_at(Vector2(87, 45), "Anvil_Log", 0.3); _at(Vector2(89.5, 41.5), "Anvil", 0.2); _at(Vector2(92, 43.5), "Workbench", -0.3)
-	_at(Vector2(86.2, 46.2), "Axe_Bronze", 1.1)                                     # B: the hatchet at the woodpile
-	_at(Vector2(84, 78), "Barrel"); _at(Vector2(82.5, 79.5), "Crate_Wooden"); _at(Vector2(78, 76), "Rope_2")
-	_at(Vector2(33, 56), "Barrel"); _at(Vector2(34, 56.8), "Barrel"); _at(Vector2(24, 60), "Crate_Wooden", 0.7)
-	_at(Vector2(44, 64), "Bucket_Wooden_1"); _at(Vector2(31, 50), "Chest_Wood", 0.4)
+	# round the well: things set down by people drawing water and trading, at the plaza's edge, not in the walkways
+	_at(Vector2(60.2, 54.6), "Stall_Cart_Empty", 0.9, "a trader's cart at the plaza's edge")
+	_at(Vector2(59.0, 56.4), "FarmCrate_Apple", 0.2, "the trader's apples")
+	_at(Vector2(67.6, 45.4), "Bench", 0.75, "a bench under the house wall, facing the well")
+	_at(Vector2(66.4, 47.0), "Bucket_Wooden_1", 0.3, "a bucket by the well")
+	_at(Vector2(57.6, 48.6), "Barrel", 0.0, "rainwater barrel against a house")
+	# the smithy: tools of the trade beside the forge, and the woodpile with its hatchet (beat B: the first weapon)
+	_at(Vector2(89.5, 41.5), "Anvil", 0.2, "the smith's anvil, in front of the smithy")
+	_at(Vector2(92.5, 40.8), "Workbench", -0.3, "the smith's bench")
+	_at(Vector2(86.0, 42.6), "Anvil_Log", 0.3, "the chopping block at the woodpile")
+	_at(Vector2(86.3, 43.1), "Axe_Bronze", 1.1, "the hatchet in the chopping block: the first weapon")
+	# the harbour: goods waiting at the head of the pier, beside the way, not on it
+	_at(Vector2(88.8, 76.6), "Barrel", 0.0, "a fish barrel at the pier's head")
+	_at(Vector2(89.6, 77.8), "Crate_Wooden", 0.4, "a crate of catch at the pier's head")
+	_at(Vector2(89.4, 75.4), "Rope_2", 0.0, "coiled rope by the boats")
+	# the tavern's yard: barrels for the cellar, a crate by its side wall
+	_at(Vector2(36.9, 64.6), "Barrel", 0.0, "the tavern's ale barrels against its east wall")
+	_at(Vector2(37.1, 65.7), "Barrel", 0.6, "the tavern's ale barrels against its east wall")
+	_at(Vector2(22.4, 58.2), "Crate_Wooden", 0.7, "a crate by the tavern's side wall")
+	_at(Vector2(28.0, 46.6), "Chest_Wood", 0.4, "a feed chest behind the hen house")
+	_at(Vector2(49.6, 68.9), "Bucket_Wooden_1", 0.0, "a bucket by a cottage's side wall")
 
 # ---------------------------------------------------------------- late afternoon
 func _light() -> void:
@@ -507,3 +528,58 @@ func _unhandled_input(event: InputEvent) -> void:
 		var sun: DirectionalLight3D = get_parent().get_node("Sun")
 		sun.shadow_enabled = not sun.shadow_enabled
 		for b in get_tree().get_nodes_in_group("blob"): b.visible = not sun.shadow_enabled
+
+
+# ---------------------------------------------------------------- what the ground is, and the city-planning check
+func _in_pad(p: Vector2, grow := 0.0, only_buildings := false) -> bool:
+	for k in pads.size():
+		if only_buildings and k >= BUILDINGS.size(): continue
+		var pad: Array = pads[k]
+		var q: Vector2 = (p - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1]
+		if absf(q.x) < e.x + grow and absf(q.y) < e.y + grow: return true
+	return false
+
+func _path_dist(p: Vector2) -> float:   # how far outside the nearest path's edge (negative: on it)
+	var best := INF
+	for path in PATHS:
+		var pts: Array = path[0]; var hw: float = path[1] * 0.5
+		for i in pts.size() - 1:
+			var a: Vector2 = pts[i]; var b: Vector2 = pts[i + 1]
+			var t := clampf((p - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0)
+			best = minf(best, p.distance_to(a + (b - a) * t) - hw)
+	return best
+
+## the kind of ground at a plan point: sea, beach, path, plaza, building, field, plots, woods or grass
+func ground_at(p: Vector2) -> String:
+	var c := _coast_signed(p)
+	if c < 0.0: return "sea"
+	if c < 6.5: return "beach"
+	if _in_pad(p, 0.3, true): return "building"
+	if p.distance_to(WELL) < 5.5: return "plaza"
+	if _path_dist(p) < 0.4: return "path"
+	if p.x > 14 and p.x < 42 and p.y > 14 and p.y < 34: return "field"
+	if p.x > 16 and p.x < 30 and p.y > 38 and p.y < 46: return "plots"
+	if not _in_clearing(p): return "woods"
+	return "grass"
+
+## the city-planning check: every clutter prop has a purpose, stands on sensible ground, keeps paths and doorways clear;
+## every flora instance grows on open ground; every building has a roof. Returns the problems found.
+func check_plan() -> Array:
+	var issues := []
+	var doors := []
+	for h in houses:
+		if h[3] == "": issues.append("ROOF   %s at %s has no roof" % [h[0], h[1]])
+		doors.append(h[2])
+	for it in placed:
+		var p := Vector2(it[1].x, it[1].z) + ORIGIN; var r: float = it[2]; var ground := ground_at(p)
+		match it[3]:
+			"flora":
+				if not ["grass", "woods", "field", "plots"].has(ground): issues.append("GROUND %s on %s at %s" % [it[0], ground, p.round()])
+			"clutter":
+				if it[4] == "": issues.append("WHY    %s at %s has no purpose" % [it[0], p.round()])
+				if ground == "sea": issues.append("GROUND %s in the sea at %s" % [it[0], p.round()])
+				if _path_dist(p) < r - 0.15: issues.append("PATH   %s stands in a path at %s" % [it[0], p.round()])
+				for d in doors:
+					if p.distance_to(d) < 1.3 + r: issues.append("DOOR   %s blocks a doorway at %s" % [it[0], p.round()])
+				if _in_pad(p, -0.4, true): issues.append("INSIDE %s is inside a building at %s" % [it[0], p.round()])
+	return issues

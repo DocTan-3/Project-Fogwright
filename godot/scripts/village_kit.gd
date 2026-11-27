@@ -16,7 +16,8 @@ func place_house(h: Dictionary, front: Vector3, facing: Vector3) -> void:
 	_house(hh, -1, turn if turn != 0.0 else 0.0001, front + f * STREET_HALF)
 
 ## any kit (village, props, nature): one model at a place, turned, optionally scaled, solid or not
-func put(path: String, pos: Vector3, yaw := 0.0, scale_by := 1.0, solid := true) -> Node3D:
+func put(path: String, pos: Vector3, yaw := 0.0, scale_by := 1.0, solid := true, role := "clutter", purpose := "") -> Node3D:
+	placed.append([path.get_file().get_basename(), pos, 0.5 * scale_by, role, purpose])
 	var s: PackedScene = _cache.get(path)
 	if s == null:
 		s = load(path); _cache[path] = s
@@ -39,6 +40,11 @@ func _scene(name: String) -> PackedScene:
 	return _cache[name]
 
 var _into: Node3D = null
+var last_roof := ""      # the roof the last house got (empty: none fitted)
+
+## everything placed, for checking (tools: the city-planning skill): [model, world position, radius, role, purpose]
+## role: "flora" (must stand on open ground), "clutter" (must not block paths or doors), "fixture" (placed by design)
+var placed := []
 func _piece(name: String, pos: Vector3, yaw: float) -> Node3D:
 	var s := _scene(name)
 	if s == null:
@@ -99,14 +105,23 @@ func _house_into(root: Node3D, h: Dictionary, side: int) -> void:
 	var top: float = h.storeys * STOREY
 	var cx: float = float(h.x) + w * 0.5
 	var cz: float = front_z + side * d * 0.5
-	var roof := "Roof_RoundTiles_%dx%d" % [d, w] if d <= 8 else "Roof_RoundTiles_6x8"
-	var r := _piece(roof, Vector3(cx, top, cz), PI / 2)
-	if r == null:
-		_piece("Roof_RoundTiles_6x8", Vector3(cx, top, cz), PI / 2)
-	# the gable ends: plaster and timber triangles closing the roof at both ends of its ridge
-	var gable := "Roof_Front_Brick%d" % clampi(d, 2, 8)
-	_piece(gable, Vector3(float(h.x), top, cz), -PI / 2)
-	_piece(gable, Vector3(float(h.x) + w, top, cz), PI / 2)
+	# the roof: the kit's tiled roofs come in fixed sizes (span x length); try the ridge along the width, then along the
+	# depth; the gable ends (plaster and timber triangles) close the roof at both ends of its ridge
+	last_roof = ""
+	if ResourceLoader.exists(KIT % ("Roof_RoundTiles_%dx%d" % [d, w])):
+		last_roof = "Roof_RoundTiles_%dx%d" % [d, w]
+		_piece(last_roof, Vector3(cx, top, cz), PI / 2)
+		var gable := "Roof_Front_Brick%d" % clampi(d, 2, 8)
+		_piece(gable, Vector3(float(h.x), top, cz), -PI / 2)
+		_piece(gable, Vector3(float(h.x) + w, top, cz), PI / 2)
+	elif ResourceLoader.exists(KIT % ("Roof_RoundTiles_%dx%d" % [w, d])):
+		last_roof = "Roof_RoundTiles_%dx%d" % [w, d]
+		_piece(last_roof, Vector3(cx, top, cz), 0.0)
+		var gable := "Roof_Front_Brick%d" % clampi(w, 2, 8)
+		_piece(gable, Vector3(cx, top, front_z), 0.0 if side < 0 else PI)
+		_piece(gable, Vector3(cx, top, back_z), PI if side < 0 else 0.0)
+	else:
+		push_warning("no roof fits a %d x %d house" % [w, d])
 	_into = null
 
 ## the plain wall of a kind, matching its window and door pieces (the plaster ones stand on a stone base)
