@@ -251,3 +251,4 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 - [ ] Which lands of the split Erde the game's island belongs to.
 - [ ] The evil lands: their name, and the peoples who remain there.
 - [ ] How the story reveals the 14th: the first signs, and who suspects the truth.
+- [ ] Each region's vegetation: its trees, undergrowth, shore plants and crops, and how the Fog changes them (the far coast, the Redwold, the Aurelan Isles, the Rimeholds, the Slag Isles, the Sere).

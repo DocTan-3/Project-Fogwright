@@ -53,6 +53,12 @@ the first weapon, the first fight, the hard moment, the gate falling, the escape
 hills and fields and down over the village to the sea: it carries forge and smokehouse smoke out over the bay. On the
 evening the Fog comes, the wind dies and swings round to blow in from the sea for the first time anyone remembers.
 
+**Vegetation** *(the region's, to refine when the regions are written)*: a cool, damp temperate coast. Mixed woods of
+Scots pine and sessile oak with birch on the edges, holly and hazel in the understorey, ferns and bramble beneath; gorse
+and heather on the open rise; marram grass and sea pinks on the dunes, wrack and kelp on the shore; barley, oats and
+beans in the fields. Far from Aldrath, so the woods are a little greyer and stiller than they should be. *(The game
+uses generic pines and broadleaves for now; the region's own trees, gorse and dune grass are still to make.)*
+
 ## 2. Logistics
 
 The ground rises from the harbour (south-east) to a rise in the north-east. The road from the interior enters through
