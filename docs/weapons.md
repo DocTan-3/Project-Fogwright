@@ -31,7 +31,8 @@ truly unique. *(proposal for the steps between:)*
 
 **With the skill tree (chosen):** the weapon brings the moves, by its rarity; the skill tree changes how they work (a
 dash-reload instead of a standing reload, a wider cleave, a second charge) and trains each family's handling. Armour
-brings abilities by rarity the same way. See design.md, *Moves, the bar and defence*.
+brings no moves (later, trinkets, relics and magic rings do). Each family also has its quirk: guns reload, heavy melee
+builds momentum, bows reward the draw, caster foci spend Fog shards. See design.md, *Moves, the bar and defence*.
 
 ## Guns (chosen: rare, more common higher up, several types, crude early ones)
 

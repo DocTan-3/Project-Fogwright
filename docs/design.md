@@ -119,21 +119,25 @@ Combat is tab-target, like Albion Online and World of Warcraft, with mobile cont
 
 Decided with the user; items marked *(proposal)* are still open.
 
-- **Gear gives the moves.** A weapon's moves depend on its rarity (weapons.md): a common weapon only attacks, and rarer ones add traits and active moves that suit their type, such as a gun with a dash-reload or a sword with a magic slash. Armour works the same way: by its rarity a piece can add a special ability *(proposal: a chest piece that vents steam to knock enemies back, a helm that marks the target, boots that leap)*. Because the build is the gear, gear is what players trade (the player economy, later).
+- **Weapons give the special moves.** A weapon's moves depend on its rarity (weapons.md): a common weapon only attacks, and rarer ones add traits and active moves that suit their type, such as a gun with a dash-reload or a sword with a magic slash. Later, trinkets, relics and magic rings add more special moves. Armour gives none: it gives protection, stats and passives. Because the build is the gear, gear is what players trade (the player economy, later).
 
-- **The skill tree changes how moves work.** Nodes are mostly modifiers rather than new buttons: dash instead of a dodge roll, reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
+- **The skill tree gives movement and changes how moves work.** Movement modifiers and the moves that come with them (dashing instead of a dodge roll, a leap, a slide) are skill-tree nodes. Most other nodes are modifiers rather than new buttons: reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
 
-- **Every character has the basic verbs:** move, auto-attack and a defensive move. The defensive move is a dodge roll by default; the tree and gear can turn it into a dash, a blink, a block or a parry.
+- **Every character has the basic verbs:** move, auto-attack and a defensive move. The defensive move is a dodge roll by default; skill-tree nodes can turn it into a dash, a blink, a block or a parry.
 
 - **Paths and gods' magic** add their own moves: a path's utility (Lanternbearers push back the Fog, Ironclads become cover) and, once claimed, the god's magic.
 
-- **The bar:** six skills, and a button that swaps to a second set of six. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. *(proposal: each set is a loadout with its own weapon, say a rifle and a sword, so swapping changes the weapon in hand; a short cooldown on the swap. The defensive move has its own button.)* Early on most slots are empty and fill as the gear gets better.
+- **The bar:** six skills, and a button that swaps to a second page of six. The second page is free: the same gear, six more slots for any moves the character has. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. *(proposal: the defensive move has its own button, outside the pages.)*
 
-- **Energy:** one energy pool for everyone, a cooldown on each skill, and one quirk per weapon family *(proposal: guns hold a shot or a few and must reload; heavy melee builds momentum while it keeps hitting; bows reward a longer draw; caster foci spend Fog shards, which raises Fog pressure as the lore says)*.
+- **Energy:** one energy pool for everyone and a cooldown on each skill, plus one quirk per weapon family:
+  - **Guns** hold one shot or a few and must reload (and the tree can make a reload part of a dash).
+  - **Heavy melee** builds momentum while it keeps hitting, and loses it when it stops.
+  - **Bows** reward a longer draw.
+  - **Caster foci** spend Fog shards, which raises Fog pressure, as the lore says magic does.
 
-- **Defence: the build decides.** Stepping out of telegraphs, dodging, dashing, blocking and parrying are all viable, and which one a character leans on comes from their gear and skill tree (a shield makes blocking strong, light armour suits dodging, plate suits holding ground). Enemy attacks are designed so no one answer wins everywhere *(proposal: an unblockable charge you step aside from, a fast combo you parry or block, a wide slam you roll or dash through)*.
+- **Defence: telegraphs, and the build decides.** Enemy attacks are telegraphed on the ground and each kind has a natural counter: dodge the unblockable, parry the undodgeable, step out of what is too wide for either *(proposal: a fast combo you block or parry, a wide slam you dodge or dash through, projectiles a shield stops)*. Every defence works, but only for a character who builds toward it: perks change the rules, so with the right node an unblockable attack becomes blockable, or a dodge goes through what it normally cannot. Without those perks, a character answers each attack with its natural counter.
 
-- **Open:** the numbers; how many moves each rarity gives for armour; what the second set holds; which pieces can carry abilities (chest, head, legs, back).
+- **Open:** the numbers; how many moves each rarity gives; whether every character has a basic parry or it comes from the tree; the list of attack kinds and their counters.
 
 ### Skill tree, paths and gods
 
@@ -162,7 +166,7 @@ There are no classes. Every character can fight and craft completely without the
 
 **Open:** none for now.
 
-- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, armour proficiencies, path moves and modifiers to the moves gear gives (see *Moves, the bar and defence*).
+- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, armour proficiencies, movement moves, path moves and modifiers to the moves weapons give (see *Moves, the bar and defence*).
 
 - **Hybrid builds.** Walking the tree toward a neighbouring craft unlocks its abilities and armor, so a Tinkerer can path into plate, or a Smith into gadgets.
 
