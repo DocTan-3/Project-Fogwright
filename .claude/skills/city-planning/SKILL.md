@@ -79,6 +79,10 @@ from the logistics table with its size, angle and use. Show it to the user befor
   the paths and yards between them. Buildings that sit off the main roads face the lane that will reach them, so draw
   those lanes as dashed lines on the layout.
 - **Edges:** walls or palisades with gates where roads enter; fields and woods around; the place should feel enclosed.
+- **Check the plan's boundaries by script, not by eye:** every building, garden and yard (forge, woodpile, pens) against
+  every other, every road and lane (with its width), the square, walls and palisades, fields and plots, the sea, beach
+  and sea walls, and piers; trees kept off all of them. The plan script prints each clash; it must print none before the
+  plan goes to the user. Special places (a shrine at the end of a road, a shed on the shore) are allowed by name only.
 - **Gameplay marks:** where each quest beat happens, with room to fight, flee and gather.
 
 ## 4. Paths
