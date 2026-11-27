@@ -139,6 +139,10 @@ post-mounted things (lamps, signs, torches) are checked only where they hang.
 writes `godot/data/model_sizes.json`), and the plan places each prop at that size, turned so its long side lies along
 its spot. Props keep 35 cm inside any room, yard or garden edge (the wall or fence there). Buildings keep 2 m apart.
 
+**Boats float, the sea stays outside:** the sea is one flat surface, so a hull's inside must not dip below it. Every
+open boat has bottom boards (a plank floor) just above its waterline and floats at that waterline; check a close look
+down into each boat before committing.
+
 **Collision check in 3D:** the game's checker asks the physics world, for every prop, whether its real box reaches into
 any wall, fence, roof or other prop (`CLIP` problems). It catches what a plan cannot see: a model that hangs below its
 base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the plan or the model, never the check.

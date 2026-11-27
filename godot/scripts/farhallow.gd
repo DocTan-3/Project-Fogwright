@@ -528,7 +528,7 @@ func _pier_run(a: Vector2, b: Vector2, y: float) -> void:
 ## a boat on the water: the sailboat remade from the reference (tools/blender/make_boat.py), its hull `length` metres
 ## long; the last ship is, for now, the same boat built larger
 func _boat(c: Vector2, a: float, length: float, ship := false) -> void:
-	put("res://assets/props/fogwright/Sailboat.glb", W(c, 0.0), -a, length / 6.0, ship, "fixture", "the last ship out" if ship else "a fishing boat at anchor")
+	put("res://assets/props/fogwright/Sailboat.glb", W(c, 0.25 * length / 6.0), -a, length / 6.0, ship, "fixture", "the last ship out" if ship else "a fishing boat at anchor")   # floating: the waterline 0.25 below its origin, under its bottom boards
 
 # ---------------------------------------------------------------- the palisade and its north gate
 func _palisade() -> void:

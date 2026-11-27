@@ -72,6 +72,25 @@ for s in (0.15,0.3,0.45,0.6,0.75):
 for s in (0.36,0.56,0.76):
     box('WoodTrim_Light',(X(s),0,0.12),(0.28,2*half(s)-0.12,0.05))
 box('WoodTrim_Light',(X(0.06),0,0.14),(0.55,2*half(0.06)-0.14,0.06)); box('WoodTrim',(X(0.06),0,-0.06),(0.5,2*half(0.06)-0.2,0.36))
+# bottom boards: a plank floor over the bilge, above the waterline, so the sea never shows inside the hull
+FLOOR=-0.2   # the waterline is 0.25 below the model's origin plane (the game floats the boat 0.25 up)
+def inner_half(s,z):   # the hull's inner half-width at height z (0 if the hull is lower there)
+    if z<=keel(s): return 0.0
+    lo,hi=0.0,1.0
+    for _ in range(30):
+        m=(lo+hi)/2
+        if section(s,m)[1]<z: lo=m
+        else: hi=m
+    return max(0.0,section(s,lo)[0]-0.03)
+rows=[]
+for s in [0.02+i*0.045 for i in range(20)]:
+    w=inner_half(s,FLOOR)
+    if w>0.05: rows.append([(X(s),-w,FLOOR),(X(s),0,FLOOR),(X(s),w,FLOOR)])
+quads('WoodTrim_Light',rows)
+for k in range(1,4):   # the plank seams across the boards
+    s=0.02+k*0.2
+    w=inner_half(s,FLOOR)
+    if w>0.05: rod('WoodTrim_Dark',(X(s),-w,FLOOR+0.005),(X(s),w,FLOOR+0.005),0.008,3)
 # mast with five iron bands, bowsprit, boom and gaff
 mx=X(0.66); top=6.0
 rod('WoodTrim',(mx,0,-0.4),(mx,0,top),0.075,6)
