@@ -22,5 +22,12 @@ for p in packs:
     if flt and flt not in p['name'].lower(): continue
     slug=p['url'].rstrip('/').rsplit('/',1)[-1]; dest=os.path.join(out,slug); os.makedirs(dest,exist_ok=True)
     print(p['name'],'-',p['licence'],'' if p['repo'] else '- NOT for the public repo')
+    if p.get('manual'): print('  manual download (a browser is needed):',p['url']); continue
+    if p.get('direct'):   # a plain zip link
+        try:
+            req=urllib.request.Request(p['direct'],headers={'User-Agent':'Mozilla/5.0'}); data=urllib.request.urlopen(req).read()
+            f=os.path.join(dest,os.path.basename(p['direct'])); open(f,'wb').write(data); print('  saved',f,f'{len(data)/1e6:.1f} MB')
+        except Exception as e: print('  failed:',e)
+        continue
     try: fetch(p['url'],dest)
     except Exception as e: print('  failed:',e)

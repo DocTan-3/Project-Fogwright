@@ -126,6 +126,54 @@
       "licence": "No licence stated on the page; the author (Kevin Iglesias) asks for credit as a link to www.keviniglesias.com. Kept out of the repo.",
       "repo": false,
       "note": "Extra motions, e.g. for NPCs"
+    },
+    {
+      "name": "Western Props Pack",
+      "url": "https://devassets.com/assets/western-props-pack/",
+      "direct": "http://devassets.com/downloads/assets/western-props-pack.zip",
+      "licence": "Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo.",
+      "repo": false,
+      "note": "Free tier; low poly, hand-painted, one atlas texture"
+    },
+    {
+      "name": "Fantasy Frost Environment",
+      "url": "https://devassets.com/assets/fantasy-frost-environment/",
+      "direct": "https://downloads.brackeys.com/devassets/fantasy-frost-environment.zip",
+      "licence": "Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo.",
+      "repo": false,
+      "note": "Free tier; low poly, hand-painted, one atlas texture"
+    },
+    {
+      "name": "Mayan Temple",
+      "url": "https://devassets.com/assets/mayan-temple/",
+      "direct": "https://downloads.brackeys.com/devassets/mayan-temple.zip",
+      "licence": "Dev Assets (Brackeys) guidelines: free for commercial and non-commercial use, no credit needed; may only be distributed as part of a game, never as raw files. Kept out of the repo.",
+      "repo": false,
+      "note": "Free tier; low poly, hand-painted, one atlas texture"
+    },
+    {
+      "name": "Steampunk Turret Pack",
+      "url": "https://quaternius.com/packs/turretpack.html",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "manual": true,
+      "note": "37 animated steampunk turrets (FBX, OBJ, Blend). Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser."
+    },
+    {
+      "name": "Medieval Village Pack",
+      "url": "https://quaternius.com/packs/medievalvillage.html",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "manual": true,
+      "note": "44 animated models; older than the MegaKit. Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser."
+    },
+    {
+      "name": "Animated Mech Pack",
+      "url": "https://quaternius.com/packs/animatedmech.html",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "manual": true,
+      "note": "4 animated mechs, glTF included; to rework toward steampunk. Downloads from a shared Google Drive folder, which refuses scripted downloads: fetch it in a browser."
     }
   ]
 }
