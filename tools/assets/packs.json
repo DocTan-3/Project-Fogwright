@@ -327,6 +327,14 @@
       "repo": false,
       "use": "harbour",
       "note": "A small brig with swappable sail and flag textures (.blend, .fbx): a candidate for the last ship"
+    },
+    {
+      "name": "The last ship (generated with Meshy by the user)",
+      "url": "https://www.meshy.ai",
+      "licence": "Meshy output: CC BY 4.0 on Meshy's free plan (credit Meshy), the user's own on a paid plan",
+      "repo": true,
+      "use": "harbour",
+      "note": "A light-steampunk brig made from docs/art/ship-prompts.md; brought in with tools/blender/import_ship.py as godot/assets/props/fogwright/Last_Ship.glb. Credit: 'Last ship generated with Meshy (meshy.ai)'"
     }
   ]
 }

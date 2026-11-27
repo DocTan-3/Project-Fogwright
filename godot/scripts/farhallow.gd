@@ -510,7 +510,7 @@ func _harbour() -> void:
 	# the pier: a T of planks on posts, its deck above the water
 	var deck_y := 1.0
 	_pier_run(Vector2(87.5, 80), Vector2(87.5, 100), deck_y); _pier_run(Vector2(78, 100.5), Vector2(106, 100.5), deck_y)
-	_boat(Vector2(96, 92), -0.3, 7.0); _boat(Vector2(76, 94), 0.4, 5.5); _boat(Vector2(120, 100), 0.05, 15.0, true)
+	_boat(Vector2(96, 92), -0.3, 7.0); _boat(Vector2(76, 94), 0.4, 5.5); _boat(Vector2(117.5, 100.5), 0.0, 16.0, true)   # moored just off the pier's end
 
 func _pier_run(a: Vector2, b: Vector2, y: float) -> void:
 	var d := (b - a).normalized(); var L := a.distance_to(b); var n := int(L / 2.0)
@@ -528,6 +528,9 @@ func _pier_run(a: Vector2, b: Vector2, y: float) -> void:
 ## a boat on the water: the sailboat remade from the reference (tools/blender/make_boat.py), its hull `length` metres
 ## long; the last ship is, for now, the same boat built larger
 func _boat(c: Vector2, a: float, length: float, ship := false) -> void:
+	if ship:   # the trader's brig from Hollin's Cross (made with Meshy, tools/blender/import_ship.py): its keel in the water
+		put("res://assets/props/fogwright/Last_Ship.glb", W(c, 0.0), -a, 1.0, true, "fixture", "the last ship out")
+		return
 	put("res://assets/props/fogwright/Sailboat.glb", W(c, 0.25 * length / 6.0), -a, length / 6.0, ship, "fixture", "the last ship out" if ship else "a fishing boat at anchor")   # floating: the waterline 0.25 below its origin, under its bottom boards
 
 # ---------------------------------------------------------------- the palisade and its north gate
