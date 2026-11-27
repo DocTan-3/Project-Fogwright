@@ -200,12 +200,13 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 
 1. **Calm before:** a late afternoon in the village, colours already a little faded so far from Aldrath. Small chores teach moving, looking, talking and picking things up.
 2. **The Fog rolls in:** at dusk the bell rings, colour drains from the world and things move in the mist.
-3. **The first fight:** a Fog-warped animal (a wolf, a boar, a dog), fought with whatever tool the player holds.
-4. **The hard moment:** a neighbour, half-changed by the Fog, grey-veined and moving wrongly: the grimdark beneath the surface, shown once, early.
-5. **Something larger:** a huge shape in the Fog tears down the village gate. It is never fought; everyone runs.
-6. **The escape:** through fires and fleeing survivors to the harbour and the last ship out.
-7. **The crossing:** through the night the Fog thins and colour returns; at dawn Aldrath's glow rises on the horizon.
-8. **Arrival at Hollin's Cross,** the starter port, where the world opens; Aldrath's outer city stands about two kilometres to its north.
+3. **The first weapon:** in the panic the player grabs a weapon (an old blade from above a door, a woodsman's hatchet, a fisher's spear), picks it up, opens their equipment and equips it: the first item and the first weapon of their journey.
+4. **The first fight:** a Fog-warped animal (a wolf, a boar, a dog), fought with that weapon.
+5. **The hard moment:** a neighbour, half-changed by the Fog, grey-veined and moving wrongly: the grimdark beneath the surface, shown once, early.
+6. **Something larger:** a huge shape in the Fog tears down the village gate. It is never fought; everyone runs.
+7. **The escape:** through fires and fleeing survivors to the harbour and the last ship out.
+8. **The crossing:** through the night the Fog thins and colour returns; at dawn Aldrath's glow rises on the horizon.
+9. **Arrival at Hollin's Cross,** the starter port, where the world opens; Aldrath's outer city stands about two kilometres to its north.
 
 **Merrith's touch.** If the player falls during the prologue, the 13th God's lingering magic lifts them up again with a soft glow: tutorial safety that is also the first sign that they are one of the chosen.
 
