@@ -91,6 +91,10 @@ Only now draw the paths, along the routes people take between the places in the 
 and widening naturally, never a grid, main roads wider than lanes, each ending at a door, a gate or another path. Every
 path gets a purpose and passes the path checks (below).
 
+Like the layout, the paths are checked by the plan script, not by eye: every door reaches a path without crossing
+another building, plot or yard; every path starts and ends on another path, at a door or at a named place; no path goes
+unused.
+
 ## 5. Doodads
 
 Last, the props and plants of daily life, each with a purpose that follows from the lore and logistics: the smith's anvil,
