@@ -1,16 +1,89 @@
 {
   "_about": "Third-party asset packs for Fogwright. fetch.py downloads them from their itch.io pages into a folder outside the repo. 'repo' says whether the files may be committed to this public repository: CC0 packs may; packs that forbid redistribution may only ship inside the game (with any credit they require).",
   "packs": [
-    {"name": "Universal Animation Library",        "url": "https://quaternius.itch.io/universal-animation-library",        "licence": "CC0 1.0", "repo": true,  "note": "Standard (free) version; in assets/animations/quaternius"},
-    {"name": "Universal Animation Library 2",      "url": "https://quaternius.itch.io/universal-animation-library-2",      "licence": "CC0 1.0", "repo": true,  "note": "Standard (free) version; in assets/animations/quaternius"},
-    {"name": "Universal Base Characters",          "url": "https://quaternius.itch.io/universal-base-characters",          "licence": "CC0 1.0", "repo": true,  "note": "Standard (free) version; in assets/characters/quaternius"},
-    {"name": "Modular Character Outfits Fantasy",  "url": "https://quaternius.itch.io/modular-character-outfits-fantasy",  "licence": "CC0 1.0", "repo": true},
-    {"name": "Fantasy Props MegaKit",              "url": "https://quaternius.itch.io/fantasy-props-megakit",              "licence": "CC0 1.0", "repo": true},
-    {"name": "Medieval Village MegaKit",           "url": "https://quaternius.itch.io/medieval-village-megakit",           "licence": "CC0 1.0", "repo": true},
-    {"name": "Stylized Nature MegaKit",            "url": "https://quaternius.itch.io/stylized-nature-megakit",            "licence": "CC0 1.0", "repo": true},
-    {"name": "Textured Lowpoly Trees",             "url": "https://quaternius.itch.io/textured-lowpoly-trees",             "licence": "CC0 1.0", "repo": true},
-    {"name": "150 Lowpoly Nature Models",          "url": "https://quaternius.itch.io/150-lowpoly-nature-models",          "licence": "CC0 1.0", "repo": true},
-    {"name": "Lowpoly Medieval Weapons",           "url": "https://quaternius.itch.io/lowpoly-medieval-weapons",           "licence": "CC0 1.0 (stated on the itch.io page; no licence file in the zip)", "repo": true},
-    {"name": "Post-Apocalyptic World",             "url": "https://atomicrealm.itch.io/post-apocalyptic-world",            "licence": "Atomic Realm licence: commercial use and editing allowed; no repackaging, resale or redistribution, however modified; credit required (link https://atomicrealm.itch.io/)", "repo": false, "note": "Free sample version; for the more modern, industrial elements"}
+    {
+      "name": "Universal Animation Library",
+      "url": "https://quaternius.itch.io/universal-animation-library",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Standard (free) version; in assets/animations/quaternius"
+    },
+    {
+      "name": "Universal Animation Library 2",
+      "url": "https://quaternius.itch.io/universal-animation-library-2",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Standard (free) version; in assets/animations/quaternius"
+    },
+    {
+      "name": "Universal Base Characters",
+      "url": "https://quaternius.itch.io/universal-base-characters",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Standard (free) version; in assets/characters/quaternius"
+    },
+    {
+      "name": "Modular Character Outfits Fantasy",
+      "url": "https://quaternius.itch.io/modular-character-outfits-fantasy",
+      "licence": "CC0 1.0",
+      "repo": true
+    },
+    {
+      "name": "Fantasy Props MegaKit",
+      "url": "https://quaternius.itch.io/fantasy-props-megakit",
+      "licence": "CC0 1.0",
+      "repo": true
+    },
+    {
+      "name": "Medieval Village MegaKit",
+      "url": "https://quaternius.itch.io/medieval-village-megakit",
+      "licence": "CC0 1.0",
+      "repo": true
+    },
+    {
+      "name": "Stylized Nature MegaKit",
+      "url": "https://quaternius.itch.io/stylized-nature-megakit",
+      "licence": "CC0 1.0",
+      "repo": true
+    },
+    {
+      "name": "Textured Lowpoly Trees",
+      "url": "https://quaternius.itch.io/textured-lowpoly-trees",
+      "licence": "CC0 1.0",
+      "repo": true
+    },
+    {
+      "name": "150 Lowpoly Nature Models",
+      "url": "https://quaternius.itch.io/150-lowpoly-nature-models",
+      "licence": "CC0 1.0",
+      "repo": true
+    },
+    {
+      "name": "Lowpoly Medieval Weapons",
+      "url": "https://quaternius.itch.io/lowpoly-medieval-weapons",
+      "licence": "CC0 1.0 (stated on the itch.io page; no licence file in the zip)",
+      "repo": true
+    },
+    {
+      "name": "Post-Apocalyptic World",
+      "url": "https://atomicrealm.itch.io/post-apocalyptic-world",
+      "licence": "Atomic Realm licence: commercial use and editing allowed; no repackaging, resale or redistribution, however modified; credit required (link https://atomicrealm.itch.io/)",
+      "repo": false,
+      "note": "Free sample version; for the more modern, industrial elements"
+    },
+    {
+      "name": "Modular Village Pack",
+      "url": "https://fertile-soil-productions.itch.io/modular-village-pack",
+      "licence": "CC0 1.0",
+      "repo": true,
+      "note": "Fertile Soil Productions; pairs with their Modular Terrain Pack"
+    },
+    {
+      "name": "Medieval Interior Asset Pack",
+      "url": "https://soi.itch.io/medieval-interior-asset-pack",
+      "licence": "No formal licence; the author (SOI) says 'free to use for any purpose' in the comments. Kept out of the repo to be safe.",
+      "repo": false,
+      "note": "38 PBR tavern interior assets with collision meshes"
+    }
   ]
 }
