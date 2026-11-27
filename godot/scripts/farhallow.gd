@@ -52,6 +52,9 @@ func _enter_tree() -> void:
 	for sp in PLAN.spurs:
 		var b: Dictionary = BUILDINGS[int(sp.owner)]
 		PATHS.append([[Vector2(sp.door[0], sp.door[1]), Vector2(sp.to[0], sp.to[1])], 1.2, "the path to the door of %s" % (b.name if b.name != "" else b.type)])
+	for t in PLAN.trails:   # worn footpaths from back doors, side doors, yard gates and plot gates
+		var pts := []; for q in t.pts: pts.append(Vector2(q[0], q[1]))
+		PATHS.append([pts, float(t.width), t.purpose, "trail"])
 	for b in BUILDINGS:
 		var ds := []; for d in b.doors: ds.append(Vector2(d[0], d[1]))
 		bdoors.append(ds)
@@ -71,7 +74,7 @@ func _ready() -> void:
 	pads.append([WELL, Vector2(6, 6), 0.0, _base(WELL)])     # the square round the well is level
 	_terrain()
 	_sea()
-	for p in PATHS: _path(p[0], p[1])
+	for p in PATHS: _path(p[0], p[1], p.size() > 3)
 	for b in BUILDINGS.size(): _build(b)
 	for pl in PLAN.plots: _plot(pl)
 	_well()
@@ -154,7 +157,7 @@ func _sea() -> void:
 	m.material_override = mat; m.position = Vector3(300, 0.0, 300); add_child(m)
 
 # ---------------------------------------------------------------- paths: smooth curves laid on the ground
-func _path(pts: Array, width: float) -> void:
+func _path(pts: Array, width: float, trail := false) -> void:
 	var curve := Curve2D.new()
 	for i in pts.size():
 		var p: Vector2 = pts[i]
@@ -165,6 +168,7 @@ func _path(pts: Array, width: float) -> void:
 	var baked := curve.get_baked_points()
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var dirt := Palette.col("path")
+	if trail: dirt = dirt.lerp(Palette.col("grass"), 0.35)      # a trail: worn into the grass, not a made path
 	var verts := []; var tris := []
 	for i in baked.size():
 		var p: Vector2 = baked[i]; var d: Vector2 = (baked[min(i + 1, baked.size() - 1)] - baked[max(i - 1, 0)]).normalized()
@@ -346,7 +350,7 @@ func _fence_run(e: Array, ty: Dictionary, L: Callable, zone: String, mir: bool) 
 		var pos: Vector3 = L.call(mid.x, mid.y)
 		var yaw := atan2(-n.x if mir else n.x, n.y)
 		var f := _piece_any(_fence_model(zone), pos, yaw)
-		if f: f.scale = Vector3(seg / 2.0, 1.0, 1.0)
+		if f: f.scale = Vector3((seg + 0.35) / 2.0, 1.0, 1.0)   # overlapping a little at the joins and corners
 
 ## who lives there decides the fence: dry stone for the well-off, woven wattle for the poor, the kit's rails for the rest
 func _fence_model(zone: String) -> String:
@@ -424,8 +428,11 @@ func _plot(pl: Dictionary) -> void:
 			var gate := si == 1 and k == cnt / 2                  # the back gate
 			if gate and not walled: continue
 			var path := "res://assets/props/fogwright/Garden_Gate.glb" if gate else _fence_model(zone)
-			var f := put(path, W(mid, height(mid)), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
-			if f: f.scale = Vector3(q0.distance_to(q1) / (2.06 if gate else 2.0), 1.0, 1.0)
+			var h0 := terrain_surface(q0); var h1 := terrain_surface(q1); var len := q0.distance_to(q1)
+			var f := put(path, W(mid, (h0 + h1) * 0.5 - 0.08), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
+			if f:
+				f.rotation.z = atan2(h1 - h0, len)            # tilted with the slope, so neighbours meet without steps
+				f.scale = Vector3((len + (0.0 if gate else 0.35)) / (2.06 if gate else 2.0), 1.0, 1.0)   # a little overlap closes the corners
 
 func _in_roofed(p: Vector2, grow := 0.0) -> bool:
 	for r in roofed:
@@ -456,16 +463,39 @@ func _well() -> void:
 	col.shape = cyl; body.add_child(col); body.position = W(WELL, y + 0.5); add_child(body)
 
 # ---------------------------------------------------------------- the harbour: sea wall, breakwater, lighthouse, pier, boats
+## a stone causeway along a smooth curve through the points: a level top and sloping sides down to the seabed, one mesh
+## (the breakwater out to the lighthouse, the sea wall), with a collider from the same mesh
 func _stone_run(pts: Array, width: float, top: float) -> void:
-	for i in pts.size() - 1:
-		var a: Vector2 = pts[i]; var b: Vector2 = pts[i + 1]; var mid := (a + b) * 0.5; var L := a.distance_to(b)
-		var low := minf(_base(a), _base(b)) - 2.0
-		var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(L + 0.6, top - low, width); mi.mesh = bm
-		var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/RockTrim_detail.png")
-		m.albedo_color = Palette.col("RockTrim") / 0.78; m.uv1_triplanar = true; m.uv1_scale = Vector3(0.35, 0.35, 0.35); mi.material_override = m
-		mi.position = W(mid, (top + low) * 0.5); mi.rotation.y = -atan2(b.y - a.y, b.x - a.x); add_child(mi)
-		var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = bm.size
-		col.shape = bs; body.add_child(col); body.transform = mi.transform; add_child(body)
+	var curve := Curve2D.new()
+	for i in pts.size():
+		var p: Vector2 = pts[i]
+		var prev: Vector2 = pts[max(i - 1, 0)]; var next: Vector2 = pts[min(i + 1, pts.size() - 1)]
+		var tan := (next - prev) * 0.3
+		curve.add_point(p, -tan, tan)
+	curve.bake_interval = 0.8
+	var baked := curve.get_baked_points()
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var hw := width * 0.5; var foot := hw + 0.9          # the sides batter outward toward the bottom
+	var along := 0.0
+	for i in baked.size():
+		var p: Vector2 = baked[i]; var d: Vector2 = (baked[min(i + 1, baked.size() - 1)] - baked[max(i - 1, 0)]).normalized()
+		var side := Vector2(-d.y, d.x)
+		if i > 0: along += p.distance_to(baked[i - 1])
+		var low := minf(_base(p), 0.0) - 2.0
+		for v in [[-foot, low], [-hw, top], [hw, top], [foot, low]]:   # a cross-section: bottom left, top left, top right, bottom right
+			var q: Vector2 = p + side * float(v[0])
+			st.set_uv(Vector2(along, float(v[0]) + (top - float(v[1]))) * 0.35)
+			st.add_vertex(W(q, float(v[1])))
+	for i in baked.size() - 1:
+		var a := i * 4
+		for k in 3:
+			st.add_index(a + k); st.add_index(a + 4 + k); st.add_index(a + k + 1)
+			st.add_index(a + k + 1); st.add_index(a + 4 + k); st.add_index(a + 5 + k)
+	st.generate_normals()
+	var mi := MeshInstance3D.new(); mi.mesh = st.commit()
+	var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/RockTrim_detail.png")
+	m.albedo_color = Palette.col("RockTrim") / 0.78; m.cull_mode = BaseMaterial3D.CULL_DISABLED; mi.material_override = m
+	add_child(mi); mi.create_trimesh_collision()
 
 func _harbour() -> void:
 	_stone_run([Vector2(80, 82), Vector2(92, 76), Vector2(100, 70), Vector2(106, 62)], 2.2, 0.9)       # the sea wall
@@ -550,11 +580,20 @@ func scatter(path: String, points: Array, scale_range := Vector2(0.9, 1.1), grou
 	var proto: Node3D = s.instantiate()
 	for mi in proto.find_children("*", "MeshInstance3D", true, false):
 		var src := mi as MeshInstance3D
-		var mm := MultiMesh.new(); mm.transform_format = MultiMesh.TRANSFORM_3D; mm.mesh = src.mesh; mm.instance_count = points.size()
+		var mesh: Mesh = src.mesh
+		for si in mesh.get_surface_count():   # palette-named materials (our own models) get the palette's colours
+			var orig := mesh.surface_get_material(si)
+			if orig and Palette.material_for(orig.resource_name, orig):
+				if mesh == src.mesh: mesh = src.mesh.duplicate()
+				mesh.surface_set_material(si, Palette.material_for(orig.resource_name, orig))
+		var centre := Vector3.ZERO                      # the batch sits at its points' centre: draw distances are measured from there
+		for pt in points: centre += pt
+		centre /= points.size()
+		var mm := MultiMesh.new(); mm.transform_format = MultiMesh.TRANSFORM_3D; mm.mesh = mesh; mm.instance_count = points.size()
 		for i in points.size():
-			var t := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(scale_range.x, scale_range.y)), points[i])
+			var t := Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(scale_range.x, scale_range.y)), points[i] - centre)
 			mm.set_instance_transform(i, t * src.transform)
-		var mmi := MultiMeshInstance3D.new(); mmi.multimesh = mm; add_child(mmi)
+		var mmi := MultiMeshInstance3D.new(); mmi.multimesh = mm; mmi.position = centre; add_child(mmi)
 	proto.free()
 
 func _ground_pts(n: int, inside: Callable) -> Array:
@@ -566,8 +605,13 @@ func _ground_pts(n: int, inside: Callable) -> Array:
 		if inside.call(p): out.append(W(p, height(p)))
 	return out
 
+## the village's ground, where no woods grow: inside the palisade (closed down to the shore), the shore itself, and the
+## old oval clearing
+const VILLAGE_LINE := [Vector2(20, 92), Vector2(8, 70), Vector2(6, 40), Vector2(10, 8), Vector2(40, 6), Vector2(56, 4), Vector2(68, 4),
+	Vector2(92, 6), Vector2(114, 13), Vector2(121, 40), Vector2(126, 56), Vector2(90, 84), Vector2(55, 110)]
 func _in_clearing(p: Vector2) -> bool:
-	return pow((p.x - 62) / 54.0, 2) + pow((p.y - 50) / 44.0, 2) < 1.0 or (p.x > 50 and p.y > 76) or (p.x > 95 and p.y > 46)
+	return Geometry2D.is_point_in_polygon(p, PackedVector2Array(VILLAGE_LINE)) or pow((p.x - 62) / 54.0, 2) + pow((p.y - 50) / 44.0, 2) < 1.0 \
+		or (p.x > 50 and p.y > 76) or (p.x > 95 and p.y > 46)
 
 func _near_built(p: Vector2, r := 2.5) -> bool:
 	for pad in pads:
@@ -591,21 +635,64 @@ func _field() -> void:
 		var p := Vector2(17.5 + i * 3.0, 39.5 + j * 0.75); plots.append(W(p, height(p)))
 	scatter(NATURE % "Plant_1", plots, Vector2(0.5, 0.7), ["plots"])
 
+## how far out of the clearing a point is: 0 at its edge, growing outward (the clearing is an ellipse, plus the shore)
+## the way big games draw forests: the trees in 24 m blocks, each block one batch per model that the engine skips when
+## it is off screen, and stops drawing beyond a distance (the haze hides where); thousands of trees cost a few batches
+func _scatter_chunked(path: String, points: Array, scale_range: Vector2, cell: float, draw_to: float) -> void:
+	var blocks := {}
+	for pt in points:
+		var k := Vector2i(floori(pt.x / cell), floori(pt.z / cell))
+		if not blocks.has(k): blocks[k] = []
+		blocks[k].append(pt)
+	for k in blocks:
+		var before := get_child_count()
+		scatter(path, blocks[k], scale_range, ["grass", "woods"])
+		for i in range(before, get_child_count()):
+			var mmi := get_child(i) as MultiMeshInstance3D
+			if mmi: mmi.visibility_range_end = draw_to; mmi.visibility_range_end_margin = 8.0
+
+func _woods_depth(p: Vector2) -> float:
+	if _in_clearing(p): return -1.0
+	return (sqrt(pow((p.x - 62) / 54.0, 2) + pow((p.y - 50) / 44.0, 2)) - 1.0) * 49.0
+
+## the woods: the wall of the world beyond the palisade. A dense band of cheap low-poly trees (60-130 triangles) packed
+## 2.4 m apart near the clearing, thinner beyond, with the kit's detailed trees only along the edge where they are seen
+## up close; ferns between them; solid trunks, so nobody walks out
 func _woods() -> void:
-	var pts := _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0)
-	var by_kind := {}
-	for i in pts.size():
-		var kind := ("CommonTree_%d" % (i % 5 + 1)) if i % 3 != 0 else ("Pine_%d" % (i % 5 + 1))
-		if not by_kind.has(kind): by_kind[kind] = []
-		by_kind[kind].append(pts[i])
-		trees.append([pts[i], 1.12])
-		var body := StaticBody3D.new(); body.collision_layer = 2; body.collision_mask = 0   # trunks block walking, not the shadow rays
-		var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 0.35; cyl.height = 4.0; col.shape = cyl
-		body.add_child(col); body.position = pts[i] + Vector3(0, 2.0, 0); add_child(body)
-	for kind in by_kind: scatter(NATURE % kind, by_kind[kind], Vector2(0.9, 1.35), ["grass", "woods"])
+	var cheap := {}; var hero := {}
+	var gr := RandomNumberGenerator.new(); gr.seed = 4242
+	for pass_ in [[2.4, 0.0, 22.0], [3.6, 22.0, 999.0]]:   # spacing, from depth, to depth
+		var sp: float = pass_[0]
+		var y := -MARGIN
+		while y < 110 + MARGIN:
+			var x := -MARGIN
+			while x < 140 + MARGIN:
+				var p := Vector2(x + gr.randf_range(-sp * 0.4, sp * 0.4), y + gr.randf_range(-sp * 0.4, sp * 0.4))
+				var dp := _woods_depth(p)
+				if dp >= pass_[1] and dp < pass_[2] and _coast_signed(p) > 4.0 and _path_dist(p) > 1.5:   # never on the road out
+					var at := W(p, height(p))
+					if dp < 4.0 and gr.randf() < 0.35:          # the edge: the kit's detailed trees, seen up close
+						var kind := ("CommonTree_%d" % (gr.randi() % 5 + 1)) if gr.randf() < 0.6 else ("Pine_%d" % (gr.randi() % 5 + 1))
+						if not hero.has(kind): hero[kind] = []
+						hero[kind].append(at)
+					else:
+						var kind: String = ["Forest_Pine_1", "Forest_Pine_2", "Forest_Broadleaf_1", "Forest_Broadleaf_2"][gr.randi() % 4]
+						if not cheap.has(kind): cheap[kind] = []
+						cheap[kind].append(at)
+					if dp < 22.0:
+						trees.append([at, 1.12])                # its crown's shade is baked onto the ground
+					if dp < 10.0:                               # the trunks nearest the village are solid
+						var body := StaticBody3D.new(); body.collision_layer = 2; body.collision_mask = 0
+						var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 0.4; cyl.height = 4.0; col.shape = cyl
+						body.add_child(col); body.position = at + Vector3(0, 2.0, 0); add_child(body)
+				x += sp
+			y += sp
+	for kind in hero: _scatter_chunked(NATURE % kind, hero[kind], Vector2(0.95, 1.35), 24.0, 70.0)
+	for kind in cheap: _scatter_chunked("res://assets/props/fogwright/%s.glb" % kind, cheap[kind], Vector2(0.85, 1.3), 24.0, 120.0)
+	var ferns := _ground_pts(700, func(p): return _woods_depth(p) >= 0.0 and _woods_depth(p) < 25.0 and _coast_signed(p) > 4.0)
+	_scatter_chunked(NATURE % "Fern_1", ferns, Vector2(0.9, 1.3), 24.0, 45.0)
 	scatter(NATURE % "Grass_Common_Short", _ground_pts(1400, func(p): return _coast_signed(p) > 5.0 and not _near_built(p) and not (p.x > 14 and p.x < 37 and p.y > 14 and p.y < 47)))
 	scatter(NATURE % "Flower_3_Group", _ground_pts(140, func(p): return _in_clearing(p) and _coast_signed(p) > 6.0 and not _near_built(p, 1.5)), Vector2(0.28, 0.4))
-	scatter(NATURE % "Fern_1", _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0), Vector2(0.9, 1.1), ["woods"])
 	for i in 14:
 		var p := Vector2(rng.randf_range(60, 130), rng.randf_range(70, 105))
 		if _coast_signed(p) < -1.0 and _coast_signed(p) > -9.0: put(NATURE % ("Rock_Medium_%d" % (i % 3 + 1)), W(p, height(p)), rng.randf() * TAU, rng.randf_range(1.2, 2.2), true, "fixture", "rocks in the shallows")
@@ -659,6 +746,7 @@ func _light() -> void:
 		sun.shadow_enabled = false          # baked; F2 turns on live shadows for characters
 	var env: Environment = get_parent().get_node("WorldEnvironment").environment
 	env.tonemap_exposure = 0.9; env.ambient_light_energy = 0.45
+	env.fog_enabled = true; env.fog_light_color = Color(0.74, 0.76, 0.74); env.fog_density = 0.0032; env.fog_sky_affect = 0.25   # the woods fade into haze
 	var sky: ProceduralSkyMaterial = env.sky.sky_material
 	sky.sky_top_color = Color(0.42, 0.56, 0.74); sky.sky_horizon_color = Color(0.93, 0.78, 0.6)
 	sky.ground_horizon_color = Color(0.93, 0.78, 0.6); sky.sun_angle_max = 30.0
@@ -812,7 +900,7 @@ func _bake_when_ready() -> void:
 	path_surfaces.clear()
 	await get_tree().process_frame
 	_terrain()
-	for p in PATHS: _path(p[0], p[1])
+	for p in PATHS: _path(p[0], p[1], p.size() > 3)
 	_world_casts_no_shadows(self)
 
 func _world_casts_no_shadows(n: Node) -> void:      # the world's shadows are baked; only characters may cast live ones
@@ -889,6 +977,7 @@ func check_plan() -> Array:
 func _destinations() -> Array:
 	var out := [[WELL, "the square", 8.6], [Vector2(62, -20), "beyond the gate", 2.0], [Vector2(87, 81), "the pier's head", 2.5]]
 	for d in PLAN.destinations: out.append([Vector2(d.x, d.y), "the " + d.name, 3.0])
+	for t in PLAN.trails: out.append([Vector2(t.pts[0][0], t.pts[0][1]), t.purpose, 1.0])   # a trail starts at its door or gate
 	for k in houses.size():
 		for d in bdoors[k]: out.append([d, "a door of the %s at %s" % [houses[k][0], (houses[k][1] as Vector2).round()], 3.0])
 	return out

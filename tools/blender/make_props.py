@@ -152,4 +152,16 @@ for row in range(6):
         off=0.035*(1 if (k+row)%2 else -1)
         part('box','Thatch_Dark' if row%3 else 'WoodTrim_Light',(-0.8+k*0.32,off,zz),(0,0,0.1*(1 if (k+row)%2 else -1)),size=(0.34,0.03,0.11))
 done('Wattle_Fence')
+# forest trees: cheap enough to plant thousands as the wall of woods round the village (the kit's trees are 1,600-6,300
+# triangles; these are 60-150). Two pines and two broadleaves, palette colours.
+for k,(h,layers) in enumerate(((7.5,3),(9.5,4))):
+    part('cyl','WoodTrim_Dark',(0,0,0),r=0.18,r2=0.1,h=h*0.45,n=5)
+    for l in range(layers):
+        z=h*0.22+l*(h*0.7/layers); r=1.9*(1.0-l/(layers+0.6))
+        part('cyl','Leaf_Dark' if l%2 else 'Leaf',(0,0,z),r=r,r2=0.05,h=h*0.42,n=7)
+    done('Forest_Pine_%d'%(k+1))
+for k,(h,blobs) in enumerate(((6.5,((0,0,0,2.0),(0.9,0.4,-0.6,1.5),(-0.8,-0.5,-0.4,1.4))),(8.0,((0,0,0,2.4),(1.1,-0.3,-0.8,1.7),(-0.9,0.6,-0.7,1.6),(0.1,-0.9,0.5,1.3))))):
+    part('cyl','WoodTrim_Dark',(0,0,0),r=0.22,r2=0.14,h=h*0.6,n=5)
+    for (x,y,dz,r) in blobs: part('sphere','Leaf' if r>1.6 else 'Leaf_Dark',(x,y,h*0.68+dz),r=r,n=7,sz=0.85)
+    done('Forest_Broadleaf_%d'%(k+1))
 print('done')

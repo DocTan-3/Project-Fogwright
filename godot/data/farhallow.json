@@ -872,6 +872,154 @@
    "street": "field lane"
   }
  ],
+ "trails": [
+  {
+   "pts": [
+    [
+     87.23901099820017,
+     25.97967697643054
+    ],
+    [
+     93.94271921143414,
+     35.81178235584036
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "a back or side door of Harbour master's house"
+  },
+  {
+   "pts": [
+    [
+     65.87532955269673,
+     61.97411973713742
+    ],
+    [
+     65.23783284366945,
+     57.90365547396476
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "a back or side door of Net-mender's cottage"
+  },
+  {
+   "pts": [
+    [
+     48.472580873469944,
+     73.100224210132
+    ],
+    [
+     53.830641155027635,
+     69.35440120053934
+    ],
+    [
+     59.131747402521356,
+     78.99277619598246
+    ],
+    [
+     59.42089865238465,
+     79.51850574118845
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "a back or side door of cottage"
+  },
+  {
+   "pts": [
+    [
+     61.00534618986979,
+     91.08691590503115
+    ],
+    [
+     63.53322908640191,
+     90.49547016667441
+    ],
+    [
+     58.232122838908204,
+     80.8570951712313
+    ],
+    [
+     57.94297158904491,
+     80.3313656260253
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "a back or side door of cottage"
+  },
+  {
+   "pts": [
+    [
+     84.2570814064311,
+     11.310386062765623
+    ],
+    [
+     81.82821320244727,
+     19.441843450446903
+    ],
+    [
+     87.23901099820017,
+     25.97967697643054
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "the back gate of the plot of Harbour master's house"
+  },
+  {
+   "pts": [
+    [
+     68.86210132581957,
+     15.569033920093483
+    ],
+    [
+     60.03911275866739,
+     13.804436206663048
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "the back gate of the plot of Dunmore house (fish merchants)"
+  },
+  {
+   "pts": [
+    [
+     47.35889726841138,
+     82.39724317102842
+    ],
+    [
+     54,
+     82.5
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "the back gate of the plot of cottage"
+  },
+  {
+   "pts": [
+    [
+     47.432202253081094,
+     6.813572963026847
+    ],
+    [
+     60.898628362997954,
+     9.50685818501022
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "the back gate of the plot of Old street house by the fields"
+  },
+  {
+   "pts": [
+    [
+     52.260000000000005,
+     59.68000000000001
+    ],
+    [
+     51.136,
+     57.432
+    ]
+   ],
+   "width": 1.0,
+   "purpose": "the back gate of the plot of Fishers' cottages"
+  }
+ ],
  "doodads": [
   {
    "kind": "bench",
@@ -1491,12 +1639,12 @@
   },
   {
    "kind": "net rack",
-   "x": 61.5,
-   "y": 90.5,
+   "x": 77.2,
+   "y": 85.3,
    "w": 2.6,
    "h": 0.4,
-   "a": -0.58,
-   "purpose": "fishers drying their nets",
+   "a": -0.32,
+   "purpose": "fishers drying their nets by the boats",
    "owner": -1,
    "mounted": false
   },

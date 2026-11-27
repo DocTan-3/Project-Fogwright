@@ -111,6 +111,11 @@ Like the layout, the paths are checked by the plan script, not by eye: every doo
 another building, plot or yard; every path starts and ends on another path, at a door or at a named place; no path goes
 unused.
 
+**Trails:** besides the made paths, everyday traffic wears trails: from every outside door that is not on the street
+(back and side doors, yard gates) and from the back gate of every plot, a narrow footpath to the nearest path, going
+round anything in the way but never through its own house. They are drawn half worn into the grass and are checked like
+paths (props keep off them).
+
 ## 5. Doodads
 
 Last, the props and plants of daily life, each with a purpose that follows from the lore and logistics: the smith's anvil,
@@ -203,6 +208,12 @@ at several places, plus a top-down view, and look for what the checker cannot se
 buildings, empty or over-cluttered spots, things that don't read at a glance. Show the user the renders.
 
 ## Performance budget
+
+- **Woods as the world's edge** are planted the way big games do it: cheap low-poly trees (about 100 triangles) packed
+  densely near the settlement, thinner beyond, the detailed kit trees (thousands of triangles) only along the edge where
+  they are seen close; drawn in instanced batches by 24 m block, each block skipped off screen and beyond a draw
+  distance, with haze hiding where they stop; solid trunks nearest the settlement so nobody walks out. Impostors
+  (flat tree pictures) and a painted tree line are the next steps if phones need more.
 
 Batch repeated small things (grass, flowers, trees) with MultiMesh; bake static shadows (no live shadows on the world);
 keep a settlement within the frame budget in docs/design.md. Measure the FPS counter after each step.

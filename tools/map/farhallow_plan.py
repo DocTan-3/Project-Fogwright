@@ -249,7 +249,74 @@ for lp,rw,ln in LANES:
     # and must be needed: some door must use it
     if not any(sp[3]==ln for sp in SPURS) and not any(math.hypot(e[0]-x,e[1]-y)<3 for e in (lp[0],lp[-1]) for (x,y),_ in DEST):
         pproblems.append('nothing uses the %s'%ln)
+# ---- trails: the everyday traffic. Every outside door that is not on the street (back and side doors, yard gates) and
+# the back gate of every plot wears a narrow footpath to the nearest path or the square, going round anything in the way
+def blocked(p0,p1,own,start=None):
+    # a trail keeps a metre clear of every wall (its own house's too), except in its first stretch out of its own door;
+    # it may cross its own yard or garden
+    L=math.hypot(p1[0]-p0[0],p1[1]-p0[1]); n=max(14,int(L/0.4))
+    pts=[(p0[0]+(p1[0]-p0[0])*i/n,p0[1]+(p1[1]-p0[1])*i/n) for i in range(0,n+1)]
+    for n_,nm,geo in things:
+        if n_==own and any(w in nm for w in ('yard','garden','pen')): continue
+        x,y,w,h,a=geo; m=0.0 if any(w_ in nm for w_ in PLOTNAMES) else 1.1; cs=corners(x,y,w+m,h+m,a)   # half a metre off buildings and yards; plots' fences may be passed close
+        for pt in pts:
+            if start and n_==own and math.hypot(pt[0]-start[0],pt[1]-start[1])<1.6: continue
+            if inside(pt,cs): return nm
+    return None
+def trail_to(start,own,skip=None):
+    dist,q,ln=nearest_on_paths(start,skip)
+    best=None
+    for lp,rw,nm in TRAILS:   # an earlier trail counts as a path
+        for p0,p1 in zip(lp,lp[1:]):
+            dx,dy=p1[0]-p0[0],p1[1]-p0[1]; L2=dx*dx+dy*dy or 1e-9; t=max(0,min(1,((start[0]-p0[0])*dx+(start[1]-p0[1])*dy)/L2))
+            qq=(p0[0]+t*dx,p0[1]+t*dy); dd=math.hypot(start[0]-qq[0],start[1]-qq[1])
+            if dd<dist: dist,q,ln=dd,qq,'trail'
+    if not blocked(start,q,own,start): return [start,q]
+    for side in (4,-4,7,-7,10,-10,13,-13):   # round the obstacle: one bend, sideways from the straight line
+        dx,dy=q[0]-start[0],q[1]-start[1]; L=math.hypot(dx,dy) or 1; nx,ny=-dy/L,dx/L
+        mid=((start[0]+q[0])/2+nx*side,(start[1]+q[1])/2+ny*side)
+        if not blocked(start,mid,own,start) and not blocked(mid,q,own) and not inside(mid,coast): return [start,mid,q]
+    # round its own house: out of the door, past one or two of the house's corners (kept clear of the walls), then on
+    if own is not None and own>=0:
+        x,y,w,h,a=placed[own][:5]; cs=corners(x,y,w+3.0,h+3.0,a)
+        routes=[[c] for c in cs]+[[cs[i],cs[(i+j)%4]] for i in range(4) for j in (1,3)]
+        best=None
+        for via in routes:
+            r=[start]+via
+            dist_,q2,_=nearest_on_paths(r[-1])
+            r=r+[q2]
+            if any(inside(v,coast) for v in via): continue
+            if any(blocked(a_,b_,own,start) for a_,b_ in zip(r,r[1:])): continue
+            L=sum(math.hypot(b_[0]-a_[0],b_[1]-a_[1]) for a_,b_ in zip(r,r[1:]))
+            if best is None or L<best[0]: best=(L,r)
+        if best: return best[1]
+    return None
+TRAILS=[]
+def outside_doors(k):
+    ty=TYPES[PTYPE[k]]; W_,H_=footprint(PTYPE[k]); out=[]
+    for dx,dy,o,dw,kind in ty['doors']:
+        if kind not in ('d','g'): continue
+        on_back=o=='h' and abs(dy-H_)<0.01; on_side=o=='v' and (abs(dx)<0.01 or abs(dx-W_)<0.01)
+        if on_back or on_side:
+            ox,oy=(0,0.8) if on_back else ((-0.8 if abs(dx)<0.01 else 0.8),0)
+            out.append(local(k,dx+ox,dy+oy))                 # just outside it
+    return out
+starts=[]
+for k in range(len(placed)):
+    for p_ in outside_doors(k):
+        if any(pl[0]==k and inside(p_,corners(*pl[2:])) for pl in PLOTS): continue   # it opens into its own yard or garden
+        starts.append((k,p_,'a back or side door of %s'%(placed[k][7] or PTYPE[k])))
+for pl in PLOTS:   # every plot has a gate at the back
+    k=pl[0]; x,y,w,h,a=pl[2:]; ca,sa=math.cos(a),math.sin(a)
+    starts.append((k,(x+(h/2+0.8)*-sa,y+(h/2+0.8)*ca),'the back gate of the plot of %s'%(placed[k][7] or PTYPE[k])))
+for k,p_,why in starts:
+    if inside(p_,coast): continue
+    r=trail_to(p_,k)
+    if r is None: pproblems.append('no clear trail from %s'%why); continue
+    if sum(math.hypot(b[0]-a[0],b[1]-a[1]) for a,b in zip(r,r[1:]))<1.2: continue   # already on a path
+    TRAILS.append((r,1.0,why))
 print('\n'.join(pproblems) or 'paths: every door reached, every lane leads somewhere')
+print('trails: %d worn from back doors, side doors, yard gates and plot gates'%len(TRAILS))
 # ---- stage 5: doodads. Each has a purpose, stands on ground that suits it, and blocks no path or door.
 # The ground each kind may stand on (city-planning skill, "Check every placement")
 KINDS={'bench':{'front','square','yard','garden','grass','beach'},'barrel':{'front','yard','beach','pier','workshop'},
@@ -272,7 +339,7 @@ VILLAGE=[(60.6,53.4,0.4,0.4,0.0,'notice post',"the harbour master's notices: whe
  (69.0,43.4,1.6,0.5,0.4,'bench','old folk sitting by the well'),
  (56,4.1,0.4,0.4,0.0,'torch','gate torch on the gate post, lit at dusk'),(68,4.1,0.4,0.4,0.0,'torch','gate torch on the gate post, lit at dusk'),
  (25,24,0.8,0.8,0.0,'scarecrow','keeping crows off the infield'),(32,30,2.0,2.0,0.0,'haystack','winter hay for the goats'),
- (61.5,90.5,2.6,0.4,-0.58,'net rack','fishers drying their nets'),(64.8,88.4,2.6,0.4,-0.58,'net rack','fishers drying their nets'),
+ (77.2,85.3,2.6,0.4,-0.32,'net rack','fishers drying their nets by the boats'),(64.8,88.4,2.6,0.4,-0.58,'net rack','fishers drying their nets'),
  (99.5,62.0,2.4,0.5,0.9,'drying rack','fish drying in the wind before smoking'),
  (82.0,83.0,1.6,0.8,-0.4,'gutting table','gutting the catch as it lands'),
  (87.5,92,1.2,1.2,0.0,'lobster pots','pots stacked on the pier'),(88.4,84,1.0,1.0,0.0,'barrel','barrels being rolled to the boats'),
@@ -307,6 +374,8 @@ def ground(p):   # what a point stands on
         if any(segd(p,p0,p1)<rw/2+0.15 for p0,p1 in zip(lp,lp[1:])): return 'path'   # a hand's breadth of margin
     for k,dp,q,ln in SPURS:
         if segd(p,dp,q)<0.6: return 'path'
+    for lp,w,why in TRAILS:
+        if any(segd(p,p0,p1)<w/2 for p0,p1 in zip(lp,lp[1:])): return 'path'
     for k in range(len(placed)):
         # in front of the building, between its front and the street
         x,y,w,h,a=placed[k][:5]; ca,sa=math.cos(a),math.sin(a); dx,dy=p[0]-x,p[1]-y
@@ -336,6 +405,8 @@ for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
 print('\n'.join(dproblems) or 'doodads: %d placed, each with a purpose, on fitting ground, blocking nothing'%len(DOODADS))
 for k,dp,q,ln in SPURS:
     d.line([P(*dp),P(*q)],fill=(178,150,110),width=int(1.2*S))
+for lp,w,why in TRAILS:   # trails: narrower, half worn into the grass
+    d.line([P(*q) for q in lp],fill=(150,140,96),width=int(w*S),joint='curve')
 for k,kind,x,y,w,h,a in PLOTS:
     poly=[P(*q) for q in corners(x,y,w,h,a)]
     d.polygon(poly,fill={'walled garden':(150,184,110),'yard and garden':(140,170,100)}[kind],
@@ -404,6 +475,7 @@ data={'buildings':[dict(type=PTYPE[k],mirror=PMIR[k],x=b_[0],y=b_[1],w=b_[2],h=b
       'roads':[dict(name=nm,pts=[list(q) for q in pts],width=w) for pts,w,nm in ROADS],
       'lanes':[dict(name=nm,pts=[list(q) for q in pts],width=w) for pts,w,nm in LANES],
       'spurs':[dict(owner=k,door=list(dp),to=list(q),street=ln) for k,dp,q,ln in SPURS],
+      'trails':[dict(pts=[list(q) for q in lp],width=w,purpose=why) for lp,w,why in TRAILS],
       'doodads':[dict(kind=kind,x=x,y=y,w=w_,h=h_,a=a_,purpose=why,owner=k,mounted=kind in MOUNTED) for x,y,w_,h_,a_,kind,why,k in DOODADS],
       'waystone':dict(x=WAYSTONE[0],y=WAYSTONE[1],a=WAYSTONE[4]),'square':dict(x=64,y=50,r=8.2),
       'rects':[dict(name=rn,x0=r[0],y0=r[1],x1=r[2],y1=r[3]) for r,rn in RECTS],

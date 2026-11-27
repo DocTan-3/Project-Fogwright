@@ -33,4 +33,5 @@ for _ in range(1400):
             if dx*dx+dy*dy<=r*r: peb[(cy+dy)%N,(cx+dx)%N]=R.uniform(0.6,1.0)
 ruts=0   # no ruts: the detail tiles in world space, so stripes would run across paths, not along them
 save('Path',smooth(peb,1)*0.9+noise(1,3)*0.5+noise(1,14)*1.4-ruts,0.12)
-print('saved 10 detail maps')
+save('Leaf',noise(1,4)*0.6+noise(1,10)+noise(1,22)*1.3,0.07)       # clumped foliage, soft
+print('saved 11 detail maps')

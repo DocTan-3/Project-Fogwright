@@ -7,7 +7,7 @@ func _ready() -> void:
 	var main: Node3D = load("res://scenes/main.tscn").instantiate(); add_child(main)
 	for i in 90: await get_tree().process_frame
 	var lv = main.get_node("Level"); var rig = main.get_node("CameraRig"); rig.set_process(false)
-	var cam: Camera3D = rig.get_node("SpringArm3D/Camera3D")
+	var cam := Camera3D.new(); main.add_child(cam); cam.current = true   # its own camera: the rig's spring arm would pull the rig's back
 	var k := 0
 	for spec in args.get("at", "64,50,14,30,-25").split(";"):
 		var v: PackedStringArray = spec.split(","); var p := Vector2(float(v[0]), float(v[1])); var dist := float(v[2]); var yaw := deg_to_rad(float(v[3])); var pitch := deg_to_rad(float(v[4]))
