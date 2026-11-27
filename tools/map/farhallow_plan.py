@@ -250,14 +250,94 @@ for lp,rw,ln in LANES:
     if not any(sp[3]==ln for sp in SPURS) and not any(math.hypot(e[0]-x,e[1]-y)<3 for e in (lp[0],lp[-1]) for (x,y),_ in DEST):
         pproblems.append('nothing uses the %s'%ln)
 print('\n'.join(pproblems) or 'paths: every door reached, every lane leads somewhere')
+# ---- stage 5: doodads. Each has a purpose, stands on ground that suits it, and blocks no path or door.
+# The ground each kind may stand on (city-planning skill, "Check every placement")
+KINDS={'bench':{'front','square','yard','garden','grass','beach'},'barrel':{'front','yard','beach','pier','workshop'},
+ 'crate':{'front','yard','beach','pier'},'woodpile':{'yard','front','grass','beach','workshop'},'washing line':{'yard','garden'},
+ 'well':{'garden','yard','square'},'fruit tree':{'garden'},'flower bed':{'garden'},'lamp':{'front','square'},'sign':{'front'},
+ 'trough':{'yard','front','pen','grass'},'cart':{'yard','front','grass'},'net rack':{'beach','yard','grass'},
+ 'lobster pots':{'pier','beach'},'gutting table':{'beach','pier'},'scarecrow':{'field'},'haystack':{'field','yard'},
+ 'notice post':{'square','front'},'torch':{'wall'},'bell frame':{'front','grass','yard'},'anvil':{'workshop'},
+ 'quench trough':{'workshop'},'grindstone':{'workshop'},'charcoal':{'workshop','yard'},'candles':{'front'},
+ 'sacks':{'yard','front','beach','pier'},'manure heap':{'yard'},'drying rack':{'beach','grass'},'hen coop':{'yard','garden'},
+ 'boat hull':{'workshop','beach','yard'}}
+COL={'bench':(120,84,50),'barrel':(140,96,56),'crate':(176,140,90),'woodpile':(120,86,52),'washing line':(240,240,230),
+ 'well':(130,150,170),'fruit tree':(70,120,60),'flower bed':(214,120,150),'lamp':(250,210,120),'sign':(200,160,90),
+ 'trough':(100,130,150),'cart':(150,110,70),'net rack':(200,200,180),'lobster pots':(150,110,80),'gutting table':(170,150,120),
+ 'scarecrow':(150,110,60),'haystack':(214,190,110),'notice post':(160,120,80),'torch':(250,160,60),'bell frame':(90,80,70),
+ 'anvil':(60,60,64),'quench trough':(100,130,150),'grindstone':(170,166,158),'charcoal':(40,36,34),'candles':(250,230,170),
+ 'sacks':(214,200,170),'manure heap':(110,90,60),'drying rack':(190,180,150),'hen coop':(160,120,80),'boat hull':(130,92,56)}
+# Farhallow's own props (map coordinates)
+VILLAGE=[(60.6,53.4,0.4,0.4,0.0,'notice post',"the harbour master's notices: when the trader's ship is due"),
+ (69.0,43.4,1.6,0.5,0.4,'bench','old folk sitting by the well'),
+ (56,4.1,0.4,0.4,0.0,'torch','gate torch on the gate post, lit at dusk'),(68,4.1,0.4,0.4,0.0,'torch','gate torch on the gate post, lit at dusk'),
+ (25,24,0.8,0.8,0.0,'scarecrow','keeping crows off the infield'),(32,30,2.0,2.0,0.0,'haystack','winter hay for the goats'),
+ (61.5,90.5,2.6,0.4,-0.58,'net rack','fishers drying their nets'),(64.8,88.4,2.6,0.4,-0.58,'net rack','fishers drying their nets'),
+ (99.5,62.0,2.4,0.5,0.9,'drying rack','fish drying in the wind before smoking'),
+ (82.0,83.0,1.6,0.8,-0.4,'gutting table','gutting the catch as it lands'),
+ (87.5,92,1.2,1.2,0.0,'lobster pots','pots stacked on the pier'),(88.4,84,1.0,1.0,0.0,'barrel','barrels being rolled to the boats'),
+ (100.5,99.0,1.6,1.2,0.0,'crate',"cargo waiting for the trader's ship (the last ship)")]
+DOODADS=[]   # (x, y, w, h, angle, kind, purpose, owner index or -1)
+for k in range(len(placed)):
+    ty=TYPES[PTYPE[k]]; a_=placed[k][4]
+    for u,v,w_,h_,kind,why in ty['doodads']:
+        DOODADS.append(room_geo(k,(u,v,w_,h_))+(kind,why,k))
+    plot=[pl for pl in PLOTS if pl[0]==k]
+    if plot and ty['plot']:
+        dep=plot[0][5]; px=ty['plot'][0]
+        for u,v,w_,h_,kind,why in ty['plot_doodads']:
+            if v+h_<=dep-0.3: DOODADS.append(room_geo(k,(px+u,placed[k][3]+v,w_,h_))+(kind,why,k))
+DOODADS+=[t_+(-1,) for t_ in VILLAGE]
+def ground(p):   # what a point stands on
+    for k in range(len(placed)):
+        ty=TYPES[PTYPE[k]]
+        for r in ty['rooms']:
+            if inside(p,corners(*room_geo(k,r))):
+                if PTYPE[k]=='workshop' and r[5] in ('shop','yard'): return 'workshop'
+                if PTYPE[k]=='boat_shed': return 'workshop'
+                if PTYPE[k]=='hen_house' and r[5]=='yard': return 'pen'
+                return {'yard':'yard','garden':'garden'}.get(r[5],'indoor')
+        # in front of the building, between its front and the street
+        x,y,w,h,a=placed[k][:5]; ca,sa=math.cos(a),math.sin(a); dx,dy=p[0]-x,p[1]-y
+        uu,vv=dx*ca+dy*sa,-dx*sa+dy*ca
+        if -w/2<=uu<=w/2 and -h/2-2.6<=vv<-h/2: return 'front'
+    for pl in PLOTS:
+        if inside(p,corners(*pl[2:])): return 'garden' if pl[1]=='walled garden' else 'yard'
+    for r,rn in RECTS:   # the pier stands over the sea, so it comes first
+        if rect_hit(p,r,0): return {'field':'field','vegetable plots':'field','pier':'pier'}[rn]
+    if inside(p,coast): return 'sea'
+    if math.hypot(p[0]-64,p[1]-50)<8.2: return 'square'
+    for lp,rw,ln in ROADS+LANES:
+        if any(segd(p,p0,p1)<rw/2 for p0,p1 in zip(lp,lp[1:])): return 'path'
+    for k,dp,q,ln in SPURS:
+        if segd(p,dp,q)<0.6: return 'path'
+    for lp,cl,ln in LINES:
+        if any(segd(p,p0,p1)<1.0 for p0,p1 in zip(lp,lp[1:])): return 'wall'
+    if inside(p,beach+[(140,110),(52,110)]): return 'beach'
+    return 'grass'
+MOUNTED={'lamp','sign','candles','torch'}   # hung on a wall or post: only where they hang matters, and they block nothing
+dproblems=[]
+alldoors=[(k,dp) for k in range(len(placed)) for dp in street_doors(k)]
+for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
+    nm='%s (%s)'%(kind,placed[k][7] or placed[k][6] if k>=0 else 'village')
+    if not why: dproblems.append('%s: no purpose'%nm)                     # 1. does it need to be there?
+    pts=[(x,y)]+corners(x,y,w_,h_,a_)
+    gs={ground(q) for q in ([(x,y)] if kind in MOUNTED else pts)}
+    bad=gs-KINDS[kind]
+    if 'path' in bad: dproblems.append('%s at (%.0f,%.0f) blocks a path'%(nm,x,y)); bad-= {'path'}        # 3. blocks a path?
+    if bad: dproblems.append('%s at (%.0f,%.0f) stands on %s'%(nm,x,y,'/'.join(sorted(bad))))              # 2. ground that makes sense?
+    for kk,dp in alldoors:                                                                                 # 3. blocks an entrance?
+        if kind not in MOUNTED and any(math.hypot(q[0]-dp[0],q[1]-dp[1])<1.0 for q in pts): dproblems.append('%s at (%.0f,%.0f) blocks a door'%(nm,x,y))
+    for j in range(i+1,len(DOODADS)):
+        o=DOODADS[j]
+        if overlap(corners(x,y,w_,h_,a_),corners(*o[:5]),0.1): dproblems.append('%s overlaps %s'%(nm,o[5]))
+print('\n'.join(dproblems) or 'doodads: %d placed, each with a purpose, on fitting ground, blocking nothing'%len(DOODADS))
 for k,dp,q,ln in SPURS:
     d.line([P(*dp),P(*q)],fill=(178,150,110),width=int(1.2*S))
 for k,kind,x,y,w,h,a in PLOTS:
     poly=[P(*q) for q in corners(x,y,w,h,a)]
     d.polygon(poly,fill={'walled garden':(150,184,110),'yard and garden':(140,170,100)}[kind],
               outline=(170,164,150) if kind=='walled garden' else (120,96,66),width=5 if kind=='walled garden' else 2)
-    if kind=='walled garden':
-        wx,wy=local(k,placed[k][2]-11.5,placed[k][3]+h-1.5); d.ellipse([P(wx-1,wy-1),P(wx+1,wy+1)],fill=(130,150,170),outline=(80,80,80),width=2)
 wx,wy,ww,_,wa=WAYSTONE; d.polygon([P(*q) for q in corners(wx,wy,ww,ww,wa)],fill=(150,146,138),outline=(60,50,40))
 d.ellipse([P(wx-0.6,wy-0.6),P(wx+0.6,wy+0.6)],fill=(250,210,120))
 def tint(c,kind):   # rooms in the owner's colour, yards and outbuildings in their own
@@ -275,10 +355,12 @@ for k,(x,y,w,h,a,c,n,_,st) in enumerate(placed):
     for hx_,hy_ in TYPES[PTYPE[k]]['hearths']:
         q=local(k,hx_,hy_); d.rectangle([P(q[0]-0.45,q[1]-0.45),P(q[0]+0.45,q[1]+0.45)],fill=(190,80,40))
     d.text(P(x,y),str(n),font=F(22,True),fill=(255,250,235),anchor='mm',stroke_width=3,stroke_fill=(40,30,20))
-# the smithy: anvil and quench trough in the work bay, charcoal and woodpile in its yard
+for x,y,w_,h_,a_,kind,why,k in DOODADS:   # the doodads
+    poly=[P(*q) for q in corners(x,y,w_,h_,a_)]
+    if kind in ('fruit tree','haystack','well','lobster pots','charcoal','manure heap'):
+        r=max(w_,h_)/2; d.ellipse([P(x-r,y-r),P(x+r,y+r)],fill=COL[kind],outline=(40,30,20))
+    else: d.polygon(poly,fill=COL[kind],outline=(40,30,20))
 SMI=[k for k,b_ in enumerate(placed) if b_[6]==5][0]
-for (u,v,w_,h_,col) in ((3.4,2.2,1.0,0.6,(60,60,64)),(4.6,3.9,1.6,0.6,(100,130,150)),(7.0,3.0,1.8,1.8,(40,36,34)),(8.6,6.8,1.2,3.2,(120,86,52))):
-    d.polygon([P(*q) for q in corners(*room_geo(SMI,(u,v,w_,h_)))],fill=col,outline=(40,30,26))
 fx,fy=local(SMI,0.6,1.2)
 # smoke drifting downwind
 for sx,sy in ((fx,fy),(95,70)):
@@ -290,7 +372,7 @@ d.text(P(cx,cy-7.5),'N',font=F(18,True),fill=(40,30,20),anchor='mm'); d.text(P(c
 def beat(x,y,t):
     d.ellipse([P(x-1.6,y-1.6),P(x+1.6,y+1.6)],fill=(200,60,50),outline=(255,255,255),width=3)
     d.text(P(x+2.3,y-1.2),t,font=F(19,True),fill=(255,255,255),stroke_width=3,stroke_fill=(60,20,20))
-beat(67,54,'A  start'); beat(79,48.5,'B  first weapon'); beat(11,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
+beat(67,54,'A  start'); beat(79,48.5,'B  first weapon'); beat(11,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(42,89,'E  the neighbour'); beat(110,103,'F  the last ship')
 d.text(P(17,22),'INFIELD',font=F(20,True),fill=(120,96,50))
 for (ax,ay,tx,ty,lab) in ((62,1.5,66,0.6,'north road to the OPEN FIELDS (~22 ha) and the common'),(6,24,1,18,'')):
     pass
@@ -302,12 +384,12 @@ for x,y,w,h,a,c,n,name,_ in placed:
     if not name: continue
     ld.rectangle((14,yy+3,32,yy+21),fill=c,outline=(60,40,26)); ld.text((40,yy),'%d  %s'%(n,name),font=F(17),fill=(30,28,26)); yy+=27
 yy+=8
-for t in ('white marks: doors and gates','yellow: well-off · purple: poor','green behind houses: yards, gardens','grey square by the well: the waystone','smithy: anvil, quench trough, charcoal,','    woodpile in its yard','grey rings: smoke blowing downwind','rooms drawn from the building types:','    tools/map/building_types.py','',
+for t in ('white marks: doors and gates','yellow: well-off · purple: poor','green behind houses: yards, gardens','grey square by the well: the waystone','small marks: doodads (benches, barrels,','  woodpiles, nets...), each with a purpose','grey rings: smoke blowing downwind','rooms drawn from the building types:','    tools/map/building_types.py','',
           'A  you begin at the well','B  hatchet at the smithy woodpile,','    the blade above the smithy door','C  a Fog-warped wolf by the field',
           'D  something huge breaks the gate','E  the half-changed Vey son','F  the last ship at the pier\'s end','',
           'Paths (stage 4): roads, lanes, and a','path from every door to its street'):
     ld.text((14,yy),t,font=F(17,t[:1] in 'ABCDEF' and t[1:2]==' '),fill=(30,28,26) if t[:1] not in 'ABCDEF' or t[1:2]!=' ' else (140,40,30)); yy+=25
 for at,label in ZLABELS: d.text(P(*at),label,font=F(20,True),fill=(255,255,245),stroke_width=3,stroke_fill=(40,30,20))
 img.paste(L,(MW+15,15),L)
-d.text((20,H-44),'FARHALLOW · plan v3: layout and paths (north up · 140 m × 110 m · ground rises to the north-east)',font=F(26,True),fill=(255,255,250),stroke_width=4,stroke_fill=(30,30,30))
+d.text((20,H-44),'FARHALLOW · plan v3: layout, paths and doodads (north up · 140 m × 110 m · ground rises to the north-east)',font=F(26,True),fill=(255,255,250),stroke_width=4,stroke_fill=(30,30,30))
 img.save(sys.argv[1]); print('saved')

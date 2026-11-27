@@ -118,6 +118,11 @@ quench barrel and coal heap at the smithy; nets and barrels at the harbour; benc
 well-off live; carts and crates at the market; flowers and grass only where nothing is built or walked. Every placement
 passes the placement checks (below).
 
+Doodads that belong to a building come with its type (`doodads` and `plot_doodads` in `building_types.py`), each with
+its purpose; the settlement adds its own (squares, harbour, fields, gates). The plan script checks every one: a purpose,
+ground its kind allows at every corner, clear of every road, lane, door path and doorway, overlapping nothing. Wall- and
+post-mounted things (lamps, signs, torches) are checked only where they hang.
+
 ## Building to the plan (3D)
 
 - Terrain is a real mesh from a height function; never place buildings or props on flat planes floating over slopes.
