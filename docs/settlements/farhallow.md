@@ -12,7 +12,7 @@ keeper; no waylodge, since Farhallow lies outside Hollin's circle (chosen).
 
 ## 1. Lore
 
-**Who lives here.** About 80 freefolk of every people: families who could not afford to move inward toward Aldrath, and a
+**Who lives here.** About 50 freefolk of every people, in a dozen households, small enough that everyone knows everyone: families who could not afford to move inward toward Aldrath, and a
 few who chose the edge of the world on purpose. Most fish; the rest farm the clearing, smith, keep the tavern or serve
 the harbour.
 
@@ -64,12 +64,12 @@ It must: it lies at the far edge of the world, two days by sea from Hollin's Cro
 unsafe. So it grows or catches its own food, burns its own wood, draws its own water and makes its own salt. The trader's
 ship brings only what the village cannot make, and Farhallow would survive a season without it.
 
-About 80 people × 2,000 kcal a day is about 58 million kcal a year:
+About 50 people × 2,000 kcal a day is about 37 million kcal a year:
 
 | Food | Share | How much | Where it comes from |
 | --- | --- | --- | --- |
-| Fish (herring, cod, mackerel; fresh, smoked, salted) | ~40% | ~19 t a year eaten, plus the surplus salted for trade | 4-5 boats from the pier; the smokehouse and salt house keep it |
-| Grain (barley, oats; bread, porridge, ale) | ~40% | ~7 t a year | **~10 ha sown each year, ~20-25 ha of open fields in two halves (one rests fallow)**, outside the palisade along the north road and west of it, worked in strips by every household |
+| Fish (herring, cod, mackerel; fresh, smoked, salted) | ~40% | ~12 t a year eaten, plus the surplus salted for trade | 3-4 boats from the pier; the smokehouse and salt house keep it |
+| Grain (barley, oats; bread, porridge, ale) | ~40% | ~4.5 t a year | **~6-7 ha sown each year, ~12-15 ha of open fields in two halves (one rests fallow)**, outside the palisade along the north road and west of it, worked in strips by every household |
 | Beans, peas, cabbage, onions, roots | ~8% | | the house plots and the small infield inside the palisade |
 | Hens, goats (milk, cheese), pigs | ~7% | | yards and the hen house; goats and pigs on the common at the wood's edge |
 | Foraging | ~5% | | shellfish and seaweed from the shore, berries, mushrooms, nuts and small game from the woods |
@@ -85,7 +85,7 @@ About 80 people × 2,000 kcal a day is about 58 million kcal a year:
   ship is the last ship out.)
 
 **Changes this made:** the fields inside the palisade are only the infield (beans and barley close to home); the real
-fields (~20-25 ha) lie outside, along the north road, beyond the edge of the plan. The salt comes from salt pans on the
+fields (~12-15 ha) lie outside, along the north road, beyond the edge of the plan. The salt comes from salt pans on the
 shore instead of the trader's ship.
 
 | Building or facility | Where | Why there | What sits with it |
@@ -107,7 +107,7 @@ shore instead of the trader's ship.
 | **Farming cottages** (middling) | West, between the square and the fields | Next to their fields and vegetable plots, upwind | Hen house, goat pen, hay, tools |
 | **Old core houses** (middling) | Round the square | The oldest houses, built round the spring | Pots, a bench, washing lines |
 | **Infield and vegetable plots** | North-west, inside the palisade | Flat, sunny, upwind, near the granary; safe inside the palisade | Fence, scarecrow, hay stacks |
-| **Open fields** (~20-25 ha) | Outside the palisade, along the north road and to the west | The village's grain; far too big to fit inside the walls | Strips, boundary stones, a field barn (beyond the plan's edge) |
+| **Open fields** (~12-15 ha) | Outside the palisade, along the north road and to the west | The village's grain; far too big to fit inside the walls | Strips, boundary stones, a field barn (beyond the plan's edge) |
 | **Common pasture and woodlot** | The wood's edge round the clearing | Goats and pigs, firewood, charcoal | A charcoal burner's clearing |
 | **Salt-boiling hut and pans** | On the shore east of the harbour, downwind | Seawater and driftwood at hand; smoke blows out to sea | Pans, a woodpile, sacks |
 | **Palisade and north gate** | Round the landward side | Built against wolves; the sea guards the rest | Gate torches |
@@ -133,6 +133,9 @@ check runs on every room, yard and plot. Placing the real sizes changed the vill
   well-off house without one; both now face the rise road from its uphill side, with walled gardens behind. The rise
   road was straightened a little for their fronts.
 - The smithy is the workshop type, with anvil and quench trough in the work bay and charcoal and woodpile in its yard.
+- **A remote fishing village, kept small (chosen):** the palisade stays as it is, big enough for the tutorial; three
+  fishers' cottages and the net-mender's remain (two were dropped), so it feels like a hometown where everyone knows
+  everyone, about 50 people.
 - The farms are one farmstead (house, byre and barn round a yard) and one farming cottage.
 - Only one old street house remains (by the fields): the street-house type is 6 × 10 m with a plot, and there was no
   room for the others by the square or on the west road. The fishers' cottages are the cottage type; where they have no
