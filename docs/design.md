@@ -76,6 +76,10 @@ Each session, players head out from the settlement, bring back resources and kno
 
 The loop runs on distance: the farther from the settlement, the richer the loot and the thicker the Fog.
 
+## The opening: the fall of Farhallow
+
+The tutorial is the story. Players begin as freefolk in Farhallow, a village on the far coast outside any god's circle, on the evening the Fog takes it. Each beat teaches something without instructions on screen: a calm late afternoon (moving, the camera, talking, picking things up); the Fog rolling in at dusk as colour drains away (sprinting, danger); a Fog-warped animal (the first fight, with a tool such as a hatchet or pitchfork); a half-changed neighbour (the grimdark moment, once); a huge shape glimpsed tearing down the gate (running, never fighting); the escape through fires to the last ship (following others, using the surroundings); the crossing as the Fog thins and colour returns; and arrival at Hollin's Cross at dawn, with Aldrath's glow on the horizon, where the game opens. If the player falls, Merrith's touch lifts them up once: safety that is also the first sign they are chosen. It is built beat by beat, each polished before the next: the village at peace first, then the Fog's arrival, then movement and the first enemy, and so on.
+
 ## Crafts
 
 Players each choose a primary craft and can learn a secondary one later, so a group of four covers most needs but still has to trade.
@@ -266,7 +270,7 @@ The land must feel real at scale: mountains that feel like mountains, seas that 
 
 **World layout (follows the lore).** Continents and isles, like World of Warcraft's, 20 km across in all, with natural coastlines (old cliffs and chasms still show where Erde tore apart):
 
-- **The main continent** holds Aldrath's heartland at its centre: the outer city, by far the biggest city, the starting village and Hollin's Cross, the starter port, where ship routes leave. The Redwold's forested hills (the Ruadhan) lie in its west.
+- **The main continent** holds Aldrath's heartland at its centre: the outer city, by far the biggest city, and Hollin's Cross, the starter port two kilometres south, where ship routes leave. The Redwold's forested hills (the Ruadhan) lie in its west, and Farhallow, the village where the game begins, on its far coast.
 - **The other homelands:** the Rimeholds on the northern continent (fjords, glaciers, high peaks, a mountain spine with Animari ruins), the Sere's deserts on the southern continent, the Aurelan Isles in the east and the volcanic Slag Isles in the west.
 - **Life weakens with distance from Aldrath:** thinner harvests, sicklier herds, shorter seasons and thicker Fog toward the world's edge, so the hometowns are smaller and specialised, and food flows outward while ores, furs, timber, spices and relics flow inward. Each people fares differently (see the lore's table of hometowns).
 - **The Sundering** lies beyond the outer coasts: no man's land where the Fog thickens into the wall at the world's edge. The Last Bastion faces it from the north, and the Forsaken landed on the southern continent's far coast.

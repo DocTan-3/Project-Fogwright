@@ -185,7 +185,8 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | Region | Where | People | God | Hometown | How it fares |
 | --- | --- | --- | --- | --- | --- |
 | Aldrath's heartland | Heart of the main continent | All peoples; Wayfolk most of all | Aldrath | **Aldrath**: the outer city, a quarter for each people around the plaza of the twelve | Thriving and crowded; the safest land in the world |
-| Hollin's Cross | Main continent, near Aldrath: the starter port | Wayfolk | Hollin | **Hollin's Cross**: crossroads and port where all peoples meet | Thriving: close to the centre, busy with trade |
+| Hollin's Cross | Main continent, near Aldrath: the starter port | Wayfolk | Hollin | **Hollin's Cross**: crossroads and port where all peoples meet, and where the survivors of Farhallow come ashore | Thriving: close to the centre, busy with trade |
+| Farhallow *(working name)* | The main continent's far coast, outside any god's circle | Freefolk of every people | None | A fishing and farming village | Falls to the Fog in the prologue |
 | The Redwold | Main continent, the western hills and forests | Ruadhan | Brannoch | **Dun Brannoch**: hill fort above the forest | Struggling: the forests sicken and the herds thin; many Ruadhan go to Aldrath as traders and beast-dealers |
 | The Aurelan Isles | Isles to the east | Aurelans | Maelis | **Solmere**: walled river city on a stone crossing | Declining: once the breadbasket of the world, now its fields fail; proud lords hold on to empty manors |
 | The Rimeholds | The northern continent | Hrimfolk | Hrothvar | **Skarvhold**: on a stone arch above a fjord | Enduring: crops never grew there; the Hrimfolk live by sea, hunt and trade, and the Fog has made little worse |
@@ -195,7 +196,20 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | The Forsaken lands | A landing on the southern continent's far coast | The Forsaken | The 14th, hidden | Unknown | The evil lands |
 | (none) | Everywhere | Ilvari | Seraveth | No hometown: enclaves and caravans | Fading: their numbers dwindle as their magic did |
 
-**The start.** Players begin in a starting village on the central land near Aldrath's outer city, where they learn the basics. Hollin's Cross is the starter port town about a kilometre to the village's south, where the first ship routes leave; Aldrath's outer city stands about a kilometre to the north. Like Riverwood, Whiterun and Falkreath, places sit a real journey apart. Quests lead onward without hand-holding: players find their own way.
+**The start: the fall of Farhallow.** Players begin as freefolk in **Farhallow** *(working name)*, a fishing and farming village on the main continent's far coast, outside any god's circle: home to freefolk of every people who could not afford to move inward. The Fog takes it on the first evening of the game.
+
+1. **Calm before:** a late afternoon in the village, colours already a little faded so far from Aldrath. Small chores teach moving, looking, talking and picking things up.
+2. **The Fog rolls in:** at dusk the bell rings, colour drains from the world and things move in the mist.
+3. **The first fight:** a Fog-warped animal (a wolf, a boar, a dog), fought with whatever tool the player holds.
+4. **The hard moment:** a neighbour, half-changed by the Fog, grey-veined and moving wrongly: the grimdark beneath the surface, shown once, early.
+5. **Something larger:** a huge shape in the Fog tears down the village gate. It is never fought; everyone runs.
+6. **The escape:** through fires and fleeing survivors to the harbour and the last ship out.
+7. **The crossing:** through the night the Fog thins and colour returns; at dawn Aldrath's glow rises on the horizon.
+8. **Arrival at Hollin's Cross,** the starter port, where the world opens; Aldrath's outer city stands about two kilometres to its north.
+
+**Merrith's touch.** If the player falls during the prologue, the 13th God's lingering magic lifts them up again with a soft glow: tutorial safety that is also the first sign that they are one of the chosen.
+
+**What it means:** a village falling so far inward is a sign that Aldrath's protection is weakening, the first hint of what the story will reveal. Later, each people may get its own opening in its own homeland, all ending on a ship to Hollin's Cross *(proposal)*. Like Riverwood, Whiterun and Falkreath, places sit a real journey apart, and quests lead onward without hand-holding.
 
 **The three moons.** Three moons cross the night sky on their own paths, so they rise and set at different times and change position from night to night: a large pale moon, a small violet moon, and a broken moon split by a jagged crack, its fragments drifting beside it. The three moons are gods themselves, who chose to seclude themselves from the world. The gods behind them are forgotten; only the names people gave the moons remain. The large pale moon is barren, devoid of everything. The small violet moon is a god's own self and the home of his people, a mysterious race he placed there; this is a secret for now, and reaching it belongs to a future expansion. The broken moon is a consequence of the first war: it was struck by a stray attack from one of the beings of the first age, whose actions brought cataclysm upon the world (which being does not matter), and remains broken as a permanent reminder that some forces in the world can move more than just mountains, or so the legends say.
 
@@ -205,7 +219,7 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | Violet, a god's self | The Veiled | Dreamlight | the Night Rose | the Shrouded Bell |
 | Broken | The Shard | (to be named) | the Broken Cup | the Wound |
 
-**Aldrath's city and where the journey begins.** The outer city is alive, the greatest city of the third age, reachable by ship and by warp. It is about 600 metres across, the trading hub and main town of the world, with a quarter for each people around a grand plaza where statues of the twelve face the sealed walls. Aldrath sealed the inner city himself, as a safe haven for the weaker gods, at least in theory. Every player begins in a village near the outer city as one of the freefolk of their people, not yet claimed by any god. Being claimed by a god later in the journey decides which magic a player can take; there are no classes.
+**Aldrath's city and where the journey begins.** The outer city is alive, the greatest city of the third age, reachable by ship and by warp. It is about 600 metres across, the trading hub and main town of the world, with a quarter for each people around a grand plaza where statues of the twelve face the sealed walls. Aldrath sealed the inner city himself, as a safe haven for the weaker gods, at least in theory. Every player arrives as one of the freefolk of their people, a survivor of Farhallow, not yet claimed by any god. Being claimed by a god later in the journey decides which magic a player can take; there are no classes.
 
 **The Forsaken on the mainland.** The Forsaken have reached the mainlands, bringing portions of the Fog with them: lighter and manageable, unlike the Sundering. Some ports still stand in these lands. The wilds there are more untamed than corrupted, because magic may still linger.
 
