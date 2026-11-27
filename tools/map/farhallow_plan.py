@@ -106,8 +106,8 @@ B=[('gate road',52,36,'inn',1.5,PUB,1,'The Gull & Lantern, tavern with rooms'),
    (None,72,84,'boat_shed',-0.58,TRADE,8,"Boatwright's shed"),
    (None,104.5,52.5,'salt_works',-0.64,TRADE,16,'Salt-boiling hut and pans'),
    ('shore lane',72,68,'cottage',1.0,POOR,9,"Net-mender's cottage"),
-   ('shore lane',63,74,'cottage',0.6,POOR,10,"Fishers' cottages"),('shore lane',54,79,'cottage',0.6,POOR,10,''),
-   ('shore lane',52,87,'cottage',0.6,POOR,10,''),
+   ('shore lane',63,74,'cottage',1.0,POOR,10,"Fishers' cottages"),('shore lane',54,79,'cottage',1.0,POOR,10,''),
+   ('shore lane',52,87,'cottage',1.0,POOR,10,''),
    ('gate road',52,13,'granary',1.0,TRADE,11,'Granary, by the gate and fields'),
    ('gate road',66,11,'guard_post',1.0,PUB,12,'Guard post and bell'),
    ('west road',34,58,'farmstead',1.0,MID,13,'Farmstead and farming cottage'),('west road',42,69,'cottage',1.0,MID,13,''),
@@ -259,14 +259,14 @@ KINDS={'bench':{'front','square','yard','garden','grass','beach'},'barrel':{'fro
  'lobster pots':{'pier','beach'},'gutting table':{'beach','pier'},'scarecrow':{'field'},'haystack':{'field','yard'},
  'notice post':{'square','front'},'torch':{'wall'},'bell frame':{'front','grass','yard'},'anvil':{'workshop'},
  'quench trough':{'workshop'},'grindstone':{'workshop'},'charcoal':{'workshop','yard'},'candles':{'front'},
- 'sacks':{'yard','front','beach','pier'},'manure heap':{'yard'},'drying rack':{'beach','grass'},'hen coop':{'yard','garden'},
+ 'sacks':{'yard','front','beach','pier'},'chopping block':{'workshop','yard'},'manure heap':{'yard'},'drying rack':{'beach','grass'},'hen coop':{'yard','garden'},
  'boat hull':{'workshop','beach','yard'}}
 COL={'bench':(120,84,50),'barrel':(140,96,56),'crate':(176,140,90),'woodpile':(120,86,52),'washing line':(240,240,230),
  'well':(130,150,170),'fruit tree':(70,120,60),'flower bed':(214,120,150),'lamp':(250,210,120),'sign':(200,160,90),
  'trough':(100,130,150),'cart':(150,110,70),'net rack':(200,200,180),'lobster pots':(150,110,80),'gutting table':(170,150,120),
  'scarecrow':(150,110,60),'haystack':(214,190,110),'notice post':(160,120,80),'torch':(250,160,60),'bell frame':(90,80,70),
  'anvil':(60,60,64),'quench trough':(100,130,150),'grindstone':(170,166,158),'charcoal':(40,36,34),'candles':(250,230,170),
- 'sacks':(214,200,170),'manure heap':(110,90,60),'drying rack':(190,180,150),'hen coop':(160,120,80),'boat hull':(130,92,56)}
+ 'sacks':(214,200,170),'chopping block':(110,80,50),'manure heap':(110,90,60),'drying rack':(190,180,150),'hen coop':(160,120,80),'boat hull':(130,92,56)}
 # Farhallow's own props (map coordinates)
 VILLAGE=[(60.6,53.4,0.4,0.4,0.0,'notice post',"the harbour master's notices: when the trader's ship is due"),
  (69.0,43.4,1.6,0.5,0.4,'bench','old folk sitting by the well'),
@@ -297,10 +297,6 @@ def ground(p):   # what a point stands on
                 if PTYPE[k]=='boat_shed': return 'workshop'
                 if PTYPE[k]=='hen_house' and r[5]=='yard': return 'pen'
                 return {'yard':'yard','garden':'garden'}.get(r[5],'indoor')
-        # in front of the building, between its front and the street
-        x,y,w,h,a=placed[k][:5]; ca,sa=math.cos(a),math.sin(a); dx,dy=p[0]-x,p[1]-y
-        uu,vv=dx*ca+dy*sa,-dx*sa+dy*ca
-        if -w/2<=uu<=w/2 and -h/2-2.6<=vv<-h/2: return 'front'
     for pl in PLOTS:
         if inside(p,corners(*pl[2:])): return 'garden' if pl[1]=='walled garden' else 'yard'
     for r,rn in RECTS:   # the pier stands over the sea, so it comes first
@@ -308,9 +304,15 @@ def ground(p):   # what a point stands on
     if inside(p,coast): return 'sea'
     if math.hypot(p[0]-64,p[1]-50)<8.2: return 'square'
     for lp,rw,ln in ROADS+LANES:
-        if any(segd(p,p0,p1)<rw/2 for p0,p1 in zip(lp,lp[1:])): return 'path'
+        if any(segd(p,p0,p1)<rw/2+0.15 for p0,p1 in zip(lp,lp[1:])): return 'path'   # a hand's breadth of margin
     for k,dp,q,ln in SPURS:
         if segd(p,dp,q)<0.6: return 'path'
+    for k in range(len(placed)):
+        # in front of the building, between its front and the street
+        x,y,w,h,a=placed[k][:5]; ca,sa=math.cos(a),math.sin(a); dx,dy=p[0]-x,p[1]-y
+        uu,vv=dx*ca+dy*sa,-dx*sa+dy*ca
+        if -w/2<=uu<=w/2 and -h/2-2.6<=vv<-h/2: return 'front'
+
     for lp,cl,ln in LINES:
         if any(segd(p,p0,p1)<1.0 for p0,p1 in zip(lp,lp[1:])): return 'wall'
     if inside(p,beach+[(140,110),(52,110)]): return 'beach'
@@ -327,7 +329,7 @@ for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     if 'path' in bad: dproblems.append('%s at (%.0f,%.0f) blocks a path'%(nm,x,y)); bad-= {'path'}        # 3. blocks a path?
     if bad: dproblems.append('%s at (%.0f,%.0f) stands on %s'%(nm,x,y,'/'.join(sorted(bad))))              # 2. ground that makes sense?
     for kk,dp in alldoors:                                                                                 # 3. blocks an entrance?
-        if kind not in MOUNTED and any(math.hypot(q[0]-dp[0],q[1]-dp[1])<1.0 for q in pts): dproblems.append('%s at (%.0f,%.0f) blocks a door'%(nm,x,y))
+        if kind not in MOUNTED and (any(math.hypot(q[0]-dp[0],q[1]-dp[1])<1.0 for q in pts) or math.hypot(x-dp[0],y-dp[1])<1.8): dproblems.append('%s at (%.0f,%.0f) blocks a door'%(nm,x,y))
     for j in range(i+1,len(DOODADS)):
         o=DOODADS[j]
         if overlap(corners(x,y,w_,h_,a_),corners(*o[:5]),0.1): dproblems.append('%s overlaps %s'%(nm,o[5]))
@@ -393,3 +395,19 @@ for at,label in ZLABELS: d.text(P(*at),label,font=F(20,True),fill=(255,255,245),
 img.paste(L,(MW+15,15),L)
 d.text((20,H-44),'FARHALLOW · plan v3: layout, paths and doodads (north up · 140 m × 110 m · ground rises to the north-east)',font=F(26,True),fill=(255,255,250),stroke_width=4,stroke_fill=(30,30,30))
 img.save(sys.argv[1]); print('saved')
+# ---- the plan for the game (godot/data/farhallow.json): everything the 3D village is built from, in plan metres
+import json,os
+ZONE={RICH:'rich',MID:'middling',POOR:'poor',TRADE:'trade',PUB:'public'}
+data={'buildings':[dict(type=PTYPE[k],mirror=PMIR[k],x=b_[0],y=b_[1],w=b_[2],h=b_[3],a=b_[4],zone=ZONE.get(b_[5],'public'),n=b_[6],name=b_[7] or '',
+                        doors=[list(dp) for dp in street_doors(k)]) for k,b_ in enumerate(placed)],
+      'plots':[dict(owner=pl[0],label=pl[1],x=pl[2],y=pl[3],w=pl[4],h=pl[5],a=pl[6]) for pl in PLOTS],
+      'roads':[dict(name=nm,pts=[list(q) for q in pts],width=w) for pts,w,nm in ROADS],
+      'lanes':[dict(name=nm,pts=[list(q) for q in pts],width=w) for pts,w,nm in LANES],
+      'spurs':[dict(owner=k,door=list(dp),to=list(q),street=ln) for k,dp,q,ln in SPURS],
+      'doodads':[dict(kind=kind,x=x,y=y,w=w_,h=h_,a=a_,purpose=why,owner=k,mounted=kind in MOUNTED) for x,y,w_,h_,a_,kind,why,k in DOODADS],
+      'waystone':dict(x=WAYSTONE[0],y=WAYSTONE[1],a=WAYSTONE[4]),'square':dict(x=64,y=50,r=8.2),
+      'rects':[dict(name=rn,x0=r[0],y0=r[1],x1=r[2],y1=r[3]) for r,rn in RECTS],
+      'walls':[dict(name=ln,pts=[list(q) for q in lp]) for lp,cl,ln in LINES],
+      'destinations':[dict(name=nm,x=q[0],y=q[1]) for q,nm in DEST]}
+out=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','godot','data','farhallow.json')
+os.makedirs(os.path.dirname(out),exist_ok=True); json.dump(data,open(out,'w'),indent=1); print('wrote',os.path.relpath(out))

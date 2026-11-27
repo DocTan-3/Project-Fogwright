@@ -87,7 +87,7 @@ Notes on each pack are in `packs.json`.
 | --- | --- | --- |
 | bench (Cottage, Inn, Merchant's house) | Bench | ok |
 | barrel (Granary, Inn, Store or salt house) | Barrel, Barrel_Apples, Barrel_Holder | ok |
-| crate (Store or salt house) | Crate_Metal, Crate_Wooden, FarmCrate_Apple, FarmCrate_Carrot, FarmCrate_Empty, Prop_Crate … | ok |
+| crate | Crate_Metal, Crate_Wooden, FarmCrate_Apple, FarmCrate_Carrot, FarmCrate_Empty, Prop_Crate … | ok |
 | woodpile (Cottage, Salt-boiling hut, Smokehouse) | Woodpile | ok |
 | washing line (Cottage, Street house) | Washing_Line | ok |
 | well (Merchant's house, Well-off house) | Prop_Well_1 | ok |

@@ -13,31 +13,18 @@ const MARGIN := 45.0                   # terrain beyond the plan on every side
 # the coastline (plan metres), land to the north-west of it; extended past the plan's edges
 const COAST := [Vector2(48, 200), Vector2(55, 110), Vector2(62, 96), Vector2(74, 88), Vector2(86, 84), Vector2(96, 76),
 	Vector2(104, 64), Vector2(112, 58), Vector2(124, 56), Vector2(140, 52), Vector2(220, 40)]
-# paths: (points, width)
-# paths: (points, width, purpose); each must lead somewhere, avoid walls but at doors, and not duplicate another
-const PATHS := [
-	[[Vector2(62, -20), Vector2(62, 0), Vector2(61, 8), Vector2(60, 16), Vector2(58, 26), Vector2(60, 40), Vector2(64, 50)], 4.0, "the road from the north gate to the well"],
-	[[Vector2(64, 50), Vector2(72, 58), Vector2(80, 66), Vector2(84, 74), Vector2(87, 81)], 3.4, "the well down to the harbour and the pier"],
-	[[Vector2(64, 50), Vector2(52, 54), Vector2(40, 58), Vector2(37.8, 61.0)], 2.8, "the well west to the tavern's door"],
-	[[Vector2(60, 30), Vector2(48, 30), Vector2(42, 26)], 2.2, "the road to the field's gate"],
-	[[Vector2(64, 50), Vector2(78, 44), Vector2(92, 38), Vector2(100, 30), Vector2(103, 23)], 2.6, "the well east up to the smithy and the shrine"],
-	[[Vector2(80, 66), Vector2(70, 71.5), Vector2(63, 73.5)], 2.0, "the harbour lane past the fish store to the lower cottage"],
-]
-# buildings: centre (plan m), width, depth, plan angle (rad), storeys, kind
-const BUILDINGS := [
-	[Vector2(29.7, 62.1), 12, 8, -0.12, 2, "tavern"], [Vector2(46, 70), 6, 6, 0.25, 1, "house"], [Vector2(36, 78), 6, 6, -0.3, 1, "house"],
-	[Vector2(70.7, 64.6), 6, 4, 0.5, 2, "house"], [Vector2(74.7, 73.4), 6, 4, -0.4, 1, "store"], [Vector2(92, 64), 8, 6, 0.35, 2, "house"],
-	[Vector2(52, 40), 6, 6, -0.15, 2, "house"], [Vector2(70, 36), 6, 6, 0.2, 1, "house"], [Vector2(91.5, 27.9), 8, 6, 0.15, 1, "smithy"],
-	[Vector2(104, 22), 4, 4, -0.1, 1, "shrine"], [Vector2(44, 12), 6, 4, 0.05, 1, "granary"], [Vector2(30, 48), 4, 4, 0.3, 1, "shed"],
-	[Vector2(55.9, 46.1), 4, 4, 0.1, 2, "house"], [Vector2(69, 41.9), 4, 6, -0.25, 1, "house"], [Vector2(55.7, 58.5), 4, 4, 0.6, 1, "house"],
-	[Vector2(78, 52), 4, 4, 0.4, 2, "house"], [Vector2(84, 58), 4, 4, 0.5, 1, "house"], [Vector2(62, 68), 4, 4, -0.5, 1, "house"],
-	[Vector2(66, 26), 4, 4, 0.1, 2, "house"], [Vector2(52, 24), 4, 6, -0.2, 1, "house"],
-]
+# the plan (tools/map/farhallow_plan.py writes it): buildings from their floorplans (tools/map/building_types.py), plots,
+# roads, lanes, a path from every door, and every doodad with its purpose
+const PLAN_JSON := "res://data/farhallow.json"
+const TYPES_JSON := "res://data/building_types.json"
+var PLAN := {}
+var TYPES := {}
+var PATHS := []        # [points, width, purpose]; each must lead somewhere, avoid walls but at doors, and not duplicate another
+var BUILDINGS := []    # the plan's buildings
+var bdoors := []       # each building's street doors (plan)
+var roofed := []       # [centre, half extents, angle] of every roofed room: "inside a building" means in one of these
 const WELL := Vector2(64, 50)
 const PIER := [Vector2(87, 81), Vector2(87.5, 90), Vector2(87.5, 99), Vector2(96, 100.5)]
-# where villagers go: the well, the tavern, the cottages, the field, the gate road, the harbour, the pier, the smithy, the shrine
-const GOAL_POINTS := [Vector2(64, 50), Vector2(30, 64), Vector2(24, 70), Vector2(42, 26), Vector2(58, 26), Vector2(87.5, 99),
-	Vector2(96, 100.5), Vector2(92, 38), Vector2(103, 23), Vector2(62, 80), Vector2(70, 72), Vector2(40, 58)]
 var GOALS := []
 var graph := {}
 var shade_grid: PackedFloat32Array
@@ -51,6 +38,22 @@ var pads := []          # [centre (plan), half extents, angle, level]
 func _enter_tree() -> void:
 	Palette.current = "hearth"
 	Palette.fog = 0.2
+	PLAN = JSON.parse_string(FileAccess.get_file_as_string(PLAN_JSON))
+	TYPES = JSON.parse_string(FileAccess.get_file_as_string(TYPES_JSON))
+	BUILDINGS = PLAN.buildings
+	for r in PLAN.roads:
+		var pts := []; for q in r.pts: pts.append(Vector2(q[0], q[1]))
+		if r.name == "gate road": pts.push_front(Vector2(62, -20))          # on through the gate, out of the village
+		PATHS.append([pts, float(r.width), "the " + r.name])
+	for r in PLAN.lanes:
+		var pts := []; for q in r.pts: pts.append(Vector2(q[0], q[1]))
+		PATHS.append([pts, float(r.width), "the " + r.name])
+	for sp in PLAN.spurs:
+		var b: Dictionary = BUILDINGS[int(sp.owner)]
+		PATHS.append([[Vector2(sp.door[0], sp.door[1]), Vector2(sp.to[0], sp.to[1])], 1.2, "the path to the door of %s" % (b.name if b.name != "" else b.type)])
+	for b in BUILDINGS:
+		var ds := []; for d in b.doors: ds.append(Vector2(d[0], d[1]))
+		bdoors.append(ds)
 
 static func W(p: Vector2, y := 0.0) -> Vector3:    # plan metres to world
 	return Vector3(p.x - ORIGIN.x, y, p.y - ORIGIN.y)
@@ -59,22 +62,25 @@ func _ready() -> void:
 	rng.seed = 1207
 	noise.seed = 7; noise.frequency = 0.035
 	for b in BUILDINGS:                                 # terraces first: the ground is shaped around them
-		var c: Vector2 = b[0]; var corners := 0.0
+		var c := Vector2(b.x, b.y); var a: float = b.a; var corners := 0.0
 		for k in 4:
-			var u := (float(b[1]) * 0.5) * (1 if k % 2 == 0 else -1); var v := (float(b[2]) * 0.5) * (1 if k < 2 else -1)
-			corners += _base(c + Vector2(u, v).rotated(b[3]))
-		pads.append([c, Vector2(b[1], b[2]) * 0.5, b[3], max(corners / 4.0, _base(c)) + 0.05])
-	pads.append([WELL, Vector2(5, 5), 0.0, _base(WELL)])     # the plaza round the well is level
+			var u := (float(b.w) * 0.5) * (1 if k % 2 == 0 else -1); var v := (float(b.h) * 0.5) * (1 if k < 2 else -1)
+			corners += _base(c + Vector2(u, v).rotated(a))
+		pads.append([c, Vector2(b.w, b.h) * 0.5, a, max(corners / 4.0, _base(c)) + 0.05])
+	pads.append([WELL, Vector2(6, 6), 0.0, _base(WELL)])     # the square round the well is level
 	_terrain()
 	_sea()
 	for p in PATHS: _path(p[0], p[1])
-	for b in BUILDINGS.size(): _building(b)
+	for b in BUILDINGS.size(): _build(b)
+	for pl in PLAN.plots: _plot(pl)
 	_well()
+	var ws := Vector2(PLAN.waystone.x, PLAN.waystone.y)
+	put("res://assets/props/fogwright/Waystone_Village.glb", W(ws, height(ws)), -float(PLAN.waystone.a), 1.0, true, "fixture", "the old waystone, older than the village")
 	_harbour()
 	_palisade()
 	_field()
 	_woods()
-	_clutter()
+	_doodads()
 	_graph()
 	_villagers()
 	_dress_player()
@@ -174,37 +180,249 @@ func _path(pts: Array, width: float) -> void:
 	var mat := StandardMaterial3D.new(); mat.vertex_color_use_as_albedo = true; mat.roughness = 1.0; mi.material_override = mat
 	add_child(mi)
 
-# ---------------------------------------------------------------- buildings, each on its terrace
-func _building(i: int) -> void:
-	var b: Array = BUILDINGS[i]; var c: Vector2 = b[0]; var a: float = b[3]; var level: float = pads[i][3]
-	var e1 := Vector2(cos(a), sin(a)); var e2 := Vector2(-sin(a), cos(a))
-	var to_path := (_nearest_path_point(c) - c).normalized()
-	var faces := [[e2, b[1], b[2]], [-e2, b[1], b[2]], [e1, b[2], b[1]], [-e1, b[2], b[1]]]   # (facing, front width, depth)
-	if b[5] == "shrine": faces = [[Vector2(0, 1).rotated(a), b[1], b[2]]]
-	var best = faces[0]
-	for f in faces:
-		if (f[0] as Vector2).dot(to_path) > (best[0] as Vector2).dot(to_path): best = f
-	var facing: Vector2 = best[0]; var bays := int(round(float(best[1]) / 2.0)); var deep := int(round(float(best[2]) / 2.0))
-	var kinds := {"tavern": ["UnevenBrick", "Plaster"], "smithy": ["UnevenBrick", "UnevenBrick"], "shrine": ["UnevenBrick"],
-		"granary": ["Plaster"], "store": ["UnevenBrick"], "shed": ["Plaster"]}
-	var walls: Array = kinds.get(b[5], ["UnevenBrick", "Plaster"] if rng.randf() < 0.6 else ["Plaster", "Plaster"])
-	var storeys: int = b[4]
-	var w := []; for s in storeys: w.append(walls[min(s, walls.size() - 1)])
-	var front := c + facing * (deep * 1.0)
-	place_house({"bays": bays, "deep": deep, "storeys": storeys, "walls": w, "door": [bays / 2]}, W(front, level), Vector3(facing.x, 0, facing.y))
-	var door_off := float(-bays + (bays / 2) * 2 + 1)   # the door bay's centre along the front, from the front's middle
-	houses.append([b[5], c, front + facing * 1.2 - facing.orthogonal() * door_off, last_roof])
+# ---------------------------------------------------------------- buildings, built from their floorplans
+# Each building is its type's floorplan (tools/map/building_types.py), placed whole: the kit's 2 m wall pieces run along
+# every outside edge of its roofed rooms, fitted to the edge's real length, with a door or window where the floorplan
+# has one; each wing (roofed rooms that make a rectangle) gets a roof fitted to it, with gable ends; yards get fences or
+# walls. Floorplan coordinates: x across the front, y back from the street (y = 0 is the street side).
+const STOREYS := {"street_house": 2, "merchant_house": 2, "merchant_house_small": 2, "inn": 2}
+const LOW := {"hen_house": 0.55, "salt_works": 0.8, "guard_post": 0.85, "smokehouse": 0.9}   # small sheds: lower walls
+const THATCH_TYPES := ["cottage", "farmstead", "hen_house", "smokehouse", "boat_shed", "salt_works", "granary"]
+const ROOF_SIZES := {4: [4, 6, 8], 6: [4, 6, 8, 10, 12, 14], 8: [8, 10, 12, 14]}
+
+func _wall_kinds(b: Dictionary) -> Array:
+	match b.zone:
+		"rich": return ["UnevenBrick", "Plaster", "Plaster"]
+		"middling": return ["Plaster", "Plaster"]
+		"poor": return ["Plaster"]
+		"trade": return ["UnevenBrick"] if b.type != "boat_shed" else ["Plaster"]
+	return ["UnevenBrick", "Plaster"]   # the inn, the guard post, the shrine
+
+func _is_roofed(r: Array) -> bool:
+	return r[5] in ["room", "shop", "out"] or str(r[4]).begins_with("arch")
+
+func _build(i: int) -> void:
+	var b: Dictionary = BUILDINGS[i]; var ty: Dictionary = TYPES[b.type]
+	var c := Vector2(b.x, b.y); var level: float = pads[i][3]
+	if b.type == "granary": level += 0.55                  # it stands on staddle stones
+	var root := Node3D.new(); root.position = W(c, level); root.rotation.y = -float(b.a); add_child(root)
+	var fw: float = b.w; var fh: float = b.h; var mir: bool = b.mirror
+	var L := func(x: float, y: float, h := 0.0) -> Vector3: return Vector3((fw - x if mir else x) - fw * 0.5, h, y - fh * 0.5)
+	var rooms: Array = ty.rooms
+	# the roofed rooms, leaving out any set inside another (an alcove)
+	var roofs := []
+	for r in rooms:
+		if not _is_roofed(r): continue
+		var inside := false
+		for o in rooms:
+			if o != r and _is_roofed(o) and r[0] >= o[0] - 0.01 and r[1] >= o[1] - 0.01 and r[0] + r[2] <= o[0] + o[2] + 0.01 and r[1] + r[3] <= o[1] + o[3] + 0.01 and (r[2] * r[3] < o[2] * o[3]): inside = true
+		if not inside: roofs.append(r)
+	for r in roofs:
+		var cc: Vector2 = c + Vector2((fw - (r[0] + r[2] * 0.5) if mir else r[0] + r[2] * 0.5) - fw * 0.5, r[1] + r[3] * 0.5 - fh * 0.5).rotated(b.a)
+		roofed.append([cc, Vector2(r[2], r[3]) * 0.5, float(b.a)])
+	var storeys: int = STOREYS.get(b.type, 1); var low: float = LOW.get(b.type, 1.0); var kinds := _wall_kinds(b)
+	_into = root
+	for r in roofs:
+		for e in _edges(r, roofs):
+			_wall_run(e, r, ty, storeys, low, kinds, L, mir)
+	# yards: a wall round the well-off's, a fence round the others, open where a building or a gate meets them
+	for r in rooms:
+		if r[5] == "yard" and not str(r[4]).begins_with("arch"):
+			for e in _edges(r, roofs):
+				_fence_run(e, ty, L, b.zone == "rich", mir)
+	# wings and roofs
+	var wings := _wings(roofs)
+	for wg in wings: _roof(wg, storeys * STOREY * low, L, b.type in THATCH_TYPES or b.zone == "poor", kinds)
+	_into = null
+	if b.type == "granary":
+		for k in 6:
+			var p := Vector2(fw * (0.15 + 0.35 * (k % 3)), fh * (0.2 if k < 3 else 0.8))
+			var q: Vector3 = root.transform * L.call(p.x, p.y, -0.6)
+			put("res://assets/props/fogwright/Staddle_Stone.glb", q, 0.0, 1.0, true, "fixture", "a staddle stone under the granary")
+	var main: Vector2 = bdoors[i][0] if bdoors[i].size() > 0 else c
+	houses.append([b.name if b.name != "" else b.type, c, main, "roof" if wings.size() > 0 else ""])
 	# a stone foundation where the ground falls away below the terrace
-	var low := level
+	var lowest := level
 	for k in 4:
-		var u := (bays * 1.0 + 0.3) * (1 if k % 2 == 0 else -1); var v := (deep * 1.0 + 0.3) * (1 if k < 2 else -1)
-		low = minf(low, _base(c + facing.orthogonal() * u + facing * v))
-	if level - low > 0.15:
-		var plinth := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(bays * 2.0 + 0.6, level - low + 0.4, deep * 2.0 + 0.6)
-		plinth.mesh = bm; var pmat := StandardMaterial3D.new(); pmat.albedo_texture = load("res://assets/library/UnevenBrick_detail.png")
-		pmat.albedo_color = Palette.col("UnevenBrick") / 0.78; pmat.uv1_triplanar = true; pmat.uv1_scale = Vector3(0.5, 0.5, 0.5); plinth.material_override = pmat
-		plinth.position = W(c, (level + low - 0.4) * 0.5); plinth.rotation.y = -atan2(facing.y, facing.x) + PI / 2
-		add_child(plinth)
+		var u := (fw * 0.5 + 0.3) * (1 if k % 2 == 0 else -1); var v := (fh * 0.5 + 0.3) * (1 if k < 2 else -1)
+		lowest = minf(lowest, _base(c + Vector2(u, v).rotated(b.a)))
+	if level - lowest > 0.15:
+		for r in roofs:
+			var plinth := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(r[2] + 0.3, level - lowest + 0.4, r[3] + 0.3)
+			plinth.mesh = bm; var pmat := StandardMaterial3D.new(); pmat.albedo_texture = load("res://assets/library/UnevenBrick_detail.png")
+			pmat.albedo_color = Palette.col("UnevenBrick") / 0.78; pmat.uv1_triplanar = true; pmat.uv1_scale = Vector3(0.5, 0.5, 0.5); plinth.material_override = pmat
+			plinth.position = L.call(r[0] + r[2] * 0.5, r[1] + r[3] * 0.5, -(level - lowest + 0.4) * 0.5 + 0.0)
+			root.add_child(plinth)
+
+## the outside parts of a room's four edges: [from (x,y), to (x,y), outward normal (x,y)], minus where another roofed room
+## lies against it
+func _edges(r: Array, roofs: Array) -> Array:
+	var x0: float = r[0]; var y0: float = r[1]; var x1: float = r[0] + r[2]; var y1: float = r[1] + r[3]
+	var sides := [[Vector2(x0, y0), Vector2(x1, y0), Vector2(0, -1)], [Vector2(x0, y1), Vector2(x1, y1), Vector2(0, 1)],
+		[Vector2(x0, y0), Vector2(x0, y1), Vector2(-1, 0)], [Vector2(x1, y0), Vector2(x1, y1), Vector2(1, 0)]]
+	var out := []
+	for sd in sides:
+		var a: Vector2 = sd[0]; var bb: Vector2 = sd[1]; var n: Vector2 = sd[2]; var horiz := n.x == 0.0
+		var segs := [[a.x if horiz else a.y, bb.x if horiz else bb.y]]
+		for o in roofs:
+			if o == r: continue
+			var line := a.y if horiz else a.x
+			var o_near: float = (o[1] + o[3] if n.y < 0 else o[1]) if horiz else (o[0] + o[2] if n.x < 0 else o[0])
+			if absf(o_near - line) > 0.02: continue
+			var lo: float = o[0] if horiz else o[1]; var hi: float = (o[0] + o[2]) if horiz else (o[1] + o[3])
+			var keep := []
+			for sg in segs:
+				if hi <= sg[0] or lo >= sg[1]: keep.append(sg); continue
+				if lo > sg[0]: keep.append([sg[0], lo])
+				if hi < sg[1]: keep.append([hi, sg[1]])
+			segs = keep
+		for sg in segs:
+			if sg[1] - sg[0] < 0.3: continue
+			out.append([Vector2(sg[0], a.y) if horiz else Vector2(a.x, sg[0]), Vector2(sg[1], a.y) if horiz else Vector2(a.x, sg[1]), n])
+	return out
+
+## the type's door or window on this edge piece, if any: [kind ("d" door, "g" gate, "o" open, "s" shop front, "w" window), width].
+## A door or gate opens every piece it overlaps; a window sits in the piece its centre falls in.
+func _opening(ty: Dictionary, p0: Vector2, p1: Vector2, n: Vector2) -> Array:
+	var horiz := n.x == 0.0
+	var line: float = p0.y if horiz else p0.x
+	var lo: float = minf(p0.x, p1.x) if horiz else minf(p0.y, p1.y); var hi: float = maxf(p0.x, p1.x) if horiz else maxf(p0.y, p1.y)
+	for d in ty.doors:
+		if (d[2] == "h") != horiz or absf((d[1] if horiz else d[0]) - line) > 0.05: continue
+		var t: float = d[0] if horiz else d[1]; var half: float = d[3] * 0.5
+		if minf(hi, t + half) - maxf(lo, t - half) > 0.3: return [d[4], d[3]]
+	for w in ty.windows:
+		if w[3] <= 0.0 or (w[2] == "h") != horiz or absf((w[1] if horiz else w[0]) - line) > 0.05: continue
+		var t: float = w[0] if horiz else w[1]
+		if t >= lo - 0.01 and t <= hi + 0.01: return ["w", w[3]]
+	return []
+
+func _wall_run(e: Array, r: Array, ty: Dictionary, storeys: int, low: float, kinds: Array, L: Callable, mir: bool) -> void:
+	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
+	var length := a.distance_to(bb); var cnt := maxi(1, roundi(length / 2.0)); var seg := length / cnt
+	var nn := Vector2(-n.x if mir else n.x, n.y)
+	var yaw := atan2(nn.x, nn.y)
+	var front := n.y < 0 and absf(a.y) < 0.05          # the street front
+	for s in storeys:
+		var kind: String = kinds[mini(s, kinds.size() - 1)]
+		for k in cnt:
+			var p0 := a.lerp(bb, float(k) / cnt); var p1 := a.lerp(bb, float(k + 1) / cnt); var mid := (p0 + p1) * 0.5
+			var pos: Vector3 = L.call(mid.x, mid.y, s * STOREY * low)
+			var name := ("Wall_Plaster_Straight_Base" if s == 0 else "Wall_Plaster_Straight") if kind == "Plaster" else "Wall_%s_Straight" % kind
+			var fill := ""
+			if s == 0:
+				var op := _opening(ty, p0, p1, n)
+				if op.size() > 0:
+					if op[0] in ["g", "o", "s"]: continue           # a gate, an archway or an open front: no wall
+					if op[0] == "d": name = "Wall_%s_Door_Flat" % kind; fill = "Door_1_Flat"
+					elif op[0] == "w":
+						name = "Wall_%s_Window_Wide_Round" % kind if op[1] >= 1.2 else "Wall_%s_Window_Thin_Round" % kind
+						fill = "Window_Wide_Round1" if op[1] >= 1.2 else "Window_Thin_Round1"
+			elif front or (n.y > 0):                               # upper storeys: windows along the front and back
+				var wide := (k + s) % 2 == 0
+				name = "Wall_%s_Window_Wide_Round" % kind if wide else "Wall_%s_Window_Thin_Round" % kind
+				fill = "Window_Wide_Round1" if wide else "Window_Thin_Round1"
+			var piece := _piece(name, pos, yaw)
+			if piece: piece.scale = Vector3(seg / 2.0, low, 1.0)
+			if fill != "":
+				var off := Vector3(-0.53, 0, 0).rotated(Vector3.UP, yaw) if fill.begins_with("Door") else Vector3.ZERO
+				var f := _piece(fill, pos + off, yaw)
+				if f and not fill.begins_with("Door"): f.scale = Vector3(1.0, low, 1.0)
+
+func _fence_run(e: Array, ty: Dictionary, L: Callable, wall: bool, mir: bool) -> void:
+	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
+	var length := a.distance_to(bb); var cnt := maxi(1, roundi(length / 2.0)); var seg := length / cnt
+	for k in cnt:
+		var p0 := a.lerp(bb, float(k) / cnt); var p1 := a.lerp(bb, float(k + 1) / cnt); var mid := (p0 + p1) * 0.5
+		var op := _opening(ty, p0, p1, n)
+		if op.size() > 0 and op[0] != "w": continue                # the gate
+		var pos: Vector3 = L.call(mid.x, mid.y)
+		var yaw := atan2(-n.x if mir else n.x, n.y)
+		if wall:
+			var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(seg, 1.7, 0.4); mi.mesh = bm
+			var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/RockTrim_detail.png"); m.albedo_color = Palette.col("RockTrim") / 0.78
+			m.uv1_triplanar = true; mi.material_override = m; mi.position = pos + Vector3(0, 0.85, 0); mi.rotation.y = yaw; _into.add_child(mi)
+			var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = bm.size; col.shape = bs
+			body.add_child(col); body.transform = mi.transform; _into.add_child(body)
+		else:
+			var f := _piece("Prop_WoodenFence_Single", pos, yaw)
+			if f: f.scale = Vector3(seg / 2.0, 1.0, 1.0)
+
+## roofed rooms merged into wings: two rooms that share a whole edge become one rectangle, until none do
+func _wings(roofs: Array) -> Array:
+	var ws := []
+	for r in roofs: ws.append([float(r[0]), float(r[1]), float(r[2]), float(r[3])])
+	var merged := true
+	while merged:
+		merged = false
+		for i in ws.size():
+			for j in ws.size():
+				if i == j: continue
+				var p: Array = ws[i]; var q: Array = ws[j]
+				var side := absf(p[0] + p[2] - q[0]) < 0.02 and absf(p[1] - q[1]) < 0.02 and absf(p[3] - q[3]) < 0.02
+				var below := absf(p[1] + p[3] - q[1]) < 0.02 and absf(p[0] - q[0]) < 0.02 and absf(p[2] - q[2]) < 0.02
+				if side or below:
+					ws[i] = [p[0], p[1], p[2] + q[2] if side else p[2], p[3] if side else p[3] + q[3]]
+					ws.remove_at(j); merged = true; break
+			if merged: break
+	return ws
+
+func _roof(wg: Array, top: float, L: Callable, thatch: bool, kinds: Array) -> void:
+	var ww: float = wg[2]; var dd: float = wg[3]
+	var span := minf(ww, dd); var length := maxf(ww, dd)
+	var S := 4 if span < 5.0 else (6 if span < 7.0 else 8)
+	var best := 0; for l in ROOF_SIZES[S]: if best == 0 or absf(l - length) < absf(best - length): best = l
+	var name := "Roof_RoundTiles_%dx%d" % [S, best]
+	var centre: Vector3 = L.call(wg[0] + ww * 0.5, wg[1] + dd * 0.5, top)
+	var along_z := ww <= dd                                        # the ridge runs along the longer side
+	var yaw := 0.0 if along_z else PI / 2
+	var piece := _piece(name, centre, yaw)
+	if piece == null: return
+	piece.scale = Vector3(span / S, span / S, length / best)
+	if thatch: _thatch(piece)
+	var gable := "Roof_Front_Brick%d" % S
+	for sgn in [-1.0, 1.0]:
+		var end: Vector3 = centre + (Vector3(0, 0, sgn * dd * 0.5) if along_z else Vector3(sgn * ww * 0.5, 0, 0))
+		var gy := (0.0 if sgn > 0 else PI) if along_z else (PI / 2 if sgn > 0 else -PI / 2)
+		var g := _piece(gable, end, gy)
+		if g: g.scale = Vector3(span / S, span / S, 1.0)
+
+## a roof thatched instead of tiled: the same piece with the Thatch material
+func _thatch(n: Node) -> void:
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (mi as MeshInstance3D).mesh
+		for s in mesh.get_surface_count():
+			var orig := mesh.surface_get_material(s)
+			if orig and orig.resource_name.contains("RoundTiles"):
+				(mi as MeshInstance3D).set_surface_override_material(s, Palette.material_for("Thatch", orig))
+
+## the plot behind a house: a fence on the three sides away from it (a wall for a walled garden), a gate at the back
+func _plot(pl: Dictionary) -> void:
+	var c := Vector2(pl.x, pl.y); var a: float = pl.a; var hw: float = pl.w * 0.5; var hh: float = pl.h * 0.5
+	var P := func(u: float, v: float) -> Vector2: return c + Vector2(u, v).rotated(a)
+	var walled: bool = pl.label == "walled garden"
+	var sides := [[P.call(-hw, -hh), P.call(-hw, hh)], [P.call(-hw, hh), P.call(hw, hh)], [P.call(hw, hh), P.call(hw, -hh)]]
+	for si in sides.size():
+		var e: Array = sides[si]; var p0: Vector2 = e[0]; var p1: Vector2 = e[1]; var length := p0.distance_to(p1); var cnt := maxi(1, roundi(length / 2.0))
+		for k in cnt:
+			var q0 := p0.lerp(p1, float(k) / cnt); var q1 := p0.lerp(p1, float(k + 1) / cnt); var mid := (q0 + q1) * 0.5
+			if si == 1 and k == cnt / 2: continue      # the back gate
+			var yaw := -atan2(q1.y - q0.y, q1.x - q0.x)
+			if walled:
+				var mi := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(q0.distance_to(q1), 1.7, 0.4); mi.mesh = bm
+				var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/RockTrim_detail.png"); m.albedo_color = Palette.col("RockTrim") / 0.78
+				m.uv1_triplanar = true; mi.material_override = m; mi.position = W(mid, height(mid) + 0.75); mi.rotation.y = yaw; add_child(mi)
+				var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = bm.size; col.shape = bs
+				body.add_child(col); body.transform = mi.transform; add_child(body)
+			else:
+				var f := put(VILLAGE % "Prop_WoodenFence_Single", W(mid, height(mid)), yaw, 1.0, true, "fixture", "the plot's fence")
+				if f: f.scale = Vector3(q0.distance_to(q1) / 2.0, 1.0, 1.0)
+
+func _in_roofed(p: Vector2, grow := 0.0) -> bool:
+	for r in roofed:
+		var q: Vector2 = (p - r[0]).rotated(-r[2]); var e: Vector2 = r[1]
+		if absf(q.x) < e.x + grow and absf(q.y) < e.y + grow: return true
+	return false
 
 func _nearest_path_point(p: Vector2) -> Vector2:
 	var best := p; var bd := INF
@@ -285,8 +503,11 @@ func _boat(c: Vector2, a: float, length: float, ship := false) -> void:
 
 # ---------------------------------------------------------------- the palisade and its north gate
 func _palisade() -> void:
-	var runs := [[Vector2(57, 4), Vector2(40, 6), Vector2(10, 8), Vector2(6, 40), Vector2(8, 70), Vector2(20, 92)],
-		[Vector2(67, 4), Vector2(92, 8), Vector2(112, 18), Vector2(118, 40)]]
+	var runs := []
+	for wl in PLAN.walls:
+		if wl.name != "palisade": continue
+		var run := []; for q in wl.pts: run.append(Vector2(q[0], q[1]))
+		runs.append(run)
 	var cm := CylinderMesh.new(); cm.top_radius = 0.16; cm.bottom_radius = 0.2; cm.height = 3.2
 	var mat := StandardMaterial3D.new(); mat.albedo_color = Palette.col("WoodTrim").darkened(0.1); cm.material = mat
 	var xf := []
@@ -347,14 +568,14 @@ func _near_built(p: Vector2, r := 2.5) -> bool:
 
 func _field() -> void:
 	var wheat := []
-	for i in 34: for j in 24:
+	for i in 28: for j in 24:
 		var p := Vector2(15 + i * 0.8 + rng.randf_range(-0.2, 0.2), 15 + j * 0.8 + rng.randf_range(-0.2, 0.2)); wheat.append(W(p, height(p)))
 	scatter(NATURE % "Grass_Wispy_Tall", wheat, Vector2(1.1, 1.5), ["field"])
-	for edge in [[Vector2(14, 14), Vector2(42, 14)], [Vector2(42, 14), Vector2(42, 34)], [Vector2(42, 34), Vector2(14, 34)], [Vector2(14, 34), Vector2(14, 14)]]:
+	for edge in [[Vector2(14, 14), Vector2(37, 14)], [Vector2(37, 14), Vector2(37, 34)], [Vector2(37, 34), Vector2(14, 34)], [Vector2(14, 34), Vector2(14, 14)]]:
 		var a: Vector2 = edge[0]; var b: Vector2 = edge[1]; var n := int(a.distance_to(b) / 2.0)
 		for k in n:
 			var p := a.lerp(b, (k + 0.5) / n)
-			if absf(p.x - 42) < 0.1 and absf(p.y - 27) < 2.5: continue        # the gap where the path comes in
+			if absf(p.x - 37) < 0.1 and absf(p.y - 27) < 2.5: continue        # the field gate, where the field lane comes in
 			put(VILLAGE % "Prop_WoodenFence_Single", W(p, height(p)), -atan2(b.y - a.y, b.x - a.x), 1.0, true, "fixture", "the field's fence")
 	var plots := []
 	for i in 5: for j in 9:
@@ -373,39 +594,52 @@ func _woods() -> void:
 		var col := CollisionShape3D.new(); var cyl := CylinderShape3D.new(); cyl.radius = 0.35; cyl.height = 4.0; col.shape = cyl
 		body.add_child(col); body.position = pts[i] + Vector3(0, 2.0, 0); add_child(body)
 	for kind in by_kind: scatter(NATURE % kind, by_kind[kind], Vector2(0.9, 1.35), ["grass", "woods"])
-	scatter(NATURE % "Grass_Common_Short", _ground_pts(1400, func(p): return _coast_signed(p) > 5.0 and not _near_built(p) and not (p.x > 14 and p.x < 42 and p.y > 14 and p.y < 47)))
+	scatter(NATURE % "Grass_Common_Short", _ground_pts(1400, func(p): return _coast_signed(p) > 5.0 and not _near_built(p) and not (p.x > 14 and p.x < 37 and p.y > 14 and p.y < 47)))
 	scatter(NATURE % "Flower_3_Group", _ground_pts(140, func(p): return _in_clearing(p) and _coast_signed(p) > 6.0 and not _near_built(p, 1.5)), Vector2(0.28, 0.4))
 	scatter(NATURE % "Fern_1", _ground_pts(260, func(p): return not _in_clearing(p) and _coast_signed(p) > 6.0), Vector2(0.9, 1.1), ["woods"])
 	for i in 14:
 		var p := Vector2(rng.randf_range(60, 130), rng.randf_range(70, 105))
 		if _coast_signed(p) < -1.0 and _coast_signed(p) > -9.0: put(NATURE % ("Rock_Medium_%d" % (i % 3 + 1)), W(p, height(p)), rng.randf() * TAU, rng.randf_range(1.2, 2.2), true, "fixture", "rocks in the shallows")
 
-# ---------------------------------------------------------------- life: around the well, the smithy, the shore
-func _at(p: Vector2, name: String, yaw: float, purpose: String, path := PROPS) -> void:
-	put(path % name, W(p, height(p)), yaw, 1.0, true, "clutter", purpose)
+# ---------------------------------------------------------------- life: the plan's doodads, each with its purpose
+const FW := "res://assets/props/fogwright/%s.glb"
+const DOCK := "res://assets/props/docks/%s.glb"
+const V2 := "res://assets/props/village2/%s.glb"
+## kind -> [model, scale, extra height (for things hung on walls or posts), solid]
+const DOODAD_MODELS := {
+	"bench": [PROPS % "Bench", 1.0, 0.0, true], "barrel": [PROPS % "Barrel", 1.0, 0.0, true], "crate": [PROPS % "Crate_Wooden", 1.0, 0.0, true],
+	"woodpile": [FW % "Woodpile", 1.0, 0.0, true], "washing line": [FW % "Washing_Line", 1.0, 0.0, false],
+	"well": [V2 % "Prop_Well_1", 0.8, 0.0, true], "fruit tree": [NATURE % "CommonTree_2", 0.55, 0.0, true],
+	"flower bed": [NATURE % "Flower_4_Group", 0.9, 0.0, false], "lamp": [PROPS % "Lantern_Wall", 1.0, 2.1, false],
+	"sign": [V2 % "Wall_Prop_Sign_1", 0.8, 2.4, false], "trough": [FW % "Trough", 1.0, 0.0, true], "cart": [V2 % "Prop_Cart_1", 0.9, 0.0, true],
+	"net rack": [FW % "Net_Rack", 1.0, 0.0, true], "lobster pots": [FW % "Lobster_Pots", 1.0, 0.0, true],
+	"gutting table": [DOCK % "Props_Table_1", 1.0, 0.0, true], "scarecrow": [FW % "Scarecrow", 1.0, 0.0, false],
+	"haystack": [V2 % "Prop_Hay_1", 1.3, 0.0, true], "notice post": [FW % "Notice_Post", 1.0, 0.0, true],
+	"torch": [PROPS % "Torch_Metal", 1.0, 2.6, false], "bell frame": [FW % "Bell_Frame", 1.0, 0.0, true],
+	"anvil": [PROPS % "Anvil", 1.0, 0.0, true], "quench trough": [FW % "Quench_Trough", 1.0, 0.0, true],
+	"grindstone": [PROPS % "Whetstone", 1.4, 0.0, false], "charcoal": [FW % "Charcoal_Heap", 1.0, 0.0, false],
+	"candles": [PROPS % "CandleStick_Triple", 1.0, 0.0, false], "sacks": [PROPS % "Bag", 1.2, 0.0, false],
+	"manure heap": [FW % "Manure_Heap", 1.0, 0.0, false], "drying rack": [DOCK % "Props_Rack_Fish", 1.0, 0.0, true],
+	"hen coop": [FW % "Hen_Coop", 1.0, 0.0, true], "boat hull": [DOCK % "Boat_Stand", 0.7, 0.0, true],
+	"chopping block": [PROPS % "Anvil_Log", 1.0, 0.0, true],
+}
 
-func _clutter() -> void:
-	# round the well: things set down by people drawing water and trading, at the plaza's edge, not in the walkways
-	_at(Vector2(60.2, 54.6), "Stall_Cart_Empty", 0.9, "a trader's cart at the plaza's edge")
-	_at(Vector2(59.0, 56.4), "FarmCrate_Apple", 0.2, "the trader's apples")
-	_at(Vector2(68.6, 51.1), "Bench", 1.4, "a bench at the plaza's edge, facing the well")
-	_at(Vector2(66.4, 47.0), "Bucket_Wooden_1", 0.3, "a bucket by the well")
-	_at(Vector2(57.6, 48.6), "Barrel", 0.0, "rainwater barrel against a house")
-	# the smithy: tools of the trade beside the forge, and the woodpile with its hatchet (beat B: the first weapon)
-	_at(Vector2(89.5, 41.5), "Anvil", 0.2, "the smith's anvil, in front of the smithy")
-	_at(Vector2(92.5, 40.8), "Workbench", -0.3, "the smith's bench")
-	_at(Vector2(86.0, 42.6), "Anvil_Log", 0.3, "the chopping block at the woodpile")
-	_at(Vector2(86.3, 43.1), "Axe_Bronze", 1.1, "the hatchet in the chopping block: the first weapon")
-	# the harbour: goods waiting at the head of the pier, beside the way, not on it
-	_at(Vector2(88.8, 76.6), "Barrel", 0.0, "a fish barrel at the pier's head")
-	_at(Vector2(89.6, 77.8), "Crate_Wooden", 0.4, "a crate of catch at the pier's head")
-	_at(Vector2(89.4, 75.4), "Rope_2", 0.0, "coiled rope by the boats")
-	# the tavern's yard: barrels for the cellar, a crate by its side wall
-	_at(Vector2(36.9, 64.6), "Barrel", 0.0, "the tavern's ale barrels against its east wall")
-	_at(Vector2(37.1, 65.7), "Barrel", 0.6, "the tavern's ale barrels against its east wall")
-	_at(Vector2(22.4, 58.2), "Crate_Wooden", 0.7, "a crate by the tavern's side wall")
-	_at(Vector2(28.0, 46.6), "Chest_Wood", 0.4, "a feed chest behind the hen house")
-	_at(Vector2(49.6, 68.9), "Bucket_Wooden_1", 0.0, "a bucket by a cottage's side wall")
+func _doodads() -> void:
+	for dd in PLAN.doodads:
+		var m: Array = DOODAD_MODELS.get(dd.kind, [])
+		if m.is_empty(): push_warning("no model for " + dd.kind); continue
+		var p := Vector2(dd.x, dd.y)
+		var owner: int = int(dd.owner)
+		# hung on a wall or post, or standing inside its own open workshop: a fixture, not clutter in the way
+		var role := "fixture" if dd.mounted or (owner >= 0 and _in_roofed(p, -0.1)) else "clutter"
+		var y: float = (1.0 if _on_pier(p) else height(p)) + float(m[2])   # on the pier's deck, or on the ground
+
+		var n := put(m[0], W(p, y), -float(dd.a), m[1], m[3], role, dd.purpose)
+		if n == null: continue
+		if dd.kind == "boat hull":   # a hull, half built, on its trestles
+			put(DOCK % "Boat_B_1", W(p, y + 0.45), -float(dd.a), 0.7, false, "fixture", "the hull on its trestles")
+		if dd.kind == "chopping block":   # beat B: the first weapon waits here
+			put(PROPS % "Axe_Bronze", W(p, y + 0.5), -float(dd.a) + 0.6, 1.0, false, "fixture", "the hatchet in the chopping block: the first weapon")
 
 # ---------------------------------------------------------------- late afternoon
 func _light() -> void:
@@ -438,9 +672,9 @@ func _graph() -> void:
 			var id: int = add.call(p)
 			if prev >= 0 and not (graph[prev][1] as Array).has(id): graph[prev][1].append(id); graph[id][1].append(prev)
 			prev = id
-	for g in GOAL_POINTS:
+	for g in [WELL, Vector2(87.5, 99), Vector2(96, 100.5)] + bdoors.reduce(func(acc, ds): return acc + ds, []):
 		var k: String = key.call(g)
-		if ids.has(k): GOALS.append(ids[k])
+		if ids.has(k) and not GOALS.has(ids[k]): GOALS.append(ids[k])
 
 const LOOKS := [
 	{"body": "res://assets/characters/quaternius/Superhero_Male_Head.gltf", "outfit": "res://assets/characters/quaternius/outfits/Male_Peasant.gltf", "hair": "res://assets/characters/quaternius/hair/Hair_SimpleParted.gltf"},
@@ -558,13 +792,14 @@ func _path_dist(p: Vector2) -> float:   # how far outside the nearest path's edg
 
 ## the kind of ground at a plan point: sea, beach, path, plaza, building, field, plots, woods or grass
 func ground_at(p: Vector2) -> String:
+	if _on_pier(p): return "pier"
 	var c := _coast_signed(p)
 	if c < 0.0: return "sea"
 	if c < 6.5: return "beach"
-	if _in_pad(p, 0.3, true): return "building"
-	if p.distance_to(WELL) < 5.5: return "plaza"
+	if _in_roofed(p, 0.3): return "building"
+	if p.distance_to(WELL) < 8.2: return "plaza"
 	if _path_dist(p) < 0.4: return "path"
-	if p.x > 14 and p.x < 42 and p.y > 14 and p.y < 34: return "field"
+	if p.x > 14 and p.x < 37 and p.y > 14 and p.y < 34: return "field"
 	if p.x > 16 and p.x < 30 and p.y > 38 and p.y < 46: return "plots"
 	if not _in_clearing(p): return "woods"
 	return "grass"
@@ -576,7 +811,7 @@ func check_plan() -> Array:
 	var doors := []
 	for h in houses:
 		if h[3] == "": issues.append("ROOF   %s at %s has no roof" % [h[0], h[1]])
-		doors.append(h[2])
+	for ds in bdoors: doors.append_array(ds)
 	for it in placed:
 		var p := Vector2(it[1].x, it[1].z) + ORIGIN; var r: float = it[2]; var ground := ground_at(p)
 		match it[3]:
@@ -585,18 +820,20 @@ func check_plan() -> Array:
 			"clutter":
 				if it[4] == "": issues.append("WHY    %s at %s has no purpose" % [it[0], p.round()])
 				if ground == "sea": issues.append("GROUND %s in the sea at %s" % [it[0], p.round()])
-				if _path_dist(p) < r - 0.15: issues.append("PATH   %s stands in a path at %s" % [it[0], p.round()])
+				if ground != "plaza" and _path_dist(p) < r - 0.15: issues.append("PATH   %s stands in a path at %s" % [it[0], p.round()])
 				for d in doors:
 					if p.distance_to(d) < 1.3 + r: issues.append("DOOR   %s blocks a doorway at %s" % [it[0], p.round()])
-				if _in_pad(p, -0.4, true): issues.append("INSIDE %s is inside a building at %s" % [it[0], p.round()])
+				if _in_roofed(p, -0.2): issues.append("INSIDE %s is inside a building at %s" % [it[0], p.round()])
 	return issues
 
 
 # ---------------------------------------------------------------- the path check (part of the city-planning skill)
 ## places a path may lead to: doors, the plaza, the gate, the pier's head, the field's gate, or another path
 func _destinations() -> Array:
-	var out := [[WELL, "the plaza", 5.5], [Vector2(62, -20), "beyond the gate", 2.0], [Vector2(87, 81), "the pier's head", 2.5], [Vector2(42, 27), "the field's gate", 2.5]]
-	for h in houses: out.append([h[2], "the door of the %s at %s" % [h[0], (h[1] as Vector2).round()], 2.5])
+	var out := [[WELL, "the square", 8.6], [Vector2(62, -20), "beyond the gate", 2.0], [Vector2(87, 81), "the pier's head", 2.5]]
+	for d in PLAN.destinations: out.append([Vector2(d.x, d.y), "the " + d.name, 3.0])
+	for k in houses.size():
+		for d in bdoors[k]: out.append([d, "a door of the %s at %s" % [houses[k][0], (houses[k][1] as Vector2).round()], 3.0])
 	return out
 
 func _path_points(path: Array, step := 0.5) -> Array:
@@ -625,7 +862,9 @@ func check_paths() -> Array:
 		for q in _path_points(path):   # (2) does it run into a building other than at its door
 			for k in houses.size():
 				var pad: Array = pads[k]; var r: Vector2 = ((q as Vector2) - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1]
-				if absf(r.x) < e.x + hw * 0.6 and absf(r.y) < e.y + hw * 0.6 and (q as Vector2).distance_to(houses[k][2]) > 2.6:
+				var near_door := false
+				for d in bdoors[k]: if (q as Vector2).distance_to(d) <= 2.6: near_door = true
+				if absf(r.x) < e.x + hw * 0.6 and absf(r.y) < e.y + hw * 0.6 and not near_door:
 					issues.append("PATH-WALL %s runs into the %s at %s" % [name, houses[k][0], (q as Vector2).round()]); break
 	for pi in PATHS.size():   # (4) is it redundant: running alongside another path for a long stretch
 		for pj in range(pi + 1, PATHS.size()):
@@ -635,3 +874,8 @@ func check_paths() -> Array:
 					if (q as Vector2).distance_to(r) < 4.0: close += 1; break
 			if close * 0.5 > 12.0: issues.append("PATH-DUP  paths %d and %d run side by side for %.0f m" % [pi, pj, close * 0.5])
 	return issues
+
+func _on_pier(p: Vector2) -> bool:   # the pier's deck (the plan's pier rectangles)
+	for r in PLAN.rects:
+		if r.name == "pier" and p.x >= r.x0 and p.x <= r.x1 and p.y >= r.y0 and p.y <= r.y1: return true
+	return false

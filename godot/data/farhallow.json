@@ -1,0 +1,1725 @@
+{
+ "buildings": [
+  {
+   "type": "inn",
+   "mirror": false,
+   "x": 47.79658587353047,
+   "y": 36.60048773235279,
+   "w": 12,
+   "h": 16,
+   "a": 1.4288992721907328,
+   "zone": "public",
+   "n": 1,
+   "name": "The Gull & Lantern, tavern with rooms",
+   "doors": [
+    [
+     55.36262843222652,
+     32.9942431483014
+    ],
+    [
+     55.99902453529442,
+     37.44901586977665
+    ]
+   ]
+  },
+  {
+   "type": "merchant_house_small",
+   "mirror": false,
+   "x": 93.72114006040847,
+   "y": 25.191005421932427,
+   "w": 10.0,
+   "h": 12,
+   "a": 2.543173760111256,
+   "zone": "rich",
+   "n": 2,
+   "name": "Harbour master's house",
+   "doors": [
+    [
+     97.43165194538055,
+     29.923034748921108
+    ]
+   ]
+  },
+  {
+   "type": "merchant_house",
+   "mirror": false,
+   "x": 74.96497595166973,
+   "y": 33.46302512667326,
+   "w": 14,
+   "h": 16,
+   "a": 2.7069224384405484,
+   "zone": "rich",
+   "n": 3,
+   "name": "Dunmore house (fish merchants)",
+   "doors": [
+    [
+     80.510687925903,
+     39.7084297331696
+    ],
+    [
+     77.06405384845895,
+     41.30865269769719
+    ],
+    [
+     73.7988215645646,
+     42.82465340093386
+    ]
+   ]
+  },
+  {
+   "type": "merrith_shrine",
+   "mirror": false,
+   "x": 107.3,
+   "y": 20.3,
+   "w": 5,
+   "h": 5,
+   "a": -2.58,
+   "zone": "public",
+   "n": 4,
+   "name": "Shrine of Merrith, on the rise",
+   "doors": [
+    [
+     105.96866273111094,
+     22.41602010303944
+    ]
+   ]
+  },
+  {
+   "type": "workshop",
+   "mirror": false,
+   "x": 84.86898628384834,
+   "y": 59.13101371615166,
+   "w": 10,
+   "h": 10,
+   "a": 3.9269908169872414,
+   "zone": "trade",
+   "n": 5,
+   "name": "Smithy: forge, quench trough, charcoal",
+   "doors": [
+    [
+     82.7476659402887,
+     64.08076118445749
+    ],
+    [
+     79.21213203435596,
+     60.54522727852475
+    ]
+   ]
+  },
+  {
+   "type": "smokehouse",
+   "mirror": false,
+   "x": 92,
+   "y": 67,
+   "w": 6,
+   "h": 6,
+   "a": -2.21,
+   "zone": "trade",
+   "n": 6,
+   "name": "Smokehouse",
+   "doors": [
+    [
+     89.59228680125976,
+     68.78966956520247
+    ]
+   ]
+  },
+  {
+   "type": "store",
+   "mirror": false,
+   "x": 78.41232229220049,
+   "y": 75.79383885389976,
+   "w": 8,
+   "h": 6,
+   "a": 1.1071487177940904,
+   "zone": "trade",
+   "n": 7,
+   "name": "Salt house and fish store",
+   "doors": [
+    [
+     81.09560386520023,
+     74.45219806739988
+    ]
+   ]
+  },
+  {
+   "type": "boat_shed",
+   "mirror": false,
+   "x": 72,
+   "y": 84,
+   "w": 8,
+   "h": 6,
+   "a": -0.58,
+   "zone": "trade",
+   "n": 8,
+   "name": "Boatwright's shed",
+   "doors": [
+    [
+     70.35592818962438,
+     81.49061205025444
+    ]
+   ]
+  },
+  {
+   "type": "salt_works",
+   "mirror": false,
+   "x": 104.5,
+   "y": 52.5,
+   "w": 6,
+   "h": 9,
+   "a": -0.64,
+   "zone": "trade",
+   "n": 16,
+   "name": "Salt-boiling hut and pans",
+   "doors": [
+    [
+     101.81262051386923,
+     48.89056908952068
+    ]
+   ]
+  },
+  {
+   "type": "cottage",
+   "mirror": false,
+   "x": 70.11532107272217,
+   "y": 64.98451371635548,
+   "w": 6,
+   "h": 8,
+   "a": 2.5829933382462307,
+   "zone": "poor",
+   "n": 9,
+   "name": "Net-mender's cottage",
+   "doors": [
+    [
+     73.42251445834202,
+     67.63450841637138
+    ]
+   ]
+  },
+  {
+   "type": "cottage",
+   "mirror": false,
+   "x": 61.14,
+   "y": 71.52000000000001,
+   "w": 6,
+   "h": 8,
+   "a": 2.498091544796509,
+   "zone": "poor",
+   "n": 10,
+   "name": "Fishers' cottages",
+   "doors": [
+    [
+     64.66,
+     73.88000000000001
+    ]
+   ]
+  },
+  {
+   "type": "cottage",
+   "mirror": false,
+   "x": 52.53822268972959,
+   "y": 76.3422230722356,
+   "w": 6,
+   "h": 8,
+   "a": 2.6387494426619322,
+   "zone": "poor",
+   "n": 10,
+   "name": "",
+   "doors": [
+    [
+     55.69259996096552,
+     79.17240045726116
+    ]
+   ]
+  },
+  {
+   "type": "cottage",
+   "mirror": false,
+   "x": 56.93970437361015,
+   "y": 87.84491704292755,
+   "w": 6,
+   "h": 8,
+   "a": 5.780342096251726,
+   "zone": "poor",
+   "n": 10,
+   "name": "",
+   "doors": [
+    [
+     53.78532710237422,
+     85.01473965790197
+    ]
+   ]
+  },
+  {
+   "type": "granary",
+   "mirror": false,
+   "x": 53.92894301056987,
+   "y": 13.321490501761645,
+   "w": 8,
+   "h": 6,
+   "a": 1.7359450042095235,
+   "zone": "trade",
+   "n": 11,
+   "name": "Granary, by the gate and fields",
+   "doors": [
+    [
+     56.8881247820663,
+     13.814687463677716
+    ]
+   ]
+  },
+  {
+   "type": "guard_post",
+   "mirror": false,
+   "x": 65.808653753716,
+   "y": 10.9617307507432,
+   "w": 4,
+   "h": 4,
+   "a": 4.90978454023457,
+   "zone": "public",
+   "n": 12,
+   "name": "Guard post and bell",
+   "doors": [
+    [
+     63.84749240233416,
+     10.569498480466834
+    ]
+   ]
+  },
+  {
+   "type": "farmstead",
+   "mirror": false,
+   "x": 33.188006837197015,
+   "y": 55.970017092992535,
+   "w": 12,
+   "h": 12,
+   "a": 2.761086276477428,
+   "zone": "middling",
+   "n": 13,
+   "name": "Farmstead and farming cottage",
+   "doors": [
+    [
+     35.41635089532164,
+     61.54087723830409
+    ]
+   ]
+  },
+  {
+   "type": "cottage",
+   "mirror": false,
+   "x": 41.86231525837064,
+   "y": 68.65578814592659,
+   "w": 6,
+   "h": 8,
+   "a": 5.902678930067221,
+   "zone": "middling",
+   "n": 13,
+   "name": "",
+   "doors": [
+    [
+     39.076885185714865,
+     65.4618283292813
+    ]
+   ]
+  },
+  {
+   "type": "hen_house",
+   "mirror": false,
+   "x": 34.5,
+   "y": 40,
+   "w": 4,
+   "h": 7,
+   "a": 1.57,
+   "zone": "middling",
+   "n": 14,
+   "name": "Hen house and goat pen",
+   "doors": [
+    [
+     37.99999889026142,
+     39.997212856512434
+    ]
+   ]
+  },
+  {
+   "type": "street_house",
+   "mirror": false,
+   "x": 46.286174631099485,
+   "y": 20.565904426806185,
+   "w": 6.0,
+   "h": 10,
+   "a": -3.058451421701352,
+   "zone": "middling",
+   "n": 15,
+   "name": "Old street house by the fields",
+   "doors": [
+    [
+     43.57889198786756,
+     25.35762861436698
+    ]
+   ]
+  }
+ ],
+ "plots": [
+  {
+   "owner": 1,
+   "label": "walled garden",
+   "x": 87.52443498935186,
+   "y": 16.1025046510494,
+   "w": 10,
+   "h": 10.0,
+   "a": 2.543173760111256
+  },
+  {
+   "owner": 2,
+   "label": "walled garden",
+   "x": 71.30454690325641,
+   "y": 20.829685933034387,
+   "w": 10,
+   "h": 10.0,
+   "a": 2.7069224384405484
+  },
+  {
+   "owner": 16,
+   "label": "yard and garden",
+   "x": 45.20483134555758,
+   "y": 77.01207836389392,
+   "w": 6,
+   "h": 10.0,
+   "a": 5.902678930067221
+  },
+  {
+   "owner": 18,
+   "label": "yard and garden",
+   "x": 47.03358394978314,
+   "y": 11.596992602602269,
+   "w": 6,
+   "h": 8.0,
+   "a": -3.058451421701352
+  },
+  {
+   "owner": 10,
+   "label": "yard and garden",
+   "x": 55.74,
+   "y": 64.32000000000001,
+   "w": 6,
+   "h": 10.0,
+   "a": 2.498091544796509
+  }
+ ],
+ "roads": [
+  {
+   "name": "gate road",
+   "pts": [
+    [
+     62,
+     0
+    ],
+    [
+     62,
+     4
+    ],
+    [
+     60,
+     14
+    ],
+    [
+     58,
+     26
+    ],
+    [
+     60,
+     40
+    ],
+    [
+     64,
+     50
+    ]
+   ],
+   "width": 4.2
+  },
+  {
+   "name": "harbour road",
+   "pts": [
+    [
+     64,
+     50
+    ],
+    [
+     72,
+     58
+    ],
+    [
+     80,
+     66
+    ],
+    [
+     84,
+     74
+    ],
+    [
+     86,
+     80
+    ]
+   ],
+   "width": 3.6
+  },
+  {
+   "name": "west road",
+   "pts": [
+    [
+     64,
+     50
+    ],
+    [
+     58,
+     54
+    ],
+    [
+     46,
+     60
+    ],
+    [
+     36,
+     64
+    ]
+   ],
+   "width": 3.0
+  },
+  {
+   "name": "rise road",
+   "pts": [
+    [
+     64,
+     50
+    ],
+    [
+     76,
+     45
+    ],
+    [
+     90,
+     38.5
+    ],
+    [
+     101,
+     31
+    ],
+    [
+     104.5,
+     25.5
+    ]
+   ],
+   "width": 2.8
+  }
+ ],
+ "lanes": [
+  {
+   "name": "shore lane",
+   "pts": [
+    [
+     80,
+     66
+    ],
+    [
+     72,
+     71
+    ],
+    [
+     64,
+     77
+    ],
+    [
+     54,
+     82.5
+    ]
+   ],
+   "width": 2.2
+  },
+  {
+   "name": "field lane",
+   "pts": [
+    [
+     58.3,
+     28
+    ],
+    [
+     50,
+     28
+    ],
+    [
+     38,
+     27
+    ]
+   ],
+   "width": 2.2
+  },
+  {
+   "name": "farm lane",
+   "pts": [
+    [
+     46,
+     60
+    ],
+    [
+     40,
+     52
+    ],
+    [
+     37,
+     45.5
+    ],
+    [
+     31.5,
+     44.5
+    ]
+   ],
+   "width": 2.0
+  },
+  {
+   "name": "salt path",
+   "pts": [
+    [
+     84,
+     41.3
+    ],
+    [
+     95,
+     46
+    ],
+    [
+     101,
+     46.5
+    ]
+   ],
+   "width": 1.8
+  }
+ ],
+ "spurs": [
+  {
+   "owner": 0,
+   "door": [
+    55.36262843222652,
+    32.9942431483014
+   ],
+   "to": [
+    58.926446609406725,
+    32.485126265847086
+   ],
+   "street": "gate road"
+  },
+  {
+   "owner": 0,
+   "door": [
+    55.99902453529442,
+    37.44901586977665
+   ],
+   "to": [
+    59.56284271247462,
+    36.93989898732234
+   ],
+   "street": "gate road"
+  },
+  {
+   "owner": 1,
+   "door": [
+    97.43165194538055,
+    29.923034748921108
+   ],
+   "to": [
+    99.06532873684094,
+    32.319094043063004
+   ],
+   "street": "rise road"
+  },
+  {
+   "owner": 2,
+   "door": [
+    80.510687925903,
+    39.7084297331696
+   ],
+   "to": [
+    81.73191071462142,
+    42.33875573964006
+   ],
+   "street": "rise road"
+  },
+  {
+   "owner": 2,
+   "door": [
+    77.06405384845895,
+    41.30865269769719
+   ],
+   "to": [
+    78.28527663717738,
+    43.938978704167646
+   ],
+   "street": "rise road"
+  },
+  {
+   "owner": 2,
+   "door": [
+    73.7988215645646,
+    42.82465340093386
+   ],
+   "to": [
+    74.89675207835072,
+    45.459686634020535
+   ],
+   "street": "rise road"
+  },
+  {
+   "owner": 3,
+   "door": [
+    105.96866273111094,
+    22.41602010303944
+   ],
+   "to": [
+    104.5,
+    25.5
+   ],
+   "street": "rise road"
+  },
+  {
+   "owner": 4,
+   "door": [
+    82.7476659402887,
+    64.08076118445749
+   ],
+   "to": [
+    80,
+    66
+   ],
+   "street": "harbour road"
+  },
+  {
+   "owner": 4,
+   "door": [
+    79.21213203435596,
+    60.54522727852475
+   ],
+   "to": [
+    76.87867965644035,
+    62.878679656440355
+   ],
+   "street": "harbour road"
+  },
+  {
+   "owner": 5,
+   "door": [
+    89.59228680125976,
+    68.78966956520247
+   ],
+   "to": [
+    83.03432518633294,
+    72.06865037266589
+   ],
+   "street": "harbour road"
+  },
+  {
+   "owner": 6,
+   "door": [
+    81.09560386520023,
+    74.45219806739988
+   ],
+   "to": [
+    83.6,
+    73.19999999999999
+   ],
+   "street": "harbour road"
+  },
+  {
+   "owner": 7,
+   "door": [
+    70.35592818962438,
+    81.49061205025444
+   ],
+   "to": [
+    65.91230025723748,
+    75.5657748070719
+   ],
+   "street": "shore lane"
+  },
+  {
+   "owner": 8,
+   "door": [
+    101.81262051386923,
+    48.89056908952068
+   ],
+   "to": [
+    101,
+    46.5
+   ],
+   "street": "salt path"
+  },
+  {
+   "owner": 9,
+   "door": [
+    73.42251445834202,
+    67.63450841637138
+   ],
+   "to": [
+    74.53551223234871,
+    69.41530485478206
+   ],
+   "street": "shore lane"
+  },
+  {
+   "owner": 10,
+   "door": [
+    64.66,
+    73.88000000000001
+   ],
+   "to": [
+    65.91999999999999,
+    75.56
+   ],
+   "street": "shore lane"
+  },
+  {
+   "owner": 11,
+   "door": [
+    55.69259996096552,
+    79.17240045726116
+   ],
+   "to": [
+    56.70462933548704,
+    81.01245386548213
+   ],
+   "street": "shore lane"
+  },
+  {
+   "owner": 12,
+   "door": [
+    53.78532710237422,
+    85.01473965790197
+   ],
+   "to": [
+    54,
+    82.5
+   ],
+   "street": "shore lane"
+  },
+  {
+   "owner": 13,
+   "door": [
+    56.8881247820663,
+    13.814687463677716
+   ],
+   "to": [
+    59.945945945945944,
+    14.324324324324325
+   ],
+   "street": "gate road"
+  },
+  {
+   "owner": 14,
+   "door": [
+    63.84749240233416,
+    10.569498480466834
+   ],
+   "to": [
+    60.80769230769231,
+    9.961538461538463
+   ],
+   "street": "gate road"
+  },
+  {
+   "owner": 15,
+   "door": [
+    35.41635089532164,
+    61.54087723830409
+   ],
+   "to": [
+    36.344827586206904,
+    63.86206896551724
+   ],
+   "street": "west road"
+  },
+  {
+   "owner": 16,
+   "door": [
+    39.076885185714865,
+    65.4618283292813
+   ],
+   "to": [
+    38.14840849482961,
+    63.140636602068156
+   ],
+   "street": "west road"
+  },
+  {
+   "owner": 17,
+   "door": [
+    37.99999889026142,
+    39.997212856512434
+   ],
+   "to": [
+    36.999508388519246,
+    45.49991061609441
+   ],
+   "street": "farm lane"
+  },
+  {
+   "owner": 18,
+   "door": [
+    43.57889198786756,
+    25.35762861436698
+   ],
+   "to": [
+    43.4044964801747,
+    27.450374706681224
+   ],
+   "street": "field lane"
+  }
+ ],
+ "doodads": [
+  {
+   "kind": "bench",
+   "x": 55.38384163566212,
+   "y": 30.667861838197656,
+   "w": 1.8,
+   "h": 0.5,
+   "a": 1.4288992721907328,
+   "purpose": "drinkers sitting out front",
+   "owner": 0,
+   "mounted": false
+  },
+  {
+   "kind": "sign",
+   "x": 55.80810570437406,
+   "y": 34.344817100367706,
+   "w": 0.6,
+   "h": 0.3,
+   "a": 1.4288992721907328,
+   "purpose": "the Gull & Lantern sign on its bracket",
+   "owner": 0,
+   "mounted": true
+  },
+  {
+   "kind": "lamp",
+   "x": 55.461623381592645,
+   "y": 32.27299423149112,
+   "w": 0.4,
+   "h": 0.4,
+   "a": 1.4288992721907328,
+   "purpose": "the lantern by the inn door",
+   "owner": 0,
+   "mounted": true
+  },
+  {
+   "kind": "trough",
+   "x": 45.03179835909107,
+   "y": 36.69241161390704,
+   "w": 2.2,
+   "h": 0.7,
+   "a": 1.4288992721907328,
+   "purpose": "water for horses in the coach yard",
+   "owner": 0,
+   "mounted": false
+  },
+  {
+   "kind": "barrel",
+   "x": 49.26736797839848,
+   "y": 40.53200143574999,
+   "w": 1.0,
+   "h": 1.0,
+   "a": 1.4288992721907328,
+   "purpose": "ale barrels by the cellar",
+   "owner": 0,
+   "mounted": false
+  },
+  {
+   "kind": "lamp",
+   "x": 98.26163486701904,
+   "y": 29.720233492050163,
+   "w": 0.4,
+   "h": 0.4,
+   "a": 2.543173760111256,
+   "purpose": "a brass lamp by the front door",
+   "owner": 1,
+   "mounted": true
+  },
+  {
+   "kind": "well",
+   "x": 84.18572540864318,
+   "y": 17.773737230819215,
+   "w": 1.4,
+   "h": 1.4,
+   "a": 2.543173760111256,
+   "purpose": "their own well",
+   "owner": 1,
+   "mounted": false
+  },
+  {
+   "kind": "flower bed",
+   "x": 91.50534855015188,
+   "y": 17.50333555499129,
+   "w": 3.0,
+   "h": 1.2,
+   "a": 2.543173760111256,
+   "purpose": "a garden for show",
+   "owner": 1,
+   "mounted": false
+  },
+  {
+   "kind": "fruit tree",
+   "x": 86.89725332458433,
+   "y": 19.797994220697706,
+   "w": 2.2,
+   "h": 2.2,
+   "a": 2.543173760111256,
+   "purpose": "pears",
+   "owner": 1,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 90.1702402757515,
+   "y": 14.480094596081853,
+   "w": 1.8,
+   "h": 0.5,
+   "a": 2.543173760111256,
+   "purpose": "sitting in the garden",
+   "owner": 1,
+   "mounted": false
+  },
+  {
+   "kind": "lamp",
+   "x": 81.36262849203814,
+   "y": 39.64364337833043,
+   "w": 0.4,
+   "h": 0.4,
+   "a": 2.7069224384405484,
+   "purpose": "a brass lamp by the front door: the well-off light their doors",
+   "owner": 2,
+   "mounted": true
+  },
+  {
+   "kind": "well",
+   "x": 67.73805806935991,
+   "y": 21.9342932830423,
+   "w": 1.4,
+   "h": 1.4,
+   "a": 2.7069224384405484,
+   "purpose": "their own well",
+   "owner": 2,
+   "mounted": false
+  },
+  {
+   "kind": "flower bed",
+   "x": 75.00384776457322,
+   "y": 22.86073815724248,
+   "w": 3.0,
+   "h": 1.2,
+   "a": 2.7069224384405484,
+   "purpose": "a garden for show",
+   "owner": 2,
+   "mounted": false
+  },
+  {
+   "kind": "fruit tree",
+   "x": 70.08332411453799,
+   "y": 24.373499542737186,
+   "w": 2.2,
+   "h": 2.2,
+   "a": 2.7069224384405484,
+   "purpose": "apples",
+   "owner": 2,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 74.17944139924475,
+   "y": 19.660292228187302,
+   "w": 1.8,
+   "h": 0.5,
+   "a": 2.7069224384405484,
+   "purpose": "sitting in the garden",
+   "owner": 2,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 107.1327361426993,
+   "y": 23.94590836446021,
+   "w": 1.2,
+   "h": 0.45,
+   "a": -2.58,
+   "purpose": "a stone bench for the shrine keeper and mourners",
+   "owner": 3,
+   "mounted": false
+  },
+  {
+   "kind": "candles",
+   "x": 104.80890626606833,
+   "y": 22.099847773776,
+   "w": 0.5,
+   "h": 0.5,
+   "a": -2.58,
+   "purpose": "candles and offerings at the door",
+   "owner": 3,
+   "mounted": true
+  },
+  {
+   "kind": "anvil",
+   "x": 84.02045814642447,
+   "y": 62.10086219713516,
+   "w": 1.0,
+   "h": 0.6,
+   "a": 3.9269908169872414,
+   "purpose": "the smith works here",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "quench trough",
+   "x": 84.16187950266179,
+   "y": 59.6966991411009,
+   "w": 1.6,
+   "h": 0.6,
+   "a": 3.9269908169872414,
+   "purpose": "quenching hot iron",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "grindstone",
+   "x": 86.99030662740797,
+   "y": 62.666547622084394,
+   "w": 0.8,
+   "h": 0.8,
+   "a": 3.9269908169872414,
+   "purpose": "sharpening",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "charcoal",
+   "x": 80.90918830920367,
+   "y": 59.555277784863584,
+   "w": 1.8,
+   "h": 1.8,
+   "a": 3.9269908169872414,
+   "purpose": "fuel for the forge",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "woodpile",
+   "x": 83.34870670429727,
+   "y": 55.20657108056632,
+   "w": 1.3,
+   "h": 3.4,
+   "a": 3.9269908169872414,
+   "purpose": "firewood for the forge",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "chopping block",
+   "x": 86.28319984622145,
+   "y": 55.02979438526968,
+   "w": 0.6,
+   "h": 0.6,
+   "a": 3.9269908169872414,
+   "purpose": "the hatchet in the block: the first weapon (beat B)",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "woodpile",
+   "x": 90.30385720498002,
+   "y": 70.75274561073647,
+   "w": 1.6,
+   "h": 0.6,
+   "a": -2.21,
+   "purpose": "oak and alder for the smoke",
+   "owner": 5,
+   "mounted": false
+  },
+  {
+   "kind": "barrel",
+   "x": 79.97756987645033,
+   "y": 71.32170289890018,
+   "w": 0.8,
+   "h": 0.7,
+   "a": 1.1071487177940904,
+   "purpose": "salt fish barrels waiting for the ship",
+   "owner": 6,
+   "mounted": false
+  },
+  {
+   "kind": "barrel",
+   "x": 80.42478347195029,
+   "y": 72.2161300899001,
+   "w": 0.8,
+   "h": 0.7,
+   "a": 1.1071487177940904,
+   "purpose": "salt fish barrels",
+   "owner": 6,
+   "mounted": false
+  },
+  {
+   "kind": "boat hull",
+   "x": 70.45109661411296,
+   "y": 86.92760965656073,
+   "w": 1.6,
+   "h": 1.6,
+   "a": -0.58,
+   "purpose": "a hull on trestles, half built",
+   "owner": 7,
+   "mounted": false
+  },
+  {
+   "kind": "woodpile",
+   "x": 99.85011173328321,
+   "y": 49.60370251751489,
+   "w": 1.6,
+   "h": 0.6,
+   "a": -0.64,
+   "purpose": "driftwood for the pans",
+   "owner": 8,
+   "mounted": false
+  },
+  {
+   "kind": "sacks",
+   "x": 103.41856258045814,
+   "y": 47.19618127123346,
+   "w": 1.0,
+   "h": 0.6,
+   "a": -0.64,
+   "purpose": "salt in sacks",
+   "owner": 8,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 71.64436801463134,
+   "y": 69.12910542718035,
+   "w": 1.4,
+   "h": 0.45,
+   "a": 2.5829933382462307,
+   "purpose": "sitting out by the door, mending",
+   "owner": 9,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 63.015,
+   "y": 75.52000000000001,
+   "w": 1.4,
+   "h": 0.45,
+   "a": 2.498091544796509,
+   "purpose": "sitting out by the door, mending",
+   "owner": 10,
+   "mounted": false
+  },
+  {
+   "kind": "woodpile",
+   "x": 59.78,
+   "y": 66.04000000000002,
+   "w": 1.0,
+   "h": 1.8,
+   "a": 2.498091544796509,
+   "purpose": "fuel for the hearth",
+   "owner": 10,
+   "mounted": false
+  },
+  {
+   "kind": "washing line",
+   "x": 57.76,
+   "y": 68.18,
+   "w": 3.4,
+   "h": 0.2,
+   "a": 2.498091544796509,
+   "purpose": "drying the wash",
+   "owner": 10,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 53.83392696468518,
+   "y": 80.56558375205704,
+   "w": 1.4,
+   "h": 0.45,
+   "a": 2.6387494426619322,
+   "purpose": "sitting out by the door, mending",
+   "owner": 11,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 55.64400009865456,
+   "y": 83.62155636310611,
+   "w": 1.4,
+   "h": 0.45,
+   "a": 5.780342096251726,
+   "purpose": "sitting out by the door, mending",
+   "owner": 12,
+   "mounted": false
+  },
+  {
+   "kind": "sacks",
+   "x": 57.710119718593084,
+   "y": 11.315822856636286,
+   "w": 2.2,
+   "h": 0.7,
+   "a": 1.7359450042095235,
+   "purpose": "grain going in at harvest",
+   "owner": 13,
+   "mounted": false
+  },
+  {
+   "kind": "barrel",
+   "x": 56.89634473143157,
+   "y": 16.198472779605396,
+   "w": 0.7,
+   "h": 0.7,
+   "a": 1.7359450042095235,
+   "purpose": "water barrel in case of fire",
+   "owner": 13,
+   "mounted": false
+  },
+  {
+   "kind": "bell frame",
+   "x": 65.4948679374949,
+   "y": 7.941542269615167,
+   "w": 1.2,
+   "h": 1.4,
+   "a": 4.90978454023457,
+   "purpose": "the alarm bell (rung in beat 2)",
+   "owner": 14,
+   "mounted": false
+  },
+  {
+   "kind": "cart",
+   "x": 35.119238354238355,
+   "y": 58.105513482028634,
+   "w": 1.4,
+   "h": 2.6,
+   "a": 2.761086276477428,
+   "purpose": "the farm cart",
+   "owner": 15,
+   "mounted": false
+  },
+  {
+   "kind": "manure heap",
+   "x": 31.758152733233718,
+   "y": 55.357222477008264,
+   "w": 1.0,
+   "h": 1.0,
+   "a": 2.761086276477428,
+   "purpose": "for the fields",
+   "owner": 15,
+   "mounted": false
+  },
+  {
+   "kind": "trough",
+   "x": 33.485119378280295,
+   "y": 59.40538084926799,
+   "w": 1.2,
+   "h": 0.6,
+   "a": 2.761086276477428,
+   "purpose": "water for the beasts",
+   "owner": 15,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 41.09167960493588,
+   "y": 64.30587484912915,
+   "w": 1.4,
+   "h": 0.45,
+   "a": 5.902678930067221,
+   "purpose": "sitting out by the door, mending",
+   "owner": 16,
+   "mounted": false
+  },
+  {
+   "kind": "woodpile",
+   "x": 41.75089805546441,
+   "y": 74.30092642650897,
+   "w": 1.0,
+   "h": 1.8,
+   "a": 5.902678930067221,
+   "purpose": "fuel for the hearth",
+   "owner": 16,
+   "mounted": false
+  },
+  {
+   "kind": "washing line",
+   "x": 44.25778512085461,
+   "y": 72.75965511963943,
+   "w": 3.4,
+   "h": 0.2,
+   "a": 5.902678930067221,
+   "purpose": "drying the wash",
+   "owner": 16,
+   "mounted": false
+  },
+  {
+   "kind": "trough",
+   "x": 33.74920391109039,
+   "y": 39.00059756210121,
+   "w": 1.2,
+   "h": 0.5,
+   "a": 1.57,
+   "purpose": "water for the goats",
+   "owner": 17,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 47.03773622377583,
+   "y": 25.997078809240776,
+   "w": 1.6,
+   "h": 0.5,
+   "a": -3.058451421701352,
+   "purpose": "sitting out by the shop in the evening",
+   "owner": 18,
+   "mounted": false
+  },
+  {
+   "kind": "sign",
+   "x": 44.546371828163636,
+   "y": 25.789465109606425,
+   "w": 0.6,
+   "h": 0.3,
+   "a": -3.058451421701352,
+   "purpose": "the shop sign on its bracket",
+   "owner": 18,
+   "mounted": true
+  },
+  {
+   "kind": "woodpile",
+   "x": 48.910411794477675,
+   "y": 14.36240708173181,
+   "w": 1.2,
+   "h": 2.0,
+   "a": -3.058451421701352,
+   "purpose": "fuel for the kitchen hearth",
+   "owner": 18,
+   "mounted": false
+  },
+  {
+   "kind": "washing line",
+   "x": 45.29793342083998,
+   "y": 14.36240708173181,
+   "w": 2.0,
+   "h": 0.2,
+   "a": -3.058451421701352,
+   "purpose": "drying the wash",
+   "owner": 18,
+   "mounted": false
+  },
+  {
+   "kind": "hen coop",
+   "x": 48.88549815052154,
+   "y": 11.048892435567586,
+   "w": 1.4,
+   "h": 1.0,
+   "a": -3.058451421701352,
+   "purpose": "eggs",
+   "owner": 18,
+   "mounted": false
+  },
+  {
+   "kind": "notice post",
+   "x": 60.6,
+   "y": 53.4,
+   "w": 0.4,
+   "h": 0.4,
+   "a": 0.0,
+   "purpose": "the harbour master's notices: when the trader's ship is due",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "bench",
+   "x": 69.0,
+   "y": 43.4,
+   "w": 1.6,
+   "h": 0.5,
+   "a": 0.4,
+   "purpose": "old folk sitting by the well",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "torch",
+   "x": 56,
+   "y": 4.1,
+   "w": 0.4,
+   "h": 0.4,
+   "a": 0.0,
+   "purpose": "gate torch on the gate post, lit at dusk",
+   "owner": -1,
+   "mounted": true
+  },
+  {
+   "kind": "torch",
+   "x": 68,
+   "y": 4.1,
+   "w": 0.4,
+   "h": 0.4,
+   "a": 0.0,
+   "purpose": "gate torch on the gate post, lit at dusk",
+   "owner": -1,
+   "mounted": true
+  },
+  {
+   "kind": "scarecrow",
+   "x": 25,
+   "y": 24,
+   "w": 0.8,
+   "h": 0.8,
+   "a": 0.0,
+   "purpose": "keeping crows off the infield",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "haystack",
+   "x": 32,
+   "y": 30,
+   "w": 2.0,
+   "h": 2.0,
+   "a": 0.0,
+   "purpose": "winter hay for the goats",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "net rack",
+   "x": 61.5,
+   "y": 90.5,
+   "w": 2.6,
+   "h": 0.4,
+   "a": -0.58,
+   "purpose": "fishers drying their nets",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "net rack",
+   "x": 64.8,
+   "y": 88.4,
+   "w": 2.6,
+   "h": 0.4,
+   "a": -0.58,
+   "purpose": "fishers drying their nets",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "drying rack",
+   "x": 99.5,
+   "y": 62.0,
+   "w": 2.4,
+   "h": 0.5,
+   "a": 0.9,
+   "purpose": "fish drying in the wind before smoking",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "gutting table",
+   "x": 82.0,
+   "y": 83.0,
+   "w": 1.6,
+   "h": 0.8,
+   "a": -0.4,
+   "purpose": "gutting the catch as it lands",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "lobster pots",
+   "x": 87.5,
+   "y": 92,
+   "w": 1.2,
+   "h": 1.2,
+   "a": 0.0,
+   "purpose": "pots stacked on the pier",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "barrel",
+   "x": 88.4,
+   "y": 84,
+   "w": 1.0,
+   "h": 1.0,
+   "a": 0.0,
+   "purpose": "barrels being rolled to the boats",
+   "owner": -1,
+   "mounted": false
+  },
+  {
+   "kind": "crate",
+   "x": 100.5,
+   "y": 99.0,
+   "w": 1.6,
+   "h": 1.2,
+   "a": 0.0,
+   "purpose": "cargo waiting for the trader's ship (the last ship)",
+   "owner": -1,
+   "mounted": false
+  }
+ ],
+ "waystone": {
+  "x": 57.6,
+  "y": 49.2,
+  "a": 0.38
+ },
+ "square": {
+  "x": 64,
+  "y": 50,
+  "r": 8.2
+ },
+ "rects": [
+  {
+   "name": "field",
+   "x0": 14,
+   "y0": 14,
+   "x1": 37,
+   "y1": 34
+  },
+  {
+   "name": "vegetable plots",
+   "x0": 16,
+   "y0": 38,
+   "x1": 30,
+   "y1": 46
+  },
+  {
+   "name": "pier",
+   "x0": 85,
+   "y0": 80,
+   "x1": 90,
+   "y1": 100
+  },
+  {
+   "name": "pier",
+   "x0": 78,
+   "y0": 98,
+   "x1": 104,
+   "y1": 103
+  }
+ ],
+ "walls": [
+  {
+   "name": "palisade",
+   "pts": [
+    [
+     10,
+     8
+    ],
+    [
+     40,
+     6
+    ],
+    [
+     56,
+     4
+    ]
+   ]
+  },
+  {
+   "name": "palisade",
+   "pts": [
+    [
+     68,
+     4
+    ],
+    [
+     92,
+     6
+    ],
+    [
+     114,
+     13
+    ],
+    [
+     121,
+     40
+    ]
+   ]
+  },
+  {
+   "name": "palisade",
+   "pts": [
+    [
+     10,
+     8
+    ],
+    [
+     6,
+     40
+    ],
+    [
+     8,
+     70
+    ],
+    [
+     20,
+     92
+    ]
+   ]
+  },
+  {
+   "name": "sea wall",
+   "pts": [
+    [
+     80,
+     82
+    ],
+    [
+     92,
+     76
+    ],
+    [
+     100,
+     70
+    ],
+    [
+     106,
+     62
+    ]
+   ]
+  },
+  {
+   "name": "breakwater",
+   "pts": [
+    [
+     106,
+     62
+    ],
+    [
+     116,
+     64
+    ],
+    [
+     126,
+     70
+    ],
+    [
+     132,
+     80
+    ]
+   ]
+  }
+ ],
+ "destinations": [
+  {
+   "name": "field gate",
+   "x": 37,
+   "y": 27
+  },
+  {
+   "name": "vegetable plots",
+   "x": 30,
+   "y": 44
+  }
+ ]
+}

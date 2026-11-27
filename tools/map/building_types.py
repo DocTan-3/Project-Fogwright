@@ -23,7 +23,7 @@ t('street_house',name="Street house",size="6 × 10 m, 2-3 storeys, plot behind 4
   plot=(0,6,4,16,'yard and garden'),
   plot_rooms=[(0,10,6,7,'yard','yard'),(0,17,2.5,3,'store','out'),(2.5,17,1,3,'','yard'),(3.5,17,2.5,3,'privy,\nhens','out'),(0,20,6,6,'garden','garden')],
   plot_doors=[(1.25,17,'h',1,'d'),(4.75,17,'h',1,'d'),(3,17,'h',1,'o'),(3,20,'h',1,'o'),(3,26,'h',1,'g')],
-  doodads=[(1.0,-0.9,1.6,0.5,'bench','sitting out by the shop in the evening'),(4.0,-0.5,0.6,0.3,'sign','the shop sign on its bracket')],
+  doodads=[(1.0,-0.6,1.6,0.5,'bench','sitting out by the shop in the evening'),(4.0,-0.5,0.6,0.3,'sign','the shop sign on its bracket')],
   plot_doodads=[(0.3,0.4,1.2,2.0,'woodpile','fuel for the kitchen hearth'),(3.5,1.0,2.0,0.2,'washing line','drying the wash'),(0.5,4.2,1.4,1.0,'hen coop','eggs')],
   note="street door into the side passage to the yard; the shop and kitchen open off it; stairs in the kitchen to the hall over the shop (jettied) and bedrooms behind; back-to-back hearth")
 t('cottage',name="Cottage",size="6 × 8 m, one storey and a loft, yard behind 2-10 m",
@@ -31,7 +31,7 @@ t('cottage',name="Cottage",size="6 × 8 m, one storey and a loft, yard behind 2-
   doors=[(1.6,0,'h',1,'d'),(3.6,4.7,'v',1.6,'o'),(5,8,'h',1,'d')],
   hearths=[(2.4,5.6)],stairs=[(0.2,4.2,0.8,1.6,'ladder')],windows=[(4.2,0,'h',1.4),(0,2.5,'v',1.2)],
   plot=(0,6,2,10,'yard and garden'),plot_rooms=[(0,8,6,6,'yard and garden','garden')],plot_doors=[(3,14,'h',1,'g')],
-  doodads=[(3.2,-0.8,1.4,0.45,'bench','sitting out by the door, mending')],
+  doodads=[(3.2,-0.55,1.4,0.45,'bench','sitting out by the door, mending')],
   plot_doodads=[(0.3,0.3,1.0,1.8,'woodpile','fuel for the hearth'),(2.0,0.6,3.4,0.2,'washing line','drying the wash')],
   note="ladder to the loft over the back half; the lean-to opens to the yard; bench by the front door")
 t('merchant_house',name="Merchant's house",size="14 × 16 m with coach yard and stable, walled garden 6-10 m",
@@ -58,7 +58,7 @@ t('inn',name="Inn",size="12 × 16 m round a coach yard",
   doors=[(3.5,0,'h',1.2,'d'),(8,0,'h',2,'g'),(8,6,'h',2,'o'),(9,3,'v',1,'d'),(7,4.4,'v',1,'d'),(2,6,'h',1,'d'),(4,9,'v',1,'d'),
          (6,12,'h',1.6,'d'),(10,12,'h',1.6,'d')],
   hearths=[(0,3),(2,12)],stairs=[(5,0.3,1.8,2.2,'stairs'),(10.2,6.2,1.6,2.6,'stairs')],windows=[(1.6,0,'h',1.6),(10.5,0,'h',1),(0,8.5,'v',1)],
-  doodads=[(0.3,-0.9,1.8,0.5,'bench','drinkers sitting out front'),(4.6,-0.4,0.6,0.3,'sign','the Gull & Lantern sign on its bracket'),(2.6,-0.4,0.4,0.4,'lamp','the lantern by the inn door'),
+  doodads=[(0.3,-0.6,1.8,0.5,'bench','drinkers sitting out front'),(4.6,-0.4,0.6,0.3,'sign','the Gull & Lantern sign on its bracket'),(2.6,-0.4,0.4,0.4,'lamp','the lantern by the inn door'),
          (4.6,10.4,2.2,0.7,'trough','water for horses in the coach yard'),(9.6,6.6,1.0,1.0,'barrel','ale barrels by the cellar')],
   note="stairs from the taproom and from the yard gallery up to the guest rooms; the archway takes coaches to the yard and stable")
 t('waylodge',name="Waylodge",size="8 × 12 m, beside the waystone",
@@ -77,7 +77,7 @@ t('workshop',name="Workshop with yard",size="10 × 10 m (smithy, cooper, carpent
   doors=[(3,0,'h',4.4,'s'),(6,2.5,'v',1,'d'),(3,5,'h',1,'d'),(6,7.5,'v',1,'d'),(8,0,'h',2.4,'g')],
   hearths=[(0,1.2)],windows=[(0,7.5,'v',1.2)],
   doodads=[(3.0,2.0,1.0,0.6,'anvil','the smith works here'),(4.3,3.8,1.6,0.6,'quench trough','quenching hot iron'),(0.6,3.6,0.8,0.8,'grindstone','sharpening'),
-              (6.6,1.0,1.8,1.8,'charcoal','fuel for the forge'),(8.2,5.0,1.3,3.4,'woodpile','firewood; the hatchet sits in the block (beat B)')],
+              (6.6,1.0,1.8,1.8,'charcoal','fuel for the forge'),(8.2,5.0,1.3,3.4,'woodpile','firewood for the forge'),(6.6,8.6,0.6,0.6,'chopping block','the hatchet in the block: the first weapon (beat B)')],
   note="the whole front of the work bay opens to the street by day, shuttered at night; smoky trades at the downwind end of town")
 t('farmstead',name="Farmstead",size="12 × 12 m: house, byre and barn round a yard",
   rooms=[(0,0,4,8,'house','room'),(4,0,4,8,'yard','yard'),(8,0,4,8,'byre','out'),(0,8,12,4,'barn','out')],
@@ -88,7 +88,7 @@ t('farmstead',name="Farmstead",size="12 × 12 m: house, byre and barn round a ya
 # plain buildings any people might put up
 t('store',people='any',name="Store or salt house",size="8 × 6 m, one room",
   rooms=[(0,0,8,6,'store','out')],doors=[(4,0,'h',2.4,'d')],windows=[(0,3,'v',0.8)],
-  doodads=[(0.3,-0.9,1.0,0.8,'barrel','salt fish barrels waiting for the ship'),(1.5,-0.9,1.0,0.8,'barrel','salt fish barrels'),(6.0,-0.9,1.6,0.8,'crate','crates for the ship')],
+  doodads=[(0.3,-0.75,0.8,0.7,'barrel','salt fish barrels waiting for the ship'),(1.3,-0.75,0.8,0.7,'barrel','salt fish barrels')],
   note="wide double doors for barrels and carts; small high windows")
 t('smokehouse',people='any',name="Smokehouse",size="6 × 6 m",
   rooms=[(0,0,6,4,'smoke room\n(racks)','out'),(0,4,6,2,'fire pit','out')],doors=[(3,0,'h',1,'d'),(3,4,'h',1.2,'o')],
@@ -100,11 +100,11 @@ t('boat_shed',people='any',name="Boatwright's shed",size="8 × 6 m, open to the 
   note="open along the front for hulls; tools along the back wall; a slipway down to the water")
 t('salt_works',people='any',name="Salt-boiling hut",size="6 × 9 m with its pans",
   rooms=[(0,0,6,5,'boiling hut','out'),(0,5,6,4,'salt pans','yard')],doors=[(3,0,'h',1.2,'d'),(3,5,'h',1.2,'d')],
-  hearths=[(3,2.6)],doodads=[(0.2,-0.9,1.6,0.6,'woodpile','driftwood for the pans'),(4.0,-0.8,1.2,0.6,'sacks','salt in sacks')],
+  hearths=[(3,2.6)],doodads=[(0.2,-0.9,1.6,0.6,'woodpile','driftwood for the pans'),(4.8,-0.7,1.0,0.6,'sacks','salt in sacks')],
   note="seawater boiled down in iron pans over a driftwood fire; the drying pans outside face the sea")
 t('granary',people='any',name="Granary",size="8 × 6 m on staddle stones",
   rooms=[(0,0,8,6,'grain bins','out')],doors=[(4,0,'h',1.4,'d')],
-  doodads=[(0.3,-1.0,2.4,0.8,'sacks','grain going in at harvest'),(5.6,-1.1,1.0,1.0,'barrel','water barrel in case of fire')],
+  doodads=[(0.3,-0.75,2.2,0.7,'sacks','grain going in at harvest'),(6.0,-0.75,0.7,0.7,'barrel','water barrel in case of fire')],
   note="raised on mushroom-shaped stones against rats; loose wooden steps up to the door, outside, taken away at night")
 t('guard_post',people='any',name="Guard post",size="4 × 4 m with the bell frame",
   rooms=[(0,0,4,4,'guard\nroom','room')],doors=[(2,0,'h',1,'d')],hearths=[(4,2)],windows=[(0,2,'v',0.8)],
@@ -121,3 +121,10 @@ t('merrith_shrine',people='any',name="Shrine of Merrith",size="5 × 5 m",
 
 def footprint(k):   # the fixed part's width (along the street) and depth
     r=T[k]['rooms']; return max(a[0]+a[2] for a in r),max(a[1]+a[3] for a in r)
+
+def export(path):   # for the game: godot/data/building_types.json
+    import json
+    json.dump(T,open(path,'w'),indent=1)
+if __name__=='__main__':
+    import sys,os
+    export(sys.argv[1] if len(sys.argv)>1 else os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','godot','data','building_types.json'))
