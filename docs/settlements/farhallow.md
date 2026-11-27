@@ -148,3 +148,25 @@ The main roads (gate, harbour, west and rise roads) and three lanes (the shore l
 field lane to the field gate, the farm lane to the hen house and vegetable plots), plus a short path from every door to
 its street. The plan script checks that every door reaches a path without crossing anything, that every lane starts and
 ends on another path, at a door or at a named place (the field gate, the plots), and that every lane is used.
+
+## 5. Doodads
+
+63 props, each with a purpose written beside it. Most come with their building type (`building_types.py`), so every
+inn, cottage or workshop brings its own: benches by doors, woodpiles and washing lines in yards, the inn's lantern,
+sign, horse trough and ale barrels, the smithy's anvil, quench trough, grindstone, charcoal and woodpile (where the
+hatchet waits for beat B), the well-off houses' own wells, fruit trees, flower beds and garden benches, the farm cart,
+trough and manure heap, the guard post's alarm bell, the shrine's bench and candles, the salt works' driftwood and
+sacks, barrels and crates outside the salt house, the half-built hull in the boatwright's shed. Plot props appear only
+where the plot is deep enough for them.
+
+Farhallow's own: the harbour master's notice post by the waystone, a bench by the well, gate torches on the gate posts,
+a scarecrow and a haystack in the infield, net racks on the beach by the fishers, a fish-drying rack by the smokehouse,
+a gutting table where the catch lands, lobster pots and barrels on the pier, and crates at the pier's end waiting for
+the trader's ship (the last ship of the prologue).
+
+The plan script checks each one: it has a purpose; every corner stands on ground its kind allows (flowers and fruit
+trees only in gardens, nets on the beach or in yards, lobster pots on the pier or beach, the anvil inside the
+workshop...); it is not on a road, lane or door path and keeps a metre clear of every door; it overlaps nothing.
+Lamps, signs, candles and torches hang on walls and posts, so only where they hang is checked.
+
+The poor cottages without a plot share the open ground between them; their nets dry on the beach.
