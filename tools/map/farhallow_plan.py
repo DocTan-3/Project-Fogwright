@@ -66,7 +66,7 @@ def boat(x,y,l,w,a,c=(140,98,62)):
 boat(96,92,8,2.8,-0.3); boat(76,94,6,2.2,0.4); boat(120,100,16,5,0.05,(110,76,50))
 RICH,MID,POOR,TRADE,PUB=(214,170,108),(166,122,84),(124,100,80),(112,100,96),(150,96,64)
 # lanes (dashed): only so the buildings off the main roads know which way to face; drawn properly in stage 4
-LANES=[([(80,66),(72,71),(64,77),(55,82),(46,86)],2.2,'shore lane'),
+LANES=[([(80,66),(72,71),(64,77),(54,82.5)],2.2,'shore lane'),
        ([(58.3,28),(50,28),(38,27)],2.2,'field lane'),
        ([(46,60),(40,52),(37,45.5),(31.5,44.5)],2.0,'farm lane'),
        ([(84,41.3),(95,46),(101,46.5)],1.8,'salt path')]
@@ -106,8 +106,8 @@ B=[('gate road',52,36,'inn',1.5,PUB,1,'The Gull & Lantern, tavern with rooms'),
    (None,72,84,'boat_shed',-0.58,TRADE,8,"Boatwright's shed"),
    (None,104.5,52.5,'salt_works',-0.64,TRADE,16,'Salt-boiling hut and pans'),
    ('shore lane',72,68,'cottage',1.0,POOR,9,"Net-mender's cottage"),
-   ('shore lane',63,74,'cottage',0.6,POOR,10,"Fishers' cottages"),('shore lane',54,79,'cottage',0.6,POOR,10,''),('shore lane',45,83,'cottage',0.6,POOR,10,''),
-   ('shore lane',60,83,'cottage',0.6,POOR,10,''),('shore lane',52,87,'cottage',0.6,POOR,10,''),
+   ('shore lane',63,74,'cottage',0.6,POOR,10,"Fishers' cottages"),('shore lane',54,79,'cottage',0.6,POOR,10,''),
+   ('shore lane',52,87,'cottage',0.6,POOR,10,''),
    ('gate road',52,13,'granary',1.0,TRADE,11,'Granary, by the gate and fields'),
    ('gate road',66,11,'guard_post',1.0,PUB,12,'Guard post and bell'),
    ('west road',34,58,'farmstead',1.0,MID,13,'Farmstead and farming cottage'),('west road',42,69,'cottage',1.0,MID,13,''),
@@ -188,11 +188,11 @@ for n,nm,(x,y,w,h,a) in plots:
         kept.append((n,nm,geo)); break
     else:
         why=ground_clash(n,nm,geo)+[o[1] for o in fixed+kept if o[0]!=n and overlap(corners(*geo),corners(*o[2]),0.4)]
-        (shared if placed[n][5]==POOR else dropped).append('%s (%s)'%(nm,', '.join(why[:3])))
+        (shared if placed[n][5]==POOR else dropped).append('%s at (%.0f,%.0f) (%s)'%(nm,placed[n][0],placed[n][1],', '.join(why[:3])))
 PLOTS=[(n,nm.split(' ',1)[1],)+geo for n,nm,geo in kept]
 things=fixed+kept
 problems=['%s: no room for even the smallest plot'%nm for nm in dropped]
-if shared: print('%d poor cottages share a yard instead of their own plot (Wayfolk: "shared yard or none")'%len(shared))
+if shared: print('%d poor cottages share a yard instead of their own plot (Wayfolk: "shared yard or none"):\n  '%len(shared)+'\n  '.join(shared))
 for i,(n,nm,geo) in enumerate(things):
     for j in range(i+1,len(things)):
         if things[j][0]==n and n>=0: continue    # rooms of one building and its plot
@@ -290,11 +290,11 @@ d.text(P(cx,cy-7.5),'N',font=F(18,True),fill=(40,30,20),anchor='mm'); d.text(P(c
 def beat(x,y,t):
     d.ellipse([P(x-1.6,y-1.6),P(x+1.6,y+1.6)],fill=(200,60,50),outline=(255,255,255),width=3)
     d.text(P(x+2.3,y-1.2),t,font=F(19,True),fill=(255,255,255),stroke_width=3,stroke_fill=(60,20,20))
-beat(67,54,'A  start'); beat(77,52,'B  first weapon'); beat(11,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
+beat(67,54,'A  start'); beat(79,48.5,'B  first weapon'); beat(11,37,'C  first fight'); beat(62,6,'D  the gate falls'); beat(60,70,'E  the neighbour'); beat(110,103,'F  the last ship')
 d.text(P(17,22),'INFIELD',font=F(20,True),fill=(120,96,50))
 for (ax,ay,tx,ty,lab) in ((62,1.5,66,0.6,'north road to the OPEN FIELDS (~22 ha) and the common'),(6,24,1,18,'')):
     pass
-d.text(P(66,0.8),'↑ to the open fields (~22 ha), the common pasture and woods',font=F(16,True),fill=(255,255,240),stroke_width=2,stroke_fill=(40,30,20))
+d.text(P(66,0.8),'↑ to the open fields (~14 ha), the common pasture and woods',font=F(16,True),fill=(255,255,240),stroke_width=2,stroke_fill=(40,30,20))
 d.text(P(1,3),'← open fields west',font=F(16,True),fill=(255,255,240),stroke_width=2,stroke_fill=(40,30,20))
 d.text(P(124,88),'THE SEA',font=F(30,True),fill=(220,235,240)); d.text(P(114,44),'WOODS',font=F(24,True),fill=(200,220,190))
 L=Image.new('RGBA',(440,1060),(250,246,236,240)); ld=ImageDraw.Draw(L); yy=12
