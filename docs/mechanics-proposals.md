@@ -15,6 +15,23 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
 - **Still open:** lanterns, day length, skill points, the Writ and Censors, stamina, and the UI cards; design.md's
   rewrite.
 
+## Core mechanics (decided 2026-11-28)
+
+The basics, settled first:
+
+| System | Decision |
+| --- | --- |
+| **Levels** | Characters have levels. Each level gives **node points** for the one large skill tree, which is the progression. Horizontal progression (breadth of the tree, gear, gods' magic) stays worthwhile. Level cap and where experience comes from are open |
+| **Mobility** | Basic moves for everyone (move, sprint, jump, swim, the dodge). Advanced mobility (dash, leap, slide, climbing and the like) comes from skill-tree nodes |
+| **Health** | One health bar, no wounds per body part. Bleeds, burns and stuns are short combat effects. Health comes back by **slow natural regen**, which food speeds up a lot |
+| **Survival needs** | None to maintain: no hunger, warmth or rest meters. **Food gives timed buffs** (more health, stamina, regen) |
+| **Fog** | No exposure meter: lantern tiers gate the deeper Fog (below) |
+| **Inventory** | A **grid of stacking slots with a weight limit**; the warp bag adds slots and weight as it is upgraded |
+| **Gathering** | Trees, ore and herbs are **shared** by everyone and **respawn on a timer**; felled trees stay down until they regrow |
+| **Loot** | **Free for all**: whoever picks a drop up first keeps it |
+| **Death** | You keep everything. You wake at your seat or last waystone, and your **equipped gear loses durability**, repaired by Smiths |
+| **Crafting** | **Basics anywhere** (bandages, torches, a campfire); weapons, armour and inventions at **stations** (forge, workbench, loom) |
+
 ## Things in design.md that clash with the lore
 
 Found while reading; each needs a yes or no.
@@ -275,12 +292,11 @@ So ruins look different and teach the history (design.md asks for hand-made room
 
 ## Progression, in one place
 
-- **Skill points** come from **Renown**: quests, discoveries, Codex sets, clearing ruin hearts, holding freeholds. Not
-  from killing alone.
+- **Levels** give node points for the skill tree (decided).
 - **Proficiency** rises by doing (design.md: crafts level by doing the work; weapons train by use).
 - **Gear** brings item power and moves (weapons.md).
 - **Grace** is a shared, world-level progression: the server's gods and colours are the group's history.
-- The base game gives enough points for one path and half another (design.md), plus one god's region.
+- Open: the level cap, where experience comes from, and whether quests and discovery (the Codex) also give points.
 
 ## Build order (proposal)
 
