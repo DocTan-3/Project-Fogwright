@@ -1,58 +1,58 @@
 {
  "street_house": {
   "name": "Street house",
-  "size": "6 \u00d7 10 m, 2-3 storeys, plot behind 4-16 m",
+  "size": "8 \u00d7 14 m, 2-3 storeys, plot behind 4-16 m",
   "rooms": [
    [
     0,
     0,
-    4.6,
-    5,
+    6,
+    7,
     "shop /\nworkshop",
     "shop"
    ],
    [
-    4.6,
+    6,
     0,
-    1.4,
-    10,
+    2,
+    14,
     "",
     "room"
    ],
    [
     0,
-    5,
-    4.6,
-    5,
+    7,
+    6,
+    7,
     "kitchen",
     "room"
    ]
   ],
   "doors": [
    [
-    5.3,
+    7,
     0,
     "h",
     1,
     "d"
    ],
    [
-    4.6,
-    2.5,
+    6,
+    3.5,
     "v",
     1,
     "d"
    ],
    [
-    4.6,
-    7.6,
-    "v",
-    1,
-    "d"
-   ],
-   [
-    5.3,
+    6,
     10,
+    "v",
+    1,
+    "d"
+   ],
+   [
+    7,
+    14,
     "h",
     1,
     "d"
@@ -60,14 +60,14 @@
   ],
   "hearths": [
    [
-    2.3,
-    5
+    3,
+    7
    ]
   ],
   "stairs": [
    [
     0.1,
-    5.6,
+    7.6,
     1.1,
     2.6,
     "stairs"
@@ -75,21 +75,27 @@
   ],
   "windows": [
    [
-    2.3,
+    3,
     0,
     "h",
     3.2
    ],
    [
-    3.9,
-    10,
+    3,
+    14,
     "h",
-    1.0
+    1.4
+   ],
+   [
+    0,
+    3.5,
+    "v",
+    1.2
    ]
   ],
   "plot": [
    0,
-   6,
+   8,
    4,
    16,
    "yard and garden"
@@ -97,40 +103,40 @@
   "plot_rooms": [
    [
     0,
-    10,
-    6,
+    14,
+    8,
     7,
     "yard",
     "yard"
    ],
    [
     0,
-    17,
-    2.5,
+    21,
+    3,
     3,
     "store",
     "out"
    ],
    [
-    2.5,
-    17,
-    1,
+    3,
+    21,
+    2,
     3,
     "",
     "yard"
    ],
    [
-    3.5,
-    17,
-    2.5,
+    5,
+    21,
+    3,
     3,
     "privy,\nhens",
     "out"
    ],
    [
     0,
-    20,
-    6,
+    24,
+    8,
     6,
     "garden",
     "garden"
@@ -138,36 +144,36 @@
   ],
   "plot_doors": [
    [
-    1.25,
-    17,
+    1.5,
+    21,
     "h",
     1,
     "d"
    ],
    [
-    4.75,
-    17,
+    6.5,
+    21,
     "h",
     1,
     "d"
    ],
    [
-    3,
-    17,
+    4,
+    21,
     "h",
     1,
     "o"
    ],
    [
-    3,
-    20,
+    4,
+    24,
     "h",
     1,
     "o"
    ],
    [
-    3,
-    26,
+    4,
+    30,
     "h",
     1,
     "g"
@@ -183,8 +189,8 @@
     "sitting out by the shop in the evening"
    ],
    [
-    4.0,
-    -0.5,
+    5.6,
+    -0.4,
     0.6,
     0.3,
     "sign",
@@ -210,7 +216,7 @@
    ],
    [
     0.5,
-    4.2,
+    4.6,
     1.4,
     1.0,
     "hen coop",
@@ -219,55 +225,63 @@
   ],
   "note": "street door into the side passage to the yard; the shop and kitchen open off it; stairs in the kitchen to the hall over the shop (jettied) and bedrooms behind; back-to-back hearth",
   "people": "wayfolk",
-  "interior": false
+  "interior": false,
+  "porch": null
  },
  "cottage": {
   "name": "Cottage",
-  "size": "6 \u00d7 8 m, one storey and a loft, yard behind 2-10 m",
+  "size": "8 \u00d7 12 m, a hall and a loft, a covered porch in front, yard behind 2-10 m",
   "rooms": [
    [
     0,
     0,
-    6,
-    6,
-    "main room",
-    "room"
-   ],
-   [
-    3.6,
-    3.4,
-    2.4,
-    2.6,
-    "bed\nalcove",
+    8,
+    8,
+    "hall",
     "room"
    ],
    [
     0,
-    6,
-    6,
-    2,
-    "lean-to",
+    8,
+    4.6,
+    4,
+    "bed\nchamber",
+    "room"
+   ],
+   [
+    4.6,
+    8,
+    3.4,
+    4,
+    "pantry\nand store",
     "out"
    ]
   ],
   "doors": [
    [
-    1.6,
+    2,
     0,
     "h",
     1,
     "d"
    ],
    [
-    3.6,
-    4.7,
-    "v",
-    1.6,
-    "o"
+    2.3,
+    8,
+    "h",
+    1,
+    "d"
    ],
    [
-    5,
+    6.3,
     8,
+    "h",
+    1,
+    "d"
+   ],
+   [
+    6.3,
+    12,
     "h",
     1,
     "d"
@@ -275,14 +289,14 @@
   ],
   "hearths": [
    [
-    2.4,
-    5.6
+    4,
+    8
    ]
   ],
   "stairs": [
    [
     0.2,
-    4.2,
+    5.8,
     0.8,
     1.6,
     "ladder"
@@ -290,21 +304,38 @@
   ],
   "windows": [
    [
-    4.2,
+    5.5,
     0,
     "h",
     1.4
    ],
    [
     0,
-    2.5,
+    4,
     "v",
     1.2
+   ],
+   [
+    8,
+    4,
+    "v",
+    1.2
+   ],
+   [
+    2.3,
+    12,
+    "h",
+    0.9
    ]
+  ],
+  "porch": [
+   0,
+   8,
+   2.0
   ],
   "plot": [
    0,
-   6,
+   8,
    2,
    10,
    "yard and garden"
@@ -312,8 +343,8 @@
   "plot_rooms": [
    [
     0,
+    12,
     8,
-    6,
     6,
     "yard and garden",
     "garden"
@@ -321,8 +352,8 @@
   ],
   "plot_doors": [
    [
-    3,
-    14,
+    4,
+    18,
     "h",
     1,
     "g"
@@ -330,12 +361,12 @@
   ],
   "doodads": [
    [
-    3.2,
-    -0.55,
-    1.4,
-    0.45,
+    4.4,
+    -1.45,
+    1.6,
+    0.5,
     "bench",
-    "sitting out by the door, mending"
+    "sitting out on the porch, mending"
    ]
   ],
   "plot_doodads": [
@@ -348,7 +379,7 @@
     "fuel for the hearth"
    ],
    [
-    2.0,
+    2.2,
     0.6,
     3.4,
     0.2,
@@ -356,57 +387,57 @@
     "drying the wash"
    ]
   ],
-  "note": "ladder to the loft over the back half; the lean-to opens to the yard; bench by the front door",
+  "note": "a hall with the hearth in its back wall, a bed chamber and a pantry behind; a ladder to the loft over the hall; a covered porch along the front; the pantry's door to the yard",
   "people": "wayfolk",
   "interior": false
  },
  "merchant_house": {
   "name": "Merchant's house",
-  "size": "14 \u00d7 16 m with coach yard and stable, walled garden 6-10 m",
+  "size": "16 \u00d7 14 m with coach yard and stable, walled garden 6-10 m",
   "rooms": [
    [
     0,
     0,
-    3.6,
-    6,
+    4.4,
+    7,
     "counting\nroom",
     "shop"
    ],
    [
-    3.6,
+    4.4,
     0,
-    2.8,
-    6,
+    3.2,
+    7,
     "",
     "room"
    ],
    [
-    6.4,
+    7.6,
     0,
-    3.6,
-    6,
+    4.4,
+    7,
     "shop",
     "shop"
    ],
    [
     0,
-    6,
-    10,
-    6,
+    7,
+    12,
+    7,
     "kitchen and stores",
     "room"
    ],
    [
-    10,
+    12,
     0,
     4,
-    12,
+    10,
     "coach\nyard",
     "yard"
    ],
    [
-    10,
     12,
+    10,
     4,
     4,
     "stable",
@@ -415,64 +446,64 @@
   ],
   "doors": [
    [
-    4.6,
+    6,
     0,
     "h",
     1.2,
     "d"
    ],
    [
-    3.6,
+    4.4,
     2,
     "v",
     1,
     "d"
    ],
    [
-    6.4,
+    7.6,
     5.4,
     "v",
     0.9,
     "d"
    ],
    [
-    8.4,
+    9.8,
     0,
     "h",
     1,
     "d"
    ],
    [
-    4.4,
     6,
+    7,
     "h",
     1,
     "d"
    ],
    [
-    10,
-    9,
+    12,
+    10.5,
     "v",
     1,
     "d"
    ],
    [
-    12,
+    14,
     0,
     "h",
     2.6,
     "g"
    ],
    [
-    12,
-    12,
+    14,
+    10,
     "h",
     1.6,
     "d"
    ],
    [
     3,
-    12,
+    14,
     "h",
     1,
     "d"
@@ -481,16 +512,16 @@
   "hearths": [
    [
     0,
-    9
+    10.5
    ],
    [
     0,
-    4.2
+    3.5
    ]
   ],
   "stairs": [
    [
-    5.2,
+    6.3,
     1.0,
     1.1,
     3.2,
@@ -499,33 +530,33 @@
   ],
   "windows": [
    [
-    1.8,
+    2.2,
     0,
     "h",
     1.4
    ],
    [
-    9.3,
+    11,
     0,
     "h",
-    1
+    0.8
    ],
    [
-    7,
-    12,
+    9,
+    14,
     "h",
     2
    ],
    [
     0,
-    1.6,
+    2,
     "v",
     1.2
    ]
   ],
   "plot": [
    0,
-   10,
+   12,
    6,
    10,
    "walled garden"
@@ -533,8 +564,8 @@
   "plot_rooms": [
    [
     0,
+    14,
     12,
-    10,
     8,
     "walled garden",
     "garden"
@@ -542,7 +573,7 @@
   ],
   "doodads": [
    [
-    3.6,
+    5.0,
     -0.8,
     0.4,
     0.4,
@@ -584,87 +615,88 @@
     "sitting in the garden"
    ]
   ],
-  "note": "front door into the stair hall between counting room and shop; hall and parlour upstairs, bedrooms above; coach gate to the yard; own well in the garden",
+  "note": "front door into the stair hall between counting room and shop (the shop has its own street door); hall and parlour upstairs, bedrooms above; coach gate to the yard; own well in the garden",
   "plot_doors": [],
   "people": "wayfolk",
-  "interior": false
+  "interior": false,
+  "porch": null
  },
  "merchant_house_small": {
   "name": "Well-off house",
-  "size": "10 \u00d7 12 m, 3 storeys, walled garden 6-10 m",
+  "size": "12 \u00d7 14 m, 3 storeys, walled garden 6-10 m",
   "rooms": [
    [
     0,
     0,
-    3.6,
-    6,
+    4.4,
+    7,
     "study",
     "shop"
    ],
    [
-    3.6,
+    4.4,
     0,
-    2.8,
-    6,
+    3.2,
+    7,
     "",
     "room"
    ],
    [
-    6.4,
+    7.6,
     0,
-    3.6,
-    6,
+    4.4,
+    7,
     "parlour",
     "room"
    ],
    [
     0,
-    6,
-    10,
-    6,
+    7,
+    12,
+    7,
     "kitchen and stores",
     "room"
    ]
   ],
   "doors": [
    [
-    4.6,
+    6,
     0,
     "h",
     1.2,
     "d"
    ],
    [
-    3.6,
+    4.4,
     2,
     "v",
     1,
     "d"
    ],
    [
-    6.4,
+    7.6,
     5.4,
     "v",
     0.9,
     "d"
    ],
    [
-    4.4,
     6,
+    7,
     "h",
     1,
     "d"
    ],
    [
     3,
-    12,
+    14,
     "h",
     1,
     "d"
    ],
    [
-    10,
-    9,
+    12,
+    10.5,
     "v",
     1,
     "d"
@@ -673,20 +705,20 @@
   "hearths": [
    [
     0,
-    9
+    10.5
    ],
    [
     0,
-    4.2
+    3.5
    ],
    [
-    10,
-    3
+    12,
+    3.5
    ]
   ],
   "stairs": [
    [
-    5.2,
+    6.3,
     1.0,
     1.1,
     3.2,
@@ -695,33 +727,33 @@
   ],
   "windows": [
    [
-    1.8,
+    2.2,
     0,
     "h",
     1.4
    ],
    [
-    8.2,
+    9.8,
     0,
     "h",
     1.4
    ],
    [
-    7,
-    12,
+    9,
+    14,
     "h",
     2
    ],
    [
     0,
-    1.6,
+    2,
     "v",
     1.2
    ]
   ],
   "plot": [
    0,
-   10,
+   12,
    6,
    10,
    "walled garden"
@@ -729,8 +761,8 @@
   "plot_rooms": [
    [
     0,
+    14,
     12,
-    10,
     8,
     "walled garden",
     "garden"
@@ -738,7 +770,7 @@
   ],
   "doodads": [
    [
-    3.6,
+    5.0,
     -0.8,
     0.4,
     0.4,
@@ -783,176 +815,188 @@
   "note": "the merchant's house without the coach yard: for the well-off who trade by ship or office, not by cart; a side door to the lane",
   "plot_doors": [],
   "people": "wayfolk",
-  "interior": false
+  "interior": false,
+  "porch": null
  },
  "inn": {
   "name": "Inn",
-  "size": "12 \u00d7 16 m round a coach yard",
+  "size": "16 \u00d7 22 m round a coach yard, a deck along the front",
   "rooms": [
    [
     0,
     0,
-    7,
-    6,
+    10,
+    8,
     "taproom\n(bar counter)",
     "room"
    ],
    [
-    7,
+    10,
     0,
-    2,
-    6,
+    2.4,
+    8,
     "arch-\nway",
     "yard"
    ],
    [
-    9,
+    12.4,
     0,
-    3,
-    6,
+    3.6,
+    8,
     "cellar\nstore",
     "shop"
    ],
    [
     0,
+    8,
     6,
-    4,
-    6,
+    8,
     "kitchen",
     "room"
    ],
    [
-    4,
     6,
     8,
-    6,
+    10,
+    8,
     "coach yard",
     "yard"
    ],
    [
     0,
-    12,
-    12,
-    4,
+    16,
+    16,
+    6,
     "stable",
     "out"
    ]
   ],
   "doors": [
    [
-    3.5,
+    5,
     0,
     "h",
     1.2,
     "d"
    ],
    [
-    8,
+    11.2,
     0,
     "h",
-    2,
+    2.4,
     "g"
    ],
    [
+    11.2,
     8,
-    6,
     "h",
-    2,
+    2.4,
     "o"
    ],
    [
-    9,
-    3,
+    12.4,
+    4,
     "v",
     1,
     "d"
    ],
    [
-    7,
-    4.4,
-    "v",
-    1,
-    "d"
-   ],
-   [
-    2,
+    10,
     6,
+    "v",
+    1,
+    "d"
+   ],
+   [
+    3,
+    8,
     "h",
     1,
     "d"
    ],
    [
-    4,
-    9,
+    6,
+    12,
     "v",
     1,
     "d"
    ],
    [
     8,
-    12,
+    16,
     "h",
-    2.0,
+    2.4,
     "d"
    ]
   ],
   "hearths": [
    [
     0,
-    3
+    4
    ],
    [
-    2,
+    0,
     12
    ]
   ],
   "stairs": [
    [
-    5,
-    0.3,
-    1.8,
-    2.2,
+    7.0,
+    0.4,
+    2.0,
+    2.4,
     "stairs"
    ],
    [
-    10.2,
-    6.2,
-    1.6,
-    2.6,
+    13.6,
+    8.4,
+    1.8,
+    3.0,
     "stairs"
    ]
   ],
   "windows": [
    [
-    1.6,
+    2,
     0,
     "h",
     1.6
    ],
    [
-    10.5,
+    8.5,
     0,
     "h",
-    1
+    1.6
+   ],
+   [
+    14.2,
+    0,
+    "h",
+    1.0
    ],
    [
     0,
-    8.5,
+    12,
     "v",
     1
    ]
   ],
+  "porch": [
+   0,
+   10,
+   2.4
+  ],
   "doodads": [
    [
-    0.3,
-    -0.6,
+    0.6,
+    -1.7,
     1.8,
     0.5,
     "bench",
-    "drinkers sitting out front"
+    "drinkers sitting out on the deck"
    ],
    [
-    4.6,
+    9.2,
     -0.4,
     0.6,
     0.3,
@@ -960,7 +1004,7 @@
     "the Gull & Lantern sign on its bracket"
    ],
    [
-    2.6,
+    3.6,
     -0.8,
     0.4,
     0.4,
@@ -968,23 +1012,23 @@
     "the lantern by the inn door"
    ],
    [
-    4.6,
-    10.4,
+    7.0,
+    13.6,
     2.2,
     0.7,
     "trough",
     "water for horses in the coach yard"
    ],
    [
-    9.6,
-    6.6,
+    14.6,
+    9.0,
     1.0,
     1.0,
     "barrel",
     "ale barrels by the cellar"
    ]
   ],
-  "note": "stairs from the taproom and from the yard gallery up to the guest rooms; the archway takes coaches to the yard and stable",
+  "note": "a deck along the taproom's front; stairs from the taproom and from the yard gallery up to the guest rooms; the archway takes carts to the yard and the long stable behind",
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
@@ -1107,6 +1151,7 @@
   "plot_doors": [],
   "people": "wayfolk",
   "interior": false,
+  "porch": null,
   "doodads": [],
   "plot_doodads": []
  },
@@ -1141,6 +1186,7 @@
   "plot_doors": [],
   "people": "wayfolk",
   "interior": false,
+  "porch": null,
   "doodads": [],
   "plot_doodads": []
  },
@@ -1175,62 +1221,63 @@
   "plot_doors": [],
   "people": "wayfolk",
   "interior": false,
+  "porch": null,
   "doodads": [],
   "plot_doodads": []
  },
  "workshop": {
   "name": "Workshop with yard",
-  "size": "10 \u00d7 10 m (smithy, cooper, carpenter)",
+  "size": "12 \u00d7 14 m (smithy, cooper, carpenter)",
   "rooms": [
    [
     0,
     0,
-    6,
-    5,
-    "open work bay:\nforge or bench",
+    8,
+    7,
+    "work bay:\nforge or bench",
     "shop"
    ],
    [
     0,
-    5,
-    6,
-    5,
+    7,
+    8,
+    7,
     "store",
     "room"
    ],
    [
-    6,
+    8,
     0,
     4,
-    10,
+    14,
     "yard: fuel,\nmaterials",
     "yard"
    ]
   ],
   "doors": [
    [
-    3,
+    4,
     0,
     "h",
     2.4,
     "s"
    ],
    [
-    3,
-    5,
+    4,
+    7,
     "h",
     1,
     "d"
    ],
    [
-    6,
-    7.5,
+    8,
+    10.5,
     "v",
     1,
     "d"
    ],
    [
-    8,
+    10,
     0,
     "h",
     2.4,
@@ -1240,13 +1287,13 @@
   "hearths": [
    [
     0,
-    1.2
+    2.2
    ]
   ],
   "windows": [
    [
     0,
-    7.5,
+    10.5,
     "v",
     1.2
    ]
@@ -1255,7 +1302,7 @@
   "doodads": [
    [
     0.36,
-    1.18,
+    1.4,
     1.5,
     1.65,
     "forge",
@@ -1264,7 +1311,7 @@
    ],
    [
     0.36,
-    2.97,
+    3.25,
     1.11,
     1.61,
     "bellows",
@@ -1273,7 +1320,7 @@
    ],
    [
     0.36,
-    0.53,
+    0.5,
     0.6,
     0.55,
     "coal bin",
@@ -1281,8 +1328,8 @@
     90
    ],
    [
-    2,
-    2.5,
+    2.3,
+    3.0,
     0.86,
     0.82,
     "slack tub",
@@ -1290,8 +1337,8 @@
     0
    ],
    [
-    2.375,
-    1.725,
+    3.4,
+    2.0,
     0.75,
     0.65,
     "anvil",
@@ -1299,8 +1346,8 @@
     90
    ],
    [
-    1.58,
-    4.52,
+    1.6,
+    6.52,
     0.9,
     0.12,
     "tool rack",
@@ -1308,8 +1355,8 @@
     180
    ],
    [
-    3.53,
-    2.975,
+    5.2,
+    3.6,
     0.84,
     0.55,
     "swage block",
@@ -1317,8 +1364,8 @@
     0
    ],
    [
-    3.62,
-    3.67,
+    5.7,
+    5.4,
     1.9,
     0.97,
     "bench vise",
@@ -1326,61 +1373,16 @@
     180
    ],
    [
-    4.45,
-    0.53,
+    6.55,
+    0.62,
     1.14,
     0.9,
     "grindstone",
-    "the grindstone by the open front, for the light",
+    "the grindstone by the front doors, for the light",
     0
    ],
    [
-    0.6,
-    9.27,
-    1.2,
-    0.37,
-    "stock rack",
-    "bar and rod iron, stood in its rack",
-    180
-   ],
-   [
-    2.8,
-    9.37,
     1.6,
-    0.27,
-    "smith goods",
-    "finished work: chain, boat hooks, rings and a small anchor",
-    180
-   ],
-   [
-    4.6,
-    9.04,
-    0.9,
-    0.6,
-    "chest",
-    "the locked chest for his best tools",
-    180
-   ],
-   [
-    0.36,
-    5.5,
-    0.5,
-    0.5,
-    "keg",
-    "a keg of nails",
-    0
-   ],
-   [
-    2.495,
-    4.5,
-    1.01,
-    0.11,
-    "old blade",
-    "his father's blade, hung above the store door where the street can see it, never sold (beat B)",
-    180
-   ],
-   [
-    0.6,
     0.33,
     1.2,
     0.09,
@@ -1389,7 +1391,7 @@
     0
    ],
    [
-    4.2,
+    5.2,
     0.33,
     1.2,
     0.09,
@@ -1398,24 +1400,69 @@
     0
    ],
    [
-    6.6,
-    1.0,
+    0.6,
+    13.27,
+    1.2,
+    0.37,
+    "stock rack",
+    "bar and rod iron, stood in its rack",
+    180
+   ],
+   [
+    2.8,
+    13.37,
+    1.6,
+    0.27,
+    "smith goods",
+    "finished work: chain, boat hooks, rings and a small anchor",
+    180
+   ],
+   [
+    5.0,
+    13.04,
+    0.9,
+    0.6,
+    "chest",
+    "the locked chest for his best tools",
+    180
+   ],
+   [
+    0.36,
+    7.5,
+    0.5,
+    0.5,
+    "keg",
+    "a keg of nails",
+    0
+   ],
+   [
+    3.495,
+    6.5,
+    1.01,
+    0.11,
+    "old blade",
+    "his father's blade, hung above the store door where the street can see it, never sold (beat B)",
+    180
+   ],
+   [
+    8.5,
+    3.0,
     1.8,
     1.8,
     "charcoal",
     "fuel for the forge"
    ],
    [
-    8.2,
-    5.0,
+    10.2,
+    7.0,
     1.3,
     3.4,
     "woodpile",
     "firewood for the forge"
    ],
    [
-    6.6,
-    8.6,
+    9.0,
+    11.6,
     0.6,
     0.6,
     "chopping block",
@@ -1428,70 +1475,71 @@
   "plot_rooms": [],
   "plot_doors": [],
   "people": "wayfolk",
+  "porch": null,
   "plot_doodads": []
  },
  "farmstead": {
   "name": "Farmstead",
-  "size": "12 \u00d7 12 m: house, byre and barn round a yard",
+  "size": "14 \u00d7 14 m: house, byre and barn round a yard",
   "rooms": [
    [
     0,
     0,
-    4,
-    8,
+    5,
+    9,
     "house",
     "room"
    ],
    [
-    4,
+    5,
     0,
     4,
-    8,
+    9,
     "yard",
     "yard"
    ],
    [
-    8,
+    9,
     0,
-    4,
-    8,
+    5,
+    9,
     "byre",
     "out"
    ],
    [
     0,
-    8,
-    12,
-    4,
+    9,
+    14,
+    5,
     "barn",
     "out"
    ]
   ],
   "doors": [
    [
-    6,
+    7,
     0,
     "h",
     2.4,
     "g"
    ],
    [
-    4,
-    4,
+    5,
+    4.5,
     "v",
     1,
     "d"
    ],
    [
-    8,
-    4,
+    9,
+    4.5,
     "v",
     1.6,
     "d"
    ],
    [
-    6,
-    8,
+    7,
+    9,
     "h",
     2.4,
     "d"
@@ -1500,7 +1548,7 @@
   "hearths": [
    [
     0,
-    5
+    6
    ]
   ],
   "stairs": [
@@ -1514,39 +1562,45 @@
   ],
   "windows": [
    [
-    2,
+    2.5,
     0,
     "h",
     1.4
    ],
    [
     0,
-    2.5,
+    3,
     "v",
     1
+   ],
+   [
+    11.5,
+    0,
+    "h",
+    0.8
    ]
   ],
   "doodads": [
    [
-    4.45,
-    4.6,
+    5.4,
+    5.0,
     1.4,
     2.7,
     "cart",
-    "the farm cart, out of the gateway"
+    "the farm cart"
    ],
    [
-    6.25,
-    5.5,
+    7.35,
+    6.0,
     1.3,
     1.3,
     "manure heap",
     "for the fields"
    ],
    [
-    6.75,
-    0.8,
-    0.8,
+    7.9,
+    1.2,
+    0.75,
     2.2,
     "trough",
     "water for the beasts, along the yard side"
@@ -1558,25 +1612,26 @@
   "plot_doors": [],
   "people": "wayfolk",
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "store": {
   "people": "any",
   "name": "Store or salt house",
-  "size": "8 \u00d7 6 m, one room",
+  "size": "10 \u00d7 8 m, one room",
   "rooms": [
    [
     0,
     0,
+    10,
     8,
-    6,
     "store",
     "out"
    ]
   ],
   "doors": [
    [
-    4,
+    5,
     0,
     "h",
     2.4,
@@ -1586,23 +1641,29 @@
   "windows": [
    [
     0,
-    3,
+    4,
+    "v",
+    0.8
+   ],
+   [
+    10,
+    4,
     "v",
     0.8
    ]
   ],
   "doodads": [
    [
-    0.3,
-    -0.75,
+    0.6,
+    -0.85,
     0.8,
     0.7,
     "barrel",
     "salt fish barrels waiting for the ship"
    ],
    [
-    1.3,
-    -0.75,
+    1.6,
+    -0.85,
     0.8,
     0.7,
     "barrel",
@@ -1616,6 +1677,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "smokehouse": {
@@ -1679,6 +1741,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "boat_shed": {
@@ -1722,6 +1785,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "porch": null,
   "plot_doodads": []
  },
  "salt_works": {
@@ -1779,7 +1843,7 @@
    ],
    [
     4.8,
-    -0.7,
+    -0.8,
     1.0,
     0.6,
     "sacks",
@@ -1793,25 +1857,26 @@
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "granary": {
   "people": "any",
   "name": "Granary",
-  "size": "8 \u00d7 6 m on staddle stones",
+  "size": "10 \u00d7 8 m on staddle stones",
   "rooms": [
    [
     0,
     0,
+    10,
     8,
-    6,
     "grain bins",
     "out"
    ]
   ],
   "doors": [
    [
-    4,
+    5,
     0,
     "h",
     1.4,
@@ -1820,16 +1885,16 @@
   ],
   "doodads": [
    [
-    0.3,
-    -0.75,
+    0.6,
+    -0.85,
     2.2,
     0.7,
     "sacks",
     "grain going in at harvest"
    ],
    [
-    6.0,
-    -0.75,
+    8.4,
+    -0.85,
     0.7,
     0.7,
     "barrel",
@@ -1844,6 +1909,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "guard_post": {
@@ -1899,6 +1965,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "hen_house": {
@@ -1957,25 +2024,26 @@
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  },
  "merrith_shrine": {
   "people": "any",
   "name": "Shrine of Merrith",
-  "size": "5 \u00d7 5 m",
+  "size": "6 \u00d7 8 m, a small chapel",
   "rooms": [
    [
     0,
     0,
-    5,
-    5,
-    "altar",
+    6,
+    8,
+    "nave\nand altar",
     "room"
    ]
   ],
   "doors": [
    [
-    2.5,
+    3,
     0,
     "h",
     1.2,
@@ -1985,20 +2053,20 @@
   "windows": [
    [
     0,
-    2.5,
+    4,
     "v",
     1
    ],
    [
-    5,
-    2.5,
+    6,
+    4,
     "v",
     1
    ]
   ],
   "doodads": [
    [
-    3.4,
+    4.4,
     -0.6,
     0.5,
     0.5,
@@ -2006,13 +2074,14 @@
     "candles and offerings at the door"
    ]
   ],
-  "note": "Farhallow's small shrine to the merciful goddess: candles, offerings, a stone bench by the door",
+  "note": "Farhallow's small chapel to the merciful goddess: candles, offerings, benches inside facing the altar",
   "hearths": [],
   "stairs": [],
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
   "interior": false,
+  "porch": null,
   "plot_doodads": []
  }
 }
