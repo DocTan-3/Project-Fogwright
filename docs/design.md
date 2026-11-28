@@ -115,7 +115,7 @@ Combat is **action aim** everywhere *(decided 2026-11-28)*: swings, shots and sp
 
 - **Loot:** creatures drop Fog shards and gear by rarity (common, uncommon, rare, epic, and the one-of-a-kind legendaries in weapons.md), with item power and stats. Gear can be equipped or salvaged into shards.
 
-- **Quests:** quest givers at settlements offer chains that lead outward, ending in dungeons and elites.
+- **Quests** *(decided 2026-11-28)*: each player has their **own story progress**, but big moments (freeing Vael, Grace shifts) happen **once for the whole server**. Side quests come from **marked quest givers** and town **notice boards**; most board jobs are simple, a few start long questlines. Chains lead outward, ending in dungeons and elites. Some quests offer **small choices** (a side or an outcome) that change rewards and standing, not the world. A few **optional daily** board jobs give a small bonus. The tracked quest shows a **mark on the top compass** and an area on the map.
 
 - **Layout:** landscape only on phones and tablets. Building has its own mode with its own controls.
 

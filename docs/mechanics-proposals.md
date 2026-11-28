@@ -25,6 +25,8 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
 - **Summons and mounts (decided):** summons from gear and skills (drones, sentries), attack or support, last until
   destroyed, cap from nodes starting at 0; taming is for mounts only; built mounts need specialisation; mounts are
   travel only with their own moves, have their own health (knocked out on a cooldown), equip as items, tradeable.
+- **Quests (decided):** personal story plus server-wide world beats; marked givers and notice boards; small choices;
+  light dailies; compass marks.
 
 ## Core mechanics (decided 2026-11-28)
 
@@ -316,6 +318,11 @@ So ruins look different and teach the history (design.md asks for hand-made room
 | Fallen freeholds | Third age | Villages like Farhallow, grey and quiet | Greyed villagers still living their last day; settlers to save |
 
 ## Quests, in layers
+
+**Decided 2026-11-28:** personal story progress, with big world moments happening once for the whole server;
+marked quest givers plus notice boards (mostly simple jobs, some long questlines); small choices that change rewards
+and standing, not the world; light optional dailies with a small bonus; compass marks and a map area for the tracked
+quest.
 
 1. **The main story** (lore-proposals.md's acts), for the whole group.
 2. **God questlines:** the claiming trial and a chain for each god, ending with something only their chosen get.
