@@ -380,3 +380,58 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
    Fog shards go into the inner city and nothing comes out. He becomes the players' secret ally in Aldrath.
 
 lore.md's open questions were answered on 2026-11-28 and merged there.
+
+## The main continent: places (proposal, 2026-11-28)
+
+A Skyrim-style spread of named places for the playable main continent (about 20 km across). All names are working
+names. Distances are rough, from Aldrath at the centre.
+
+### Land
+
+| Feature | Where | What it is |
+| --- | --- | --- |
+| **The Kingsteeth** | The north, east to west | The main mountain range, 500 to 800 m, snow on the peaks; passes, cliff paths, mines. Highest peak: **Old Crown** |
+| **The Redwold hills** | The west | Forested hills of the Ruadhan, sickening at their outer edge |
+| **The Downs** | South of Aldrath, toward Hollin's Cross | Rolling farm hills, the safest country in the world |
+| **The Aldwater** | From the Kingsteeth, south through Aldrath, to the sea at Hollin's Cross | The great river; mills and waterwheels along it, barges to the port |
+| **The Rede** | From the Redwold hills east into the Aldwater | A fast forest river, rapids and fords |
+| **The Weeping Fen** | The Greying Coast | A grey salt marsh where the Fog pools, around Farhallow's bay |
+| **The Scar** | The north-east coast | The cliff and chasm where Erde was split; Ostrevan hangs over it |
+
+### Settlements (beyond the three cities)
+
+| Place | Where | What it is |
+| --- | --- | --- |
+| **Tollford** | On the Aldwater, north of Aldrath | A mill town at the river ford; grain, barges, the last inn before the mountains |
+| **Copperhythe** | Kingsteeth foothills | A mining village of Ferrin and Wayfolk; ore, coal, a smithy town |
+| **Brinewick** | The south coast, east of Hollin's Cross | A fishing village; boats, smokehouses, smugglers' coves |
+| **Lampwatch** | On the east lantern road | A Vigil waypost town where the coils are wound for the road; the last safe bed before the Greying Coast |
+| **Thornby** | The Redwold's edge | A logging village holding on as the forest sickens |
+| **Gunhill** | The Old Front | A scavengers' camp inside a half-buried gun fort; salvage traders and relic hunters |
+| **Lastrope** | The clifftop above Ostrevan | An explorers' camp of ropes, winches and lifts down into the chasm |
+
+### Caves and dungeons
+
+| Place | Where | What it is |
+| --- | --- | --- |
+| **Echo Mine** | Above Copperhythe | An abandoned mine where miners' Echoes still swing their picks |
+| **Wolfden** | The Redwold | A cave system of Fog-touched wolves |
+| **The Drowned Grotto** | The Greying Coast | A sea cave reached at low tide; smugglers once, now something else |
+| **The Trenchworks** | The Old Front | Tunnels and bunkers under the battlefield, with sleeping war machines |
+| **The Undervault** | Under Ostrevan | Persistent dungeon levels down the chasm face |
+
+### Bandit forts and enemy holds
+
+Two kinds of enemies hold forts:
+
+- **Briarkin** (lore.md: the wild men, like Skyrim's Forsworn) in the hills and forests.
+- **The Unlit** *(new, proposal)*: deserters and outlaws who rob caravans on the lantern roads and smash the lamps to
+  hide in the Fog.
+
+| Place | Who | What it is |
+| --- | --- | --- |
+| **Fort Cinder** | The Unlit | A burned-out second-age fort on the Old Front, their biggest hold |
+| **Redhook Keep** | The Unlit | A ruined hill keep over the Rede, raiding barges and the west road |
+| **Briar Hollow** | Briarkin | A thorn-walled camp deep in the Redwold |
+| **The Antler Stones** | Briarkin | A standing-stone hill camp in the Kingsteeth foothills |
+| **Saltreach Tower** | The Unlit | A lighthouse on the Greying Coast, its light put out |
