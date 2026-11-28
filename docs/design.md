@@ -192,7 +192,7 @@ There are no classes. Every character can fight and craft completely without the
 - **Five wedges.** The web is cut into wedges running from the centre to the edge: **Combat, Crafting, Gathering, Utility** (the paths), and a separate **Magic** wedge holding the gods' regions.
 - **The Magic wedge** stays shut until a god claims you. Claiming opens your god's foothold there, far from the other gods' regions, and from it you can walk to any other god's magic. Aldrath has no region; Vael's region is hidden until he is freed.
 - **Node kinds:** **small** nodes (stats), **notables** (strong perks or moves) and rare **keystones** that change a rule (the dodge becomes a dash, blocks can stop heavy blows).
-- **Every node you own is always active**; there are no loadout limits.
+- **Every node you own is always active**; there are no loadout limits. **Exclusive nodes:** nodes that change the same mechanic (the dodge becoming a dash or a blink) exclude each other; taking one blocks the others until a respec.
 - **Points:** each level gives node points; there is no level cap.
 - **Mastery by use:** weapon, armour, gathering and craft lines also gain mastery as you use them, Albion-style. Any tier of gear can be equipped, but it works weaker below the mastery it needs, and mastery adds small bonuses to that line.
 - **Respec:** at a dedicated respec NPC, and expensive.
