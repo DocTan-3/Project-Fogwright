@@ -7,9 +7,9 @@ extends Node3D
 const W := 1.4
 const H := 2.2
 const SWING := 100.0
-var leaf_mesh: Mesh
-var swing_sign := 1   # 1 swings toward the leaf's inner side (-Z), -1 the other way
-var open := false
+@export var leaf_mesh: Mesh   # exported, so a baked building (BuildingKit.bake) keeps its doors
+@export var swing_sign := 1   # 1 swings toward the leaf's inner side (-Z), -1 the other way
+@export var open := false
 var _swing: Node3D
 var _angle := 0.0
 
