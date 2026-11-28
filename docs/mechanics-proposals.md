@@ -199,16 +199,18 @@ says arcane engines do.
 inscriptions and books, raised by use. They open schematics, lore fragments and hidden doors. Seraveth's chosen read them
 all without the skill.
 
-## Taming: Zarhim and Ruadhan ways
+## Taming (decided: one method for everyone)
 
-Two ways to get a beast, and both are open to everyone, but each people starts ahead in its own.
+Every people tames the same way; only the beasts differ by region (decided 2026-11-28). Proposal for the method: find a
+wild beast, wear it down without hurting it badly, then calm it (food, patience, staying near it) until it accepts you.
+Zarhim and Ruadhan start with a small bonus to taming, as the peoples known for it.
 
-| | **Field taming** (the Zarhim way) | **Breeding** (the Ruadhan way) |
-| --- | --- | --- |
-| How | Find a wild beast, wear it down without hurting it badly, then **endure** with it: share water, follow it, survive a night beside it | Buy or tame a pair, keep them in a stable (warp space or Freehold), breed them; foals and pups are raised from birth |
-| Result | A wild-born beast with random traits, often strong in harsh places | Predictable traits that improve over generations; can be sold |
-| Speed | Hours of play for one beast | Days of real time for a line |
-| Beasts (examples) | Sand striders, dune lizards, carrion kites (scouts), desert cats | Horses, war hounds, great elk, draught oxen |
+| Region | Beasts (examples) |
+| --- | --- |
+| The Sere (Zarhim) | Sand striders, dune lizards, carrion kites (scouts), desert cats |
+| The Redwold (Ruadhan) | Horses, war hounds, great elk |
+| The Rimeholds | Snow wolves, shaggy draught oxen, sea eagles |
+| Aldrath's heartland | Horses, oxen, hounds |
 
 **Mounts** (design.md plans them): horses first, then larger beasts. Fogtouched beasts can never be tamed, except by
 Oriel's chosen with the Ride move, for a while.

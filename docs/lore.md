@@ -101,6 +101,19 @@ Four of the twelve stand apart. Oriel and Vael lost their peoples before the thi
 
 **Galeth the Vigilant and the Lantern Vigil.** Galeth, god of protection, becomes the first of the remaining gods to be devoured by the Fog, as an event during the story. His crusader-like order of men, fiercely loyal, journeys into the Fog to search for him. Their search is part of the main story.
 
+### How the truth comes out *(decided 2026-11-28)*
+
+Slowly, as a trail of clues across the story, so players can suspect before they know:
+
+1. On the night after a player is first claimed, every Fog-pusher lamp in the world flickers at once.
+2. Galeth falls; the Last Bastion's flame goes out.
+3. In the Fog, the Vigil finds not Galeth's remains but a drag trail, where the Fog itself was pulled away.
+4. The Verdane clue: the one god whose magic ordinary people still use is the one fading slowest.
+5. Vael, hidden since the second age, finally speaks.
+6. The Undercroft of the Rule, under the sealed city.
+
+The acts built on these are drafted in lore-proposals.md.
+
 ## Magic
 
 Magic is a mysterious driving force, in the spirit of Lord of the Rings, not a mage throwing fireballs and lightning bolts.
@@ -109,6 +122,7 @@ Magic is a mysterious driving force, in the spirit of Lord of the Rings, not a m
 - **It powers the greatest machines.** Even the greatest technomancers rely on the mysterious force of one of the Gods to power their contraptions.
 - **Ordinary machines are separate.** Turrets, sentries and everyday contraptions run without any god's power.
 - **Forbidden to most.** Outside the chosen, magic is outlawed among the "good" races.
+- **What claiming gives** *(decided 2026-11-28)*: each god grants a quiet magic of their own (drafted in mechanics-proposals.md). Being claimed also gives a **seat** in that god's city, a warp bind and favour with its people, but not a new home: homes stay in the warp space. Aldrath claims no one.
 
 ## The peoples
 
@@ -203,7 +217,7 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | The Slag Isles | Isles to the west | Ferrin | Ostrak | **Ashforge**: carved into a volcano's flank | Thriving against the odds: volcanic heat and forge smoke keep the Fog thinner; they trade metal for food |
 | The Sere | The southern continent | Zarhim | Khesra | **Qaraseth**: oasis city, a gathering place for caravans | Holding: the Zarhim always lived with scarcity, and their ways still work |
 | The Last Bastion | The northern continent's far coast, facing the Sundering | The Lantern Vigil | Galeth | Fortress-monastery of the Vigil | Besieged: it stands at the edge of the Fog; it falls during the story |
-| The Forsaken lands | A landing on the southern continent's far coast | The Forsaken | The 14th, hidden | Unknown | The evil lands |
+| The Godless Reach | Beyond the southern continent's far coast, with a landing on that coast | The Forsaken | The 14th, hidden | Unknown | The evil lands: no gods remain there |
 | (none) | Everywhere | Ilvari | Seraveth | No hometown: enclaves and caravans | Fading: their numbers dwindle as their magic did |
 
 **The start: the fall of Farhallow.** Players begin as freefolk in **Farhallow** *(working name)*, a fishing and farming village on the main continent's far coast, outside any god's circle: home to freefolk of every people who could not afford to move inward. The Fog takes it on the first evening of the game.
@@ -222,13 +236,26 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 
 **What it means:** a village falling so far inward is a sign that Aldrath's protection is weakening, the first hint of what the story will reveal. Later, each people may get its own opening in its own homeland, all ending on a ship to Hollin's Cross *(proposal)*. Like Riverwood, Whiterun and Falkreath, places sit a real journey apart, and quests lead onward without hand-holding.
 
+### Each region's land *(decided 2026-11-28)*
+
+| Region | Trees and plants | Crops | How the Fog changes it |
+| --- | --- | --- | --- |
+| The far coast (Farhallow) | Wind-bent pines, gorse, heather, sea thrift on the cliffs, dune grass | Barley, beans, hay, cabbages | Heather turns ash-grey, pines lose their needles but stand, gulls go silent |
+| Aldrath's heartland | Oaks, limes, chestnuts, orchards, hedgerows | Wheat, vines, everything | Barely: colour stays bright; the only sign is how still the air is near the walls |
+| The Redwold (Ruadhan) | Great oaks, rowan, yew, beech, ferns, bluebells | Oats, apples, pasture | Bark peels and goes white, rot spreads from the roots, beasts born small |
+| The Aurelan Isles | Cypress, olive, lemon groves, lavender, poppies | Grain, olives, grapes, the old breadbasket | Fields grow tall and empty: the stalks are there, the grain is not |
+| The Rimeholds (Hrimfolk) | Birch, spruce, juniper, moss and lichen, cotton grass | Almost none: some rye and turnips | Little changes; the snow goes grey, the auroras fade |
+| The Slag Isles (Ferrin) | Black pines, fire-moss, ash ferns, tough grasses on the lava | Tubers, mushrooms grown in warm caves | Held back by the heat; where forges go cold, everything greys at once |
+| The Sere (Zarhim) | Date palms at oases, tamarisk, thornbush, desert blooms after rain | Dates, millet, figs | Oases sink; dunes march; mirages show the Fog's memories |
+| The Godless Reach | Dead forest, black reeds, grey grass that grows in spirals | None | It is the Fog |
+
 **The three moons.** Three moons cross the night sky on their own paths, so they rise and set at different times and change position from night to night: a large pale moon, a small violet moon, and a broken moon split by a jagged crack, its fragments drifting beside it. The three moons are gods themselves, who chose to seclude themselves from the world. The gods behind them are forgotten; only the names people gave the moons remain. The large pale moon is barren, devoid of everything. The small violet moon is a god's own self and the home of his people, a mysterious race he placed there; this is a secret for now, and reaching it belongs to a future expansion. The broken moon is a consequence of the first war: it was struck by a stray attack from one of the beings of the first age, whose actions brought cataclysm upon the world (which being does not matter), and remains broken as a permanent reminder that some forces in the world can move more than just mountains, or so the legends say.
 
 | Moon | Common name | Hrimfolk | Zarhim | Aurelans |
 | --- | --- | --- | --- | --- |
 | Pale, barren | The Hollow | Frostskull | the Dry Well | the Pale Lady |
 | Violet, a god's self | The Veiled | Dreamlight | the Night Rose | the Shrouded Bell |
-| Broken | The Shard | (to be named) | the Broken Cup | the Wound |
+| Broken | The Shard | the Godscar | the Broken Cup | the Wound |
 
 **Aldrath's city and where the journey begins.** The outer city is alive, the greatest city of the third age, reachable by ship and by warp. It is about 600 metres across, the trading hub and main town of the world, with a quarter for each people around a grand plaza where statues of the twelve face the sealed walls. Aldrath sealed the inner city himself, as a safe haven for the weaker gods, at least in theory; in truth it is where he devours them. Every player arrives as one of the freefolk of their people, a survivor of Farhallow, not yet claimed by any god. Being claimed by a god later in the journey decides which magic a player can take; there are no classes.
 
@@ -244,21 +271,29 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 
 **Scale:** the world stays within the 20 km budget for now, spread across the continents and isles: Aldrath's heartland is the largest region, and each hometown's domain spans a few kilometres. Following the plan to build a playable world first, launch could start with Aldrath's outer city and one neighbouring domain, then open further domains in later updates *(proposal)*.
 
-**Open:** who lives in Aldrath's outer city and how it is reached; which peoples share which lands; where the Forsaken came from and where the shattered capital lies; which smaller lands are saved for future releases.
+**Aldrath's outer city** *(decided 2026-11-28)*: a quarter for each people round the plaza of the twelve. The Ordinal's courts and the Censure's hall stand on the plaza itself, facing the sealed walls. Beneath the sealed core lies the **Undercroft of the Rule**, the hidden hall where Aldrath keeps his plans, which no one alive knows of except Vael.
+
+**Freeholds** *(decided 2026-11-28)*: yes, there are settlements outside any god's protection. Freeholds are cheap frontier villages, like Farhallow, that many freefolk risk because the land is free. Many are falling, and every one that falls gives the 14th more Greyed. Players can retake fallen freeholds as their group's shared bases.
+
+**The Penitent's town** *(decided 2026-11-28)*: the freed Penitent have built a refuge town of their own, closely watched by the Censors. Its name and place are still open.
+
+**Open:** which peoples share which lands; where the Forsaken came from and where the shattered capital lies; which smaller lands are saved for future releases.
 
 ## Open questions
 
-- [ ] Final names for the gods and peoples (all are working names).
-- [ ] The Hrimfolk name for the Shard, and moon names among the other peoples.
+- [ ] The Penitent's town: its name and where it stands.
+
+- [x] Final names for the gods and peoples: keep the working names for now *(decided 2026-11-28)*; a naming pass comes later.
+- [x] The Hrimfolk name for the Shard: **the Godscar**. (Moon names among the Ruadhan, Ferrin and others are drafted in lore-proposals.md.)
 - [x] Which god each people belongs to: answered by the table of the twelve. (Naming styles per people are in characters.md.)
-- [x] Where the Forsaken came from: the Greyed, remade by the 14th. (Where they live and where the freed go is still open.)
-- [ ] Desert and forest people are both tamers: how their taming differs.
-- [ ] What the outer city of Aldrath is like: its districts, peoples and the walls around the sealed core.
-- [ ] Which magic each god grants, and does being claimed also change a player's home city?
+- [x] Where the Forsaken came from and live: the Greyed, remade by the 14th, in the Godless Reach; the freed Penitent have a town of their own.
+- [x] Desert and forest taming: the same method for everyone; only the beasts differ by region *(decided 2026-11-28)*.
+- [x] Aldrath's outer city: quarters, the plaza courts, the Undercroft (above).
+- [x] What claiming gives: each god's own magic and a seat, not a new home (see Magic).
 - [x] Can players be claimed by the head of the Gods without knowing who he truly is? **No** *(decided 2026-11-28)*.
-- [ ] Are there settlements outside any god's protection?
+- [x] Settlements outside any god's protection: yes, the freeholds.
 - [x] Why the twelve are losing their magic: the Ban starved the Return, and Aldrath's well drinks what is left.
-- [ ] Which lands of the split Erde the game's island belongs to.
-- [ ] The evil lands: their name, and the peoples who remain there.
-- [ ] How the story reveals the 14th: the first signs, and who suspects the truth.
-- [ ] Each region's vegetation: its trees, undergrowth, shore plants and crops, and how the Fog changes them (the far coast, the Redwold, the Aurelan Isles, the Rimeholds, the Slag Isles, the Sere).
+- [x] The game's land is the main continent *(decided 2026-11-28)*.
+- [x] The evil lands are **the Godless Reach**, home of the Forsaken.
+- [x] How the story reveals the 14th: a slow trail of clues (see How the truth comes out).
+- [x] Each region's vegetation: in the table under Regions and cities.

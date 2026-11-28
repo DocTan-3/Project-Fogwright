@@ -32,11 +32,11 @@ chosen gets no Return from them, and yet he alone never fades.
 | The first-age empire | **the Concord of Erde**, or simply the Concord | It was an empire built on a promise (the two rules); breaking it is the original sin |
 | Its capital, the shattered capital | **Aumenor, the Crown of Erde** | Sunk and broken in the Sundering; the endgame |
 | The script of the first age | **Old Concordant**, the "Concord hand" | Players learn to read it from inscriptions |
-| The evil lands | **the Hollowmarch** | A march (border land) that is hollow: no gods remain |
+| The evil lands | **the Godless Reach** (decided) | Plain and ominous: no gods remain there |
 | Vael's lost people | **the Sennari**, called the Doorfolk | Builders of the warps |
 | The great evil, as people know it before the reveal | **the Unnamed**, or "the One Below" by the Penitent | Nobody knows it has a name, and it has one: Aldrath's |
 | The gods' power as people say it | **grace** | "She has grace": she is chosen. "The grace is thin here": the Fog is near |
-| The Hrimfolk name for the Shard | **the Splitshield** | A shield broken in a fight that was not theirs |
+| The Hrimfolk name for the Shard | **the Godscar** (decided) | A wound left on the sky by the gods' war |
 | Other moon names | Ruadhan: the Milk Cow, the Hound's Eye, the Torn Ear; Ferrin: the Cold Slag, the Ember, the Cracked Crucible; Ilvari: Absence, Memory, Proof | Each people sees its own life in the sky |
 
 ## The truth of the world, in order
@@ -61,7 +61,7 @@ war for them. Both rules broke at once.
 
 **The Splitting.** When the war reached Aumenor itself, Aldrath "ended" it. He broke Erde apart with a single working
 so great that a stray piece of it struck the third moon and cracked it, and Aumenor fell into the tear. The other gods
-saw a hero. He punished the corrupt gods he had stirred up, confining them together in the Hollowmarch, and sent every
+saw a hero. He punished the corrupt gods he had stirred up, confining them together in the Godless Reach, and sent every
 god with their people to their own land. Each people was changed by its god into what we see now. A new peace was born.
 
 **What it really did:** the Splitting scattered the peoples so no other god could ever gather the Return as Aumenor once
@@ -105,16 +105,16 @@ faded to hold their own circle were brought inside, with great ceremony, "to res
 city is a larder. **(proposal: nearly empty, a few faded gods still alive and imprisoned, which the players can free in
 the endgame.)**
 
-**The 14th.** In the Hollowmarch, the corrupt gods kept using their magic, and with no Return they withered. Aldrath went
+**The 14th.** In the Godless Reach, the corrupt gods kept using their magic, and with no Return they withered. Aldrath went
 there in secret, in a second body made of his own pulled-in power, and devoured them one by one. That second body is the
-14th. To the twelve he still sits behind his walls. To the Hollowmarch he is the only god. He now has enough power that
+14th. To the twelve he still sits behind his walls. To the Godless Reach he is the only god. He now has enough power that
 he no longer needs the twelve alive. He needs them to fade a little faster, and he needs their peoples gathered close to
 the centre, where the well can drink them when the time comes.
 
 **The fall of Galeth.** Galeth the Vigilant, god of protection, stands at the Last Bastion facing the Sundering. He has
 started to suspect where the drawn magic goes, because his circle shrinks from the wrong side. During the story he is
 "devoured by the Fog". In truth the 14th takes him. **(proposal: Galeth is not dead either; he is held in the
-Hollowmarch, and the Vigil's search for him is the road to the truth.)**
+Godless Reach, and the Vigil's search for him is the road to the truth.)**
 
 ### Why Aldrath does it
 
@@ -203,8 +203,9 @@ Short additions to each people, for culture sheets later.
 Penitent remember everything they did and scourge themselves because the pain is the only thing that drowns out the
 14th's voice.
 
-**Where the Penitent go:** to Hollin's Cross, where Hollin's priests take them in at the waylodges, and to the
-**House of Ash**, a Penitent monastery on the edge of the Sere that Khesra tolerates. The Censors watch both.
+**Where the Penitent go** (decided): to a refuge town of their own (see lore.md). Proposal for it: working name
+**Mercyhold**, on the main continent's southern coast facing the Godless Reach across the water, built round a
+Merrith shrine, with a Censure watch-house at its gate.
 
 ### The Briarkin and the Lessborn
 
@@ -318,19 +319,6 @@ person back. After the turn, nothing can, except, rumour says, Merrith.
 magic. Caster foci burn them, inventions use them, and the Ordinal buys them up "to be destroyed". (Where they actually go
 is one more clue: the Ordinal ships them all to the inner city.)
 
-## Regions and their land (answer to an open question)
-
-| Region | Trees and plants | Crops | How the Fog changes it |
-| --- | --- | --- | --- |
-| The far coast (Farhallow) | Wind-bent pines, gorse, heather, sea thrift on the cliffs, dune grass | Barley, beans, hay, cabbages | Heather turns ash-grey, pines lose their needles but stand, gulls go silent |
-| Aldrath's heartland | Oaks, limes, chestnuts, orchards, hedgerows | Wheat, vines, everything | Barely: colour stays bright; the only sign is how still the air is near the walls |
-| The Redwold (Ruadhan) | Great oaks, rowan, yew, beech, ferns, bluebells | Oats, apples, pasture | Bark peels and goes white, rot spreads from the roots, beasts born small |
-| The Aurelan Isles | Cypress, olive, lemon groves, lavender, poppies | Grain, olives, grapes, the old breadbasket | Fields grow tall and empty: the stalks are there, the grain is not |
-| The Rimeholds (Hrimfolk) | Birch, spruce, juniper, moss and lichen, cotton grass | Almost none: some rye and turnips | Little changes; the snow goes grey, the auroras fade |
-| The Slag Isles (Ferrin) | Black pines, fire-moss, ash ferns, tough grasses on the lava | Tubers, mushrooms grown in warm caves | Held back by the heat; where forges go cold, everything greys at once |
-| The Sere (Zarhim) | Date palms at oases, tamarisk, thornbush, desert blooms after rain | Dates, millet, figs | Oases sink; dunes march; mirages show the Fog's memories |
-| The Hollowmarch | Dead forest, black reeds, grey grass that grows in spirals | None | It is the Fog |
-
 ## The main story, in acts (proposal)
 
 Built so launch can ship with the Prologue and Act I, and each update adds an act. Every act ends on a place the players
@@ -358,7 +346,7 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 - **The fall of Galeth.** The Last Bastion's First Flame goes out. Galeth is gone. The Vigil marches into the Fog;
   players can join the march.
 - In the Fog they find not Galeth's remains but **a drag trail**: a path where the Fog itself was pulled toward the
-  south-west. Toward the Hollowmarch, everyone assumes.
+  south-west. Toward the Godless Reach, everyone assumes.
 - The Vigil splits (see above). Players pick a side, or neither.
 - An Ilvari archivist, **Ithel Varr** (working name), shows the players the Verdane clue: the one god ordinary people
   still use is the one not fading. She is arrested by the Censure the next day.
@@ -366,7 +354,7 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 
 ### Act III: The Empty Lands
 
-- The expedition to the Hollowmarch. There are no evil gods: their seats are empty, their temples gnawed.
+- The expedition to the Godless Reach. There are no evil gods: their seats are empty, their temples gnawed.
 - One will rules the Forsaken now: the 14th. The Lessborn tribes march under him for the first time in history.
 - **Vael speaks.** In a broken Sennari warp, Vael finally appears to the players, tired and ashamed, and tells them what
   he saw in the Undercroft of the Rule. He cannot prove it.
@@ -401,21 +389,4 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 6. **One Ordinant**: an old judge of the Ordinal, **Prelate Corwen Ashe** (working name), who has noticed that the
    Fog shards go into the inner city and nothing comes out. He becomes the players' secret ally in Aldrath.
 
-## Answers to lore.md's open questions
-
-| Open question | Proposed answer |
-| --- | --- |
-| Final names for the gods and peoples | Keep the working names for now; this file adds the missing ones (above) |
-| The Hrimfolk name for the Shard, and other moons | The Splitshield; others in the names table |
-| Names for each people, and which god each belongs to | Already in lore.md's table of the twelve; naming styles in characters.md |
-| Where the Forsaken live, where the freed go | The Hollowmarch; the Penitent go to the waylodges and the House of Ash |
-| Desert and forest taming | Zarhim tame wild beasts in the field by patience and shared hardship; Ruadhan breed beast lines from birth (mechanics in mechanics-proposals.md) |
-| Aldrath's outer city | A quarter for each people round the plaza of the twelve, with the Ordinal's courts and the Censure's hall on the plaza; the Undercroft beneath the sealed core |
-| Which magic each god grants; does being claimed change a home city | See mechanics-proposals.md; claiming gives a seat (a warp bind and favour) in that god's city, but no new home |
-| Can players be claimed by the head of the Gods | No (decided): he claims no one |
-| Settlements outside any god's protection | Yes: the **freeholds**, like Farhallow, cheap frontier land many freefolk risk; many are falling |
-| Why the twelve are losing their magic | Decided: the Ban starved the Return; Aldrath's well drinks what is left |
-| Which lands the game's island belongs to | The main continent, as lore.md already says |
-| The evil lands: name and peoples | The Hollowmarch; the Forsaken, and Lessborn tribes who now follow the 14th |
-| How the story reveals the 14th | The acts above: the lamps flicker, Galeth falls, the drag trail, the Verdane clue, Vael, the Undercroft |
-| Each region's vegetation | The regions table above |
+lore.md's open questions were answered on 2026-11-28 and merged there.
