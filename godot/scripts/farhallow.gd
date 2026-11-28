@@ -74,7 +74,6 @@ func _ready() -> void:
 	pads.append([WELL, Vector2(6, 6), 0.0, _base(WELL)])     # the square round the well is level
 	_terrain()
 	_sea()
-	for p in PATHS: _path(p[0], p[1], p.size() > 3)
 	for b in BUILDINGS.size(): _build(b)
 	for pl in PLAN.plots: _plot(pl)
 	_well()
@@ -138,7 +137,7 @@ func _terrain() -> void:
 			st.add_index(a + 1); st.add_index(a + nx + 2); st.add_index(a + nx + 1)
 	st.generate_normals()
 	var mi := MeshInstance3D.new(); mi.mesh = st.commit(); mi.name = "Terrain"
-	mi.material_override = _ground_material("Grass")
+	mi.material_override = _ground_shader()
 	add_child(mi)
 	if not has_node("TerrainBody"):
 		mi.create_trimesh_collision(); mi.get_child(0).name = "TerrainBody"; mi.get_child(0).reparent(self)
@@ -199,7 +198,7 @@ func _path(pts: Array, width: float, trail := false) -> void:
 const STOREYS := {"street_house": 2, "merchant_house": 2, "merchant_house_small": 2, "inn": 2}
 const LOW := {"hen_house": 0.55, "salt_works": 0.8, "guard_post": 0.85, "smokehouse": 0.9}   # small sheds: lower walls
 const THATCH_TYPES := ["cottage", "farmstead", "hen_house", "smokehouse", "boat_shed", "salt_works", "granary"]
-const ROOF_SIZES := {4: [4, 6, 8], 6: [4, 6, 8, 10, 12, 14], 8: [8, 10, 12, 14]}
+const ROOF_SIZES := {4: [4, 6, 8], 6: [6, 8, 10, 12, 14], 8: [8, 10, 12, 14]}   # (the kit's 6x4 is a single slope, not a roof)
 
 func _wall_kinds(b: Dictionary) -> Array:
 	match b.zone:
@@ -236,6 +235,22 @@ func _build(i: int) -> void:
 	for r in roofs:
 		for e in _edges(r, roofs):
 			_wall_run(e, r, ty, storeys, low, kinds, L, mir)
+	for e in _inner_edges(roofs):                            # partitions between rooms, with the floorplan's inner doors
+		_wall_run(e, [], ty, 1, low, kinds, L, mir, true)
+	for r in rooms:                                          # floors: boards in rooms, flags in shops and sheds, earth in yards
+		if r[5] == "garden": continue
+		var fl := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(r[2], 0.1, r[3]); fl.mesh = bm
+		var key: String = {"room": "WoodTrim", "shop": "RockTrim", "out": "RockTrim", "stone": "RockTrim", "yard": "path"}.get(r[5], "WoodTrim")
+		var fm := StandardMaterial3D.new(); fm.albedo_color = Palette.col(key) / (0.78 if key != "path" else 0.8)
+		fm.albedo_texture = load("res://assets/library/%s_detail.png" % ({"WoodTrim": "WoodTrim", "RockTrim": "RockTrim", "path": "Path"}[key]))
+		fm.uv1_triplanar = true; fm.uv1_scale = Vector3(0.5, 0.5, 0.5); fl.material_override = fm
+		fl.position = L.call(r[0] + r[2] * 0.5, r[1] + r[3] * 0.5, -0.03 if r[5] == "yard" else -0.02); root.add_child(fl)
+		if _is_roofed(r) and r in roofs:                     # the floors of the storeys above
+			for st in range(1, storeys):
+				var up := MeshInstance3D.new(); var um := BoxMesh.new(); um.size = Vector3(r[2], 0.12, r[3]); up.mesh = um
+				var wm := StandardMaterial3D.new(); wm.albedo_texture = load("res://assets/library/WoodTrim_detail.png"); wm.albedo_color = Palette.col("WoodTrim") / 0.78
+				wm.uv1_triplanar = true; wm.uv1_scale = Vector3(0.5, 0.5, 0.5); up.material_override = wm
+				up.position = L.call(r[0] + r[2] * 0.5, r[1] + r[3] * 0.5, st * STOREY * low - 0.07); root.add_child(up)
 	# yards: a wall round the well-off's, a fence round the others, open where a building or a gate meets them
 	for r in rooms:
 		if r[5] == "yard" and not str(r[4]).begins_with("arch"):
@@ -315,49 +330,119 @@ func _opening(ty: Dictionary, p0: Vector2, p1: Vector2, n: Vector2) -> Array:
 		if t >= lo - 0.01 and t <= hi + 0.01: return ["w", w[3]]
 	return []
 
-func _wall_run(e: Array, r: Array, ty: Dictionary, storeys: int, low: float, kinds: Array, L: Callable, mir: bool) -> void:
+## a wall line cut into pieces round its openings: [from, to, kind ("d" door, "g"/"o"/"s" open, "w" window, "" plain), width].
+## Every door gets one 2 m piece centred on it (so the door sits in the middle of its frame, never two leaves for one door);
+## gates, archways and open fronts are gaps exactly their width; the rest is plain pieces of about 2 m, a window in the
+## piece where the floorplan has one
+func _segments(a: Vector2, bb: Vector2, n: Vector2, ty: Dictionary) -> Array:
+	var horiz := n.x == 0.0
+	var line: float = a.y if horiz else a.x
+	var lo: float = a.x if horiz else a.y; var hi: float = bb.x if horiz else bb.y
+	var at := func(t: float) -> Vector2: return Vector2(t, line) if horiz else Vector2(line, t)
+	var spans := []
+	for d in ty.doors:
+		if (d[2] == "h") != horiz or absf((d[1] if horiz else d[0]) - line) > 0.05: continue
+		var t: float = d[0] if horiz else d[1]
+		if t < lo - 0.01 or t > hi + 0.01: continue
+		var hw: float = 1.0 if d[4] == "d" else float(d[3]) * 0.5
+		var s0 := clampf(t - hw, lo, hi); var s1 := clampf(t + hw, lo, hi)
+		if d[4] == "d" and s1 - s0 < 2.0 and hi - lo >= 2.0:            # a door near a corner: its piece slides in, still 2 m
+			if s0 <= lo + 0.01: s1 = lo + 2.0
+			else: s0 = hi - 2.0
+		spans.append([s0, s1, d[4], d[3]])
+	spans.sort_custom(func(p, q): return p[0] < q[0])
+	var out := []; var cur := lo
+	var plain := func(from: float, to: float) -> void:
+		var cnt := maxi(1, roundi((to - from) / 2.0))
+		for k in cnt:
+			var p0: float = from + (to - from) * k / cnt; var p1: float = from + (to - from) * (k + 1) / cnt
+			var kind := ""; var wdt := 0.0
+			for w in ty.windows:
+				if w[3] <= 0.0 or (w[2] == "h") != horiz or absf((w[1] if horiz else w[0]) - line) > 0.05: continue
+				var tw: float = w[0] if horiz else w[1]
+				if tw >= p0 - 0.01 and tw <= p1 + 0.01: kind = "w"; wdt = w[3]
+			out.append([at.call(p0), at.call(p1), kind, wdt])
+	for sp in spans:
+		var s0: float = maxf(sp[0], cur)
+		if s0 - cur > 0.25: plain.call(cur, s0)
+		elif s0 > cur and out.size() > 0: out[-1][1] = at.call(s0)     # a sliver: the piece before stretches over it
+		else: s0 = cur
+		out.append([at.call(s0), at.call(sp[1]), sp[2], sp[3]]); cur = sp[1]
+	if hi - cur > 0.25: plain.call(cur, hi)
+	elif hi > cur and out.size() > 0: out[-1][1] = at.call(hi)
+	return out
+
+func _wall_run(e: Array, r: Array, ty: Dictionary, storeys: int, low: float, kinds: Array, L: Callable, mir: bool, inner := false) -> void:
 	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
 	var length := a.distance_to(bb); var cnt := maxi(1, roundi(length / 2.0)); var seg := length / cnt
 	var nn := Vector2(-n.x if mir else n.x, n.y)
 	var yaw := atan2(nn.x, nn.y)
 	var front := n.y < 0 and absf(a.y) < 0.05          # the street front
 	for s in storeys:
-		var kind: String = kinds[mini(s, kinds.size() - 1)]
-		for k in cnt:
-			var p0 := a.lerp(bb, float(k) / cnt); var p1 := a.lerp(bb, float(k + 1) / cnt); var mid := (p0 + p1) * 0.5
+		var kind: String = "Plaster" if inner else kinds[mini(s, kinds.size() - 1)]
+		var pieces := []
+		if s == 0: pieces = _segments(a, bb, n, ty)
+		else:
+			for k in cnt:
+				var wide := (k + s) % 2 == 0
+				pieces.append([a.lerp(bb, float(k) / cnt), a.lerp(bb, float(k + 1) / cnt), "w" if (front or n.y > 0) else "", 1.4 if wide else 0.9])
+		for pc in pieces:
+			var p0: Vector2 = pc[0]; var p1: Vector2 = pc[1]; var op: String = pc[2]; var len := p0.distance_to(p1)
+			if op in ["g", "o", "s"]: continue                       # a gate, an archway or an open front: a gap its own width
+			var mid := (p0 + p1) * 0.5
 			var pos: Vector3 = L.call(mid.x, mid.y, s * STOREY * low)
 			var name := ("Wall_Plaster_Straight_Base" if s == 0 else "Wall_Plaster_Straight") if kind == "Plaster" else "Wall_%s_Straight" % kind
-			var fill := ""
-			if s == 0:
-				var op := _opening(ty, p0, p1, n)
-				if op.size() > 0:
-					if op[0] in ["g", "o", "s"]: continue           # a gate, an archway or an open front: no wall
-					if op[0] == "d": name = "Wall_%s_Door_Flat" % kind; fill = "Door_1_Flat"
-					elif op[0] == "w":
-						name = "Wall_%s_Window_Wide_Round" % kind if op[1] >= 1.2 else "Wall_%s_Window_Thin_Round" % kind
-						fill = "Window_Wide_Round1" if op[1] >= 1.2 else "Window_Thin_Round1"
-			elif front or (n.y > 0):                               # upper storeys: windows along the front and back
-				var wide := (k + s) % 2 == 0
-				name = "Wall_%s_Window_Wide_Round" % kind if wide else "Wall_%s_Window_Thin_Round" % kind
-				fill = "Window_Wide_Round1" if wide else "Window_Thin_Round1"
+			var fill := ""; var frame := ""
+			if op == "d": name = "Wall_%s_Door_Flat" % kind; fill = "Door_1_Flat"; frame = "DoorFrame_Flat_WoodDark"
+			elif op == "w":
+				name = "Wall_%s_Window_Wide_Round" % kind if pc[3] >= 1.2 else "Wall_%s_Window_Thin_Round" % kind
+				fill = "Window_Wide_Round1" if pc[3] >= 1.2 else "Window_Thin_Round1"
+			var sx := len / 2.0
 			var piece := _piece(name, pos, yaw)
-			if piece: piece.scale = Vector3(seg / 2.0, low, 1.0)
+			if piece: piece.scale = Vector3(sx, low, 1.0)
+			if frame != "":
+				var fr := _piece(frame, pos, yaw)
+				if fr: fr.scale = Vector3(sx, low, 1.0)
 			if fill != "":
 				var off := Vector3(-0.53, 0, 0).rotated(Vector3.UP, yaw) if fill.begins_with("Door") else Vector3.ZERO
-				var f := _piece(fill, pos + off * (seg / 2.0), yaw)
-				if f: f.scale = Vector3(seg / 2.0, low, 1.0)            # the door or window fits its (stretched or squeezed) wall piece
+				var f := _piece(fill, pos + off * sx, yaw)
+				if f: f.scale = Vector3(sx, low, 1.0)
+
+## the walls between two roofed rooms that share an edge: [from, to, normal] in floorplan metres
+func _inner_edges(roofs: Array) -> Array:
+	var out := []
+	for i in roofs.size():
+		var r: Array = roofs[i]
+		for j in range(i + 1, roofs.size()):
+			var o: Array = roofs[j]
+			for side in [[r[1] + r[3], o[1], true, Vector2(0, 1)], [r[1], o[1] + o[3], true, Vector2(0, -1)], [r[0] + r[2], o[0], false, Vector2(1, 0)], [r[0], o[0] + o[2], false, Vector2(-1, 0)]]:
+				if absf(float(side[0]) - float(side[1])) > 0.02: continue
+				var lo: float; var hi: float
+				if side[2]: lo = maxf(r[0], o[0]); hi = minf(r[0] + r[2], o[0] + o[2])
+				else: lo = maxf(r[1], o[1]); hi = minf(r[1] + r[3], o[1] + o[3])
+				if hi - lo < 0.3: continue
+				var ln: float = side[0]
+				out.append([Vector2(lo, ln) if side[2] else Vector2(ln, lo), Vector2(hi, ln) if side[2] else Vector2(ln, hi), side[3]])
+	return out
 
 func _fence_run(e: Array, ty: Dictionary, L: Callable, zone: String, mir: bool) -> void:
 	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
-	var length := a.distance_to(bb); var cnt := maxi(1, roundi(length / 2.0)); var seg := length / cnt
-	for k in cnt:
-		var p0 := a.lerp(bb, float(k) / cnt); var p1 := a.lerp(bb, float(k + 1) / cnt); var mid := (p0 + p1) * 0.5
-		var op := _opening(ty, p0, p1, n)
-		if op.size() > 0 and op[0] != "w": continue                # the gate
-		var pos: Vector3 = L.call(mid.x, mid.y)
+	for pc in _segments(a, bb, n, ty):
+		if pc[2] in ["d", "g", "o", "s"]: continue                     # the gate
+		var p0: Vector2 = pc[0]; var p1: Vector2 = pc[1]; var mid := (p0 + p1) * 0.5; var seg := p0.distance_to(p1)
 		var yaw := atan2(-n.x if mir else n.x, n.y)
-		var f := _piece_any(_fence_model(zone), pos, yaw)
-		if f: f.scale = Vector3((seg + 0.35) / 2.0, 1.0, 1.0)   # overlapping a little at the joins and corners
+		var f := _piece_any(_fence_model(zone), L.call(mid.x, mid.y), yaw)
+		if f:
+			f.scale = Vector3((seg + 0.35) / 2.0, 1.0, 1.0)            # overlapping a little at the joins and corners
+			_on_ground(f, seg + 0.35)
+
+## a fence or wall piece set on the ground under it: at the drawn ground's height, tilted from one end to the other
+func _on_ground(f: Node3D, length: float) -> void:
+	var e0: Vector3 = f.global_transform * Vector3(-1, 0, 0); var e1: Vector3 = f.global_transform * Vector3(1, 0, 0)
+	var h0 := terrain_surface(Vector2(e0.x, e0.z) + ORIGIN); var h1 := terrain_surface(Vector2(e1.x, e1.z) + ORIGIN)
+	var parent_y: float = (f.get_parent() as Node3D).global_position.y
+	f.position.y = (h0 + h1) * 0.5 - parent_y - 0.12
+	f.rotation.z = atan2(h1 - h0, length)
 
 ## who lives there decides the fence: dry stone for the well-off, woven wattle for the poor, the kit's rails for the rest
 func _fence_model(zone: String) -> String:
@@ -435,11 +520,11 @@ func _plot(pl: Dictionary) -> void:
 			var gate := si == 1 and k == cnt / 2                  # the back gate
 			if gate and not walled: continue
 			var path := "res://assets/props/fogwright/Garden_Gate.glb" if gate else _fence_model(zone)
-			var h0 := terrain_surface(q0); var h1 := terrain_surface(q1); var len := q0.distance_to(q1)
-			var f := put(path, W(mid, (h0 + h1) * 0.5 - 0.15), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
+			var len := q0.distance_to(q1)
+			var f := put(path, W(mid, height(mid)), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
 			if f:
-				f.rotation.z = atan2(h1 - h0, len)            # tilted with the slope, so neighbours meet without steps
 				f.scale = Vector3((len + (0.0 if gate else 0.35)) / (2.06 if gate else 2.0), 1.0, 1.0)   # a little overlap closes the corners
+				_on_ground(f, len)                            # on the drawn ground, tilted with the slope
 
 func _in_roofed(p: Vector2, grow := 0.0) -> bool:
 	for r in roofed:
@@ -458,7 +543,7 @@ func _nearest_path_point(p: Vector2) -> Vector2:
 	return best
 
 func _well() -> void:   # the village well in the square (the Modular Village Pack's, in our palette), solid
-	put("res://assets/props/village2/Prop_Well_1.glb", W(WELL, height(WELL)), 0.3, 1.3, true, "fixture", "the village well, the old spring")
+	put("res://assets/props/village2/Prop_Well_1.glb", W(WELL, height(WELL)), 0.3, 1.65, true, "fixture", "the village well, the old spring")
 
 # ---------------------------------------------------------------- the harbour: sea wall, breakwater, lighthouse, pier, boats
 ## a stone causeway along a smooth curve through the points: a level top and sloping sides down to the seabed, one mesh
@@ -480,7 +565,9 @@ func _stone_run(pts: Array, width: float, top: float) -> void:
 		var side := Vector2(-d.y, d.x)
 		if i > 0: along += p.distance_to(baked[i - 1])
 		var low := minf(_base(p), 0.0) - 2.0
-		for v in [[-foot, low], [-hw, top], [hw, top], [foot, low]]:   # a cross-section: bottom left, top left, top right, bottom right
+		var tp := top                                       # where it runs over the shore, its top stays above the ground
+		for s_ in [-hw, 0.0, hw]: tp = maxf(tp, terrain_surface(p + side * s_) + 0.12)
+		for v in [[-foot, low], [-hw, tp], [hw, tp], [foot, low]]:   # a cross-section: bottom left, top left, top right, bottom right
 			var q: Vector2 = p + side * float(v[0])
 			st.set_uv(Vector2(along, float(v[0]) + (top - float(v[1]))) * 0.35)
 			st.add_vertex(W(q, float(v[1])))
@@ -496,17 +583,11 @@ func _stone_run(pts: Array, width: float, top: float) -> void:
 	add_child(mi); mi.create_trimesh_collision()
 
 func _harbour() -> void:
-	_stone_run([Vector2(80, 82), Vector2(92, 76), Vector2(100, 70), Vector2(106, 62)], 2.2, 0.9)       # the sea wall
-	_stone_run([Vector2(106, 62), Vector2(116, 64), Vector2(126, 70), Vector2(132, 79)], 2.6, 0.9)     # the breakwater
+	_stone_run([Vector2(80, 82), Vector2(92, 76), Vector2(100, 70), Vector2(106, 62), Vector2(116, 64), Vector2(126, 70), Vector2(131, 78)], 2.4, 0.9)   # the sea wall running on as the breakwater, one causeway
 	var lh := Vector2(132.5, 80.5)                                                                      # the lighthouse
-	for k in 4:
-		var t := MeshInstance3D.new(); var cm := CylinderMesh.new(); cm.top_radius = 1.9 - k * 0.25; cm.bottom_radius = 2.2 - k * 0.25; cm.height = 3.2
-		t.mesh = cm; var m := StandardMaterial3D.new(); m.albedo_texture = load("res://assets/library/Plaster_detail.png")
-		m.albedo_color = (Palette.col("Plaster") if k % 2 == 0 else Palette.col("RedBrick")) / 0.78; m.uv1_triplanar = true; t.material_override = m
-		t.position = W(lh, 0.9 + 1.6 + k * 3.2); add_child(t)
+	put("res://assets/props/fogwright/Lighthouse.glb", W(lh, 0.8), PI * 0.7, 1.0, true, "fixture", "the harbour master's lighthouse")
 	var lamp := OmniLight3D.new(); lamp.light_color = Color(1, 0.8, 0.5); lamp.light_energy = 2.0; lamp.omni_range = 18
-	lamp.position = W(lh, 15.0); add_child(lamp)
-	put(VILLAGE % "Roof_Tower_RoundTiles", W(lh, 13.7), 0.0, 0.9, false, "fixture", "the lighthouse's roof")
+	lamp.position = W(lh, 11.2); add_child(lamp)
 	# the pier: a T of planks on posts, its deck above the water
 	var deck_y := 1.0
 	_pier_run(Vector2(87.5, 80), Vector2(87.5, 100), deck_y); _pier_run(Vector2(78, 100.5), Vector2(106, 100.5), deck_y)
@@ -540,26 +621,31 @@ func _palisade() -> void:
 		if wl.name != "palisade": continue
 		var run := []; for q in wl.pts: run.append(Vector2(q[0], q[1]))
 		runs.append(run)
-	var cm := CylinderMesh.new(); cm.top_radius = 0.16; cm.bottom_radius = 0.2; cm.height = 3.2
-	var mat := StandardMaterial3D.new(); mat.albedo_color = Palette.col("WoodTrim").darkened(0.1); cm.material = mat
+	var cm := CylinderMesh.new(); cm.top_radius = 0.17; cm.bottom_radius = 0.2; cm.height = 3.2; cm.radial_segments = 7
+	var mat := StandardMaterial3D.new(); mat.albedo_texture = load("res://assets/library/WoodTrim_detail.png")
+	mat.albedo_color = Palette.col("WoodTrim").darkened(0.15) / 0.78; mat.uv1_scale = Vector3(1.0, 2.0, 1.0); cm.material = mat
+	var tip := CylinderMesh.new(); tip.top_radius = 0.0; tip.bottom_radius = 0.17; tip.height = 0.45; tip.radial_segments = 7; tip.material = mat   # sharpened tops
+	var tips := []
 	var xf := []
 	for run in runs:
 		for i in run.size() - 1:
 			var a: Vector2 = run[i]; var b: Vector2 = run[i + 1]; var n := int(a.distance_to(b) / 0.42)
 			for k in n:
 				var p := a.lerp(b, float(k) / n)
-				xf.append(Transform3D(Basis(Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized(), rng.randf_range(0.0, 0.05)), W(p, height(p) + 1.4 + rng.randf_range(-0.2, 0.2))))
+				var t3 := Transform3D(Basis(Vector3(rng.randf_range(-1, 1), 0, rng.randf_range(-1, 1)).normalized(), rng.randf_range(0.0, 0.05)), W(p, height(p) + 1.4 + rng.randf_range(-0.2, 0.2)))
+				xf.append(t3); tips.append(t3 * Transform3D(Basis(), Vector3(0, 1.6 + 0.22, 0)))
 			var body := StaticBody3D.new(); var col := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(a.distance_to(b), 3.0, 0.5)
 			col.shape = bs; body.add_child(col); body.position = W((a + b) * 0.5, height((a + b) * 0.5) + 1.4); body.rotation.y = -atan2(b.y - a.y, b.x - a.x); add_child(body)
 	var mm := MultiMesh.new(); mm.transform_format = MultiMesh.TRANSFORM_3D; mm.mesh = cm; mm.instance_count = xf.size()
 	for i in xf.size(): mm.set_instance_transform(i, xf[i])
 	var mmi := MultiMeshInstance3D.new(); mmi.multimesh = mm; add_child(mmi)
-	for x in [57.5, 66.5]:   # the gate's towers
-		var p := Vector2(x, 4.0); var t := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(2.0, 6.0, 2.0); t.mesh = bm
-		t.material_override = mat; t.position = W(p, height(p) + 3.0); add_child(t)
-		put(VILLAGE % "Roof_Tower_RoundTiles", W(p, height(p) + 6.0), 0.0, 0.55, false, "fixture", "a gate tower's roof")
-	var gate := MeshInstance3D.new(); var gm := BoxMesh.new(); gm.size = Vector3(8.0, 3.6, 0.3); gate.mesh = gm; gate.material_override = mat
-	gate.position = W(Vector2(62, 4), height(Vector2(62, 4)) + 1.8); add_child(gate)
+	var tm := MultiMesh.new(); tm.transform_format = MultiMesh.TRANSFORM_3D; tm.mesh = tip; tm.instance_count = tips.size()
+	for i in tips.size(): tm.set_instance_transform(i, tips[i])
+	var tmi := MultiMeshInstance3D.new(); tmi.multimesh = tm; add_child(tmi)
+	# the gate: timber towers with lookouts, a lintel over the 7 m opening, the leaves standing open (tools/blender/make_props.py)
+	var gp := Vector2(62, 4.6)
+	put("res://assets/props/fogwright/Village_Gate.glb", W(gp, height(gp) - 0.05), 0.0, 1.0, true, "fixture", "the village gate, open by day")
+
 
 # ---------------------------------------------------------------- the field, the plots and the woods (batched)
 func scatter(path: String, points: Array, scale_range := Vector2(0.9, 1.1), ground := ["grass"]) -> void:
@@ -644,6 +730,15 @@ func _scatter_chunked(path: String, points: Array, scale_range: Vector2, cell: f
 			var mmi := get_child(i) as MultiMeshInstance3D
 			if mmi: mmi.visibility_range_end = draw_to; mmi.visibility_range_end_margin = 8.0
 
+func _palisade_dist(p: Vector2) -> float:   # how far from the palisade
+	var best := INF
+	for wl in PLAN.walls:
+		if wl.name != "palisade": continue
+		for i in wl.pts.size() - 1:
+			var a := Vector2(wl.pts[i][0], wl.pts[i][1]); var b := Vector2(wl.pts[i + 1][0], wl.pts[i + 1][1])
+			var t := clampf((p - a).dot(b - a) / (b - a).length_squared(), 0.0, 1.0); best = minf(best, p.distance_to(a + (b - a) * t))
+	return best
+
 func _woods_depth(p: Vector2) -> float:
 	if _in_clearing(p): return -1.0
 	return (sqrt(pow((p.x - 62) / 54.0, 2) + pow((p.y - 50) / 44.0, 2)) - 1.0) * 49.0
@@ -662,7 +757,7 @@ func _woods() -> void:
 			while x < 140 + MARGIN:
 				var p := Vector2(x + gr.randf_range(-sp * 0.4, sp * 0.4), y + gr.randf_range(-sp * 0.4, sp * 0.4))
 				var dp := _woods_depth(p)
-				if dp >= pass_[1] and dp < pass_[2] and _coast_signed(p) > 4.0 and _path_dist(p) > 1.5:   # never on the road out
+				if dp >= pass_[1] and dp < pass_[2] and _coast_signed(p) > 4.0 and _path_dist(p) > 1.5 and _palisade_dist(p) > 3.2:   # never on the road out, never against the palisade
 					var at := W(p, height(p))
 					if dp < 4.0 and gr.randf() < 0.35:          # the edge: the kit's detailed trees, seen up close
 						var kind := ("CommonTree_%d" % (gr.randi() % 5 + 1)) if gr.randf() < 0.6 else ("Pine_%d" % (gr.randi() % 5 + 1))
@@ -716,7 +811,7 @@ func _doodads() -> void:
 		if dd.kind == "boat hull":   # a hull, half built, on its trestles
 			put(DOCK % "Boat_B_1", W(p, y + 0.45), yaw, 0.7, false, "fixture", "the hull on its trestles")
 		if dd.kind == "chopping block":   # beat B: the first weapon waits here
-			put(PROPS % "Axe_Bronze", W(p, y + 0.5), yaw + 0.6, 1.0, false, "fixture", "the hatchet in the chopping block: the first weapon")
+			put(PROPS % "Axe_Bronze", W(p, y + 0.62), yaw + 0.6, 1.0, false, "fixture", "the hatchet in the chopping block: the first weapon")
 
 # ---------------------------------------------------------------- late afternoon
 func _light() -> void:
@@ -727,7 +822,8 @@ func _light() -> void:
 		sun.shadow_enabled = false          # baked; F2 turns on live shadows for characters
 	var env: Environment = get_parent().get_node("WorldEnvironment").environment
 	env.tonemap_exposure = 0.9; env.ambient_light_energy = 0.45
-	env.fog_enabled = true; env.fog_light_color = Color(0.74, 0.76, 0.74); env.fog_density = 0.0032; env.fog_sky_affect = 0.25   # the woods fade into haze
+	env.fog_enabled = true; env.fog_mode = Environment.FOG_MODE_DEPTH; env.fog_light_color = Color(0.72, 0.75, 0.74)
+	env.fog_depth_begin = 30.0; env.fog_depth_end = 150.0; env.fog_depth_curve = 1.4; env.fog_density = 0.85; env.fog_sky_affect = 0.2   # the woods fade into haze; the village stays clear
 	var sky: ProceduralSkyMaterial = env.sky.sky_material
 	sky.sky_top_color = Color(0.42, 0.56, 0.74); sky.sky_horizon_color = Color(0.93, 0.78, 0.6)
 	sky.ground_horizon_color = Color(0.93, 0.78, 0.6); sky.sun_angle_max = 30.0
@@ -817,6 +913,17 @@ var light_tex: ImageTexture        # the baked light: sun shadows, tree shade an
 func _light_uv(p: Vector2) -> Vector2:   # plan metres to the light map
 	return (p - Vector2(_x0, _y0)) / Vector2(_nx, _ny)
 
+## the ground's shader (shaders/ground.gdshader): grass, and the paths painted in from the plan's path mask
+func _ground_shader() -> ShaderMaterial:
+	var m := ShaderMaterial.new(); m.shader = load("res://shaders/ground.gdshader")
+	if light_tex: m.set_shader_parameter("light_map", light_tex)
+	m.set_shader_parameter("path_mask", load("res://data/farhallow_paths.png"))
+	m.set_shader_parameter("grass_detail", load("res://assets/library/Grass_detail.png"))
+	m.set_shader_parameter("path_detail", load("res://assets/library/Path_detail.png"))
+	var c: Color = Palette.col("path") / 0.8
+	m.set_shader_parameter("path_col", Vector3(c.r, c.g, c.b))
+	return m
+
 func _ground_material(detail: String) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new(); m.vertex_color_use_as_albedo = true; m.roughness = 1.0
 	if light_tex: m.albedo_texture = light_tex
@@ -896,7 +1003,6 @@ func _bake_when_ready() -> void:
 	path_surfaces.clear()
 	await get_tree().process_frame
 	_terrain()
-	for p in PATHS: _path(p[0], p[1], p.size() > 3)
 	_world_casts_no_shadows(self)
 
 func _world_casts_no_shadows(n: Node) -> void:      # the world's shadows are baked; only characters may cast live ones
@@ -948,7 +1054,7 @@ func ground_at(p: Vector2) -> String:
 ## the city-planning check: every clutter prop has a purpose, stands on sensible ground, keeps paths and doorways clear;
 ## every flora instance grows on open ground; every building has a roof. Returns the problems found.
 func check_plan() -> Array:
-	var issues := check_paths() + check_ground() + check_clip()
+	var issues := check_paths() + check_ground() + check_clip() + check_roofs()
 	var doors := []
 	for h in houses:
 		if h[3] == "": issues.append("ROOF   %s at %s has no roof" % [h[0], h[1]])
@@ -1006,6 +1112,7 @@ func check_paths() -> Array:
 				var pad: Array = pads[k]; var r: Vector2 = ((q as Vector2) - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1]
 				var near_door := false
 				for d in bdoors[k]: if (q as Vector2).distance_to(d) <= 2.6: near_door = true
+				if path.size() > 3 and (q as Vector2).distance_to(pts[0]) <= 2.6: near_door = true   # a trail leaving its own back door
 				if absf(r.x) < e.x + hw * 0.6 and absf(r.y) < e.y + hw * 0.6 and not near_door:
 					issues.append("PATH-WALL %s runs into the %s at %s" % [name, houses[k][0], (q as Vector2).round()]); break
 	for pi in PATHS.size():   # (4) is it redundant: running alongside another path for a long stretch
@@ -1082,4 +1189,21 @@ func check_clip() -> Array:
 			var where := ""
 			if other is Node3D: where = " (%s, its origin %s)" % [other.get_path(), ((other as Node3D).global_position).round()]
 			issues.append("CLIP   the %s (%s) reaches into %s at %s%s" % [d[1], d[2], what, p.round(), where])
+	return issues
+
+## every roofed room is under a roof: a ray down through its middle must meet a roof piece first
+func check_roofs() -> Array:
+	var issues := []
+	var space := get_world_3d().direct_space_state
+	for r in roofed:
+		for off in [Vector2.ZERO, Vector2(0.6, 0.6), Vector2(-0.6, -0.6)]:
+			var p: Vector2 = r[0] + (off * r[1]).rotated(r[2])
+			var q := PhysicsRayQueryParameters3D.create(W(p, 40.0), W(p, -5.0), 1)
+			var hit := space.intersect_ray(q)
+			var roof := false; var n: Node = hit.collider if not hit.is_empty() else null
+			while n and n != self:
+				if str(n.name).begins_with("Roof_"): roof = true; break
+				n = n.get_parent()
+			if not roof:
+				issues.append("ROOF   no roof over the room at %s (the ray met %s)" % [p.round(), hit.collider.get_parent().name if not hit.is_empty() and hit.collider.get_parent() else "nothing"]); break
 	return issues

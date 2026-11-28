@@ -105,7 +105,7 @@ B=[('gate road',52,36,'inn',1.5,PUB,1,'The Gull & Lantern, tavern with rooms'),
    (None,107.3,20.3,'merrith_shrine',-2.58,(200,196,186),4,'Shrine of Merrith, on the rise'),
    ('harbour road',87,57,'workshop',1.5,TRADE,5,'Smithy: forge, quench trough, charcoal'),
    (None,92,67,'smokehouse',-2.21,TRADE,6,'Smokehouse'),
-   ('harbour road',80,75,'store',1.0,TRADE,7,'Salt house and fish store'),
+   ('harbour road',80,74,'store',1.0,TRADE,7,'Salt house and fish store'),
    (None,72,84,'boat_shed',-0.58,TRADE,8,"Boatwright's shed"),
    (None,104.5,52.5,'salt_works',-0.64,TRADE,16,'Salt-boiling hut and pans'),
    ('shore lane',72,68,'cottage',1.0,POOR,9,"Net-mender's cottage"),
@@ -160,7 +160,7 @@ def inside(p,poly):
     return c
 def rect_hit(p,r,pad): return r[0]-pad<=p[0]<=r[2]+pad and r[1]-pad<=p[1]<=r[3]+pad
 LINES=[(pal,1.5,'palisade'),(pal2,1.5,'palisade'),([(10,8),(6,40),(8,70),(20,92)],1.5,'palisade'),
-       ([(80,82),(92,76),(100,70),(106,62)],1.6,'sea wall'),([(106,62),(116,64),(126,70),(132,80)],1.8,'breakwater')]
+       ([(80,82),(92,76),(100,70),(106,62)],2.3,'sea wall'),([(106,62),(116,64),(126,70),(132,80)],2.3,'breakwater')]   # their sloping sides reach 2.1 m from the line
 RECTS=[((14,14,37,34),'field'),((16,38,30,46),'vegetable plots'),((85,80,90,100),'pier'),((78,98,104,103),'pier')]
 SHORE_OK={6,7,8,16}   # the smokehouse and the boatwright's shed belong on the shore
 things=[(k,'%d %s'%(placed[k][6],(r[4] or 'passage').replace('\n',' ')),room_geo(k,r)) for k in range(len(placed)) for r in TYPES[PTYPE[k]]['rooms']]+\
@@ -254,70 +254,103 @@ for lp,rw,ln in LANES:
         pproblems.append('nothing uses the %s'%ln)
 # ---- trails: the everyday traffic. Every outside door that is not on the street (back and side doors, yard gates) and
 # the back gate of every plot wears a narrow footpath to the nearest path or the square, going round anything in the way
-def blocked(p0,p1,own,start=None):
-    # a trail keeps a metre clear of every wall (its own house's too), except in its first stretch out of its own door;
-    # it may cross its own yard or garden
-    L=math.hypot(p1[0]-p0[0],p1[1]-p0[1]); n=max(14,int(L/0.4))
-    pts=[(p0[0]+(p1[0]-p0[0])*i/n,p0[1]+(p1[1]-p0[1])*i/n) for i in range(0,n+1)]
-    for n_,nm,geo in things:
-        if n_==own and any(w in nm for w in ('yard','garden','pen')): continue
-        x,y,w,h,a=geo; m=0.0 if any(w_ in nm for w_ in PLOTNAMES) else 1.1; cs=corners(x,y,w+m,h+m,a)   # half a metre off buildings and yards; plots' fences may be passed close
-        for pt in pts:
-            if start and n_==own and math.hypot(pt[0]-start[0],pt[1]-start[1])<1.6: continue
-            if inside(pt,cs): return nm
-    return None
-def trail_to(start,own,skip=None):
-    dist,q,ln=nearest_on_paths(start,skip)
-    best=None
-    for lp,rw,nm in TRAILS:   # an earlier trail counts as a path
+# routed on a half-metre grid round every building, yard and garden wall (0.9 m clear of them), the sea and the fields:
+# a shortest route (A*) from a point 1.6 m out of the door to the nearest path, straightened where it can see ahead,
+# its corners rounded, and checked again after rounding
+import heapq, numpy as _np
+GS=0.5; GW,GH=int(150/GS),int(120/GS)
+_gx,_gy=_np.meshgrid((_np.arange(GW)+0.5)*GS-5,(_np.arange(GH)+0.5)*GS-5)
+def _rect_mask(geo,m):
+    x,y,w,h,a=geo; ca,sa=math.cos(a),math.sin(a); dx,dy=_gx-x,_gy-y
+    return (_np.abs(dx*ca+dy*sa)<w/2+m)&(_np.abs(-dx*sa+dy*ca)<h/2+m)
+def _blocks(margin):
+    B=_np.zeros((GH,GW),bool)
+    for n_,nm,geo in things: B|=_rect_mask(geo,margin)
+    for r,rn in RECTS:
+        if rn in ('field','vegetable plots'): B|=(_gx>r[0]-margin)&(_gx<r[2]+margin)&(_gy>r[1]-margin)&(_gy<r[3]+margin)
+    from PIL import Image as _I, ImageDraw as _D   # the sea: the coast polygon drawn onto the grid
+    sea=_I.new('L',(GW,GH),0); _D.Draw(sea).polygon([((x+5)/GS,(y+5)/GS) for x,y in coast],fill=1)
+    B|=_np.asarray(sea,bool)
+    return B
+BLOCK=_blocks(0.9); BLOCK_TIGHT=_blocks(0.5)
+def _cell(p): return (min(GH-1,max(0,int((p[1]+5)/GS))),min(GW-1,max(0,int((p[0]+5)/GS))))
+def _pt(c): return ((c[1]+0.5)*GS-5,(c[0]+0.5)*GS-5)
+def _clear(p0,p1,B):
+    n=max(2,int(math.hypot(p1[0]-p0[0],p1[1]-p0[1])/(GS*0.5)))
+    return all(not B[_cell((p0[0]+(p1[0]-p0[0])*i/n,p0[1]+(p1[1]-p0[1])*i/n))] for i in range(n+1))
+def _targets():
+    T=_np.zeros((GH,GW),bool)
+    for lp,rw,ln in ROADS+LANES+[([dp,q],1.2,'spur') for k,dp,q,ln in SPURS]+[(lp,w,'trail') for lp,w,why in TRAILS]:
         for p0,p1 in zip(lp,lp[1:]):
-            dx,dy=p1[0]-p0[0],p1[1]-p0[1]; L2=dx*dx+dy*dy or 1e-9; t=max(0,min(1,((start[0]-p0[0])*dx+(start[1]-p0[1])*dy)/L2))
-            qq=(p0[0]+t*dx,p0[1]+t*dy); dd=math.hypot(start[0]-qq[0],start[1]-qq[1])
-            if dd<dist: dist,q,ln=dd,qq,'trail'
-    if not blocked(start,q,own,start): return [start,q]
-    for side in (4,-4,7,-7,10,-10,13,-13):   # round the obstacle: one bend, sideways from the straight line
-        dx,dy=q[0]-start[0],q[1]-start[1]; L=math.hypot(dx,dy) or 1; nx,ny=-dy/L,dx/L
-        mid=((start[0]+q[0])/2+nx*side,(start[1]+q[1])/2+ny*side)
-        if not blocked(start,mid,own,start) and not blocked(mid,q,own) and not inside(mid,coast): return [start,mid,q]
-    # round its own house: out of the door, past one or two of the house's corners (kept clear of the walls), then on
-    if own is not None and own>=0:
-        x,y,w,h,a=placed[own][:5]; cs=corners(x,y,w+3.0,h+3.0,a)
-        routes=[[c] for c in cs]+[[cs[i],cs[(i+j)%4]] for i in range(4) for j in (1,3)]
-        best=None
-        for via in routes:
-            r=[start]+via
-            dist_,q2,_=nearest_on_paths(r[-1])
-            r=r+[q2]
-            if any(inside(v,coast) for v in via): continue
-            if any(blocked(a_,b_,own,start) for a_,b_ in zip(r,r[1:])): continue
-            L=sum(math.hypot(b_[0]-a_[0],b_[1]-a_[1]) for a_,b_ in zip(r,r[1:]))
-            if best is None or L<best[0]: best=(L,r)
-        if best: return best[1]
+            dx,dy=p1[0]-p0[0],p1[1]-p0[1]; L2=dx*dx+dy*dy or 1e-9
+            t=_np.clip(((_gx-p0[0])*dx+(_gy-p0[1])*dy)/L2,0,1)
+            T|=_np.hypot(_gx-p0[0]-t*dx,_gy-p0[1]-t*dy)<rw/2
+    T|=_np.hypot(_gx-64,_gy-50)<8.0
+    return T&~BLOCK
+def _astar(start,T):
+    s0=_cell(start)
+    if BLOCK[s0]: return None
+    openq=[(0,0,s0)]; came={s0:None}; g={s0:0}
+    while openq:
+        _,gc,c=heapq.heappop(openq)
+        if T[c]:
+            out=[]
+            while c: out.append(_pt(c)); c=came[c]
+            return out[::-1]
+        if gc>g.get(c,1e9): continue
+        for di,dj,w in ((1,0,1),(-1,0,1),(0,1,1),(0,-1,1),(1,1,1.414),(1,-1,1.414),(-1,1,1.414),(-1,-1,1.414)):
+            n=(c[0]+di,c[1]+dj)
+            if not (0<=n[0]<GH and 0<=n[1]<GW) or BLOCK[n]: continue
+            ng=gc+w
+            if ng<g.get(n,1e9): g[n]=ng; came[n]=c; heapq.heappush(openq,(ng,ng,n))
     return None
+def _pull(pts):   # straighten: from each point jump to the farthest one it can see
+    out=[pts[0]]; i=0
+    while i<len(pts)-1:
+        j=len(pts)-1
+        while j>i+1 and not _clear(pts[i],pts[j],BLOCK): j-=1
+        out.append(pts[j]); i=j
+    return out
+def _round(pts,k=2):   # Chaikin corner-cutting: curves that stay inside the straight route's corners
+    for _ in range(k):
+        if len(pts)<3: return pts
+        out=[pts[0]]
+        for a_,b_ in zip(pts,pts[1:]): out+=[(0.75*a_[0]+0.25*b_[0],0.75*a_[1]+0.25*b_[1]),(0.25*a_[0]+0.75*b_[0],0.25*a_[1]+0.75*b_[1])]
+        out.append(pts[-1]); pts=out
+    return pts
+def route_trail(door,normal):
+    launch=(door[0]+normal[0]*1.6,door[1]+normal[1]*1.6)
+    g=_astar(launch,_targets())
+    if g is None: return None
+    r=[door]+_pull([launch]+g[1:])
+    rr=_round(r)
+    if all(_clear(a_,b_,BLOCK_TIGHT) for a_,b_ in zip(rr[1:],rr[2:])): return rr
+    return r if all(_clear(a_,b_,BLOCK_TIGHT) for a_,b_ in zip(r[1:],r[2:])) else None
 TRAILS=[]
-def outside_doors(k):
+def outside_doors(k):   # [(the doorstep outside it, the way out)]
     ty=TYPES[PTYPE[k]]; W_,H_=footprint(PTYPE[k]); out=[]
     for dx,dy,o,dw,kind in ty['doors']:
         if kind not in ('d','g'): continue
         on_back=o=='h' and abs(dy-H_)<0.01; on_side=o=='v' and (abs(dx)<0.01 or abs(dx-W_)<0.01)
         if on_back or on_side:
-            ox,oy=(0,0.8) if on_back else ((-0.8 if abs(dx)<0.01 else 0.8),0)
-            out.append(local(k,dx+ox,dy+oy))                 # just outside it
+            ox,oy=(0,0.3) if on_back else ((-0.3 if abs(dx)<0.01 else 0.3),0)
+            p_=local(k,dx+ox,dy+oy); q_=local(k,dx+ox*2,dy+oy*2)
+            out.append((p_,((q_[0]-p_[0])/0.3,(q_[1]-p_[1])/0.3)))
     return out
 starts=[]
 for k in range(len(placed)):
-    for p_ in outside_doors(k):
+    for p_,nrm in outside_doors(k):
         if any(pl[0]==k and inside(p_,corners(*pl[2:])) for pl in PLOTS): continue   # it opens into its own yard or garden
-        starts.append((k,p_,'a back or side door of %s'%(placed[k][7] or PTYPE[k])))
-for pl in PLOTS:   # every plot has a gate at the back
+        starts.append((k,p_,nrm,'a back or side door of %s'%(placed[k][7] or PTYPE[k])))
+for pl in PLOTS:   # every plot has a gate in the middle of its back wall
     k=pl[0]; x,y,w,h,a=pl[2:]; ca,sa=math.cos(a),math.sin(a)
-    starts.append((k,(x+(h/2+0.8)*-sa,y+(h/2+0.8)*ca),'the back gate of the plot of %s'%(placed[k][7] or PTYPE[k])))
-for k,p_,why in starts:
+    starts.append((k,(x+(h/2+0.3)*-sa,y+(h/2+0.3)*ca),(-sa,ca),'the back gate of the plot of %s'%(placed[k][7] or PTYPE[k])))
+for k,p_,nrm,why in starts:
     if inside(p_,coast): continue
-    r=trail_to(p_,k)
+    r=route_trail(p_,nrm)
     if r is None: pproblems.append('no clear trail from %s'%why); continue
     if sum(math.hypot(b[0]-a[0],b[1]-a[1]) for a,b in zip(r,r[1:]))<1.2: continue   # already on a path
-    TRAILS.append((r,1.0,why))
+    TRAILS.append((r,1.1,why))
 print('\n'.join(pproblems) or 'paths: every door reached, every lane leads somewhere')
 print('trails: %d worn from back doors, side doors, yard gates and plot gates'%len(TRAILS))
 # ---- stage 5: doodads. Each has a purpose, stands on ground that suits it, and blocks no path or door.
@@ -338,13 +371,13 @@ COL={'bench':(120,84,50),'barrel':(140,96,56),'crate':(176,140,90),'woodpile':(1
  'anvil':(60,60,64),'quench trough':(100,130,150),'grindstone':(170,166,158),'charcoal':(40,36,34),'candles':(250,230,170),
  'sacks':(214,200,170),'chopping block':(110,80,50),'manure heap':(110,90,60),'drying rack':(190,180,150),'hen coop':(160,120,80),'boat hull':(130,92,56)}
 # Farhallow's own props (map coordinates)
-VILLAGE=[(60.6,53.4,0.4,0.4,0.0,'notice post',"the harbour master's notices: when the trader's ship is due"),
+VILLAGE=[(64+7.4*math.cos(2.75),50+7.4*math.sin(2.75),1.05,0.4,0.0,'notice post',"the harbour master's notices: when the trader's ship is due"),
  (69.0,43.4,1.6,0.5,0.4,'bench','old folk sitting by the well'),
  (56,4.1,0.4,0.4,0.0,'torch','gate torch on the gate post, lit at dusk'),(68,4.1,0.4,0.4,0.0,'torch','gate torch on the gate post, lit at dusk'),
  (25,24,0.8,0.8,0.0,'scarecrow','keeping crows off the infield'),(32,30,2.0,2.0,0.0,'haystack','winter hay for the goats'),
  (77.2,85.3,2.6,0.4,-0.32,'net rack','fishers drying their nets by the boats'),(64.8,88.4,2.6,0.4,-0.58,'net rack','fishers drying their nets'),
  (99.5,62.0,2.4,0.5,0.9,'drying rack','fish drying in the wind before smoking'),
- (82.0,83.0,1.6,0.8,-0.4,'gutting table','gutting the catch as it lands'),
+ (89.2,87.5,1.6,0.8,1.5708,'gutting table','gutting the catch where it lands, along the pier edge'),
  (87.5,92,1.2,1.2,0.0,'lobster pots','pots stacked on the pier'),(88.4,84,1.0,1.0,0.0,'barrel','barrels being rolled to the boats'),
  (100.5,99.0,1.6,1.2,0.0,'crate',"cargo waiting for the trader's ship (the last ship)")]
 DOODADS=[]   # (x, y, w, h, angle, kind, purpose, owner index or -1)
@@ -358,6 +391,11 @@ for k in range(len(placed)):
         for u,v,w_,h_,kind,why in ty['plot_doodads']:
             if v+h_<=dep-0.3: DOODADS.append(room_geo(k,(px+u,placed[k][3]+v,w_,h_))+(kind,why,k))
 DOODADS+=[t_+(-1,) for t_ in VILLAGE]
+FACE_USERS={'notice post','bench'}   # read or sat on: turned to face where people stand
+for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
+    if k<0 and kind in FACE_USERS and math.hypot(x-64,y-50)<10:
+        # local +y (the plan's 'front' of a doodad spot) toward the square's middle
+        a_=math.atan2(50-y,64-x)-math.pi/2; DOODADS[i]=(x,y,w_,h_,a_,kind,why,k)
 # every doodad takes its model's real size (godot/data/model_sizes.json, measured from the models), turned so its long
 # side lies along the long side of the spot the plan gave it: the checks below run on what will really stand there
 import json as _json, os as _os
@@ -368,7 +406,7 @@ MOUNTED={'lamp','sign','candles','torch'}   # hung on a wall or post: only where
 TURN={}
 for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     m=MODELS[kind]; sz=SIZES[m['model']]; mw,mh=sz[0]*m['scale'],sz[1]*m['scale']
-    turn=(mw>=mh)!=(w_>=h_)
+    turn=(mw>=mh)!=(w_>=h_) and kind not in MOUNTED   # hung things keep their own facing (a lamp's arm points out from its wall)
     if turn: mw,mh=mh,mw
     TURN[i]=turn
     if kind not in MOUNTED and kind not in LOOSE: DOODADS[i]=(x,y,mw,mh,a_,kind,why,k)
@@ -406,7 +444,7 @@ def ground(p):   # what a point stands on
         if -w/2<=uu<=w/2 and -h/2-2.6<=vv<-h/2: return 'front'
 
     for lp,cl,ln in LINES:
-        if any(segd(p,p0,p1)<1.0 for p0,p1 in zip(lp,lp[1:])): return 'wall'
+        if any(segd(p,p0,p1)<cl for p0,p1 in zip(lp,lp[1:])): return 'wall'   # within the wall's own width
     if inside(p,beach+[(140,110),(52,110)]): return 'beach'
     return 'grass'
 MOUNTED={'lamp','sign','candles','torch'}   # hung on a wall or post: only where they hang matters, and they block nothing
@@ -421,6 +459,8 @@ for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     bad=gs-KINDS[kind]
     if 'path' in bad: dproblems.append('%s at (%.0f,%.0f) blocks a path'%(nm,x,y)); bad-= {'path'}        # 3. blocks a path?
     if bad: dproblems.append('%s at (%.0f,%.0f) stands on %s'%(nm,x,y,'/'.join(sorted(bad))))              # 2. ground that makes sense?
+    if kind not in MOUNTED and any(math.hypot(q[0]-64,q[1]-50)<8.2-1.5 for q in pts):                       # 3. in the square's walkway?
+        dproblems.append('%s at (%.0f,%.0f) stands in the middle of the square, where people cross it'%(nm,x,y))
     for kk,dp in alldoors:                                                                                 # 3. blocks an entrance?
         if kind not in MOUNTED and (any(math.hypot(q[0]-dp[0],q[1]-dp[1])<1.0 for q in pts) or math.hypot(x-dp[0],y-dp[1])<1.8): dproblems.append('%s at (%.0f,%.0f) blocks a door'%(nm,x,y))
     for j in range(i+1,len(DOODADS)):
@@ -490,6 +530,54 @@ for at,label in ZLABELS: d.text(P(*at),label,font=F(20,True),fill=(255,255,245),
 img.paste(L,(MW+15,15),L)
 d.text((20,H-44),'FARHALLOW · plan v3: layout, paths and doodads (north up · 140 m × 110 m · ground rises to the north-east)',font=F(26,True),fill=(255,255,250),stroke_width=4,stroke_fill=(30,30,30))
 img.save(sys.argv[1]); print('saved')
+# ---- the ground's path mask (godot/data/farhallow_paths.png): every road, lane, door path, trail and the square painted
+# into the ground the way games do it, so paths are part of the ground: curved, soft-edged and worn, merging where they
+# meet, never floating or clipping. 4 texels a metre over the whole terrain (plan -45..185 x -45..155). Red: how worn.
+import numpy as _np, os
+from PIL import Image as _Im
+X0,Y0,TX,TY,PX=-45.0,-45.0,230,200,4
+def smooth_line(pts,step=0.5):   # Catmull-Rom through the points: curves, not corners
+    if len(pts)<3: 
+        a,b=pts[0],pts[-1]; n=max(2,int(math.hypot(b[0]-a[0],b[1]-a[1])/step)); return [(a[0]+(b[0]-a[0])*i/n,a[1]+(b[1]-a[1])*i/n) for i in range(n+1)]
+    P=[pts[0]]+list(pts)+[pts[-1]]; out=[]
+    for i in range(1,len(P)-2):
+        p0,p1,p2,p3=P[i-1],P[i],P[i+1],P[i+2]; n=max(2,int(math.hypot(p2[0]-p1[0],p2[1]-p1[1])/step))
+        for k in range(n):
+            t=k/n; t2=t*t; t3=t2*t
+            out.append(tuple(0.5*((2*p1[j])+(-p0[j]+p2[j])*t+(2*p0[j]-5*p1[j]+4*p2[j]-p3[j])*t2+(-p0[j]+3*p1[j]-3*p2[j]+p3[j])*t3) for j in (0,1)))
+    out.append(pts[-1]); return out
+H,Wd=TY*PX,TX*PX
+yy,xx=_np.mgrid[0:H,0:Wd].astype(_np.float32)
+gx=X0+(xx+0.5)/PX; gy=Y0+(yy+0.5)/PX
+rng_=_np.random.default_rng(3)
+def blur(a,k):
+    for _ in range(k): a=(a+_np.roll(a,1,0)+_np.roll(a,-1,0)+_np.roll(a,1,1)+_np.roll(a,-1,1))/5
+    return a
+wobble=blur(rng_.random((H,Wd)).astype(_np.float32),6); wobble=(wobble-wobble.mean())/wobble.std()   # ragged, worn edges
+mask=_np.zeros((H,Wd),_np.float32)
+def stamp(pts,width,wear,curve=True):
+    if curve: pts=smooth_line(pts)
+    xs=[q[0] for q in pts]; ys=[q[1] for q in pts]; m=width/2+1.5
+    i0=max(0,int((min(ys)-m-Y0)*PX)); i1=min(H,int((max(ys)+m-Y0)*PX)+1); j0=max(0,int((min(xs)-m-X0)*PX)); j1=min(Wd,int((max(xs)+m-X0)*PX)+1)
+    if i0>=i1 or j0>=j1: return
+    sx=gx[i0:i1,j0:j1]; sy=gy[i0:i1,j0:j1]; d=_np.full(sx.shape,1e9,_np.float32)
+    for a_,b_ in zip(pts,pts[1:]):
+        dx,dy=b_[0]-a_[0],b_[1]-a_[1]; L2=dx*dx+dy*dy or 1e-9
+        t=_np.clip(((sx-a_[0])*dx+(sy-a_[1])*dy)/L2,0,1); d=_np.minimum(d,_np.hypot(sx-a_[0]-t*dx,sy-a_[1]-t*dy))
+    edge=width/2*(1+0.16*wobble[i0:i1,j0:j1])
+    v=_np.clip((edge-d)/0.6+0.5,0,1)*wear                          # a soft edge, 60 cm wide
+    mask[i0:i1,j0:j1]=_np.maximum(mask[i0:i1,j0:j1],v)
+for pts,w,nm in ROADS: stamp(pts,w,1.0)
+stamp([(62,-30),(62,4),(61.4,10)],7.0,1.0); stamp([(61.4,10),(60.6,15)],5.2,1.0)   # through the gate: as wide as its opening
+for pts,w,nm in LANES: stamp(pts,w,1.0)
+for k,dp,q,ln in SPURS:                                              # a door path widens where it meets its street
+    stamp([dp,q],1.3,0.95); stamp([q,q],2.6,0.9)
+for lp,w,why in TRAILS: stamp(lp,w,0.92,curve=False)               # trails: the same worn dirt, narrower; already rounded
+d=_np.hypot(gx-64,gy-50); mask=_np.maximum(mask,_np.clip((8.6*(1+0.05*wobble)-d)/0.8+0.5,0,1))   # the square
+for pts,w,nm in ROADS+LANES:                                         # wider where paths meet: worn corners
+    for q in (pts[0],pts[-1]): stamp([q,q],w*1.8,0.9)
+_Im.fromarray((mask*255).astype(_np.uint8),'L').save(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','godot','data','farhallow_paths.png'))
+print('wrote the path mask')
 # ---- the plan for the game (godot/data/farhallow.json): everything the 3D village is built from, in plan metres
 import json,os
 ZONE={RICH:'rich',MID:'middling',POOR:'poor',TRADE:'trade',PUB:'public'}

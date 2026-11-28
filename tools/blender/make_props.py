@@ -153,15 +153,66 @@ for row in range(6):
         part('box','Thatch_Dark' if row%3 else 'WoodTrim_Light',(-0.8+k*0.32,off,zz),(0,0,0.1*(1 if (k+row)%2 else -1)),size=(0.34,0.03,0.11))
 done('Wattle_Fence')
 # forest trees: cheap enough to plant thousands as the wall of woods round the village (the kit's trees are 1,600-6,300
-# triangles; these are 60-150). Two pines and two broadleaves, palette colours.
-for k,(h,layers) in enumerate(((7.5,3),(9.5,4))):
-    part('cyl','WoodTrim_Dark',(0,0,0),r=0.18,r2=0.1,h=h*0.45,n=5)
+# triangles; these are 200-320): pines of drooping, jagged tiers and oaks of several lumpy crowns, palette colours
+import random as _r
+R2=_r.Random(5)
+def jag(o,amt):   # roughen a mesh's vertices so no two trees look turned on a lathe
+    for v in o.data.vertices: v.co.x+=R2.uniform(-amt,amt); v.co.y+=R2.uniform(-amt,amt); v.co.z+=R2.uniform(-amt*0.6,amt*0.6)
+for k,(h,layers) in enumerate(((8.0,5),(10.5,6))):
+    part('cyl','WoodTrim_Dark',(0,0,0),r=0.22,r2=0.08,h=h*0.55,n=6)
     for l in range(layers):
-        z=h*0.22+l*(h*0.7/layers); r=1.9*(1.0-l/(layers+0.6))
-        part('cyl','Leaf_Dark' if l%2 else 'Leaf',(0,0,z),r=r,r2=0.05,h=h*0.42,n=7)
+        z=h*0.18+l*(h*0.74/layers); r=2.1*(1.0-l/(layers+0.4))+0.25
+        o=part('cyl',['Leaf_Dark','Leaf','Leaf_Dark'][l%3],(0,0,z),r=r,r2=0.05,h=h*0.3,n=9); jag(o,0.18)
+    o=part('cyl','Leaf',(0,0,h*0.9),r=0.45,r2=0.02,h=h*0.18,n=6)
     done('Forest_Pine_%d'%(k+1))
-for k,(h,blobs) in enumerate(((6.5,((0,0,0,2.0),(0.9,0.4,-0.6,1.5),(-0.8,-0.5,-0.4,1.4))),(8.0,((0,0,0,2.4),(1.1,-0.3,-0.8,1.7),(-0.9,0.6,-0.7,1.6),(0.1,-0.9,0.5,1.3))))):
-    part('cyl','WoodTrim_Dark',(0,0,0),r=0.22,r2=0.14,h=h*0.6,n=5)
-    for (x,y,dz,r) in blobs: part('sphere','Leaf' if r>1.6 else 'Leaf_Dark',(x,y,h*0.68+dz),r=r,n=7,sz=0.85)
+for k,(h,blobs) in enumerate(((7.0,((0,0,0,2.1),(1.2,0.5,-0.7,1.6),(-1.1,-0.6,-0.5,1.5),(0.3,-1.0,0.6,1.3))),(8.5,((0,0,0.2,2.4),(1.3,-0.4,-0.9,1.8),(-1.2,0.7,-0.8,1.7),(0.2,-1.2,0.6,1.4),(-0.4,1.0,0.9,1.3))))):
+    part('cyl','WoodTrim_Dark',(0,0,0),r=0.26,r2=0.16,h=h*0.62,n=6)
+    for (x,y,dz,r) in ((0.9,0.3,-1.6,0.08),(-0.8,-0.4,-1.4,0.08)):   # two limbs reaching into the crown
+        part('cyl','WoodTrim_Dark',(x*0.5,y*0.5,h*0.45),(0.5*y,-0.5*x,0),r=0.1,r2=0.06,h=1.6,n=5)
+    for (x,y,dz,r) in blobs:
+        o=part('sphere',['Leaf','Leaf_Dark'][int(r*10)%2],(x,y,h*0.68+dz),r=r,n=9,sz=0.8); jag(o,0.2)
     done('Forest_Broadleaf_%d'%(k+1))
+# chopping block: a stout oak round with its axe-scarred top (the hatchet waits in it, beat B)
+part('cyl','WoodTrim_Dark',(0,0,0),r=0.3,r2=0.27,h=0.55,n=10); part('cyl','WoodTrim_Light',(0,0,0.55),r=0.27,h=0.02,n=10)
+done('Chopping_Block')
+# the village gate: two timber towers with plank walls and a lookout under a shingle roof, a lintel beam over the 7 m
+# opening, and two plank gate leaves with iron straps standing open inward (it is day; beat D breaks them)
+for sx in (-1,1):
+    cx=sx*4.5
+    for (dx,dy) in ((-0.9,-0.9),(0.9,-0.9),(-0.9,0.9),(0.9,0.9)): part('box','WoodTrim_Dark',(cx+dx,dy,0),size=(0.3,0.3,6.2))
+    for k in range(9):   # horizontal planks round the lower tower
+        z=0.1+k*0.42
+        for (px,py,w,d) in ((cx,-1.0,2.0,0.08),(cx,1.0,2.0,0.08),(cx-1.0,0,0.08,2.0),(cx+1.0,0,0.08,2.0)):
+            part('box','WoodTrim' if k%2 else 'WoodTrim_Wear',(px,py,z),size=(w,d,0.4))
+    part('box','WoodTrim_Dark',(cx,0,4.0),size=(2.6,2.6,0.2))                       # the lookout floor
+    for (px,py,w,d) in ((cx,-1.25,2.6,0.08),(cx,1.25,2.6,0.08),(cx-1.25,0,0.08,2.6),(cx+1.25,0,0.08,2.6)):
+        part('box','WoodTrim_Wear',(px,py,4.2),size=(w,d,0.9))                       # its parapet
+    for sgn in (-1,1): part('box','Thatch_Dark',(cx,sgn*0.75,6.5),(sgn*0.62,0,0),size=(3.0,1.85,0.1))
+part('box','WoodTrim_Dark',(0,0,4.0),size=(9.2,0.45,0.45))                              # the lintel over the opening
+for sx in (-1,1):   # the leaves, swung open inward against the towers
+    hx=sx*3.4
+    for k in range(7): part('box','WoodTrim',(hx,0.25+k*0.5,0.1),size=(0.12,0.48,3.4))
+    for z in (0.5,1.7,2.9): part('box','Iron',(hx-sx*0.08,1.85,z),size=(0.03,3.4,0.12))
+    part('box','WoodTrim_Dark',(hx-sx*0.08,1.85,1.75),(0.85,0,0),size=(0.05,0.12,4.4))
+done('Village_Gate')
+# the lighthouse: a squat beacon tower on a rock base at the breakwater's end, the kind a harbour master would pay for:
+# rough limewashed stone tapering up, one door, two slit windows, a corbelled gallery with an iron rail, a lantern room
+# of iron frames round a lamp, and a conical cap
+part('cyl','RockTrim_Dark',(0,0,-0.6),r=3.0,r2=2.6,h=1.4,n=10)                          # the rock it stands on
+part('cyl','Plaster',(0,0,0.8),r=2.0,r2=1.5,h=8.0,n=12)                                 # the tower
+part('cyl','RockTrim',(0,0,0.8),r=2.05,r2=1.95,h=0.6,n=12)                              # its stone plinth course
+part('box','WoodTrim_Dark',(0,-1.98,0.8),(0.0,0,0),size=(0.9,0.12,1.9))                 # the door, facing the breakwater
+for z,a in ((3.5,0.6),(6.0,-0.9)): part('box','Iron_Dark',(1.75*math.sin(a),-1.75*math.cos(a)+0.02,z),(0,0,a),size=(0.22,0.15,0.7))
+part('cyl','RockTrim',(0,0,8.8),r=1.55,r2=2.2,h=0.5,n=12)                               # corbels under the gallery
+part('cyl','RockTrim_Light',(0,0,9.3),r=2.25,h=0.18,n=12)                               # the gallery floor
+for k in range(12):
+    a=k*math.pi/6; part('box','Iron_Dark',(2.15*math.cos(a),2.15*math.sin(a),9.48),size=(0.05,0.05,0.9))
+part('cyl','Iron_Dark',(0,0,10.35),r=2.18,h=0.06,n=12,caps=False)                       # the rail
+part('cyl','Iron_Dark',(0,0,9.48),r=1.2,h=0.25,n=8)                                     # lantern room sill
+for k in range(8):
+    a=k*math.pi/4; part('box','Iron_Dark',(1.1*math.cos(a),1.1*math.sin(a),9.7),size=(0.07,0.07,1.6))
+part('sphere','Glow',(0,0,10.4),r=0.55,n=8)                                             # the lamp
+part('cyl','Iron_Dark',(0,0,11.3),r=1.3,r2=0.1,h=1.3,n=8)                               # the cap
+part('cyl','Iron',(0,0,12.6),r=0.06,h=0.6,n=4)
+done('Lighthouse')
 print('done')
