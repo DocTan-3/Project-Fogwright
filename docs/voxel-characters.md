@@ -143,7 +143,7 @@ Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyri
 
 - **One version per tier first** (Doc Tan): five tiers, one per rarity step. T1 common is the Wayfolk iron set. T2 uncommon adds contrast trim and brass fittings. T3 rare adds tooled leather, rivets and small brass fittings. T4 epic adds working parts such as gauges, pipes and a glowing vial. T5 legendary glows; motion comes later. The item list doc tracks what exists.
 - `TIERS` and `TIERED` in `make_equipment.py` set which types get tiers. Items are named `<type>_t2` .. `<type>_t5`, and `iron_<type>` stays as T1.
-- **Swords** are done:
+- **Swords, greatswords and daggers** are done (`blade_tier`, one design scaled to each blade by `BLADES`):
   - T2: bright steel with a brass guard whose tips sweep down, a brass-wired grip and a brass pommel.
   - T3: a broader blade with a wide fuller, a riveted guard with langets, a tooled grip and a wheel pommel.
   - T4: a blackened blade with a copper pipe up the fuller, fed by a glowing vial in the guard, plus a gauge and a valve pommel.

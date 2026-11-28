@@ -964,10 +964,13 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
 # T1 common is the Wayfolk iron set above. T2 uncommon: contrast trim, brass fittings. T3 rare: tooled leather, rivets,
 # small brass fittings. T4 epic: working parts (gauges, pipes, a glowing vial). T5 legendary: glows (and later moves).
 TIERS = {2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary'}
-def sword_tier(V, b, t):
-    """the sword at tiers 2-5, in the same frame as the iron sword: u thickness, w across the flat, h along the blade
-    from the middle of the grip (the fist)"""
-    g = 8
+BLADES = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}   # grip half, blade end, half width, guard
+def blade_tier(V, b, t, kind):
+    """a sword, dagger or greatsword at tiers 2-5, in the same frame as the iron one: u thickness, w across the flat,
+    h along the blade from the middle of the grip (the fist); the sword's design, scaled to each blade"""
+    g, bl, hw, gw = BLADES[kind]
+    L = lambda n: round(n * bl / 80)                      # lengths along the blade scale with it
+    pr = {'sword': 5, 'dagger': 4, 'greatsword': 6}[kind]  # the wheel pommel's radius
     def blade(h0, h1, hw, body, edge, fuller=None, fw=0, tip=None, profile=None):
         tip = tip or 3 * hw
         for h in range(h0, h1 + 1):
@@ -985,51 +988,55 @@ def sword_tier(V, b, t):
                     if du * du + dw * dw + dh * dh <= r * r + 1: V[(du, dw, h + dh)] = c(du, dw, dh) if callable(c) else c
     if t == 2:      # uncommon: bright steel, a brass guard with down-swept tips, brass wire round the grip, brass pommel
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'brass' if h % 4 == 0 else 'leather_d')
-        ball(-g - 3, 2, lambda du, dw, dh: 'brass_l' if dh == 1 else 'brass')
-        b(-2, 2, -10, 10, g + 1, g + 3, lambda u, w, h: 'brass_d' if abs(w) < 3 else 'brass')
-        for k in range(3): b(-1, 1, 10 + k, 10 + k, g + 1 - k, g + 2 - k, 'brass_l'); b(-1, 1, -10 - k, -10 - k, g + 1 - k, g + 2 - k, 'brass_l')
-        b(-1, 1, -4, 4, g + 4, g + 5, 'brass')                          # a brass collar at the blade's root
-        blade(g + 6, 86, 4, 'steel', 'steel_l', 'steel_d', 0)
+        ball(-g - 3, 2 if kind != 'greatsword' else 3, lambda du, dw, dh: 'brass_l' if dh == 1 else 'brass')
+        b(-2, 2, -gw, gw, g + 1, g + 3, lambda u, w, h: 'brass_d' if abs(w) < 3 else 'brass')
+        for k in range(3): b(-1, 1, gw + k, gw + k, g + 1 - k, g + 2 - k, 'brass_l'); b(-1, 1, -gw - k, -gw - k, g + 1 - k, g + 2 - k, 'brass_l')
+        b(-1, 1, -hw, hw, g + 4, g + 5, 'brass')                        # a brass collar at the blade's root
+        blade(g + 6, L(86), hw, 'steel', 'steel_l', 'steel_d', 0)
     if t == 3:      # rare: a broader blade with a wide fuller, a riveted guard with langets, a tooled grip, a wheel pommel
         b(-2, 2, -2, 2, -g, g, lambda u, w, h: 'leather_l' if (h + w) % 3 == 0 else 'leather')
         b(-2, 2, -2, 2, -g, -g, 'leather_d'); b(-2, 2, -2, 2, g, g, 'leather_d')
-        for dw in range(-5, 6):                                             # the wheel pommel, flat to the blade's face
-            for dh in range(-5, 6):
+        pc = -g - pr - 1
+        for dw in range(-pr, pr + 1):                                       # the wheel pommel, flat to the blade's face
+            for dh in range(-pr, pr + 1):
                 r2 = dw * dw + dh * dh
-                if r2 <= 26: b(-2, 2, dw, dw, -g - 6 + dh, -g - 6 + dh, 'iron_d' if r2 > 16 else 'steel')
-        V[(2, 0, -g - 6)] = V[(-2, 0, -g - 6)] = 'brass_l'; V[(-3, 0, -g - 6)] = V[(3, 0, -g - 6)] = 'brass'   # its rivet
-        b(-2, 2, -12, 12, g + 1, g + 4, lambda u, w, h: 'brass' if (abs(w) % 4 == 2 and abs(u) == 2 and h == g + 2) else ('iron_d' if abs(w) > 10 else 'steel_d'))
+                if r2 <= pr * pr + 1: b(-2, 2, dw, dw, pc + dh, pc + dh, 'iron_d' if r2 > (pr - 1) ** 2 else 'steel')
+        V[(2, 0, pc)] = V[(-2, 0, pc)] = 'brass_l'; V[(-3, 0, pc)] = V[(3, 0, pc)] = 'brass'   # its rivet
+        b(-2, 2, -gw - 2, gw + 2, g + 1, g + 4, lambda u, w, h: 'brass' if (abs(w) % 4 == 2 and abs(u) == 2 and h == g + 2) else ('iron_d' if abs(w) > gw else 'steel_d'))
         b(-2, 2, -3, 3, g + 5, g + 9, lambda u, w, h: 'brass' if (abs(u) == 2 and w == 0 and h == g + 7) else 'steel_d')   # langets
-        blade(g + 5, 90, 5, 'steel', 'steel_l', 'iron_d', 1, tip=13)
+        blade(g + 5, L(90), hw + 1, 'steel', 'steel_l', 'iron_d', 1, tip=L(13))
     if t == 4:      # epic: a blackened blade with bright edges; a glowing vial set in the guard feeds a copper pipe up the
         # fuller; a little gauge on the guard; a valve on the pommel cap
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'rubber' if h % 2 else 'black')
         b(-2, 2, -2, 2, -g - 4, -g - 1, lambda u, w, h: 'brass_d' if h == -g - 1 else 'brass')
         b(0, 0, -1, 1, -g - 6, -g - 5, 'copper'); b(-1, 1, 0, 0, -g - 6, -g - 6, 'copper')     # the valve wheel
-        b(-3, 3, -11, 11, g + 1, g + 4, lambda u, w, h: 'black_d' if abs(w) > 8 else 'black')
+        b(-3, 3, -gw - 1, gw + 1, g + 1, g + 4, lambda u, w, h: 'black_d' if abs(w) > gw - 2 else 'black')
         b(-3, 3, -2, 2, g + 1, g + 6, lambda u, w, h: 'glass_l' if abs(u) == 3 or abs(w) == 2 else 'potion')   # the vial
         b(-3, 3, -2, 2, g + 7, g + 7, 'brass')
-        for dw in range(-3, 4):                                             # the gauge, on the guard's arm
-            for dh in range(-3, 4):
-                if dw * dw + dh * dh <= 10: V[(-4, 8 + dw, g + 3 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
-        V[(-5, 8, g + 3)] = V[(-5, 9, g + 4)] = 'red'                       # its needle
-        blade(g + 8, 88, 4, 'black', 'steel_l', lambda h, w: 'copper' if h % 9 else 'copper_d', 1, tip=12)
-        for h in range(g + 10, 66, 8): V[(0, 0, h)] = 'potion'             # the vial's light seen through the pipe's ports
+        gc = gw - 2 if gw >= 9 else None                                    # the gauge, on the guard's arm (not on a dagger)
+        if gc:
+            for dw in range(-3, 4):
+                for dh in range(-3, 4):
+                    if dw * dw + dh * dh <= 10: V[(-4, gc + dw, g + 3 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+            V[(-5, gc, g + 3)] = V[(-5, gc + 1, g + 4)] = 'red'               # its needle
+        blade(g + 8, L(88), hw, 'black', 'steel_l', lambda h, w: 'copper' if h % 9 else 'copper_d', 1, tip=L(12))
+        for h in range(g + 10, L(66), 8): V[(0, 0, h)] = 'potion'          # the vial's light seen through the pipe's ports
     if t == 5:      # legendary: blued steel with glowing runes down the fuller, gilt wings for a guard round an arcane
         # crystal, a crystal pommel; the blade swells a little before the point
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'gilt' if h % 3 == 0 else 'blued_d')
         for dh in range(-4, 5):                                             # the pommel crystal, a long diamond
             r = 3 - abs(dh) * 3 // 4
             b(-r, r, -r, r, -g - 5 + dh, -g - 5 + dh, 'arc' if abs(dh) < 3 else 'arc_d')
-        for k in range(14):                                                 # gilt wings sweeping up and out
-            lift = (k * k) // 28
-            b(-2, 2, k, k, g + 1 + lift, g + 3 + lift, 'gilt' if k < 12 else 'brass_l'); b(-2, 2, -k, -k, g + 1 + lift, g + 3 + lift, 'gilt' if k < 12 else 'brass_l')
+        n = gw + 4
+        for k in range(n):                                                  # gilt wings sweeping up and out
+            lift = (k * k) * 14 // (28 * n)
+            b(-2, 2, k, k, g + 1 + lift, g + 3 + lift, 'gilt' if k < n - 2 else 'brass_l'); b(-2, 2, -k, -k, g + 1 + lift, g + 3 + lift, 'gilt' if k < n - 2 else 'brass_l')
         for dh in range(-3, 4):                                             # the crystal in the guard
             r = 2 - abs(dh) * 2 // 3
             b(-3, 3, -r, r, g + 5 + dh, g + 5 + dh, 'arc')
         rune = {0: (0,), 1: (-1, 1), 2: (0,), 3: (-1, 0, 1), 4: ()}
-        blade(g + 9, 96, 5, 'blued', 'blued_l', lambda h, w: 'arc' if w in rune[h % 5] else 'arc_d', 1, tip=14,
-              profile=lambda h: 5 if h < 66 else (6 if h < 80 else 5))
+        blade(g + 9, L(96), hw + 1, 'blued', 'blued_l', lambda h, w: 'arc' if w in rune[h % 5] else 'arc_d', 1, tip=L(14),
+              profile=lambda h: hw + 1 if h < L(66) else (hw + 2 if h < L(80) else hw + 1))
     return V
 
 def iron_shape(kind, floor, tier=1):
@@ -1052,8 +1059,8 @@ def iron_shape(kind, floor, tier=1):
                 thick = abs(w) < max(1, w_ - 1) and h < h1 - 2
                 col = 'iron_d' if (fuller and w == 0 and h < h1 - tip - 2) else ('iron_l' if abs(w) == w_ else 'iron')
                 b(-1 if thick else 0, 1 if thick else 0, w, w, h, h, col)
-    if kind == 'sword' and tier > 1:
-        sword_tier(V, b, tier)
+    if kind in BLADES and tier > 1:
+        blade_tier(V, b, tier, kind)
     elif kind in ('sword', 'dagger', 'greatsword'):
         g, bl, hw, gw = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}[kind]
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'leather_d' if h % 3 == 0 else 'leather')
@@ -1255,7 +1262,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)
