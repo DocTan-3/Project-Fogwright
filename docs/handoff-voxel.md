@@ -136,3 +136,22 @@ The plan: [Fogwright voxel building kit: plan (inn first)](https://claude.ai/art
   - After adding a new `class_name`, run `godot --headless --path godot --import` once, or scenes using it fail to load.
 - **Git:** commit trailers as before. Pushing to `main` needs the user's explicit OK.
 - **Tone with the user:** they want honest assessments and renders shown, and short answers.
+
+## Update from the cloud session (2026-11-28, afternoon)
+
+Godot 4.7.1 runs in the cloud (downloaded from GitHub releases; renders with `xvfb-run` on llvmpipe, about a minute a walk test).
+
+- **Builder (step 2), done:** `godot/scripts/voxel/building_kit.gd` (`BuildingKit.build(layout)`), layouts in
+  `scripts/voxel/kit_layouts.gd`, doors in `scripts/voxel/kit_door.gd`. Pieces are stamped into one voxel set per storey and
+  greedy-meshed once (`Vox.mesh`); fittings at 5 cm from `kit_fittings.vox`. Box collision; ramps for stairs, steps, roof.
+  Doors swing when walked up to and stay open; their doorway is on collision layer 3 (value 4), which only the camera's
+  spring arm sees, so indoors the camera never backs out of a door. Test house: `scenes/kit_room.tscn`, `tests/kit_room_walk.tscn`.
+- **Architecture follows the lore (the user chose it):** Farhallow is a poor windswept freehold (lore.md, PR 1): drystone with
+  daub inside, salvaged tarred ship timber, plank partitions, heather thatch netted with ropes and weighted at the eaves,
+  the upper floor up in the roof behind a knee wall with dormers and a collar ceiling, shutters, faded colours, the Vigil's
+  lantern over the inn door, Hollin's waystone, a carved gull. No oak framing in Farhallow.
+- **The inn (step 3), first build:** `scenes/inn_gull_lantern.tscn`, `tests/inn_walk.tscn`. 30,642 triangles (cap 25,000).
+  Deviations from the plan's table: the stair hall is 10 x 4 behind the taproom (a straight 6.6 m stair needs it), so one
+  back guest room, not two; no cellar, trapdoor or attic hatch yet.
+- **Open:** a stair rail at the well; the camera crowds in on the stair and in the small roof rooms; colours still read
+  pale under the test sun (tune under the village's light); the inn is not yet placed in Farhallow (step 4).
