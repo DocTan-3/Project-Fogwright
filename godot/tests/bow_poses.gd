@@ -21,19 +21,19 @@ func _ready() -> void:
 	sun.shadow_enabled = true; sun.shadow_bias = 0.25; sun.shadow_normal_bias = 3.0; add_child(sun)
 	var g := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = Vector2(200, 200); g.mesh = pm
 	var gm := StandardMaterial3D.new(); gm.albedo_color = Color(0.36, 0.42, 0.26); g.material_override = gm; add_child(g)
-	var poses := ["E", "F", "G", "H"]
+	var poses := ["E"]
 	for r in 2:
 		for i in poses.size():
 			Equipment.bow_pose = poses[i]
 			var m := Equipment.dress(people, sex, [type, "quiver"], true, true); add_child(m)
 			m.position = Vector3(i * 1.4, 0, r * 30.0)
-			if r == 1: m.rotation_degrees.y = -60.0      # the bow side toward the camera
+			if r == 1: m.rotation_degrees.y = -90.0 if poses.size() == 1 else -60.0      # the bow side toward the camera
 			var l := Label3D.new(); l.text = poses[i]; l.font_size = 64; l.pixel_size = 0.0025; l.outline_size = 8
 			l.position = m.position + Vector3(0, 0.05, 0.8); add_child(l)
 	Equipment.bow_pose = ""
 	var cam := Camera3D.new(); add_child(cam); get_viewport().size = Vector2i(2400, 1000)
-	var cx := 2.1
-	for sh in [["front", Vector3(cx + 1.2, 1.3, 5.4), Vector3(cx, 0.85, 0)], ["turned", Vector3(cx + 1.2, 1.3, 30.0 + 5.4), Vector3(cx, 0.85, 30.0)]]:
+	var cx := 2.1 if poses.size() > 1 else 0.0
+	for sh in [["front", Vector3(cx + 1.2, 1.3, 5.4 if poses.size() > 1 else 3.0), Vector3(cx, 0.85, 0)], ["turned", Vector3(cx, 1.1, 30.0 + (5.4 if poses.size() > 1 else 3.0)), Vector3(cx, 0.85, 30.0)]]:
 		cam.position = sh[1]; cam.look_at(sh[2]); cam.fov = 40.0
 		for k in 6: await get_tree().process_frame
 		await RenderingServer.frame_post_draw

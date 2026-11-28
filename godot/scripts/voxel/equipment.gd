@@ -81,7 +81,7 @@ const BOW_POSES := {
 		"D": Vector3(1, 0.12, 0.1), "S": Vector3(0, 0.4, -1)},
 }
 const BOW_REF := {
-	"E": {"arms": {"arm_upper_l": Vector3(-6, 0, 2), "arm_lower_l": Vector3(-12, 0, 0)}, "D": Vector3(0.9, 0.3, -0.3), "S": Vector3(0, 1, -0.7)},
+	"E": {"arms": {"arm_upper_l": Vector3(-2, 0, 4), "arm_lower_l": Vector3(-6, 0, 0)}, "D": Vector3(0, 0.04, 1), "S": Vector3(0, 1, 0)},
 	"F": {"arms": {"arm_upper_l": Vector3(-6, 0, 2), "arm_lower_l": Vector3(-24, 0, 0)}, "D": Vector3(-0.15, 0.85, -0.5), "S": Vector3(-1, 0.2, -0.3)},
 	"G": {"arms": {"arm_upper_l": Vector3(-10, 0, 0), "arm_lower_l": Vector3(-28, 0, 0)}, "D": Vector3(0.95, 0.15, -0.2), "S": Vector3(0, 1, -0.4)},
 	"H": {"arms": {"arm_upper_l": Vector3(-4, 0, 4), "arm_lower_l": Vector3(-14, 0, 0)}, "D": Vector3(0.7, 0.6, -0.35), "S": Vector3(-0.2, 0.7, -1)},
