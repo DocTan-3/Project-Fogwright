@@ -1,7 +1,8 @@
 # Fogwright's voxel character generator: any people, either sex, in the approved stylized look (make_stylized.py's
 # Hrimfolk man): a big bevelled head with a face drawn as a pixel map, a short broad neckless body, thick arms with big
 # fists, short sturdy legs, big boots, flat colours with a darker and lighter tone. docs/characters.md has the peoples.
-#   python3 tools/voxel/make_character.py                 -> godot/assets/voxel/characters/peoples/<people>_<m|f>.vox
+#   python3 tools/voxel/make_character.py   -> godot/assets/voxel/characters/peoples/<people>_<m|f>.vox (the base body in its
+#   underwear, as the creator shows it) and <people>_<m|f>_clothes.vox (the starting clothes: parts that replace the bare ones)
 # 2.5 cm voxels; MagicaVoxel axes: x across (0 = the character's right seen from the front), y front (small) to back, z up.
 # Skin colours stay within real skin's reflectance (pale skin reflects about 60% of light, sRGB about 200 at most): brighter
 # values flare yellow or white under the game's sun.
@@ -46,7 +47,8 @@ HEAD = {'ilvari': (24, 22)}   # narrower, shallower heads (width, depth, in 1.25
 EXPR = {}   # (people, sex) -> stern, grim, calm, smile; men default stern, women calm (presets will set it)
 
 def tone(c, f): return tuple(max(0, min(255, int(v * f))) for v in c)
-def build(people, sex):
+def build(people, sex, dressed=True):
+    """the character dressed in its starting clothes, or (dressed=False) the base body in its underwear"""
     p = dict(PEOPLES[people])
     if sex == 'f':
         for k, v in WOMAN.items(): p[k] += v
@@ -57,7 +59,7 @@ def build(people, sex):
            'tunic': p['tunic'], 'tunic_d': tone(p['tunic'], 0.76), 'leather': p['leather'], 'leather_d': tone(p['leather'], 0.72),
            'trousers': p['trousers'], 'trousers_d': tone(p['trousers'], 0.78), 'boots': (84, 52, 32), 'boots_d': (60, 36, 22),
            'iron': (128, 132, 136), 'iron_d': (90, 92, 96), 'bead': (176, 150, 96),
-           'ink': (56, 116, 210), 'tattoo': (40, 58, 56), 'vein': tone(p['skin'], 0.7), 'soot': tone(p['skin'], 0.55), 'freckle': tone(p['skin'], 0.78), 'stub': tone(p['skin'], 0.88), 'cheek': (min(255, p['skin'][0] + 12), int(p['skin'][1] * 0.86), int(p['skin'][2] * 0.86))}
+           'ink': (56, 116, 210), 'tattoo': (40, 58, 56), 'vein': tone(p['skin'], 0.7), 'soot': tone(p['skin'], 0.55), 'freckle': tone(p['skin'], 0.78), 'stub': tone(p['skin'], 0.88), 'linen': (122, 106, 88), 'linen_d': (94, 80, 64), 'cheek': (min(255, p['skin'][0] + 12), int(p['skin'][1] * 0.86), int(p['skin'][2] * 0.86))}
     P = {}
     def put(part, x, y, z, c): P.setdefault(part, {})[(x, y, z)] = c
     def rbox(part, x0, x1, y0, y1, z0, z1, c, bev=1, top_bev=False):
@@ -74,11 +76,18 @@ def build(people, sex):
     hip = 6 + 2 + p['LL'] + p['UL']
     for side, x0 in (('l', x0l), ('r', x0r)):
         x1 = x0 + LW - 1; yc = (TD - 8) // 2
-        rbox('foot_' + side, x0, x1, yc - (1 if sex == 'f' else 2), yc + 7, 0, 3, lambda x, y, z: 'boots_d' if z == 0 else 'boots')
-        rbox('foot_' + side, x0, x1, yc, yc + 7, 4, 6, 'boots')
-        rbox('leg_lower_' + side, x0 - 1, x1 + 1, yc - 1, yc + 8, 7, 8, 'boots_d')
-        rbox('leg_lower_' + side, x0, x1, yc, yc + 7, 9, 8 + p['LL'], 'trousers')
-        rbox('leg_upper_' + side, x0, x1, yc, yc + 7, 9 + p['LL'], hip, lambda x, y, z, x0=x0, x1=x1: 'trousers_d' if (x in (x0, x1) and z % 3 == 0) else 'trousers')
+        if dressed:     # boots with a turned cuff, trousers
+            rbox('foot_' + side, x0, x1, yc - (1 if sex == 'f' else 2), yc + 7, 0, 3, lambda x, y, z: 'boots_d' if z == 0 else 'boots')
+            rbox('foot_' + side, x0, x1, yc, yc + 7, 4, 6, 'boots')
+            rbox('leg_lower_' + side, x0 - 1, x1 + 1, yc - 1, yc + 8, 7, 8, 'boots_d')
+            rbox('leg_lower_' + side, x0, x1, yc, yc + 7, 9, 8 + p['LL'], 'trousers')
+            rbox('leg_upper_' + side, x0, x1, yc, yc + 7, 9 + p['LL'], hip, lambda x, y, z, x0=x0, x1=x1: 'trousers_d' if (x in (x0, x1) and z % 3 == 0) else 'trousers')
+        else:           # bare feet with toes, bare legs, linen drawers to mid-thigh
+            rbox('foot_' + side, x0, x1, yc - 1, yc + 6, 0, 2, lambda x, y, z, x0=x0: 'skin_d' if z == 0 or (y == yc - 1 and z == 1 and (x - x0) % 2 == 1) else 'skin')
+            rbox('foot_' + side, x0 + 1, x1 - 1, yc + 1, yc + 6, 3, 6, 'skin')
+            rbox('leg_lower_' + side, x0, x1, yc, yc + 7, 7, 8 + p['LL'], lambda x, y, z: 'skin_d' if (y == yc and z == 7 + p['LL'] - 1 and 1 <= x - x0 <= LW - 2) else 'skin')
+            dz = hip - (p['UL'] + 1) // 2
+            rbox('leg_upper_' + side, x0, x1, yc, yc + 7, 9 + p['LL'], hip, lambda x, y, z, dz=dz: 'linen_d' if z == dz else ('linen' if z > dz else 'skin'))
     # ---- torso: chest tapering to the waist (a woman's waist narrower, her hips wider at the belt), belt, laced V neck
     top = hip + p['TH']; cx = TW // 2; SH = 1 if sex == 'f' else 0
     for z in range(hip + 1, top + 1):
@@ -90,6 +99,12 @@ def build(people, sex):
         else: w = 0 if up else 1
         d = 0 if r >= 9 else 1
         def col(x, y, z=z, r=r, d=d):
+            if not dressed:      # bare: drawers at the hips, a breast band on women, the chest and navel shaded on the skin
+                if r <= 2: return 'linen_d' if r == 2 else 'linen'
+                if sex == 'f' and top - 10 <= z <= top - 4: return 'linen_d' if z == top - 10 else 'linen'
+                if sex == 'm' and z == top - 8 and y <= d and not (cx - 1 <= x <= cx): return 'skin_d'
+                if y <= d and z == hip + 6 and cx - 1 <= x <= cx: return 'skin_d'
+                return 'skin'
             if r <= 1: return 'leather_d' if r == 0 else 'leather'
             if r == 2: return 'tunic_d'
             if y <= d and cx - 2 <= x <= cx + 1 and z >= top - 4: return 'skin' if z >= top - 3 and cx - 1 <= x <= cx else ('leather_d' if x in (cx - 2, cx + 1) and z % 2 == 0 else 'tunic')
@@ -99,21 +114,30 @@ def build(people, sex):
         for k, z in enumerate(range(top - 9, top - 4)):
             inset = 1 if k in (0, 4) else 0
             for x in list(range(SH + 1 + inset, cx - 1 - inset)) + list(range(cx + 1 + inset, TW - 1 - SH - inset)):
-                put('torso', x, -1, z, 'tunic_d' if k == 0 else 'tunic')
-    if p['mark'] == 'veins':     # healed scourge scars, diagonal across the back (through the tunic's wear: shown on a bare back later)
+                put('torso', x, -1, z, ('tunic_d' if k == 0 else 'tunic') if dressed else 'linen')
+    if p['mark'] == 'veins' and not dressed:     # healed scourge scars, diagonal across the back
         for k in range(5):
             zb = top - 4 - k * 3
             for x in range(2, TW - 2):
                 if (x + k) % 6 < 4: put('torso', x, TD, zb - x // 4, 'scar')
-    for x in range(cx - 1, cx + 1): put('torso', x, 0, hip + 2, 'iron'); put('torso', x, -1, hip + 2, 'iron_d')
+    if dressed:
+        for x in range(cx - 1, cx + 1): put('torso', x, 0, hip + 2, 'iron'); put('torso', x, -1, hip + 2, 'iron_d')
+    if not dressed and people == 'hrimfolk':     # knotwork over the shoulders and up the neck's base
+        for x in list(range(0, 4)) + list(range(TW - 4, TW)):
+            for y in range(0, TD):
+                if y in (0, TD - 1) or (x + y) % 2 == 0: put('torso', x, y, top, 'tattoo')
+        for x in (1, 2, TW - 3, TW - 2):
+            for z in (top - 1, top - 2): put('torso', x, 0, z, 'tattoo')
+    if not dressed and p['mark'] == 'soot':     # old forge burns on the chest
+        for x, z in ((3, top - 3), (4, top - 3), (4, top - 4), (TW - 5, top - 6), (TW - 6, top - 6)): put('torso', x, 0, z, 'scar')
     # ---- arms: sleeves, bare forearms (bracers for some peoples), big fists with a thumb
     ay0 = (TD - AW) // 2
     for side, (x0, x1) in (('l', (TW - SH, TW - SH + AW - 1)), ('r', (SH - AW, SH - 1))):
         au0 = top - p['AU'] + 1; al0 = au0 - p['AL']; h0 = al0 - (5 if sex == 'f' else 6)
         sleeve = top - p['AU'] * 2 // 3
-        rbox('arm_upper_' + side, x0, x1, ay0, ay0 + AW - 1, au0, top, lambda x, y, z: 'tunic' if z >= sleeve else 'skin', top_bev=True)
+        rbox('arm_upper_' + side, x0, x1, ay0, ay0 + AW - 1, au0, top, lambda x, y, z: 'tunic' if z >= sleeve and dressed else ('tattoo' if people == 'hrimfolk' and not dressed and (z in (top - 6, top - 3) or (z in (top - 5, top - 4) and (x + y + z) % 2 == 0)) else 'skin'), top_bev=True)
         rbox('arm_lower_' + side, x0, x1, ay0, ay0 + AW - 1, al0, au0 - 1, 'skin')
-        if p['bracers']:
+        if p['bracers'] and dressed:
             rbox('arm_lower_' + side, x0 - 1 if side == 'r' else x0, x1 if side == 'r' else x1 + 1, ay0 - 1, ay0 + AW, al0, al0 + 5,
                  lambda x, y, z: 'leather_d' if z in (al0, al0 + 5) else 'leather')
         rbox('hand_' + side, x0, x1, ay0 - 1, ay0 + AW, h0, al0 - 1, lambda x, y, z: 'skin_d' if (y == ay0 - 1 and z in (h0 + 1, h0 + 3)) else 'skin')
@@ -121,11 +145,11 @@ def build(people, sex):
         if p['mark'] == 'ink':
             for z in (h0 + 2, h0 + 3, h0 + 4): put('hand_' + side, x0 + AW // 2, ay0 + AW, z, 'ink')
         # marks on the bare forearm
-        mz = al0 + (6 if p['bracers'] else 1)
+        mz = al0 + (6 if p['bracers'] and dressed else 1)
         for z in range(mz, au0):
             for x in range(x0, x1 + 1):
                 k = (x * 3 + z * 5) % 7
-                if p['mark'] == 'knotwork' and z % 2 == 0 and k < 3: put('arm_lower_' + side, x, ay0, z, 'tattoo')
+                if p['mark'] == 'knotwork' and (z in (mz + 1, mz + 4) or (z in (mz + 2, mz + 3) and (x + z) % 2 == 0)): put('arm_lower_' + side, x, ay0, z, 'tattoo')
                 if p['mark'] == 'veins' and k == 0: put('arm_lower_' + side, x, ay0, z, 'vein')
                 if p['mark'] == 'veins' and side == 'r' and (x + z) % 4 == 0 and z % 3 == 0: put('arm_lower_' + side, x, ay0, z, 'scar')   # old lash scars
                 if p['mark'] == 'soot' and k == 1: put('arm_lower_' + side, x, ay0, z, 'soot')
@@ -308,12 +332,15 @@ def build(people, sex):
     return P, PAL
 
 OUT = os.path.join(HERE, '..', '..', 'godot', 'assets', 'voxel', 'characters', 'peoples')
+CLOTHED = ['torso', 'arm_upper_l', 'arm_upper_r', 'arm_lower_l', 'arm_lower_r', 'leg_upper_l', 'leg_upper_r', 'leg_lower_l', 'leg_lower_r', 'foot_l', 'foot_r']
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     for people in PEOPLES:
         for sex in ('m', 'f'):
-            P, PAL = build(people, sex)
+            P, PAL = build(people, sex, dressed=False)
             mb.COL = PAL; mb.NAMES = list(PAL)
             mb.write(os.path.join(OUT, '%s_%s.vox' % (people, sex)), P)
+            C, _ = build(people, sex, dressed=True)      # the starting clothes: the body parts they cover, replacing the bare ones
+            mb.write(os.path.join(OUT, '%s_%s_clothes.vox' % (people, sex)), {k: v for k, v in C.items() if k in CLOTHED})
             zs = [z / (2 if '#2' in n else 1) for n, part in P.items() for (_, _, z) in part]; xs = [x / (2 if '#2' in n else 1) for n, part in P.items() for (x, _, _) in part]
             print('%-9s %s  %d voxels tall (%.2f m), %d across (%.2f m)' % (people, sex, max(zs) - min(zs) + 1, (max(zs) - min(zs) + 1) * 0.025, max(xs) - min(xs) + 1, (max(xs) - min(xs) + 1) * 0.025))

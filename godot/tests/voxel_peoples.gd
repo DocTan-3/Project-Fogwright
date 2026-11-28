@@ -1,11 +1,12 @@
 extends Node3D
 ## the lineup: every playable people, man and woman (tools/voxel/make_character.py), beside a 2.2 x 1.4 m doorway frame
-##   godot --path . --rendering-driver opengl3 res://tests/voxel_peoples.tscn -- out=<png prefix>
+##   godot --path . --rendering-driver opengl3 res://tests/voxel_peoples.tscn -- out=<png prefix> [clothes=1]
 const PEOPLES := ["hrimfolk", "ruadhan", "aurelan", "zarhim", "ilvari", "ferrin", "wayfolk", "penitent"]
 func _ready() -> void:
-	var out := "/tmp/peoples"
+	var out := "/tmp/peoples"; var clothes := false
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("out="): out = a.split("=")[1]
+		if a == "clothes=1": clothes = true   # the starting clothes layered on (else the base body in underwear)
 	const D := "res://assets/voxel/characters/peoples/"
 	# the game's own daylight (scenes/main.tscn with Farhallow's late afternoon, scripts/farhallow.gd _light), so colours read as in play
 	var env := WorldEnvironment.new(); env.environment = Environment.new(); var e := env.environment
@@ -28,7 +29,7 @@ func _ready() -> void:
 	var i := 0
 	for p in PEOPLES:
 		for s in ["m", "f"]:
-			var m := Vox.character(D + "%s_%s.vox" % [p, s], Vox.FINE); add_child(m)
+			var m := Vox.character(D + "%s_%s.vox" % [p, s], Vox.FINE, [], [D + "%s_%s_clothes.vox" % [p, s]] if clothes else []); add_child(m)
 			m.position = Vector3(i * 0.95, 0, 0)
 			var tris := 0
 			for mi in m.find_children("*", "MeshInstance3D", true, false): tris += (mi as MeshInstance3D).mesh.get_faces().size() / 3
