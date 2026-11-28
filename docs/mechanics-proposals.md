@@ -6,16 +6,14 @@ Game mechanics built from the lore in [lore.md](lore.md) and [lore-proposals.md]
 [design.md](design.md) already decided (tab-target combat, weapons give moves, one skill tree, paths, relics, the warp
 space). Everything here is a **proposal**. Numbers are first guesses, to tune in play.
 
-## Quick decisions
+## Decisions so far (2026-11-28)
 
-| # | Proposal | Why |
-| --- | --- | --- |
-| 1 | **Freeholds are the "settlement"**: the group's shared base is a frontier village they retake from the Fog; the warp space stays the private, safe home | Joins design.md's settlement loop to the lore's warp space |
-| 2 | **Runecrafter becomes Relicwright**: the craft that reverse-engineers relics and makes relic cores; spells come only from gods | The lore bans magic for anyone unclaimed |
-| 3 | **Gods are world state**: each god has a server-wide Grace value that players raise and lower, and that changes everyone's magic and the colour of that god's land | Makes the persistent co-op server matter |
-| 4 | **Warps carry the chosen, not cargo**: the warp bag has a weight limit, so bulk goods move by ship and cart | Keeps ships and roads important, as lore.md asks |
-| 5 | **Greying replaces "Fog corruption"** with five visible stages | Readable on a phone, and ties to the lore's Greyed |
-| 6 | **Retaking Farhallow** is the first big Freehold goal | Gives the prologue a payoff |
+- **Decided:** freeholds are the group's shared base and the warp space is each player's private home; Runecrafter
+  becomes the **Relicwright**; each god has a server-wide **Grace**; warps and the warp bag have a **weight limit that
+  grows over time**; **no Fog exposure meter** on players (Fog is gated by lanterns instead); **Farhallow stays lost**;
+  being claimed grants a **starting node in the one skill tree**; **players do not drop items on death**.
+- **Still open:** lanterns, day length, skill points, the Writ and Censors, stamina, and the UI cards; design.md's
+  rewrite.
 
 ## Things in design.md that clash with the lore
 
@@ -47,15 +45,15 @@ How a player gets a god, and what it gives.
 4. **Claimed.** The god's magic opens as a region of the skill tree; the Ordinal issues a **Writ of Grace**; the warps
    open to you; you get a **seat** in that god's city (a free warp bind and favour with that people).
 
-**One god at a time.** A player can change god by **apostasy**: going to a new god's site and passing their trial. The
-old god's magic is locked (the points are refunded into the new region) and that god's people trust you less for a
-while. It costs a quest and some reputation, not money.
+**A starting node, not a lock (decided).** Being claimed grants a starting node in the one skill tree, inside that god's
+region, placed far from the other gods' regions. Every player can eventually walk the tree to other gods' magic and
+unlock it too; the god who claimed you only decides where you start. There is no apostasy.
 
 **Vael (hidden).** Vael cannot be sought at the start. After Act III he can claim players who find him in a broken warp,
 which opens Warpwalker-style magic properly.
 
 **Galeth (falls).** Players claimed by Galeth become **Orphaned** when he falls: they keep their magic but its strength
-drops slowly over weeks unless they join the Vigil's march, or change god. If Galeth is freed later (lore proposal),
+drops slowly over weeks unless they join the Vigil's march. If Galeth is freed later (lore proposal),
 the Orphaned are the first to feel it.
 
 **Aldrath** claims no one (decided 2026-11-28), so his plaza is not a claiming site.
@@ -71,7 +69,7 @@ moves and modifiers. The moves are quiet and strange, never fireballs. They shap
 | **Maelis**, Stewardship | Food and potions last longer | **Oath** (bind an ally: you share damage taken), **Bounty** (heal over time in an area), **Keep** (a ward on a door or wall that holds) | Freehold fields yield more; buildings go up faster |
 | **Seraveth**, Remembrance | Read ruin inscriptions without the language skill | **Recall** (step back to where you stood 4 s ago), **Echo** (see a fallen enemy's last moves replayed), **Mend** (restore a broken item's durability) | See Echoes of the past at ruins (lore discovery), restore relics |
 | **Ostrak**, Valor | Deal more damage the lower your health | **Anvil Skin** (block takes no stamina for a while), **Ember** (weapon hits burn), **Stand Fast** (heal from damage you block) | Better forging quality; heat a forge without fuel for a time |
-| **Khesra**, Survival | Thirst and heat drain more slowly | **Shed** (cure one affliction or wound), **Mirage** (leave a decoy and slip away), **Adapt** (resist the last damage type that hit you) | Find water anywhere; Greying slows |
+| **Khesra**, Survival | Thirst and heat drain more slowly | **Shed** (cure one affliction or wound), **Mirage** (leave a decoy and slip away), **Adapt** (resist the last damage type that hit you) | Find water anywhere |
 | **Brannoch**, Bonds | Tamed beasts and mounts take less damage | **Bond** (link to an ally or beast: share healing), **Call** (summon your bonded beast to you), **Kinship** (calm a wild animal) | Better prices with traders who know you; tame more easily |
 | **Hollin**, the Road | Faster on roads and paths | **Stride** (a long sprint with no stamina cost), **Waystone** (recall to the last waystone you prayed at), **Welcome** (a safe camp circle: no Fog, enemies won't enter for a time) | Travel time between ports shortens; better at inns |
 | **Oriel**, Understanding | See enemies' weak points (more critical hits) | **Ride** (move your mind into a beast or machine for a while), **Know** (reveal a creature's moves and weaknesses), **Wake** (start a dead Animari machine) | Technomancy: summons gather resources; repair machines |
@@ -124,24 +122,18 @@ ruins.
 | 0 | Clear | Gods' circles and lit streets; no night strength for enemies |
 | 1 | Haze | Normal wilds by day |
 | 2 | Mist | Night in the wilds; Fogtouched appear |
-| 3 | Fog | The far coasts; Greying starts without a lantern; the map stops filling in |
-| 4 | Deep Fog | Breaches open; Wrought roam; lanterns are needed to see |
-| 5 | The Wall | The Sundering; only the best lanterns and Fogstalkers last long |
+| 3 | Fog | The far coasts; needs a lantern of tier 1 or better; the map stops filling in |
+| 4 | Deep Fog | Breaches open; Wrought roam; needs a tier 2 lantern |
+| 5 | The Wall | The Sundering; needs a tier 3 lantern (or a Fogstalker's) |
 
-### Greying
+### Gating, not a meter (decided)
 
-A meter with five stages (lore-proposals.md). It rises in Fog of density 3 and up without light, from Fog creatures'
-hits, and from carrying lots of Fog shards. It falls slowly in clear places and fast with remedies and grace.
+Players have **no Fog exposure meter or status**: the Fog does nothing to a player's body. Instead each density is a
+gate: from density 3 up you need a lantern of high enough tier to go in at all. Without it the Fog is too thick to walk
+into (the way back is always open). Better lanterns, made or bought as the game goes on, open the deeper Fog, the way
+gear opens harder zones. Danger inside comes from what lives there.
 
-| Stage | Sign on the character | Effect |
-| --- | --- | --- |
-| 1 Chill | Breath fogs, pale lips | Warmth drains faster |
-| 2 Veins | Grey veins on hands and neck | Healing weaker; some townsfolk avoid you |
-| 3 Eyes | Grey eyes | Stamina regenerates slower; Censors stop you; you see Echoes |
-| 4 The tune | A song only you hear (a sound cue) | Random brief control loss in thick Fog; the Fog's creatures ignore you sometimes (a strange perk) |
-| 5 The turn | Collapse | You fall and wake at your seat, Greying reset to stage 2, a lasting **scar** (a small permanent minus until treated by a god's quest) |
-
-Players never truly turn. Settlers and NPCs can.
+**Greying stays in the lore** for NPCs and settlers: the Greyed are people the Fog took over years, never players.
 
 ### Lanterns
 
@@ -154,7 +146,7 @@ Every adventurer carries a lantern (design.md). Proposals for the open parts:
   longest but adds a little Fog pressure, the usual trade-off.
 - **Upgrades:** lens (wider light), cowl (no light seen by enemies: stealth), coil (pushes Fog harder), cage (survives
   falls and swimming). Made by Tinkerers and Smiths.
-- **Out of fuel:** density counts as one step higher around you, and Greying starts.
+- **Tiers:** the lantern's tier sets the deepest Fog density you can enter (see Gating).
 
 ### Clearing the Fog
 
@@ -170,7 +162,7 @@ The shared base in design.md, placed in the lore. A **freehold** is a frontier v
 proposals). Many are falling. Players can retake a fallen one, or found a new one on open ground, as a group.
 
 - **Where:** fixed sites on the map (a ruined freehold, an empty valley, a headland), so they are part of the authored
-  world. Farhallow is one, and the first goal: **go back and retake the village you fled**.
+  world. **Farhallow stays lost (decided):** it remains a Fog-taken ruin; the group's first freehold is somewhere new.
 - **What it holds:** buildings the group builds (on the voxel building kit), fields, workshops that need power (water,
   wind, steam), walls, turrets, pylons, and **settlers** (design.md: traits, moods, jobs).
 - **The risk:** Freeholds are not safe. Surges at night, raids by Briarkin and Lessborn, outbreaks of Greying among
@@ -219,8 +211,9 @@ Oriel's chosen with the Ride move, for a while.
 
 - **Prices follow the lore's gradient:** food is cheap near Aldrath and dear at the edges; ores, furs, timber, spices
   and relics are cheap where they come from and dear at the centre. Each port's trader shows a few goods "in demand".
-- **Cargo:** goods have weight. The warp bag holds personal gear and a little more, so **bulk trade goods** (crates,
-  barrels, bales) must be carried in a cart, on a mount, or shipped. Warps refuse cargo crates. This makes the ships and
+- **Cargo (decided):** goods have weight. Warps and the warp bag have a **weight limit that grows over time** (bag
+  upgrades and progression), so early on **bulk trade goods** (crates, barrels, bales) must go by cart, mount or ship,
+  and later players can carry more through. This makes the ships and
   roads in design.md matter, and gives non-fighting players a real job.
 - **Trade runs** as quests and as free play: buy at one port, ship to another. Ships can be attacked at sea under the
   Shard.
@@ -243,19 +236,12 @@ Players have standing with each **people** (eight), and with some **factions**:
 
 Standing with one often costs standing with another: the Censure and the cogwitches, the Ordinal and the Archive.
 
-## Death and coming back
-
-Following design.md (drop carried items, wake at home, friends can recover them), with lore added:
+## Death and coming back (decided: no item drop)
 
 - **In the prologue:** Merrith's touch lifts you (lore.md).
 - **After:** you wake at your **seat** (the god's city where you were claimed) or the last **waystone** you prayed at,
-  whichever is nearer. Your warp bag's contents drop where you fell in a **cache** that glows faintly gold for your group
-  (Merrith's thread marking it).
-- **Dying in Deep Fog (density 4 and up):** the Fog remembers you. An **Echo of you** stands over your cache, fighting
-  with a copy of your moves. Your group (or you) must put it down to get your things back. Hard, memorable, and a reason
-  to go into the Fog together.
-- **Hardcore option:** as design.md, death is permanent; the character becomes an Echo that stays in the world for others
-  to find.
+  whichever is nearer, **with everything you carried**. Nothing drops. (This replaces design.md's drop rule.)
+- What dying costs instead is open: a short weakness, gear durability, or nothing but the walk back.
 
 ## Time and the moons
 
@@ -303,9 +289,9 @@ So ruins look different and teach the history (design.md asks for hand-made room
 What to make first so it is playable soonest:
 
 1. Lantern fuel and Fog density zones (the lamps already exist).
-2. Greying stages 1 to 3 and the Herbalist remedy.
+2. Lantern tiers as gates into Fog densities 3 to 5.
 3. Merrith's thread on the compass and the first claiming trial (Hollin's, since Hollin's Cross is the start).
 4. One god's magic region (Hollin's) and the Writ.
 5. Grace for one god, driving colour in one region.
-6. Retaking Farhallow as the first Freehold.
+6. The first freehold.
 7. Everything else, region by region.
