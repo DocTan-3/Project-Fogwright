@@ -18,31 +18,12 @@ back to does not vanish: it pools, sours and becomes the Fog. Almost every myste
 
 Answered on 2026-11-28 and merged into lore.md: **kept** the Return (1), Aldrath's well (2), the inner city as a larder
 (3), the Fog remembers (4), Merrith spread through the Fog (5) and the year 312 TA (7). **Dropped:** players being
-claimed by Aldrath (6); he claims no one (below). **To rework:** the Forsaken's origin (8), with three new options below.
+claimed by Aldrath (6); he claims no one (below). **Reworked:** the Forsaken's origin (8) is now the Greyed, remade (in lore.md).
 The rest of this file is still open.
 
 **Aldrath claims no one.** The Ordinal teaches that the Rule is above choosing favourites: Aldrath gives his grace to the
 whole world through his circle, not to a few. It sounds generous. It is also one more clue, since a god who claims no
 chosen gets no Return from them, and yet he alone never fades.
-
-## The Forsaken: three new origins
-
-The first idea (the peoples of the punished gods) is dropped. Three replacements, each keeping lore.md's facts: the
-Forsaken are the people of the 14th, corrupted, the most magically gifted, and some were freed by Merrith as the Penitent.
-
-| | **A. The Greyed, remade** (recommended) | **B. The Sundered** | **C. The Grown** |
-| --- | --- | --- | --- |
-| Who they were | Ordinary people of every people, taken by the Fog: the Greyed of fallen freeholds, lost ships and old battlefields | The survivors of Aumenor, who fell with their city into the tear at the Splitting and lived on in the Sundering for two ages | Never people at all: the 14th made them from the power of the gods he devoured, in the shapes of men |
-| How the 14th got them | The Fog empties a Greyed person and keeps only a memory of them. The 14th fills what is left with his own will. Every freehold that falls gives him more | They prayed in the dark for two ages and only one god answered | He shaped them from the devoured gods' grace, so each Forsaken carries a little of a dead god |
-| Why the most gifted | The Fog is magic; they are made of it now | Two ages in the thickest Fog soaked them in magic | They are made of a god's grace |
-| The Penitent | Greyed people whom Merrith's thread, running through the same Fog, brought back to themselves. They remember who they were before, and everything they did after | Those Merrith's thread reached when she gave herself to the Fog | Those whose borrowed god-spark woke up and remembered being someone else |
-| What it adds | Ties together the Fog remembers, Merrith's thread, Greying, falling freeholds and the half-changed neighbour in Farhallow. The Forsaken may be people from Farhallow. Every Greyed person the players save is one the 14th does not get | The oldest people alive, who remember the first age; a lore goldmine | The darkest: their faces are the faces of dead gods' peoples |
-| Weakness | Players must see the Greyed and the Forsaken as the same thing at different stages, which needs clear art | Explains little else; sits apart from the Fog systems | Makes the Penitent less human, which weakens their tragedy |
-
-**Why A:** it adds no new history. It uses what is already decided (the Fog remembers, Merrith in the Fog) and the
-Greying stages in mechanics-proposals.md, and it makes the prologue matter: the neighbour who was half-changed in
-Farhallow could be standing in the Hollowmarch in Act III. The Penitent would then go to Hollin's Cross and the
-House of Ash as before.
 
 ## The names still missing
 
@@ -218,7 +199,7 @@ Short additions to each people, for culture sheets later.
 | **Wayfolk** | Being stuck | The road | "Every door is a waystone to someone." | Hollin's priests hear every rumour of the roads at the waylodges; they are the first to notice that freeholds are falling faster each year |
 | **Penitent** | Their own memories | That they chose to be free | "I was. I am not." | They hear the voice of the One Below in their sleep, and it uses the words of Aldrath's liturgy |
 
-**The Forsaken:** origin being reworked; see the three options near the top of this file. Whichever is chosen, the
+**The Forsaken** are the Greyed, remade by the 14th (decided, in lore.md). The
 Penitent remember everything they did and scourge themselves because the pain is the only thing that drowns out the
 14th's voice.
 
@@ -427,7 +408,7 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 | Final names for the gods and peoples | Keep the working names for now; this file adds the missing ones (above) |
 | The Hrimfolk name for the Shard, and other moons | The Splitshield; others in the names table |
 | Names for each people, and which god each belongs to | Already in lore.md's table of the twelve; naming styles in characters.md |
-| Where the Forsaken live, where the freed go | The Hollowmarch; the Penitent go to the waylodges and the House of Ash; their origin is being reworked (options above) |
+| Where the Forsaken live, where the freed go | The Hollowmarch; the Penitent go to the waylodges and the House of Ash |
 | Desert and forest taming | Zarhim tame wild beasts in the field by patience and shared hardship; Ruadhan breed beast lines from birth (mechanics in mechanics-proposals.md) |
 | Aldrath's outer city | A quarter for each people round the plaza of the twelve, with the Ordinal's courts and the Censure's hall on the plaza; the Undercroft beneath the sealed core |
 | Which magic each god grants; does being claimed change a home city | See mechanics-proposals.md; claiming gives a seat (a warp bind and favour) in that god's city, but no new home |

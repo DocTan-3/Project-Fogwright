@@ -160,6 +160,10 @@ The mixed races: travelers and commoners with no specialty, but the most numerou
 
 The people of the 14th God: corrupted, without a moral compass, guided by a deep magic. Some were touched by the magic of the 13th God's sacrifice, which lifted their corruption and made them playable. The freed are called the Penitent. They are the most magically gifted of all, but suffer for their past and live as flagellants.
 
+**Where they came from: the Greyed, remade** *(decided 2026-11-28)*. The Forsaken were ordinary people of every people, taken by the Fog: the Greyed of fallen freeholds, lost ships and old battlefields. The Fog empties a Greyed person and keeps only a memory of them; the 14th fills what is left with his own will. Every freehold that falls gives him more, and every Greyed person brought back is one he does not get. They are the most magically gifted because the Fog is magic, and they are made of it now. The half-changed neighbour of Farhallow may one day stand among them.
+
+**The Penitent** are Greyed whom Merrith's thread, running through the same Fog, brought back to themselves. They remember who they were before, and everything they did after. They scourge themselves because the pain is the only thing that drowns out the 14th's voice.
+
 ### Briarkin, the wild men (not playable)
 
 Men who became wild and one with nature, like Skyrim's Forsworn. They serve as a bandit race.
@@ -247,7 +251,7 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 - [ ] Final names for the gods and peoples (all are working names).
 - [ ] The Hrimfolk name for the Shard, and moon names among the other peoples.
 - [ ] Names for each people, and which god each belongs to (so far only the commonfolk's God of travels is known).
-- [ ] Where the Forsaken live, and where the freed Forsaken go.
+- [x] Where the Forsaken came from: the Greyed, remade by the 14th. (Where they live and where the freed go is still open.)
 - [ ] Desert and forest people are both tamers: how their taming differs.
 - [ ] What the outer city of Aldrath is like: its districts, peoples and the walls around the sealed core.
 - [ ] Which magic each god grants, and does being claimed also change a player's home city?
