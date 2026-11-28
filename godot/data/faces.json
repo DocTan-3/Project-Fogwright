@@ -16,45 +16,115 @@
   "Elder"
  ],
  "ruadhan_m": [
-  "Default"
+  "Woodsman",
+  "Piper",
+  "Hillfort",
+  "Hunter",
+  "Brawler",
+  "Bard"
  ],
  "ruadhan_f": [
-  "Default"
+  "Wildflower",
+  "Archer",
+  "Merry",
+  "Druid",
+  "Fierce",
+  "Grandmother"
  ],
  "aurelan_m": [
-  "Default"
+  "Burgher",
+  "Knight",
+  "Merchant",
+  "Scholar",
+  "Veteran",
+  "Squire"
  ],
  "aurelan_f": [
-  "Default"
+  "Matron",
+  "Lady",
+  "Baker",
+  "Sergeant",
+  "Courtier",
+  "Maid"
  ],
  "zarhim_m": [
-  "Default"
+  "Caravaneer",
+  "Sandrunner",
+  "Emir",
+  "Storyteller",
+  "Blade",
+  "Elder"
  ],
  "zarhim_f": [
-  "Default"
+  "Weaver",
+  "Falconer",
+  "Dancer",
+  "Spice-seller",
+  "Outrider",
+  "Matriarch"
  ],
  "ilvari_m": [
-  "Default"
+  "Artificer",
+  "Seer",
+  "Warden",
+  "Courtier",
+  "Exile",
+  "Archivist"
  ],
  "ilvari_f": [
-  "Default"
+  "Silversmith",
+  "Starreader",
+  "Duelist",
+  "Charmer",
+  "Inkwitch",
+  "Elder"
  ],
  "ferrin_m": [
-  "Default"
+  "Forgemaster",
+  "Greyhand",
+  "Stoker",
+  "Tinker",
+  "Delver",
+  "Apprentice"
  ],
  "ferrin_f": [
-  "Default"
+  "Hearthkeeper",
+  "Riveter",
+  "Brewer",
+  "Engineer",
+  "Ironmother",
+  "Spark"
  ],
  "wayfolk_m": [
-  "Default"
+  "Drifter",
+  "Ferryman",
+  "Peddler",
+  "Fieldhand",
+  "Sellsword",
+  "Fisher"
  ],
  "wayfolk_f": [
-  "Default"
+  "Traveller",
+  "Innkeeper",
+  "Herbwife",
+  "Scout",
+  "Farmgirl",
+  "Widow"
  ],
  "penitent_m": [
-  "Default"
+  "Penitent",
+  "Hollow",
+  "Confessor",
+  "Mended",
+  "Scourged",
+  "Old Ash"
  ],
  "penitent_f": [
-  "Default"
+  "Penitent",
+  "Pale-eyed",
+  "Shorn",
+  "Lantern",
+  "Vigil",
+  "Old Ash"
  ]
 }

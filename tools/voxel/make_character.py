@@ -50,8 +50,8 @@ EXPR = {}   # (people, sex) -> stern, grim, calm, smile; men default stern, wome
 #   eyes: round | narrow (a heavy lid) | big (a taller iris);  set: the eyes' spacing, -2 close-set, 0, +2 wide-set
 #   nose: straight | broad | hooked | button | long;  mouth: normal | thin | wide | full
 #   brows: normal | heavy | thin;  scar: None | brow | cheek | lip;  expr: stern | grim | calm | smile
-#   hair, beard, hair_col: override the people's (hair_col stays within the people's own range)
-FACE = dict(eyes='round', set=0, nose='straight', mouth='normal', brows='normal', scar=None, expr=None, hair=None, beard=None, hair_col=None)
+#   hair, beard, hair_col, eye_col: override the people's (colours stay within the people's own range)
+FACE = dict(eyes='round', set=0, nose='straight', mouth='normal', brows='normal', scar=None, expr=None, hair=None, beard='people', hair_col=None, eye_col=None)
 # six presets per people and sex; preset 0 is the base body's own face (for the Hrimfolk man, the approved one)
 PRESETS = {
  ('hrimfolk', 'm'): [
@@ -70,6 +70,125 @@ PRESETS = {
    dict(name='Hearth', expr='calm', hair='crown', mouth='full', set=-2, hair_col=(176, 132, 76)),
    dict(name='Elder', expr='grim', eyes='narrow', mouth='thin', hair='long', hair_col=(150, 146, 140), brows='heavy', nose='hooked'),
  ],
+ # Ruadhan: tall forest people, fair and freckled, red to copper hair, green eyes
+ ('ruadhan', 'm'): [
+   dict(name='Woodsman'),
+   dict(name='Piper', expr='smile', eyes='big', nose='button', hair='long', beard='moustache', hair_col=(196, 98, 44)),
+   dict(name='Hillfort', expr='stern', brows='heavy', beard='big', hair='braids', hair_col=(150, 62, 30), nose='broad'),
+   dict(name='Hunter', expr='calm', eyes='narrow', nose='long', beard='stubble', hair='crop', hair_col=(120, 56, 30), eye_col=(90, 110, 70)),
+   dict(name='Brawler', expr='grim', nose='broad', scar='cheek', beard='short', hair='shaved', set=2),
+   dict(name='Bard', expr='smile', mouth='wide', hair='long', beard=None, hair_col=(206, 120, 60), set=-2),
+ ],
+ ('ruadhan', 'f'): [
+   dict(name='Wildflower'),
+   dict(name='Archer', expr='stern', eyes='narrow', hair='braids', hair_col=(170, 66, 30), brows='heavy'),
+   dict(name='Merry', expr='smile', eyes='big', nose='button', hair='bun', hair_col=(206, 104, 48)),
+   dict(name='Druid', expr='calm', hair='crown', mouth='full', hair_col=(140, 60, 34), eye_col=(80, 130, 100)),
+   dict(name='Fierce', expr='grim', hair='crop', scar='brow', nose='long', hair_col=(186, 80, 36)),
+   dict(name='Grandmother', expr='calm', eyes='narrow', mouth='thin', hair='bun', hair_col=(170, 150, 140), set=-2),
+ ],
+ # Aurelans: balanced, upright, olive to warm tan, dark brown hair, hazel or brown eyes
+ ('aurelan', 'm'): [
+   dict(name='Burgher'),
+   dict(name='Knight', expr='stern', brows='heavy', nose='long', beard='short', hair='crop', eye_col=(110, 96, 50)),
+   dict(name='Merchant', expr='smile', mouth='wide', nose='broad', beard='moustache', hair='crop', hair_col=(56, 36, 26)),
+   dict(name='Scholar', expr='calm', eyes='narrow', nose='hooked', beard=None, hair='long', set=-2),
+   dict(name='Veteran', expr='grim', scar='cheek', beard='stubble', hair='shaved', brows='heavy'),
+   dict(name='Squire', expr='calm', eyes='big', nose='button', beard=None, hair='crop', hair_col=(96, 62, 38), eye_col=(110, 96, 50)),
+ ],
+ ('aurelan', 'f'): [
+   dict(name='Matron'),
+   dict(name='Lady', expr='calm', hair='crown', mouth='full', eyes='big', eye_col=(110, 96, 50)),
+   dict(name='Baker', expr='smile', nose='broad', hair='bun', hair_col=(96, 60, 38), set=-2),
+   dict(name='Sergeant', expr='stern', hair='crop', brows='heavy', scar='brow', nose='long'),
+   dict(name='Courtier', expr='calm', eyes='narrow', hair='long', mouth='thin', nose='hooked', hair_col=(52, 34, 24)),
+   dict(name='Maid', expr='smile', eyes='big', nose='button', hair='braids', hair_col=(88, 56, 36)),
+ ],
+ # Zarhim: lean desert people, deep brown skin, black hair (close crops and long ties), amber or dark eyes
+ ('zarhim', 'm'): [
+   dict(name='Caravaneer'),
+   dict(name='Sandrunner', expr='calm', eyes='narrow', nose='long', beard=None, hair='crop', eye_col=(96, 64, 36)),
+   dict(name='Emir', expr='stern', nose='hooked', beard='big', hair='long', brows='heavy'),
+   dict(name='Storyteller', expr='smile', mouth='wide', beard='moustache', hair='crop', set=-2),
+   dict(name='Blade', expr='grim', eyes='narrow', scar='cheek', beard='stubble', hair='shaved'),
+   dict(name='Elder', expr='calm', beard='full_braid', hair='long', hair_col=(150, 146, 140), eyes='narrow', nose='long'),
+ ],
+ ('zarhim', 'f'): [
+   dict(name='Weaver'),
+   dict(name='Falconer', expr='stern', eyes='narrow', nose='hooked', hair='braids', eye_col=(170, 120, 44)),
+   dict(name='Dancer', expr='smile', eyes='big', mouth='full', hair='long'),
+   dict(name='Spice-seller', expr='calm', nose='broad', hair='bun', set=-2, eye_col=(96, 64, 36)),
+   dict(name='Outrider', expr='grim', hair='crop', scar='lip', brows='heavy'),
+   dict(name='Matriarch', expr='calm', eyes='narrow', mouth='thin', hair='crown', hair_col=(120, 116, 112)),
+ ],
+ # Ilvari: slender, cool pale to grey-blue skin, silver to black hair, light clear eyes, blue ink on the face
+ ('ilvari', 'm'): [
+   dict(name='Artificer'),
+   dict(name='Seer', expr='calm', eyes='big', hair='long', hair_col=(186, 192, 204), eye_col=(150, 176, 196)),
+   dict(name='Warden', expr='stern', eyes='narrow', nose='long', hair='braids', brows='heavy'),
+   dict(name='Courtier', expr='smile', mouth='thin', nose='hooked', hair='crop', hair_col=(120, 126, 140)),
+   dict(name='Exile', expr='grim', scar='cheek', hair='long', beard='stubble', hair_col=(58, 60, 72)),
+   dict(name='Archivist', expr='calm', eyes='narrow', hair='bun', hair_col=(160, 166, 178), set=-2),
+ ],
+ ('ilvari', 'f'): [
+   dict(name='Silversmith'),
+   dict(name='Starreader', expr='calm', eyes='big', hair='crown', eye_col=(150, 176, 196)),
+   dict(name='Duelist', expr='stern', eyes='narrow', hair='crop', hair_col=(40, 42, 54), nose='long'),
+   dict(name='Charmer', expr='smile', mouth='full', hair='long', hair_col=(120, 126, 140)),
+   dict(name='Inkwitch', expr='grim', brows='heavy', hair='braids', hair_col=(36, 38, 48), scar='brow'),
+   dict(name='Elder', expr='calm', eyes='narrow', mouth='thin', hair='bun', nose='hooked'),
+ ],
+ # Ferrin: short and broad, ruddy and soot-darkened, dark hair greying early, thick beards and braided crowns
+ ('ferrin', 'm'): [
+   dict(name='Forgemaster'),
+   dict(name='Greyhand', expr='grim', beard='full_braid', hair='crop', hair_col=(120, 112, 104), brows='heavy', eyes='narrow'),
+   dict(name='Stoker', expr='smile', nose='broad', mouth='wide', beard='short', hair='shaved'),
+   dict(name='Tinker', expr='calm', eyes='big', nose='button', beard='moustache', hair='crop', hair_col=(74, 50, 34)),
+   dict(name='Delver', expr='stern', scar='cheek', beard='big', hair='long', hair_col=(36, 26, 20), nose='hooked'),
+   dict(name='Apprentice', expr='calm', beard='stubble', hair='crop', set=-2, eye_col=(70, 50, 36)),
+ ],
+ ('ferrin', 'f'): [
+   dict(name='Hearthkeeper'),
+   dict(name='Riveter', expr='stern', brows='heavy', hair='crop', scar='brow', nose='broad'),
+   dict(name='Brewer', expr='smile', mouth='wide', hair='bun', hair_col=(74, 50, 34)),
+   dict(name='Engineer', expr='calm', eyes='narrow', hair='braids', nose='long', eye_col=(70, 50, 36)),
+   dict(name='Ironmother', expr='grim', hair='crown', hair_col=(124, 116, 108), mouth='thin'),
+   dict(name='Spark', expr='smile', eyes='big', nose='button', hair='long', hair_col=(40, 28, 22)),
+ ],
+ # Wayfolk: the mix, any one feature from any people (colours drawn from the others' ranges)
+ ('wayfolk', 'm'): [
+   dict(name='Drifter'),
+   dict(name='Ferryman', expr='grim', beard='big', hair='crop', hair_col=(150, 146, 140), nose='broad', eyes='narrow'),
+   dict(name='Peddler', expr='smile', beard='moustache', hair='long', hair_col=(176, 72, 36), eye_col=(70, 120, 70), mouth='wide'),
+   dict(name='Fieldhand', expr='calm', beard=None, hair='crop', hair_col=(206, 168, 100), eyes='big', nose='button'),
+   dict(name='Sellsword', expr='stern', scar='cheek', beard='short', hair='shaved', brows='heavy', eye_col=(70, 110, 140)),
+   dict(name='Fisher', expr='calm', beard='full_braid', hair='braids', hair_col=(30, 24, 22), nose='hooked'),
+ ],
+ ('wayfolk', 'f'): [
+   dict(name='Traveller'),
+   dict(name='Innkeeper', expr='smile', hair='bun', mouth='full', hair_col=(176, 72, 36), eye_col=(70, 120, 70)),
+   dict(name='Herbwife', expr='calm', hair='braids', hair_col=(206, 168, 100), eyes='narrow', eye_col=(70, 110, 140)),
+   dict(name='Scout', expr='stern', hair='crop', hair_col=(30, 24, 22), nose='long', scar='lip'),
+   dict(name='Farmgirl', expr='smile', eyes='big', nose='button', hair='long', hair_col=(150, 110, 70)),
+   dict(name='Widow', expr='grim', eyes='narrow', mouth='thin', hair='crown', hair_col=(120, 116, 112)),
+ ],
+ # Penitent: freed Forsaken, gaunt and ashen, often cropped hair, sometimes pale-rimmed eyes, scourge scars
+ ('penitent', 'm'): [
+   dict(name='Penitent'),
+   dict(name='Hollow', expr='grim', eyes='narrow', hair='shaved', eye_col=(150, 156, 166), scar='cheek'),
+   dict(name='Confessor', expr='calm', nose='long', hair='crop', beard='stubble'),
+   dict(name='Mended', expr='smile', eyes='big', hair='long', hair_col=(96, 86, 76), mouth='thin'),
+   dict(name='Scourged', expr='stern', brows='heavy', scar='brow', hair='crop', beard='short', nose='hooked'),
+   dict(name='Old Ash', expr='grim', eyes='narrow', hair='crop', hair_col=(140, 138, 134), beard='big', set=-2),
+ ],
+ ('penitent', 'f'): [
+   dict(name='Penitent'),
+   dict(name='Pale-eyed', expr='calm', eyes='big', hair='long', eye_col=(150, 156, 166)),
+   dict(name='Shorn', expr='grim', hair='shaved', scar='cheek', eyes='narrow'),
+   dict(name='Lantern', expr='smile', hair='bun', hair_col=(96, 86, 76), nose='button'),
+   dict(name='Vigil', expr='stern', hair='braids', brows='heavy', scar='lip', nose='long'),
+   dict(name='Old Ash', expr='calm', eyes='narrow', mouth='thin', hair='crop', hair_col=(150, 146, 140)),
+ ],
 }
 def presets(people, sex):
     return PRESETS.get((people, sex), [dict(name='Default')])
@@ -83,7 +202,7 @@ def build(people, sex, dressed=True, face=0):
     if sex == 'f':
         for k, v in WOMAN.items(): p[k] += v
     hair_col = F['hair_col'] or p['hair_f' if sex == 'f' else 'hair_m']
-    PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': p['eye'], 'eye_d': tone(p['eye'], 0.55), 'pupil': (26, 22, 22), 'lid': tone(p['skin'], 0.7), 'nostril': tone(p['skin'], 0.5), 'lip_d': tone(p['skin'], 0.55) if sex == 'm' else (120, 58, 54),
+    PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': F['eye_col'] or p['eye'], 'eye_d': tone(F['eye_col'] or p['eye'], 0.55), 'pupil': (26, 22, 22), 'lid': tone(p['skin'], 0.7), 'nostril': tone(p['skin'], 0.5), 'lip_d': tone(p['skin'], 0.55) if sex == 'm' else (120, 58, 54),
            'brow': tone(hair_col, 0.7), 'brow_d': tone(hair_col, 0.48), 'hair': hair_col, 'hair_d': tone(hair_col, 0.72), 'hair_l': tone(hair_col, 1.25),
            'lip': tone(p['skin'], 0.62) if sex == 'm' else (150, 78, 70), 'scar': tone(p['skin'], 1.12),
            'tunic': p['tunic'], 'tunic_d': tone(p['tunic'], 0.76), 'leather': p['leather'], 'leather_d': tone(p['leather'], 0.72),
@@ -195,7 +314,7 @@ def build(people, sex, dressed=True, face=0):
     X0 = TW - W // 2; Y0 = -4; Z0 = (top + 1) * 2
     expr = F['expr'] or EXPR.get((people, sex), 'stern' if sex == 'm' else 'calm')
     hair_m, hair_f = p['hair']; hs = F['hair'] or (hair_f if sex == 'f' else hair_m)
-    beard = F['beard'] or (p['beard'] if sex == 'm' else None)
+    beard = (p['beard'] if sex == 'm' else None) if F['beard'] == 'people' else F['beard']     # beard=None: clean-shaven
     HP = 'head#2'
     def X(c): return X0 + W - 1 - c
     def Z(v): return Z0 + H - 1 - v
@@ -304,7 +423,7 @@ def build(people, sex, dressed=True, face=0):
                 if hair_at(c, d, v): col = 'hair_l' if v < 2 and c % 4 == 1 else ('hair_d' if (c + d) % 4 == 0 else 'hair')
                 elif beard_at(c, d, v): col = 'hair_d' if c % 3 == 0 else 'hair'
                 elif d == fr and (c, v) in marks: col = marks[(c, v)]
-                elif hs == 'shaved' and (d >= 3 or v < 3) and d > fr - 1 and ((v in (5, 8) and (c + d) % 4 != 3) or (v in (6, 7) and (c + d + v) % 4 == 0) or (v == 0 and abs(c - mid + 0.5) + abs(d - D / 2) in (3, 3.5, 4.5, 6) )): col = 'tattoo'
+                elif hs == 'shaved' and people == 'hrimfolk' and (d >= 3 or v < 3) and d > fr - 1 and ((v in (5, 8) and (c + d) % 4 != 3) or (v in (6, 7) and (c + d + v) % 4 == 0) or (v == 0 and abs(c - mid + 0.5) + abs(d - D / 2) in (3, 3.5, 4.5, 6) )): col = 'tattoo'
                 else: col = 'skin'
                 hput(HP, c, d, v, col)
     # what stands proud of the face: the nose, a moustache, the front of a full beard

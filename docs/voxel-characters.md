@@ -63,8 +63,8 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
 ## Not settled yet
 
 - **Face presets (started):** `make_character.py` `FACE` lists the face options (eyes, spacing, nose, mouth, brows,
-  scar, expression, hair, beard, hair colour) and `PRESETS` six faces per people and sex; only the Hrimfolk have theirs
-  so far. Preset 0 is the base body's own face; presets 1 to 5 are written as head-only layers to
+  scar, expression, hair, beard (None is clean-shaven), hair and eye colour) and `PRESETS` six faces per people and sex, for
+  all eight peoples. Preset 0 is the base body's own face; presets 1 to 5 are written as head-only layers to
   `peoples/faces/<people>_<sex>_<k>.vox`, their names to `godot/data/faces.json`. A layer with a `head` replaces the
   base head and everything riding on it (`Vox.character`); `Equipment.dress(..., face)` puts it under any helm.
   `godot/tests/voxel_faces.tscn -- people=<people>` renders the presets. Sliders (height and bulk within each people's
