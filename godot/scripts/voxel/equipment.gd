@@ -28,8 +28,6 @@ const STANCES := {
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow at rest is
 	# held low across the body (_rest_bow)
-	# a walking staff planted beside the bearer, the arm a little forward
-	"staff": {"arm_upper_r": Vector3(-10, 0, -4), "arm_lower_r": Vector3(-70, 0, 0)},
 	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
 	"bow": {"arm_upper_l": Vector3(-12, 0, 0), "arm_lower_l": Vector3(-30, 0, 0), "arm_lower_r": Vector3(-8, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
@@ -67,22 +65,6 @@ static func _aim(root: Node3D) -> void:
 			for k in 8: low = minf(low, bb.get_endpoint(k).y)
 			if low >= POLE_CLEAR: break
 		hand.set_meta("rest", hand.rotation_degrees)
-
-## a walking staff stands upright whatever the arm does: the wrist turns the hand the least it must
-static func _upright(root: Node3D) -> void:
-	for node in root.find_children("weapon*", "Node3D", true, false):
-		if not String(node.get_meta("piece", "")).ends_with("@hand_r"): continue
-		var hand := node.get_parent() as Node3D
-		var arm := _to_root(hand.get_parent(), root)
-		var now: Basis = arm.basis * hand.basis
-		hand.basis = arm.basis.inverse() * (Basis(Quaternion((now * Vector3.UP).normalized(), Vector3.UP)) * now)
-		hand.set_meta("rest", hand.rotation_degrees)
-		# slide the staff along its own length so its foot rests on the ground
-		var to_root: Transform3D = arm * hand.transform
-		var bb: AABB = (to_root * (node as Node3D).transform) * (node as MeshInstance3D).get_aabb()
-		var low := INF
-		for k in 8: low = minf(low, bb.get_endpoint(k).y)
-		(node as Node3D).position += to_root.basis.inverse() * Vector3(0, -low, 0)
 
 ## a bow at rest, held low across the body (the user's reference): the grip in the lowered off hand before the hip,
 ## the bow nearly level, its upper limb rising toward the far side, the string up and toward the body. The bow turns in
@@ -157,7 +139,6 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 			if st.has(String(node.name)):
 				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
 		if "polearm" in kinds: _aim(root)
-		if "staff" in kinds: _upright(root)
 		if "bow" in kinds: _rest_bow(root)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue

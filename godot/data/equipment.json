@@ -617,7 +617,7 @@
    "carried": "res://assets/voxel/gear/iron_spear_carried/%s_%s.vox",
    "stance": "polearm"
   },
-  "iron_halberd": {
+  "iron_bow": {
    "tier": "common",
    "slots": [
     "main_hand",
@@ -625,44 +625,8 @@
    ],
    "order": 11,
    "hides": [],
-   "file": "res://assets/voxel/gear/iron_halberd/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_halberd_carried/%s_%s.vox",
-   "stance": "polearm"
-  },
-  "iron_glaive": {
-   "tier": "common",
-   "slots": [
-    "main_hand",
-    "off_hand"
-   ],
-   "order": 11,
-   "hides": [],
-   "file": "res://assets/voxel/gear/iron_glaive/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_glaive_carried/%s_%s.vox",
-   "stance": "polearm"
-  },
-  "iron_shortbow": {
-   "tier": "common",
-   "slots": [
-    "main_hand",
-    "off_hand"
-   ],
-   "order": 11,
-   "hides": [],
-   "file": "res://assets/voxel/gear/iron_shortbow/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_shortbow_carried/%s_%s.vox",
-   "stance": "bow"
-  },
-  "iron_longbow": {
-   "tier": "common",
-   "slots": [
-    "main_hand",
-    "off_hand"
-   ],
-   "order": 11,
-   "hides": [],
-   "file": "res://assets/voxel/gear/iron_longbow/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_longbow_carried/%s_%s.vox",
+   "file": "res://assets/voxel/gear/iron_bow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_bow_carried/%s_%s.vox",
    "stance": "bow"
   },
   "iron_heavy_crossbow": {
@@ -698,28 +662,6 @@
    "file": "res://assets/voxel/gear/iron_tower_shield/%s_%s.vox",
    "carried": "res://assets/voxel/gear/iron_tower_shield_carried/%s_%s.vox",
    "stance": "shield"
-  },
-  "iron_wand": {
-   "tier": "common",
-   "slots": [
-    "main_hand"
-   ],
-   "order": 11,
-   "hides": [],
-   "file": "res://assets/voxel/gear/iron_wand/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_wand_carried/%s_%s.vox",
-   "stance": "one_hand"
-  },
-  "iron_staff": {
-   "tier": "common",
-   "slots": [
-    "main_hand"
-   ],
-   "order": 11,
-   "hides": [],
-   "file": "res://assets/voxel/gear/iron_staff/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_staff_carried/%s_%s.vox",
-   "stance": "staff"
   }
  },
  "sets": {

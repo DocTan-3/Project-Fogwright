@@ -774,13 +774,14 @@ def _rod(P, part, a, b, c, r=0.0):
         q = tuple(round(a[i] + (b[i] - a[i]) * t / n) for i in range(3))
         P[part][q] = c
 def quiver(F, Pb, Pc):
-    """a side quiver for bows (Doc Tan's references): hung from the belt by two straps on the right hip, just outside
-    the hanging arm so the arm clears it; a flat leather case slanting from a wide laced mouth in front, higher, to a narrow capped foot
-    behind; brass studs round the mouth and along the top, a tooled panel; arrows standing forward and up out of it"""
+    """a side quiver for bows (Doc Tan's references), worn on the body: strapped tight to the belt at the right hip, just
+    behind the hanging arm; a flat leather case slanting from a wide laced mouth at the hip down and back past the seat
+    to a narrow capped foot; brass studs round the mouth and along the top, a tooled panel; the arrows stand up out of
+    the mouth behind the arm, where the drawing hand reaches back for them"""
     P = {}; hip = F['hip']; part = 'ammo@torso#2'; P[part] = {}
-    ax0 = F['arms']['r'][0]
-    sl = math.radians(18); L = 46
-    m = (2 * ax0 - 4, -8, 2 * hip - 8)                  # the mouth's centre: before the hip, outside the arm
+    TD = F['TD']
+    sl = math.radians(52); L = 42
+    m = (-3, 2 * TD + 1, 2 * hip - 1)                   # the mouth's centre: at the hip, behind the arm, against the body
     ay, az = math.cos(sl), -math.sin(sl)                # mouth -> foot: back and down
     for x in range(m[0] - 4, m[0] + 5):
         for y in range(m[1] - 6, m[1] + L + 6):
@@ -800,17 +801,14 @@ def quiver(F, Pb, Pc):
                 elif ez < -0.8 and round(t) % 3 == 0: c = 'cord'           # the lacing along the bottom seam
                 else: c = 'leather'
                 P[part][(x, y, z)] = c
-    for tt in (4, 31):                                  # the two straps, before and behind the arm
+    for tt in (3, 13):                                  # the two straps, short and tight to the belt
         y = round(m[1] + tt * ay); ztop = round(m[2] + tt * az + 5.0 - 2.4 * tt / L)
-        # each strap drops from the belt at the hip and slants out over the arm's shoulder line to the case
         for z in range(ztop - 1, 2 * hip + 4):
-            f = (2 * hip + 4 - z) / max(1, 2 * hip + 4 - ztop)
-            x = round(-2 + (m[0] + 1 - -2) * min(1.0, f * 1.6))
-            for yy in (y, y + 1): P[part][(x, yy, z)] = 'leather_d'
+            for yy in (y, y + 1): P[part][(-1, yy, z)] = 'leather_d'
         P[part][(-2, y, 2 * hip + 1)] = 'brass'         # the strap's buckle
-    dy_, dz_ = -math.cos(math.radians(28)), math.sin(math.radians(28))     # the arrows: forward and up
+    dy_, dz_ = math.sin(math.radians(8)), math.cos(math.radians(8))       # the arrows: up, leaning a little back
     for i, (dx, dn) in enumerate(((0, 0), (-1, 2), (1, -1), (0, -2), (-1, 1))):
-        base = (m[0] + dx, m[1] + 3, m[2] + dn); ln = 16 + (i % 3) * 3
+        base = (m[0] + dx, round(m[1] + 3 * ay - dn * az), round(m[2] + 3 * az + dn * ay)); ln = 18 + (i % 3) * 3
         top_ = (base[0], round(base[1] + dy_ * ln), round(base[2] + dz_ * ln))
         _rod(P, part, base, top_, 'ash')
         fl = ('red', 'wool', 'canvas')[i % 3]
@@ -954,11 +952,10 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
     'sword': ('hip', 1, 'one_hand'), 'axe': ('hip', 1, 'one_hand'), 'mace': ('hip', 1, 'one_hand'),
     'hammer': ('hip', 1, 'one_hand'), 'dagger': ('hip', 1, 'one_hand'),
     'greatsword': ('back', 2, 'one_hand'), 'greataxe': ('back', 2, 'one_hand'), 'warhammer': ('back', 2, 'one_hand'),
-    'spear': ('back', 2, 'polearm'), 'halberd': ('back', 2, 'polearm'), 'glaive': ('back', 2, 'polearm'),
-    'shortbow': ('back', 2, 'bow'), 'longbow': ('back', 2, 'bow'),
+    'spear': ('back', 2, 'polearm'),
+    'bow': ('back', 2, 'bow'),       # one bow; its damage to speed ratio is a stat, not a model
     'heavy_crossbow': ('back', 2, 'one_hand'),
     'shield': ('shield', 0, 'shield'), 'tower_shield': ('tower', 0, 'shield'),
-    'wand': ('hip', 1, 'one_hand'), 'staff': ('back', 1, 'staff'),
 }
 def iron_shape(kind, floor):
     V = {}
@@ -1016,47 +1013,15 @@ def iron_shape(kind, floor):
         for k in range(hl):              # the back spike, tapering
             r = max(0, 2 - k // 3)
             b(-r, r, 3 + k, 3 + k, top - r, top + r, 'iron')
-    if kind in ('spear', 'halberd', 'glaive'):
+    if kind == 'spear':
         haft(-70, 80, (-8, 8))
     if kind == 'spear':                 # a leaf head and an iron socket
         b(-1, 1, -1, 1, 76, 82, 'iron_d')
         for h in range(83, 104):
             hw = min(3, (h - 82) // 2) if h < 94 else max(0, 3 - (h - 94) // 3)
             b(0, 0, -hw, hw, h, h, lambda u, w, hh: 'iron_l' if abs(w) == hw else 'iron'); b(-1, 1, 0, 0, h, h, 'iron_d')
-    if kind == 'halberd':               # an axe blade, a top spike and a back hook
-        b(-1, 1, -1, 1, 76, 92, 'iron_d')
-        for h in range(76, 92):
-            reach = 14 - abs(h - 84) // 2
-            b(0, 0, -reach, -2, h, h, lambda u, w, hh: 'iron_l' if w == -reach else 'iron')
-        for h in range(93, 110): b(0, 0, 0, 0, h, h, 'iron_l' if h > 105 else 'iron'); b(-1, 1, 0, 0, h, min(h, 100), 'iron') if h < 101 else None
-        for k in range(7): b(0, 0, 2 + k, 2 + k, 84 - k // 2, 86 - k // 2, 'iron')
-    if kind == 'glaive':                # a long single-edged blade, curving forward at the tip
-        b(-1, 1, -1, 1, 76, 82, 'iron_d')
-        for h in range(83, 118):
-            bend = max(0, h - 104) // 3
-            b(-1, 1, -3 - bend, 1 - bend, h, h, lambda u, w, hh: 'iron_d' if w == 1 - bend else 'iron')     # the thick back
-            b(0, 0, -7 - bend, -4 - bend, h, h, lambda u, w, hh: 'iron_l' if w <= -6 - bend else 'iron')       # thinning to the edge
-    if kind == 'staff':                 # a walking staff, taller than its bearer: thick, knotted, an iron-shod foot
-        h0 = -min(floor, 90); h1 = h0 + 150
-        for h in range(h0, h1 + 1):
-            sway = round(math.sin(h / 23.0))                     # a gently crooked shaft
-            b(-2 + sway, 2 + sway, -2, 2, h, h, lambda u, w, hh: 'leather' if -8 <= hh <= 8 else ('ash_d' if hh % 17 == 0 else 'ash'))
-        for hn, du in ((h0 + 40, 3), (h0 + 95, -3), (h1 - 30, 3)):   # knots where twigs were cut
-            b(du, du + (1 if du > 0 else -1), -1, 1, hn, hn + 2, 'ash_d')
-        b(-2, 2, -2, 2, h0, h0 + 3, 'iron_d')                      # the iron-shod foot
-        top = h1; sw = round(math.sin(top / 23.0))
-        for h in range(top - 3, top + 9):                          # the gnarled head: a knot of root, leaning forward
-            r = 4 if h < top + 6 else 3
-            for u in range(-r, r + 1):
-                for w in range(-r - 2, r - 1):
-                    if u * u + (w + 1) ** 2 <= r * r + 1 and not (h > top + 5 and (u + w) % 3 == 0):
-                        V[(u + sw, w, h)] = 'wood_d' if h < top + 1 else 'wood'
-        b(-3 + sw, 3 + sw, -3, 3, top - 5, top - 4, 'iron')        # an iron band under the head
-    if kind == 'wand':
-        b(-1, 1, -1, 1, -6, 6, 'leather'); b(-1, 1, -1, 1, 7, 30, lambda u, w, h: 'ash_d' if h % 5 == 0 else 'ash')
-        b(-1, 1, -1, 1, 31, 34, 'iron_l'); pommel(-7)
-    if kind in ('shortbow', 'longbow'):     # limbs along h, curving back toward the archer (+w), the string behind
-        L = 44 if kind == 'shortbow' else 68
+    if kind == 'bow':     # limbs along h, curving back toward the archer (+w), the string behind
+        L = 54
         for h in range(-L, L + 1):
             bend = round(10 * (h / L) ** 2)
             th = 1 if abs(h) > L * 0.6 else 2
@@ -1121,13 +1086,6 @@ def iron_item(kind):
             return P
         x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
         gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
-        if kind == 'staff':           # upright in the fist held at the chest (the elbow bent), its foot on the ground in
-            # front: the foot reaches below the hanging fist by about the height the bent arm lifts it (equipment.gd
-            # _upright sets it on the ground exactly)
-            lift = round((2 * (F['arms']['r'][3] - F['arms']['r'][4]) + 6) * 0.83)
-            V = iron_shape(kind, gz - 3 + lift)
-            P['weapon@hand_r#2'] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
-            return P
         V = iron_shape(kind, 52 if stance == 'polearm' else gz - 2)
         P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
         return P
@@ -1136,9 +1094,9 @@ def iron_item(kind):
         V = iron_shape(kind, 999)
         hl = max(h for (_, _, h) in V); lo = min(h for (_, _, h) in V)
         where = carry
-        if where == 'hip' and kind in ('sword', 'dagger', 'wand') and 2 * (hip + 4) - hl < 6: where = 'back'    # too long for this hip
-        if where == 'hip' and kind in ('sword', 'dagger', 'wand'):     # sheathed at the left hip, hilt up
-            g = {'sword': 8, 'dagger': 6, 'wand': 6}[kind]
+        if where == 'hip' and kind in ('sword', 'dagger') and 2 * (hip + 4) - hl < 6: where = 'back'    # too long for this hip
+        if where == 'hip' and kind in ('sword', 'dagger'):     # sheathed at the left hip, hilt up
+            g = {'sword': 8, 'dagger': 6}[kind]
             W_ = {k: c for k, c in V.items() if k[2] <= g + 3}
             for h in range(g + 4, hl + 1):
                 for w in range(-5, 6):

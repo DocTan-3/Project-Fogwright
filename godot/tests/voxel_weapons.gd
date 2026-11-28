@@ -2,8 +2,8 @@ extends Node3D
 ## the Wayfolk common iron set (make_equipment.py IRON): every weapon drawn, a sword and shield and a mace and tower shield,
 ## then everything carried, on one body; prints GROUND FAIL for anything below the ground and the triangle counts
 ##   godot --path . --rendering-driver opengl3 res://tests/voxel_weapons.tscn -- out=<png prefix> [people=hrimfolk] [sex=m]
-const KINDS := ["sword", "axe", "mace", "hammer", "dagger", "greatsword", "greataxe", "warhammer", "spear", "halberd", "glaive",
-	"shortbow", "longbow", "heavy_crossbow", "shield", "tower_shield", "wand", "staff"]
+const KINDS := ["sword", "axe", "mace", "hammer", "dagger", "greatsword", "greataxe", "warhammer", "spear",
+	"bow", "heavy_crossbow", "shield", "tower_shield"]
 func _ready() -> void:
 	var out := "/tmp/weapons"; var people := "hrimfolk"; var sex := "m"
 	for a in OS.get_cmdline_user_args():
@@ -25,10 +25,10 @@ func _ready() -> void:
 	var rows := [[], []]
 	for k in KINDS: rows[0].append([["iron_" + k], true])
 	rows[0].append([["iron_sword", "iron_shield"], true]); rows[0].append([["iron_mace", "iron_tower_shield"], true])
-	rows[0].append([["iron_shortbow", "quiver"], true]); rows[0].append([["iron_heavy_crossbow", "bolt_case"], true])
+	rows[0].append([["iron_bow", "quiver"], true]); rows[0].append([["iron_heavy_crossbow", "bolt_case"], true])
 	for k in KINDS: rows[1].append([["iron_" + k], false])
 	# the ammunition at the back of the belt, with a knapsack on the back to show both are worn
-	rows[1].append([["iron_longbow", "quiver", "knapsack"], false]); rows[1].append([["iron_heavy_crossbow", "bolt_case", "knapsack"], false])
+	rows[1].append([["iron_bow", "quiver", "knapsack"], false]); rows[1].append([["iron_heavy_crossbow", "bolt_case", "knapsack"], false])
 	rows[1].append([["quiver", "knapsack"], false]); rows[1].append([["bullet_pouch", "knapsack", "plain_belt"], false])
 	for r in 2:
 		for i in rows[r].size():
