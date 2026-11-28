@@ -12,7 +12,7 @@ Fogwright is a lightweight, cross-platform co-op RPG where a small group of frie
 
 1.  **Build together, depend on each other.** Crafts are interlocking, so no player can do everything alone.
 
-2.  **Invent, don't just craft.** Machines are assembled from parts, so experimenting is the fun.
+2.  **Find it, then make it.** Recipes for gear and machines come from ruins, trainers and experimenting, so exploring and crafting feed each other.
 
 3.  **The world pushes back.** The Fog, events and settlers generate stories without a script.
 
@@ -204,22 +204,19 @@ There are no classes. Every character can fight and craft completely without the
 
 Armor tiers follow the tech eras, because brass suits and firearms need foundries and boilers the group builds first.
 
-## Inventions
+## Inventions and crafting *(decided 2026-11-28)*
 
-Inventions are assembled from four kinds of parts, so a small set of parts produces hundreds of machines without hand-made art or data for each.
+Inventions are **normal recipes**: each machine (a crossbow turret, an automatic sawmill, a grappling hook) is its own recipe, like any weapon or armour. There are no part slots.
 
-| Slot      | Examples                                                      | What it decides                            |
-|-----------|---------------------------------------------------------------|--------------------------------------------|
-| Frame     | Wooden stand, iron tripod, cart, wall mount, backpack harness | Where it goes and whether it moves         |
-| Mechanism | Lever, spring, gear train, crank, piston                      | How it acts: once, repeating or continuous |
-| Power     | Hand crank, water, wind, steam, relic core                    | How long it runs and what it needs         |
-| Payload   | Bolt launcher, saw blade, bellows, lantern, net, hook         | What it actually does                      |
-
-Examples: a wall mount, spring and bolt launcher make a crossbow turret. A cart, gear train, water power and saw blade make an automatic sawmill. A backpack harness, spring and hook make a grappling hook.
-
-**Discovery:** schematics found in ruins reveal some combinations. Others are found by experimenting at a workbench, and the game records each new invention with the name of the player who found it first.
-
-**Quality:** part material (wood, bronze, iron, steel) and the builder's skill set durability and strength.
+- **Learning recipes:** the basics are known from the start; better recipes come from schematics found in ruins, from trainers, and from experimenting at a station.
+- **Making an item:** pick a recipe at a station, choose which materials fill it, and a short timer runs; several can be queued. Basics (bandages, torches, a campfire) can be made anywhere.
+- **Materials:** one refining step: raw to refined (ore to ingot, hide to leather, log to plank), then refined into items.
+- **Quality is fixed by the recipe:** the same recipe always makes the same item. Some recipes make higher-tier items, and **some legendary items can only be crafted**.
+- **Maker's name:** a crafted item shows who made it in its tooltip.
+- **Repair and salvage:** Smiths repair durability (lost on death); unwanted gear salvages into some materials and Fog shards.
+- **Stations:** cities have public forges, benches and looms for a small fee; players build their own in their warp space or freehold.
+- **Cybernetic implants** are not worn when found or crafted: an NPC fits them, or a player with the fitting skill node.
+- **Players can do NPCs' work:** some skill nodes let a player do what an NPC does (repairs, fitting implants and the like) out in the field, so players can run businesses for each other on trust.
 
 ### Tech eras
 
@@ -560,7 +557,7 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 | Herbalist | Layered skirt or wrap, satchels, rolled sleeves | Linen, dried herbs, glass phials, cork | A belt stack of pouches and jars |
 | Warden | Trench or hooded coat, cape | Waxed leather, fur trim, buckled straps | A lantern on the belt, a cowl mantle |
 
-Crafted items show who made them: a small stamped sigil in a fixed place on each item (a buckle, a collar tab, a pauldron rim), the craft's own finishing style (a Tinkerer's boots get brass eyelets, a Smith's get iron toe caps) and a visible flourish on master work. Sigils are earned: from your settlement, a guild, the god who claims you, and great deeds. There are no items limited to one people for now.
+Crafted items show who made them by name in the tooltip *(decided 2026-11-28)*, and each craft has its own finishing style (a Tinkerer's boots get brass eyelets, a Smith's get iron toe caps). There are no items limited to one people for now.
 
 **Later:** dyes as items, restyling gear to look like other gear (transmog), and Fog wear on clothing.
 

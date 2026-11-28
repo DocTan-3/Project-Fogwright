@@ -32,6 +32,9 @@ The basics, settled first:
 | **Loot** | **Free for all**: whoever picks a drop up first keeps it |
 | **Death** | You keep everything. You wake at your seat or last waystone, and your **equipped gear loses durability**, repaired by Smiths |
 | **Crafting** | **Basics anywhere** (bandages, torches, a campfire); weapons, armour and inventions at **stations** (forge, workbench, loom) |
+| **Recipes** | Basics known; the rest from ruins, trainers and experimenting. Pick a recipe, choose materials, a short timer, a queue. One refining step. Quality fixed by recipe; some recipes make higher tiers; some legendaries are craft-only. Inventions are normal recipes (no part slots). Maker's name in the tooltip |
+| **Repair, salvage, stations** | Smiths repair; gear salvages to materials and Fog shards. Public stations in cities for a fee, own stations at home or in a freehold |
+| **Players as NPCs** | Implants are fitted by an NPC or a player with the node. Generally, skill nodes let players do NPC services in the field, so players can trade services on trust |
 
 ## Things in design.md that clash with the lore
 
