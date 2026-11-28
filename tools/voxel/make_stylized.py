@@ -102,11 +102,18 @@ for row, line in enumerate(FACE):
 for side in (HX0 - 1, HX0 + HW):
     for z in (HZ0 + 6, HZ0 + 7, HZ0 + 8):
         for y in (HY0 + 5, HY0 + 6): put('head', side, y, z, 'skin_d' if z == HZ0 + 6 else 'skin')
-# the braid under the beard, with two beads, and the beard's underside
-for z in range(HZ0 - 10, HZ0 - 3):
-    for x in (HX0 + 6, HX0 + 7):
-        for y in (HY0, HY0 + 1):
-            put('braid@head', x, y, z, 'bead' if z in (HZ0 - 6, HZ0 - 9) else ('beard_l' if (z + x) % 2 else 'beard'))   # rides on the head
+# the braid grows out of the beard's point: three strands gathered by an iron ring, plaited down, two beads, a tuft
+BRAID = [   # rows downward from the beard's last row: (x offsets from HX0 that are filled, colour rule)
+    ((5, 6, 7, 8), 'beard'), ((6, 7), 'ring'), ((6, 7), 'plait'), ((6, 7), 'bead'), ((6, 7), 'plait'), ((6, 7), 'plait'),
+    ((6, 7), 'bead'), ((6, 7), 'ring'), ((5, 6, 7, 8), 'tuft'), ((6, 7), 'tuft')]
+for k, (xs, rule) in enumerate(BRAID):
+    z = HZ0 - 3 - k
+    for dx in xs:
+        x = HX0 + dx
+        for y in (HY0 - 1, HY0):
+            c = {'ring': 'iron', 'bead': 'bead', 'beard': 'beard_d', 'tuft': 'beard_l' if dx in (6, 7) else 'beard'}.get(rule)
+            if rule == 'plait': c = 'beard_l' if (dx + k) % 2 else 'beard_d'      # the strands crossing
+            put('braid@head', x, y, z, c)
 
 # the beard hangs over the chest: two more rows below the chin, narrowing, darker underneath
 for k, (a, b) in enumerate(((3, 10), (4, 9))):
