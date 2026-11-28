@@ -1,8 +1,9 @@
-## Two cameras (F3 switches): HIGH, Albion-style - a perspective camera high above and looking down at about 50 degrees,
+## Two cameras (F3 switches); CLOSE, the WoW-style one, is the default. HIGH, Albion-style - a perspective camera high above and looking down at about 50 degrees,
 ## the cursor free (attacks and aim go toward it), the wheel zooms from 12 to 32 m, the middle mouse button (held) turns the
 ## view; walls and roofs between the camera and the player, and roofs over the player, are cut away (their shadows stay).
 ## And CLOSE, the third-person camera: it follows the player from just behind and above the shoulder, turns with the mouse
-## (the cursor is captured; Esc frees it and a click takes it back), zooms a little with the wheel (never far out: the world is seen from street level), and can tilt up
+## (the cursor is captured; Esc frees it and a click takes it back), zooms with the wheel from over the shoulder out to
+## WoW's distance (each notch a share of the distance, so zoom is fine close and quick far out), and can tilt up
 ## steeply to look at what towers over the street. A spring arm keeps it from going through walls.
 extends Node3D
 
@@ -10,7 +11,7 @@ extends Node3D
 const MIN_PITCH := deg_to_rad(-55.0)   # looking down
 const MAX_PITCH := deg_to_rad(70.0)    # looking up at towers
 const MIN_DIST := 1.8
-const MAX_DIST := 5.5
+const MAX_DIST := 18.0   # WoW's default farthest is about 15 yards (14 m)
 var max_dist_override := 0.0   # tests only
 var aiming := false     # a gun or bow aimed (right click): the camera comes in over the shoulder and narrows
 var shoulder := 0.0    # how far right of the head the camera sits (shooters keep the crosshair clear of their own back)
@@ -18,14 +19,14 @@ const SENSITIVITY := 0.005
 const FOLLOW := 14.0
 
 var yaw := 0.0
-var high := true                 # the Albion-style camera (F3 switches)
+var high := false                # the Albion-style camera (F3 switches); WoW-style by default
 var high_dist := 20.0
 const HIGH_PITCH := deg_to_rad(-50.0)
 const HIGH_MIN := 12.0
 const HIGH_MAX := 32.0
 var _turning := false
 var pitch := deg_to_rad(-12.0)
-var distance := 3.6
+var distance := 5.0
 @onready var arm: SpringArm3D = $SpringArm3D
 
 func _ready() -> void:
@@ -66,9 +67,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and event.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED; get_viewport().set_input_as_handled()   # a click takes it back
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			distance = max(MIN_DIST, distance - 0.4)
+			distance = max(MIN_DIST, distance / 1.15)
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			distance = min(MAX_DIST, distance + 0.4)
+			distance = min(MAX_DIST, distance * 1.15)
 	elif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		yaw -= event.relative.x * SENSITIVITY
 		pitch = clamp(pitch - event.relative.y * SENSITIVITY, MIN_PITCH, MAX_PITCH)
