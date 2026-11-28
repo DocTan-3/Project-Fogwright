@@ -59,7 +59,7 @@ static func db() -> Dictionary:
 ## the items of a set, by its tier name (light, medium, heavy, plate, rig)
 static func set_items(tier: String) -> Array: return db().sets[tier].items
 
-static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true, face := 0) -> Node3D:
+static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true, face := 0, height := 0.0, bulk := 0.0) -> Node3D:
 	var items: Dictionary = db().items
 	var taken := {}
 	for n in worn:
@@ -78,6 +78,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 		layers.append(file % [people, sex])
 		hides.append_array(items[n].hides)
 	var root := Vox.character(BODY % [people, sex, ""], Vox.FINE, [], layers)
+	if height != 0.0 or bulk != 0.0: Vox.shape(root, height, bulk)   # the creator's body sliders
 	if drawn:
 		for n in order:
 			if not items[n].has("stance"): continue

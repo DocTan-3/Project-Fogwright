@@ -250,6 +250,25 @@ const REST := {
 	"leg_lower_l": Vector3(0, 0, -3), "leg_lower_r": Vector3(0, 0, 3), "foot_l": Vector3(0, 12, 0), "foot_r": Vector3(0, -12, 0),
 	"head": Vector3(-3, 4, 2), "torso": Vector3(0, -2, 0)}
 
+## the creator's body sliders, -1 to 1 within the people's range: height stretches the legs, torso and arms (about 6%
+## either way), bulk thickens or slims them (about 12%). The parts are scaled in place, not regenerated (the user's
+## choice), so gear riding on a part scales with it; the head keeps its size (the face is the preset's), and weapons
+## keep theirs. Everything above the ground is raised or lowered with the height, so the feet stay on it.
+const HEIGHT_RANGE := 0.06
+const BULK_RANGE := 0.12
+static func shape(root: Node3D, height := 0.0, bulk := 0.0) -> void:
+	var hs := 1.0 + clampf(height, -1.0, 1.0) * HEIGHT_RANGE; var bs := 1.0 + clampf(bulk, -1.0, 1.0) * BULK_RANGE
+	root.set_meta("shape", Vector2(height, bulk))
+	for part in root.get_children():
+		if not part is Node3D: continue
+		part.position = Vector3(part.position.x * bs, part.position.y * hs, part.position.z * bs)
+		if String(part.name) != "head": part.scale = Vector3(bs, hs, bs)
+	for w in root.find_children("weapon*", "Node3D", true, false):   # weapons keep their own size in a scaled hand or on a scaled back
+		var s := Vector3.ONE; var n: Node = w.get_parent()
+		while n != root and n != null:
+			s *= (n as Node3D).scale; n = n.get_parent()
+		w.scale = Vector3(1.0 / s.x, 1.0 / s.y, 1.0 / s.z)
+
 ## a part's name without its finer-resolution mark and its tilt: the name that replaces and is replaced
 static func _bare(n: String) -> String: return n.get_slice("~", 0).get_slice("#", 0)
 

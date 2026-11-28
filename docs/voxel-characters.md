@@ -69,6 +69,11 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
   base head and everything riding on it (`Vox.character`); `Equipment.dress(..., face)` puts it under any helm.
   `godot/tests/voxel_faces.tscn -- people=<people>` renders the presets. Sliders (height and bulk within each people's
   range, skin tone) are still to do.
+- **Body sliders (the user's choice: scaled in the game, not regenerated):** `Vox.shape(root, height, bulk)`, each -1
+  to 1: height stretches legs, torso and arms by up to 6%, bulk thickens or slims them by up to 12%. Heights above the
+  ground scale too, so the feet stay down; the head keeps its size, gear riding on a part scales with it, weapons keep
+  theirs. `Equipment.dress(..., face, height, bulk)` applies it. `godot/tests/voxel_bodies.tscn -- people=<people>`
+  shows the slider corners bare and in heavy armour with a spear, and prints GROUND FAIL / FLOAT FAIL.
 - **Each people looks its own (the user's rule):** `SIGNATURE` gives every people its brow style (Hrimfolk shaped and
   heavy, Ruadhan high arches, Aurelan level, Zarhim joined, Ilvari fine, Ferrin a bushy shelf, Penitent none) and marks
   (kohl, pointed ears, a high bridge, hollow eyes, rosy cheeks, freckles); `STYLES` its own hair and beards (Ruadhan
