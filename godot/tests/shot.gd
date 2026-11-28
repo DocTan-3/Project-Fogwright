@@ -12,6 +12,8 @@ func _ready() -> void:
 	var main: Node3D = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	var rig = main.get_node("CameraRig")
+	if "camera=high" in OS.get_cmdline_user_args(): pass
+	else: rig.high = false; rig._apply_mode()   # tests place the close camera themselves unless asked for the high one
 	if args.has("weapon"):   # combat: show the player holding a weapon
 		for k in 3: await get_tree().process_frame
 		main.get_node("Player/Combat").equip(args.weapon)
@@ -20,7 +22,7 @@ func _ready() -> void:
 	for st in steps:
 		var p := st.split(":")
 		var secs := float(p[0]); var keys := p[1]
-		rig.yaw = deg_to_rad(float(p[2])); rig.pitch = deg_to_rad(float(p[3])); rig.distance = float(p[4])
+		rig.yaw = deg_to_rad(float(p[2])); rig.pitch = deg_to_rad(float(p[3])); rig.distance = float(p[4]); rig.high_dist = float(p[4])
 		rig.get_node("SpringArm3D").collision_mask = 0 if rig.distance >= 20.0 else 1   # an overview sees past roofs
 		for k in ["move_forward", "move_back", "move_left", "move_right", "sprint", "jump"]:
 			Input.action_release(k)

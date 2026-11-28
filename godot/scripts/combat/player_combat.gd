@@ -1,4 +1,5 @@
-## The player's side of combat (docs/design.md, Combat), PC controls:
+## The player's side of combat (docs/design.md, Combat), PC controls (under the high camera, F3, attacks and aim go to the
+## cursor instead of the screen's centre):
 ##   the mouse turns the camera (Esc frees the cursor, a click takes it back); left click attacks toward where you look, or
 ##   at the locked target (the bow: hold to draw, release to loose); right click held blocks, and a block started in the
 ##   last moment before an enemy's hit lands is a parry (melee weapons only); Alt dodges; Tab locks the nearest enemy
@@ -67,7 +68,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if fighter.perks.has(p): fighter.perks.erase(p)
 		else: fighter.perks[p] = true
 		changed.emit()
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED: return   # the click that takes the cursor back does not attack
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not _high(): return   # the click that takes the cursor back does not attack
 	if event.is_action_pressed("target_nearest"):
 		target = null if _target_ok() else _nearest(); changed.emit()
 	elif event.is_action_pressed("attack"):
@@ -160,12 +161,15 @@ func aim_target() -> Node3D:
 	if _target_ok() and target.global_position.distance_to(player.global_position) <= W.range + 0.5: return target
 	var vp := player.get_viewport(); var cam := vp.get_camera_3d()
 	if cam:
-		var e := _pick(vp.get_visible_rect().size / 2.0, 1.6)
+		var e := _pick(player.camera_rig.screen_point() if player.camera_rig and player.camera_rig.has_method("screen_point") else vp.get_visible_rect().size / 2.0, 1.6)
 		if e and e.global_position.distance_to(player.global_position) <= W.range + 0.5: return e
 	return null
 
+func _high() -> bool:
+	return player.camera_rig != null and bool(player.camera_rig.get("high"))
+
 func _aim_dir() -> Vector3:
-	if not W.melee:
+	if not W.melee or _high():   # shooters, and everyone under the high camera, aim at the crosshair or the cursor
 		var d0 := crosshair_point() - player.global_position; d0.y = 0.0
 		if d0.length() > 0.5: return d0.normalized()
 	var t := aim_target()
@@ -209,7 +213,7 @@ func _auto_attack(mult: float) -> void:
 func crosshair_point() -> Vector3:
 	var cam := player.get_viewport().get_camera_3d()
 	if cam == null: return player.global_position + _fwd() * 20.0
-	var c := player.get_viewport().get_visible_rect().size / 2.0
+	var c: Vector2 = player.camera_rig.screen_point() if player.camera_rig and player.camera_rig.has_method("screen_point") else player.get_viewport().get_visible_rect().size / 2.0
 	var from := cam.project_ray_origin(c); var dir := cam.project_ray_normal(c)
 	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 80.0, 1 | 2, [player.get_rid()])
 	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)

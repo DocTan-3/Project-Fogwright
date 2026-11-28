@@ -43,7 +43,7 @@ func _ready() -> void:
 			var l := _label(p, 13); l.autowrap_mode = TextServer.AUTOWRAP_WORD; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			_slots.append(l)
 	var keys := _label(root, 13); keys.set_anchors_preset(Control.PRESET_BOTTOM_LEFT); keys.position = Vector2(24, -64); keys.modulate = Color(1, 1, 1, 0.75)
-	keys.text = "left click attack  right click block (just before a hit: parry) - guns and bows: aim  Alt dodge  Tab lock target  1-6, Q E R T Z V skills  Esc frees the mouse\ntesting: G weapon  F9 enemies  F5 iron guard  F6 slip  F7 deflect  F8 dash  F10 dash reload  F11 steady guard"
+	keys.text = "left click attack  right click block (just before a hit: parry) - guns and bows: aim  Alt dodge  Tab lock target  1-6, Q E R T Z V skills  F3 camera (high: aim with the cursor, wheel zoom, middle mouse turns)\ntesting: G weapon  F9 enemies  F5 iron guard  F6 slip  F7 deflect  F8 dash  F10 dash reload  F11 steady guard"
 
 func _process(_d: float) -> void:
 	if pc == null or pc.fighter == null: return

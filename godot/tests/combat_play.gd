@@ -18,6 +18,8 @@ func _ready() -> void:
 	pc = main.get_node("Player/Combat")
 	pc.fighter.hit_taken.connect(func(r, a): counts[a.kind + ":" + r.outcome] = counts.get(a.kind + ":" + r.outcome, 0) + 1)
 	var rig = main.get_node("CameraRig"); rig.pitch = deg_to_rad(-28); rig.distance = 5.5
+	if "camera=high" in OS.get_cmdline_user_args(): pass
+	else: rig.high = false; rig._apply_mode()   # tests place the close camera themselves unless asked for the high one
 	for w in (OS.get_environment("WEAPONS").split(",") if OS.get_environment("WEAPONS") != "" else Weapons.LIST):
 		pc.equip(w); pc.fighter.hp = pc.fighter.max_hp; pc.fighter.stamina = 100.0; pc.fighter.energy = 100.0
 		for e in get_tree().get_nodes_in_group("enemies"): e.queue_free()

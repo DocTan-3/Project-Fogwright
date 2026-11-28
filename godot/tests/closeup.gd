@@ -5,6 +5,8 @@ func _ready() -> void:
 	var out := "/tmp/claude-0/-home-user/28227d4b-b333-5d02-966b-9f0af28e8773/scratchpad/g/cu"
 	for i in 120: await get_tree().process_frame
 	var rig = main.get_node("CameraRig"); rig.set_process(false)
+	if "camera=high" in OS.get_cmdline_user_args(): pass
+	else: rig.high = false; rig._apply_mode()   # tests place the close camera themselves unless asked for the high one
 	var cam: Camera3D = rig.get_node("SpringArm3D/Camera3D")
 	var targets := [main.get_node("Player")]
 	for n in main.get_node("Level").get_children():

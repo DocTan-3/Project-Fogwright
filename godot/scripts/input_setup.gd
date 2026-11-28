@@ -15,6 +15,7 @@ const ACTIONS := {
 	"turn_left": [],          # the mouse turns the camera now; Q and E cast skills
 	"turn_right": [],
 	"shadows_toggle": [KEY_F2],
+	"camera_mode": [KEY_F3],     # the high (Albion-style) camera or the close third-person one
 	# combat (docs/design.md, Combat), PC: the mouse attacks (left) and blocks (right, held; a well-timed block parries);
 	# both skill pages show at once on PC, on 1-6 and Q E R T Z V
 	"target_nearest": [KEY_TAB],

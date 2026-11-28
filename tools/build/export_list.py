@@ -11,6 +11,7 @@ keep=['res://'+f for d in ['assets/props/quaternius','assets/nature/quaternius']
       if os.path.splitext(os.path.basename(f))[0] in names]
 for d in ['assets/village/quaternius','assets/props/docks','assets/props/village2','assets/props/fogwright','assets/characters','assets/library']:
     keep+=['res://'+f for f in sorted(glob.glob(d+'/**/*',recursive=True)) if f.endswith(('.gltf','.glb','.png'))]
+keep+=['res://'+f for f in sorted(glob.glob('data/*.png'))]   # generated maps the level loads (the ground's path mask)
 keep+=['res://assets/animations/quaternius/UAL1_Standard.glb','res://assets/animations/quaternius/UAL2_Standard.glb']   # UAL2: combat (sword combos, block, knockback, the enemies' clips)
 keep+=['res://'+f for f in sorted(glob.glob('scenes/*.tscn')+glob.glob('scripts/**/*.gd',recursive=True))]
 cfg=open('export_presets.cfg').read()

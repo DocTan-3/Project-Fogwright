@@ -3,6 +3,8 @@ func _ready() -> void:
 	var main: Node3D = load("res://scenes/main.tscn").instantiate(); add_child(main)
 	var pl: CharacterBody3D = main.get_node("Player"); var lv = main.get_node("Level")
 	var rig = main.get_node("CameraRig")
+	if "camera=high" in OS.get_cmdline_user_args(): pass
+	else: rig.high = false; rig._apply_mode()   # tests place the close camera themselves unless asked for the high one
 	pl.global_position = lv.W(Vector2(84, 40), lv.height(Vector2(84, 40)) + 0.2)
 	rig.yaw = deg_to_rad(-100)
 	for i in 10: await get_tree().physics_frame

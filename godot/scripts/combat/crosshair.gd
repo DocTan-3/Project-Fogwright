@@ -15,6 +15,8 @@ func _process(_d: float) -> void:
 func _draw() -> void:
 	if pc == null or pc.W.is_empty(): return
 	var vs := get_viewport_rect().size; var c := vs / 2.0
+	var rig = pc.player.camera_rig
+	if rig and rig.has_method("screen_point"): c = rig.screen_point()   # the cursor, under the high camera
 	var cam := get_viewport().get_camera_3d()
 	var col := Color(1, 1, 1, 0.9); var sh := Color(0, 0, 0, 0.6)
 	if pc.W.melee or cam == null:
