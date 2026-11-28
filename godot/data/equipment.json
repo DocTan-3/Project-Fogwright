@@ -1,0 +1,839 @@
+{
+ "items": {
+  "warden_hood": {
+   "tier": "light",
+   "slots": [
+    "head"
+   ],
+   "order": 8,
+   "hides": [
+    "hair*"
+   ],
+   "file": "res://assets/voxel/gear/warden_hood/%s_%s.vox"
+  },
+  "warden_jerkin": {
+   "tier": "light",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_jerkin/%s_%s.vox"
+  },
+  "warden_bracers": {
+   "tier": "light",
+   "slots": [
+    "wrists"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_bracers/%s_%s.vox"
+  },
+  "warden_boots": {
+   "tier": "light",
+   "slots": [
+    "feet"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_boots/%s_%s.vox"
+  },
+  "warden_belt": {
+   "tier": "light",
+   "slots": [
+    "waist"
+   ],
+   "order": 5,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_belt/%s_%s.vox"
+  },
+  "tinker_goggles": {
+   "tier": "medium",
+   "slots": [
+    "eyes"
+   ],
+   "order": 9,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_goggles/%s_%s.vox"
+  },
+  "tinker_brigandine": {
+   "tier": "medium",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_brigandine/%s_%s.vox"
+  },
+  "tinker_pauldron": {
+   "tier": "medium",
+   "slots": [
+    "shoulder_l"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_pauldron/%s_%s.vox"
+  },
+  "canister_gauntlet": {
+   "tier": "medium",
+   "slots": [
+    "hand_r",
+    "wrist_r"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/canister_gauntlet/%s_%s.vox"
+  },
+  "tinker_belt": {
+   "tier": "medium",
+   "slots": [
+    "waist"
+   ],
+   "order": 5,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_belt/%s_%s.vox"
+  },
+  "steam_respirator": {
+   "tier": "heavy",
+   "slots": [
+    "mouth"
+   ],
+   "order": 9,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_respirator/%s_%s.vox"
+  },
+  "steam_cuirass": {
+   "tier": "heavy",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_cuirass/%s_%s.vox"
+  },
+  "steam_pauldrons": {
+   "tier": "heavy",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_pauldrons/%s_%s.vox"
+  },
+  "steam_boiler": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_boiler/%s_%s.vox"
+  },
+  "steam_greaves": {
+   "tier": "heavy",
+   "slots": [
+    "legs"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_greaves/%s_%s.vox"
+  },
+  "steam_gloves": {
+   "tier": "heavy",
+   "slots": [
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_gloves/%s_%s.vox"
+  },
+  "iron_helm": {
+   "tier": "plate",
+   "slots": [
+    "head",
+    "eyes",
+    "mouth"
+   ],
+   "order": 8,
+   "hides": [
+    "hair*",
+    "beard*"
+   ],
+   "file": "res://assets/voxel/gear/iron_helm/%s_%s.vox"
+  },
+  "iron_breastplate": {
+   "tier": "plate",
+   "slots": [
+    "chest",
+    "coat"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_breastplate/%s_%s.vox"
+  },
+  "iron_arms": {
+   "tier": "plate",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r",
+    "arms"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_arms/%s_%s.vox"
+  },
+  "iron_gauntlets": {
+   "tier": "plate",
+   "slots": [
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_gauntlets/%s_%s.vox"
+  },
+  "iron_legs": {
+   "tier": "plate",
+   "slots": [
+    "legs"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_legs/%s_%s.vox"
+  },
+  "iron_sabatons": {
+   "tier": "plate",
+   "slots": [
+    "feet"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_sabatons/%s_%s.vox"
+  },
+  "arcane_rig": {
+   "tier": "rig",
+   "slots": [
+    "rig"
+   ],
+   "order": 10,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arcane_rig/%s_%s.vox"
+  },
+  "arm_claw": {
+   "tier": "medium",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_claw/%s_%s.vox"
+  },
+  "arm_saw": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_saw/%s_%s.vox"
+  },
+  "arm_bulwark": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_bulwark/%s_%s.vox"
+  },
+  "arm_cannons": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_cannons/%s_%s.vox"
+  },
+  "colossus_gauntlets": {
+   "tier": "heavy",
+   "slots": [
+    "wrists",
+    "hands",
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/colossus_gauntlets/%s_%s.vox"
+  },
+  "colossus_arms": {
+   "tier": "heavy",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r",
+    "arms",
+    "wrists",
+    "hands",
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/colossus_arms/%s_%s.vox"
+  },
+  "cloth_cap": {
+   "tier": "common",
+   "slots": [
+    "head"
+   ],
+   "order": 8,
+   "hides": [
+    "hair",
+    "hair_bun",
+    "hair_crown",
+    "hair_mane"
+   ],
+   "file": "res://assets/voxel/gear/cloth_cap/%s_%s.vox"
+  },
+  "spectacles": {
+   "tier": "common",
+   "slots": [
+    "eyes"
+   ],
+   "order": 9,
+   "hides": [],
+   "file": "res://assets/voxel/gear/spectacles/%s_%s.vox"
+  },
+  "wool_scarf": {
+   "tier": "common",
+   "slots": [
+    "mouth"
+   ],
+   "order": 9,
+   "hides": [
+    "beard*"
+   ],
+   "file": "res://assets/voxel/gear/wool_scarf/%s_%s.vox"
+  },
+  "shoulder_pads": {
+   "tier": "common",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/shoulder_pads/%s_%s.vox"
+  },
+  "armbands": {
+   "tier": "common",
+   "slots": [
+    "arms"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/armbands/%s_%s.vox"
+  },
+  "gambeson": {
+   "tier": "common",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/gambeson/%s_%s.vox"
+  },
+  "long_coat": {
+   "tier": "common",
+   "slots": [
+    "coat"
+   ],
+   "order": 3,
+   "hides": [],
+   "file": "res://assets/voxel/gear/long_coat/%s_%s.vox"
+  },
+  "wrist_wraps": {
+   "tier": "common",
+   "slots": [
+    "wrists"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/wrist_wraps/%s_%s.vox"
+  },
+  "leather_gloves": {
+   "tier": "common",
+   "slots": [
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/leather_gloves/%s_%s.vox"
+  },
+  "plain_belt": {
+   "tier": "common",
+   "slots": [
+    "waist"
+   ],
+   "order": 5,
+   "hides": [],
+   "file": "res://assets/voxel/gear/plain_belt/%s_%s.vox"
+  },
+  "work_trousers": {
+   "tier": "common",
+   "slots": [
+    "legs"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/work_trousers/%s_%s.vox"
+  },
+  "shoes": {
+   "tier": "common",
+   "slots": [
+    "feet"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/shoes/%s_%s.vox"
+  },
+  "knapsack": {
+   "tier": "common",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/knapsack/%s_%s.vox"
+  },
+  "hatchet": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hatchet/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hatchet_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "spear": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/spear/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/spear_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "hammer": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hammer/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hammer_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "blade": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/blade/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/blade_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "boathook": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/boathook/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/boathook_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "cleaver": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/cleaver/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/cleaver_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "pitchfork": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/pitchfork/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/pitchfork_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_sword": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_sword/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_sword_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_axe": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_axe/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_axe_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_mace": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_mace/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_mace_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_hammer": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_hammer/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_hammer_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_dagger": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_dagger/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_dagger_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_greatsword": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_greatsword/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_greatsword_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_greataxe": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_greataxe/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_greataxe_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_warhammer": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_warhammer/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_warhammer_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_spear": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_spear/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_spear_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_halberd": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_halberd/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_halberd_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_glaive": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_glaive/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_glaive_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_shortbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_shortbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_shortbow_carried/%s_%s.vox",
+   "stance": "bow"
+  },
+  "iron_longbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_longbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_longbow_carried/%s_%s.vox",
+   "stance": "bow"
+  },
+  "iron_hand_crossbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_hand_crossbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_hand_crossbow_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_heavy_crossbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_heavy_crossbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_heavy_crossbow_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_shield": {
+   "tier": "common",
+   "slots": [
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_shield/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_shield_carried/%s_%s.vox",
+   "stance": "shield"
+  },
+  "iron_tower_shield": {
+   "tier": "common",
+   "slots": [
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_tower_shield/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_tower_shield_carried/%s_%s.vox",
+   "stance": "shield"
+  },
+  "iron_wand": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_wand/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_wand_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_staff": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_staff/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_staff_carried/%s_%s.vox",
+   "stance": "staff"
+  }
+ },
+ "sets": {
+  "light": {
+   "name": "Warden's leathers",
+   "items": [
+    "warden_hood",
+    "warden_jerkin",
+    "warden_bracers",
+    "warden_boots",
+    "warden_belt"
+   ]
+  },
+  "medium": {
+   "name": "Tinkerer's brigandine",
+   "items": [
+    "tinker_goggles",
+    "tinker_brigandine",
+    "tinker_pauldron",
+    "canister_gauntlet",
+    "tinker_belt"
+   ]
+  },
+  "heavy": {
+   "name": "Steamwright's brass",
+   "items": [
+    "steam_respirator",
+    "steam_cuirass",
+    "steam_pauldrons",
+    "steam_boiler",
+    "steam_greaves",
+    "steam_gloves"
+   ]
+  },
+  "plate": {
+   "name": "Ironclad plate",
+   "items": [
+    "iron_helm",
+    "iron_breastplate",
+    "iron_arms",
+    "iron_gauntlets",
+    "iron_legs",
+    "iron_sabatons"
+   ]
+  },
+  "rig": {
+   "name": "Arcane engine rig",
+   "items": [
+    "tinker_goggles",
+    "arcane_rig"
+   ]
+  },
+  "arm_utility": {
+   "name": "Tinkerer with a third arm (utility)",
+   "items": [
+    "tinker_goggles",
+    "tinker_brigandine",
+    "canister_gauntlet",
+    "tinker_belt",
+    "arm_claw"
+   ]
+  },
+  "arm_combat": {
+   "name": "Warden with a saw arm (combat)",
+   "items": [
+    "warden_jerkin",
+    "warden_bracers",
+    "warden_boots",
+    "warden_belt",
+    "arm_saw"
+   ]
+  },
+  "arm_defence": {
+   "name": "Ironclad with a bulwark arm (defence)",
+   "items": [
+    "iron_breastplate",
+    "iron_arms",
+    "iron_gauntlets",
+    "iron_legs",
+    "iron_sabatons",
+    "arm_bulwark"
+   ]
+  },
+  "arm_cannons": {
+   "name": "Steamwright with twin cannon arms (combat)",
+   "items": [
+    "steam_respirator",
+    "steam_cuirass",
+    "steam_greaves",
+    "steam_gloves",
+    "arm_cannons"
+   ]
+  },
+  "gauntlets": {
+   "name": "Colossus gauntlets over light leathers",
+   "items": [
+    "warden_hood",
+    "warden_jerkin",
+    "warden_boots",
+    "warden_belt",
+    "colossus_gauntlets"
+   ]
+  },
+  "basics": {
+   "name": "Basics: one common item in every slot",
+   "items": [
+    "cloth_cap",
+    "spectacles",
+    "wool_scarf",
+    "shoulder_pads",
+    "armbands",
+    "gambeson",
+    "long_coat",
+    "wrist_wraps",
+    "leather_gloves",
+    "plain_belt",
+    "work_trousers",
+    "shoes",
+    "knapsack",
+    "hatchet"
+   ]
+  },
+  "colossus": {
+   "name": "Colossus arms over light leathers",
+   "items": [
+    "warden_jerkin",
+    "warden_boots",
+    "warden_belt",
+    "colossus_arms"
+   ]
+  }
+ }
+}

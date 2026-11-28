@@ -1,0 +1,51 @@
+extends Node3D
+## the body sliders (Vox.shape): each body at the slider corners and the middle, bare and in heavy armour with a spear
+## drawn, beside the 2.2 x 1.4 m door. Prints GROUND FAIL (below the ground) or FLOAT FAIL (feet off it).
+##   godot --path . --rendering-driver opengl3 res://tests/voxel_bodies.tscn -- out=<png prefix> [people=hrimfolk]
+const SLIDERS := [[-1.0, -1.0], [-1.0, 1.0], [0.0, 0.0], [1.0, -1.0], [1.0, 1.0]]
+func _ready() -> void:
+	var out := "/tmp/bodies"; var people := "hrimfolk"
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("out="): out = a.split("=")[1]
+		if a.begins_with("people="): people = a.split("=")[1]
+	var env := WorldEnvironment.new(); env.environment = Environment.new(); var e := env.environment
+	var sky := Sky.new(); var sm := ProceduralSkyMaterial.new(); sky.sky_material = sm
+	sm.sky_top_color = Color(0.42, 0.56, 0.74); sm.sky_horizon_color = Color(0.93, 0.78, 0.6); sm.ground_horizon_color = Color(0.93, 0.78, 0.6)
+	e.background_mode = Environment.BG_SKY; e.sky = sky
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_SKY; e.ambient_light_energy = 0.45; e.ambient_light_sky_contribution = 0.6
+	e.tonemap_mode = Environment.TONE_MAPPER_ACES; e.tonemap_exposure = 0.9; add_child(env)
+	var sun := DirectionalLight3D.new(); sun.rotation_degrees = Vector3(-30, -30, 0); sun.light_color = Color(1.0, 0.8, 0.58); sun.light_energy = 1.05
+	sun.shadow_enabled = true; sun.shadow_bias = 0.25; sun.shadow_normal_bias = 3.0; add_child(sun)
+	var g := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = Vector2(80, 80); g.mesh = pm
+	var gm := StandardMaterial3D.new(); gm.albedo_color = Color(0.36, 0.42, 0.26); g.material_override = gm; add_child(g)
+	var fm := StandardMaterial3D.new(); fm.albedo_color = Color("5a3a22")
+	for side in [-1, 1]:   # the doorway: 1.4 m wide, 2.2 m tall
+		var post := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(0.1, 2.2, 0.1); post.mesh = bm; post.material_override = fm
+		post.position = Vector3(-1.4 + side * 0.75, 1.1, 0); add_child(post)
+	var lintel := MeshInstance3D.new(); var lm := BoxMesh.new(); lm.size = Vector3(1.6, 0.1, 0.1); lintel.mesh = lm; lintel.material_override = fm
+	lintel.position = Vector3(-1.4, 2.25, 0); add_child(lintel)
+	var i := 0
+	for s in ["m", "f"]:
+		for armed in [false, true]:
+			for sl in SLIDERS:
+				var worn: Array = (Equipment.set_items("heavy") + ["spear"]) if armed else []
+				var m := Equipment.dress(people, s, worn, true, true, 0, sl[0], sl[1]); add_child(m)
+				m.position = Vector3(i * 1.15 + (4.0 if s == "f" else 0.0) + (0.6 if armed else 0.0), 0, 0)
+				var low := INF; var foot := INF
+				for mi in m.find_children("*", "MeshInstance3D", true, false):
+					if not (mi as MeshInstance3D).is_visible_in_tree(): continue
+					var bb: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).get_aabb()
+					for k in 8: low = minf(low, bb.get_endpoint(k).y)
+					if String(mi.name).begins_with("foot"): for k in 8: foot = minf(foot, bb.get_endpoint(k).y)
+				if low < -0.01: print("GROUND FAIL %s_%s h%+.0f b%+.0f armed=%s: %.3f m below" % [people, s, sl[0], sl[1], armed, -low])
+				if foot > 0.02: print("FLOAT FAIL %s_%s h%+.0f b%+.0f: feet %.3f m up" % [people, s, sl[0], sl[1], foot])
+				var l := Label3D.new(); l.text = "h%+.0f b%+.0f" % [sl[0], sl[1]]; l.font_size = 40; l.pixel_size = 0.0025; l.outline_size = 8
+				l.position = m.position + Vector3(0, 0.06, 0.6); add_child(l); i += 1
+	var cam := Camera3D.new(); add_child(cam); get_viewport().size = Vector2i(3200, 900)
+	for sh in [["m", 5.5], ["f", 21.5]]:     # men (and the door), then women
+		cam.position = Vector3(sh[1], 1.2, 8.6); cam.look_at(Vector3(sh[1], 0.95, 0)); cam.fov = 30.0
+		for k in 8: await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png("%s_%s_%s.png" % [out, people, sh[0]])
+	print("BODIES done")
+	get_tree().quit()

@@ -1,0 +1,1403 @@
+{
+ "presets": {
+  "hrimfolk_m": [
+   {
+    "name": "Warden",
+    "hair": "shaved",
+    "beard": "full_braid",
+    "hair_col": [
+     92,
+     58,
+     34
+    ]
+   },
+   {
+    "name": "Greybeard",
+    "hair": "long",
+    "beard": "big",
+    "hair_col": [
+     132,
+     126,
+     116
+    ]
+   },
+   {
+    "name": "Youngblood",
+    "hair": "braids",
+    "beard": "short",
+    "hair_col": [
+     170,
+     120,
+     64
+    ]
+   },
+   {
+    "name": "Laughing",
+    "hair": "long",
+    "beard": "short",
+    "hair_col": [
+     120,
+     66,
+     34
+    ]
+   },
+   {
+    "name": "Raider",
+    "hair": "long",
+    "beard": "full_braid",
+    "hair_col": [
+     58,
+     40,
+     30
+    ]
+   },
+   {
+    "name": "Shorn",
+    "hair": "shaved",
+    "beard": "stubble",
+    "hair_col": [
+     92,
+     58,
+     34
+    ]
+   }
+  ],
+  "hrimfolk_f": [
+   {
+    "name": "Braided",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     206,
+     168,
+     100
+    ]
+   },
+   {
+    "name": "Bright",
+    "hair": "long",
+    "beard": null,
+    "hair_col": [
+     214,
+     176,
+     112
+    ]
+   },
+   {
+    "name": "Shieldmaiden",
+    "hair": "shaved",
+    "beard": null,
+    "hair_col": [
+     120,
+     80,
+     44
+    ]
+   },
+   {
+    "name": "Fox",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     150,
+     74,
+     40
+    ]
+   },
+   {
+    "name": "Hearth",
+    "hair": "crown",
+    "beard": null,
+    "hair_col": [
+     176,
+     132,
+     76
+    ]
+   },
+   {
+    "name": "Elder",
+    "hair": "long",
+    "beard": null,
+    "hair_col": [
+     150,
+     146,
+     140
+    ]
+   }
+  ],
+  "ruadhan_m": [
+   {
+    "name": "Woodsman",
+    "hair": "mane",
+    "beard": "droop",
+    "hair_col": [
+     176,
+     72,
+     36
+    ]
+   },
+   {
+    "name": "Piper",
+    "hair": "mane",
+    "beard": "droop",
+    "hair_col": [
+     196,
+     98,
+     44
+    ]
+   },
+   {
+    "name": "Hillfort",
+    "hair": "braids",
+    "beard": "big",
+    "hair_col": [
+     150,
+     62,
+     30
+    ]
+   },
+   {
+    "name": "Hunter",
+    "hair": "braids",
+    "beard": "stubble",
+    "hair_col": [
+     120,
+     56,
+     30
+    ]
+   },
+   {
+    "name": "Brawler",
+    "hair": "crop",
+    "beard": "short",
+    "hair_col": [
+     176,
+     72,
+     36
+    ]
+   },
+   {
+    "name": "Bard",
+    "hair": "mane",
+    "beard": null,
+    "hair_col": [
+     206,
+     120,
+     60
+    ]
+   }
+  ],
+  "ruadhan_f": [
+   {
+    "name": "Wildflower",
+    "hair": "mane",
+    "beard": null,
+    "hair_col": [
+     196,
+     88,
+     40
+    ]
+   },
+   {
+    "name": "Archer",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     170,
+     66,
+     30
+    ]
+   },
+   {
+    "name": "Merry",
+    "hair": "mane",
+    "beard": null,
+    "hair_col": [
+     206,
+     104,
+     48
+    ]
+   },
+   {
+    "name": "Druid",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     140,
+     60,
+     34
+    ]
+   },
+   {
+    "name": "Fierce",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     186,
+     80,
+     36
+    ]
+   },
+   {
+    "name": "Grandmother",
+    "hair": "mane",
+    "beard": null,
+    "hair_col": [
+     170,
+     150,
+     140
+    ]
+   }
+  ],
+  "aurelan_m": [
+   {
+    "name": "Burgher",
+    "hair": "parted",
+    "beard": "moustache",
+    "hair_col": [
+     70,
+     44,
+     30
+    ]
+   },
+   {
+    "name": "Knight",
+    "hair": "parted",
+    "beard": "goatee",
+    "hair_col": [
+     70,
+     44,
+     30
+    ]
+   },
+   {
+    "name": "Merchant",
+    "hair": "parted",
+    "beard": "moustache",
+    "hair_col": [
+     56,
+     36,
+     26
+    ]
+   },
+   {
+    "name": "Scholar",
+    "hair": "parted",
+    "beard": null,
+    "hair_col": [
+     70,
+     44,
+     30
+    ]
+   },
+   {
+    "name": "Veteran",
+    "hair": "crop",
+    "beard": "goatee",
+    "hair_col": [
+     70,
+     44,
+     30
+    ]
+   },
+   {
+    "name": "Squire",
+    "hair": "parted",
+    "beard": null,
+    "hair_col": [
+     96,
+     62,
+     38
+    ]
+   }
+  ],
+  "aurelan_f": [
+   {
+    "name": "Matron",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     78,
+     50,
+     34
+    ]
+   },
+   {
+    "name": "Lady",
+    "hair": "crown",
+    "beard": null,
+    "hair_col": [
+     78,
+     50,
+     34
+    ]
+   },
+   {
+    "name": "Baker",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     96,
+     60,
+     38
+    ]
+   },
+   {
+    "name": "Sergeant",
+    "hair": "parted",
+    "beard": null,
+    "hair_col": [
+     78,
+     50,
+     34
+    ]
+   },
+   {
+    "name": "Courtier",
+    "hair": "parted",
+    "beard": null,
+    "hair_col": [
+     52,
+     34,
+     24
+    ]
+   },
+   {
+    "name": "Maid",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     88,
+     56,
+     36
+    ]
+   }
+  ],
+  "zarhim_m": [
+   {
+    "name": "Caravaneer",
+    "hair": "tail",
+    "beard": "short",
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   },
+   {
+    "name": "Sandrunner",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   },
+   {
+    "name": "Emir",
+    "hair": "tail",
+    "beard": "big",
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   },
+   {
+    "name": "Storyteller",
+    "hair": "crop",
+    "beard": "short",
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   },
+   {
+    "name": "Blade",
+    "hair": "shaved",
+    "beard": "stubble",
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   },
+   {
+    "name": "Elder",
+    "hair": "tail",
+    "beard": "big",
+    "hair_col": [
+     150,
+     146,
+     140
+    ]
+   }
+  ],
+  "zarhim_f": [
+   {
+    "name": "Weaver",
+    "hair": "tail",
+    "beard": null,
+    "hair_col": [
+     34,
+     26,
+     24
+    ]
+   },
+   {
+    "name": "Falconer",
+    "hair": "tail",
+    "beard": null,
+    "hair_col": [
+     34,
+     26,
+     24
+    ]
+   },
+   {
+    "name": "Dancer",
+    "hair": "tail",
+    "beard": null,
+    "hair_col": [
+     34,
+     26,
+     24
+    ]
+   },
+   {
+    "name": "Spice-seller",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     34,
+     26,
+     24
+    ]
+   },
+   {
+    "name": "Outrider",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     34,
+     26,
+     24
+    ]
+   },
+   {
+    "name": "Matriarch",
+    "hair": "tail",
+    "beard": null,
+    "hair_col": [
+     120,
+     116,
+     112
+    ]
+   }
+  ],
+  "ilvari_m": [
+   {
+    "name": "Artificer",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     36,
+     38,
+     48
+    ]
+   },
+   {
+    "name": "Seer",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     186,
+     192,
+     204
+    ]
+   },
+   {
+    "name": "Warden",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     36,
+     38,
+     48
+    ]
+   },
+   {
+    "name": "Courtier",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     120,
+     126,
+     140
+    ]
+   },
+   {
+    "name": "Exile",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     58,
+     60,
+     72
+    ]
+   },
+   {
+    "name": "Archivist",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     160,
+     166,
+     178
+    ]
+   }
+  ],
+  "ilvari_f": [
+   {
+    "name": "Silversmith",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     186,
+     192,
+     204
+    ]
+   },
+   {
+    "name": "Starreader",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     186,
+     192,
+     204
+    ]
+   },
+   {
+    "name": "Duelist",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     40,
+     42,
+     54
+    ]
+   },
+   {
+    "name": "Charmer",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     120,
+     126,
+     140
+    ]
+   },
+   {
+    "name": "Inkwitch",
+    "hair": "sleek",
+    "beard": null,
+    "hair_col": [
+     36,
+     38,
+     48
+    ]
+   },
+   {
+    "name": "Elder",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     186,
+     192,
+     204
+    ]
+   }
+  ],
+  "ferrin_m": [
+   {
+    "name": "Forgemaster",
+    "hair": "crop",
+    "beard": "forked",
+    "hair_col": [
+     52,
+     34,
+     24
+    ]
+   },
+   {
+    "name": "Greyhand",
+    "hair": "crop",
+    "beard": "forked",
+    "hair_col": [
+     120,
+     112,
+     104
+    ]
+   },
+   {
+    "name": "Stoker",
+    "hair": "shaved",
+    "beard": "short",
+    "hair_col": [
+     52,
+     34,
+     24
+    ]
+   },
+   {
+    "name": "Tinker",
+    "hair": "crop",
+    "beard": "moustache",
+    "hair_col": [
+     74,
+     50,
+     34
+    ]
+   },
+   {
+    "name": "Delver",
+    "hair": "braids",
+    "beard": "forked",
+    "hair_col": [
+     36,
+     26,
+     20
+    ]
+   },
+   {
+    "name": "Apprentice",
+    "hair": "crop",
+    "beard": "stubble",
+    "hair_col": [
+     52,
+     34,
+     24
+    ]
+   }
+  ],
+  "ferrin_f": [
+   {
+    "name": "Hearthkeeper",
+    "hair": "crown",
+    "beard": null,
+    "hair_col": [
+     60,
+     40,
+     28
+    ]
+   },
+   {
+    "name": "Riveter",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     60,
+     40,
+     28
+    ]
+   },
+   {
+    "name": "Brewer",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     74,
+     50,
+     34
+    ]
+   },
+   {
+    "name": "Engineer",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     60,
+     40,
+     28
+    ]
+   },
+   {
+    "name": "Ironmother",
+    "hair": "crown",
+    "beard": null,
+    "hair_col": [
+     124,
+     116,
+     108
+    ]
+   },
+   {
+    "name": "Spark",
+    "hair": "braids",
+    "beard": null,
+    "hair_col": [
+     40,
+     28,
+     22
+    ]
+   }
+  ],
+  "wayfolk_m": [
+   {
+    "name": "Drifter",
+    "hair": "crop",
+    "beard": "stubble",
+    "hair_col": [
+     100,
+     70,
+     46
+    ]
+   },
+   {
+    "name": "Ferryman",
+    "hair": "crop",
+    "beard": "short",
+    "hair_col": [
+     150,
+     146,
+     140
+    ]
+   },
+   {
+    "name": "Peddler",
+    "hair": "long",
+    "beard": "moustache",
+    "hair_col": [
+     176,
+     72,
+     36
+    ]
+   },
+   {
+    "name": "Fieldhand",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     206,
+     168,
+     100
+    ]
+   },
+   {
+    "name": "Sellsword",
+    "hair": "crop",
+    "beard": "short",
+    "hair_col": [
+     100,
+     70,
+     46
+    ]
+   },
+   {
+    "name": "Fisher",
+    "hair": "long",
+    "beard": "short",
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   }
+  ],
+  "wayfolk_f": [
+   {
+    "name": "Traveller",
+    "hair": "long",
+    "beard": null,
+    "hair_col": [
+     110,
+     76,
+     50
+    ]
+   },
+   {
+    "name": "Innkeeper",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     176,
+     72,
+     36
+    ]
+   },
+   {
+    "name": "Herbwife",
+    "hair": "long",
+    "beard": null,
+    "hair_col": [
+     206,
+     168,
+     100
+    ]
+   },
+   {
+    "name": "Scout",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     30,
+     24,
+     22
+    ]
+   },
+   {
+    "name": "Farmgirl",
+    "hair": "long",
+    "beard": null,
+    "hair_col": [
+     150,
+     110,
+     70
+    ]
+   },
+   {
+    "name": "Widow",
+    "hair": "bun",
+    "beard": null,
+    "hair_col": [
+     120,
+     116,
+     112
+    ]
+   }
+  ],
+  "penitent_m": [
+   {
+    "name": "Penitent",
+    "hair": "shorn",
+    "beard": null,
+    "hair_col": [
+     60,
+     56,
+     52
+    ]
+   },
+   {
+    "name": "Hollow",
+    "hair": "shaved",
+    "beard": null,
+    "hair_col": [
+     60,
+     56,
+     52
+    ]
+   },
+   {
+    "name": "Confessor",
+    "hair": "shorn",
+    "beard": "stubble",
+    "hair_col": [
+     60,
+     56,
+     52
+    ]
+   },
+   {
+    "name": "Mended",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     96,
+     86,
+     76
+    ]
+   },
+   {
+    "name": "Scourged",
+    "hair": "shorn",
+    "beard": "short",
+    "hair_col": [
+     60,
+     56,
+     52
+    ]
+   },
+   {
+    "name": "Old Ash",
+    "hair": "shorn",
+    "beard": "short",
+    "hair_col": [
+     140,
+     138,
+     134
+    ]
+   }
+  ],
+  "penitent_f": [
+   {
+    "name": "Penitent",
+    "hair": "shorn",
+    "beard": null,
+    "hair_col": [
+     66,
+     60,
+     56
+    ]
+   },
+   {
+    "name": "Pale-eyed",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     66,
+     60,
+     56
+    ]
+   },
+   {
+    "name": "Shorn",
+    "hair": "shaved",
+    "beard": null,
+    "hair_col": [
+     66,
+     60,
+     56
+    ]
+   },
+   {
+    "name": "Lantern",
+    "hair": "crop",
+    "beard": null,
+    "hair_col": [
+     96,
+     86,
+     76
+    ]
+   },
+   {
+    "name": "Vigil",
+    "hair": "shorn",
+    "beard": null,
+    "hair_col": [
+     66,
+     60,
+     56
+    ]
+   },
+   {
+    "name": "Old Ash",
+    "hair": "shorn",
+    "beard": null,
+    "hair_col": [
+     150,
+     146,
+     140
+    ]
+   }
+  ]
+ },
+ "styles": {
+  "hrimfolk": {
+   "hair": [
+    "shaved",
+    "braids",
+    "crown",
+    "long"
+   ],
+   "beard": [
+    "full_braid",
+    "big",
+    "short",
+    "stubble"
+   ]
+  },
+  "ruadhan": {
+   "hair": [
+    "mane",
+    "braids",
+    "crop"
+   ],
+   "beard": [
+    "droop",
+    "short",
+    "big",
+    "stubble",
+    null
+   ]
+  },
+  "aurelan": {
+   "hair": [
+    "parted",
+    "bun",
+    "crown",
+    "crop"
+   ],
+   "beard": [
+    "moustache",
+    "goatee",
+    "short",
+    null
+   ]
+  },
+  "zarhim": {
+   "hair": [
+    "tail",
+    "crop",
+    "shaved"
+   ],
+   "beard": [
+    "short",
+    "big",
+    "stubble",
+    null
+   ]
+  },
+  "ilvari": {
+   "hair": [
+    "sleek",
+    "bun",
+    "crop"
+   ],
+   "beard": [
+    null
+   ]
+  },
+  "ferrin": {
+   "hair": [
+    "crop",
+    "crown",
+    "shaved",
+    "braids"
+   ],
+   "beard": [
+    "forked",
+    "big",
+    "short",
+    "moustache",
+    "stubble"
+   ]
+  },
+  "wayfolk": {
+   "hair": [
+    "crop",
+    "long",
+    "bun"
+   ],
+   "beard": [
+    "short",
+    "stubble",
+    "moustache",
+    null
+   ]
+  },
+  "penitent": {
+   "hair": [
+    "shorn",
+    "shaved",
+    "crop"
+   ],
+   "beard": [
+    "stubble",
+    "short",
+    null
+   ]
+  }
+ },
+ "hair_colours": {
+  "hrimfolk": [
+   [
+    206,
+    168,
+    100
+   ],
+   [
+    214,
+    176,
+    112
+   ],
+   [
+    170,
+    164,
+    150
+   ],
+   [
+    132,
+    126,
+    116
+   ],
+   [
+    170,
+    120,
+    64
+   ],
+   [
+    92,
+    58,
+    34
+   ]
+  ],
+  "ruadhan": [
+   [
+    176,
+    72,
+    36
+   ],
+   [
+    196,
+    98,
+    44
+   ],
+   [
+    150,
+    62,
+    30
+   ],
+   [
+    120,
+    56,
+    30
+   ],
+   [
+    206,
+    120,
+    60
+   ],
+   [
+    170,
+    150,
+    140
+   ]
+  ],
+  "aurelan": [
+   [
+    70,
+    44,
+    30
+   ],
+   [
+    96,
+    62,
+    38
+   ],
+   [
+    110,
+    70,
+    44
+   ],
+   [
+    52,
+    34,
+    24
+   ],
+   [
+    88,
+    56,
+    36
+   ],
+   [
+    130,
+    126,
+    120
+   ]
+  ],
+  "zarhim": [
+   [
+    30,
+    24,
+    22
+   ],
+   [
+    28,
+    30,
+    40
+   ],
+   [
+    34,
+    26,
+    24
+   ],
+   [
+    52,
+    36,
+    28
+   ],
+   [
+    120,
+    116,
+    112
+   ],
+   [
+    150,
+    146,
+    140
+   ]
+  ],
+  "ilvari": [
+   [
+    186,
+    192,
+    204
+   ],
+   [
+    160,
+    166,
+    178
+   ],
+   [
+    120,
+    126,
+    140
+   ],
+   [
+    58,
+    60,
+    72
+   ],
+   [
+    40,
+    42,
+    54
+   ],
+   [
+    36,
+    38,
+    48
+   ]
+  ],
+  "ferrin": [
+   [
+    52,
+    34,
+    24
+   ],
+   [
+    36,
+    26,
+    20
+   ],
+   [
+    60,
+    40,
+    28
+   ],
+   [
+    74,
+    50,
+    34
+   ],
+   [
+    120,
+    112,
+    104
+   ],
+   [
+    124,
+    116,
+    108
+   ]
+  ],
+  "wayfolk": [
+   [
+    100,
+    70,
+    46
+   ],
+   [
+    110,
+    76,
+    50
+   ],
+   [
+    176,
+    72,
+    36
+   ],
+   [
+    206,
+    168,
+    100
+   ],
+   [
+    30,
+    24,
+    22
+   ],
+   [
+    150,
+    146,
+    140
+   ]
+  ],
+  "penitent": [
+   [
+    60,
+    56,
+    52
+   ],
+   [
+    66,
+    60,
+    56
+   ],
+   [
+    96,
+    86,
+    76
+   ],
+   [
+    140,
+    138,
+    134
+   ],
+   [
+    150,
+    146,
+    140
+   ],
+   [
+    40,
+    38,
+    38
+   ]
+  ]
+ },
+ "keys": {
+  "hair": [
+   [
+    255,
+    0,
+    255
+   ],
+   1.0
+  ],
+  "hair_d": [
+   [
+    191,
+    0,
+    191
+   ],
+   0.72
+  ],
+  "hair_l": [
+   [
+    255,
+    96,
+    255
+   ],
+   1.25
+  ],
+  "brow": [
+   [
+    128,
+    0,
+    128
+   ],
+   0.7
+  ],
+  "brow_d": [
+   [
+    96,
+    0,
+    96
+   ],
+   0.48
+  ]
+ }
+}
