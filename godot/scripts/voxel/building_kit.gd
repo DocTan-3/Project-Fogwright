@@ -27,6 +27,8 @@ const PLINTH := 5
 const DOOR := [4, 17, 0, 21]     # the opening in a door bay (x0, x1, z0, z1), as make_building_kit.py cuts it
 const WIN := [7, 14, 9, 18]
 const OVERHANG := 3
+## bump when the builder or the kit changes what it makes: baked buildings with an older stamp are built again
+const BAKE_VERSION := 1
 
 static var _pieces := {}  # name -> {Vector3i: Color}, the kit's voxels in each piece's own box
 static var _meshes := {}
@@ -650,3 +652,34 @@ static func _firepit(vs: Dictionary, boxes: Array, at: Vector2i, r: int, z: int)
 	for k in range(-r + 3, r - 2):   # two logs crossed over the embers
 		vs[Vector3i(at.x + k, at.y, z + 2)] = Color8(88, 70, 54); vs[Vector3i(at.x, at.y + k, z + 3)] = Color8(76, 60, 48)
 	boxes.append([Vector3(at.x - r, at.y - r, z), Vector3(at.x + r, at.y + r, z + 4)])
+
+# ---------------------------------------------------------------- baking
+## a layout's stamp: the builder's version and the layout itself, so a bake is used only for exactly what it was made from
+static func stamp(layout: Dictionary) -> String: return "%d:%d" % [BAKE_VERSION, str(layout).hash()]
+
+## the building for a layout from its bake at path if the bake is current, otherwise built now (and baked there if
+## bake is true). A bake is the finished node tree saved as a scene: loading it skips all the stamping and meshing.
+## Bake with a real renderer (not --headless): meshes keep their data only where a rendering server holds it.
+static func load_or_build(layout: Dictionary, path: String, bake := false) -> Node3D:
+	var st := stamp(layout)
+	if not bake and ResourceLoader.exists(path):
+		var ps := load(path) as PackedScene
+		if ps:
+			var n := ps.instantiate() as Node3D
+			if n and n.get_meta("stamp", "") == st:
+				n.set_meta("baked", true); return n
+			if n: n.free()
+	var b := build(layout); b.set_meta("stamp", st)
+	if bake: save_bake(b, path)
+	return b
+
+## saves a freshly built building (before it enters the tree, so the doors' own runtime children are not in it)
+static func save_bake(b: Node3D, path: String) -> void:
+	var own := func(f: Callable, n: Node) -> void:
+		for c in n.get_children():
+			c.owner = b; f.call(f, c)
+	own.call(own, b)
+	var ps := PackedScene.new(); ps.pack(b)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
+	var err := ResourceSaver.save(ps, path, ResourceSaver.FLAG_COMPRESS)
+	print("BAKE %s: %s" % [path, "ok" if err == OK else "error %d" % err])

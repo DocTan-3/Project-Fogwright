@@ -12,6 +12,10 @@ const STANDINS := [["Houses/House_1", 6.5, 6.4], ["Houses/House_2", 4.8, 6.1], [
 	["Shops/Shop_Closed", 2.8, 2.4], ["Towers/Tower_Simple", 6.0, 6.0]]
 # plan building types built from the voxel building kit instead of a stand-in (scripts/voxel/kit_layouts.gd)
 const KITS := {"inn": KitLayouts.GULL_LANTERN}
+## the village's buildings baked (BuildingKit.load_or_build): run this scene with "-- bake" (not headless) to make them;
+## tools/build/bake_farhallow.sh does it before an export. Missing or stale bakes are built live, which is slower.
+const BAKED := "res://assets/voxel/baked/farhallow_%02d.scn"
+var baking := OS.get_cmdline_user_args().has("bake")
 const MR := 0.25             # the path mask's resolution (m)
 var fh: Node3D
 var mask := PackedByteArray()
@@ -38,7 +42,10 @@ func _ready() -> void:
 	add_child(ground)
 	print("FARHALLOW ground %d ms, %d grass tufts, pieces %s" % [Time.get_ticks_msec() - t0, ground.get_node("Grass").get_meta("tufts"), ground.get_meta("pieces")])
 	_sea()
+	var tb := Time.get_ticks_msec()
 	_buildings(); _ready_kit_report()
+	print("FARHALLOW buildings ready in %d ms" % (Time.get_ticks_msec() - tb))
+	if baking: get_tree().quit()
 	player = get_parent().get_node_or_null("Player")
 	if player:
 		var sp: Vector2 = fh.WELL + Vector2(2.5, 2.5)
@@ -101,13 +108,13 @@ func _buildings() -> void:
 				for dd in b.doors:
 					var v := Vector2(dd[0] - b.x, dd[1] - b.y); dl.append(Vector2(v.x * ca + v.y * sa, -v.x * sa + v.y * ca))
 				lay = KitLayouts.for_plot(b.type, float(b.w), float(b.h), dl, i)
-			var bk := BuildingKit.build(lay); kit_holder.add_child(bk)
+			var bk := BuildingKit.load_or_build(lay, BAKED % i, baking); kit_holder.add_child(bk)
 			var sz: Vector2i = lay.size
 			# the kit's front (+Z) turned to face the plot's door side (its local -Z), centred on the plot
 			bk.rotation.y = PI; bk.position = Vector3(sz.x, 0, -sz.y)
 			kit_holder.position = Vector3(b.x - o.x, fh.pads[i][3], b.y - o.y); kit_holder.rotation.y = -float(b.a)
 			kit_tris += bk.get_meta("triangles")
-			print("FARHALLOW %s (%s) from the kit: %d triangles, %d ms" % [b.name, b.type, bk.get_meta("triangles"), bk.get_meta("build_ms")])
+			print("FARHALLOW %s (%s) from the kit%s: %d triangles, %d ms" % [b.name, b.type, " (baked)" if bk.get_meta("baked", false) else "", bk.get_meta("triangles"), bk.get_meta("build_ms")])
 			continue
 		var w := float(b.w); var d := float(b.h)
 		var best: Array = STANDINS[0]; var err := INF
