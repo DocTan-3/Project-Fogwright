@@ -10,9 +10,12 @@ var amount := 0.0          # 0 standing, 1 running
 var parts := {}
 var model: Node3D
 var _base_y := 0.0
+var extra := {}            # part name -> degrees added on top (an attack, a block, a scripted pose), set by others
+var calm := 1.0           # 1: the walk swings the arms; 0: the arms are left to `extra` (an attack in progress)
 
 func _ready() -> void:
 	model = get_parent().get_node("Model")
+	parts.clear()
 	for n in ["leg_upper_l", "leg_upper_r", "leg_lower_l", "leg_lower_r", "arm_upper_l", "arm_upper_r", "arm_lower_l", "arm_lower_r", "torso", "head"]:
 		var p := model.find_child(n, true, false) as Node3D
 		if p: parts[n] = p
@@ -28,7 +31,7 @@ func _process(delta: float) -> void:
 	var swing := 38.0 * a; var arm := 30.0 * a
 	_rot("leg_upper_l", Vector3(-s * swing, 0, 0)); _rot("leg_upper_r", Vector3(s * swing, 0, 0))
 	_rot("leg_lower_l", Vector3(maxf(0.0, s) * 45.0 * a, 0, 0)); _rot("leg_lower_r", Vector3(maxf(0.0, -s) * 45.0 * a, 0, 0))
-	_rot("arm_upper_l", Vector3(s * arm, 0, 0)); _rot("arm_upper_r", Vector3(-s * arm, 0, 0))
+	_rot("arm_upper_l", Vector3(s * arm, 0, 0)); _rot("arm_upper_r", Vector3(-s * arm * calm, 0, 0))
 	_rot("arm_lower_l", Vector3(-25.0 * a, 0, 0)); _rot("arm_lower_r", Vector3(-25.0 * a, 0, 0))
 	_rot("torso", Vector3(8.0 * a, s * 4.0 * a, 0)); _rot("head", Vector3(-6.0 * a, -s * 3.0 * a, 0))
 	if air:   # tucked in the air
@@ -40,4 +43,4 @@ func _rot(n: String, add: Vector3) -> void:
 	if not parts.has(n): return
 	var p: Node3D = parts[n]
 	var rest: Vector3 = p.get_meta("rest", Vector3.ZERO)
-	p.rotation_degrees = p.rotation_degrees.lerp(rest + add, 0.5)
+	p.rotation_degrees = p.rotation_degrees.lerp(rest + add + extra.get(n, Vector3.ZERO), 0.5)

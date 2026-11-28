@@ -565,6 +565,9 @@ func _doodads() -> void:
 		if kind in PROP_SKIP: continue
 		if kind in KIT_YARD and int(dd.owner) >= 0: continue
 		var p := Vector2(dd.x, dd.y)
+		if kind == "chopping block":   # the first weapon's block stands in the smithy's yard, outside its door, where beat 3 needs it
+			p = _outside_door(4, 0, 2.6, 1.4)
+		elif _in_building(p, 0.4): _count("inside a building, left to the kit"); continue
 		var yaw := -float(dd.a) + (PI / 2.0 if dd.get("turn", false) else 0.0) + deg_to_rad(float(dd.get("spin", 0)))
 		var y: float = 1.0 if fh._on_pier(p) else H(p)
 		var m: ArrayMesh
@@ -588,6 +591,20 @@ func _doodads() -> void:
 		if kind == "chopping block": mi.name = "ChoppingBlock"
 		placed.append([kind, p, maxf(float(dd.w), float(dd.h)) * 0.5, dd.purpose])
 		_count("props")
+
+## is a plan point inside one of the kit's buildings (its plot's footprint, grown by `grow`)
+func _in_building(p: Vector2, grow := 0.0) -> bool:
+	for k in fh.BUILDINGS.size():
+		var pad: Array = fh.pads[k]
+		var q: Vector2 = (p - pad[0]).rotated(-pad[2]); var e: Vector2 = pad[1]
+		if absf(q.x) < e.x + grow and absf(q.y) < e.y + grow: return true
+	return false
+
+## a point out in front of building b's door d: `out` metres from the door, `side` to its right
+func _outside_door(b: int, d: int, out: float, side: float) -> Vector2:
+	var bd: Dictionary = fh.BUILDINGS[b]; var door := Vector2(bd.doors[d][0], bd.doors[d][1])
+	var n := (door - Vector2(bd.x, bd.y)).normalized()
+	return door + n * out + Vector2(-n.y, n.x) * side
 
 ## flowers in a bed: flora, so low-poly heads on stalks
 func _flowers(w: float, h: float) -> MultiMeshInstance3D:

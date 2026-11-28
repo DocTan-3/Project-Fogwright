@@ -22,6 +22,9 @@ var control_lock := 0.0
 var forced := Vector3.ZERO
 var auto_dir := Vector3.ZERO
 var speed_scale := 1.0
+var face_yaw := 0.0        # the prologue's voxel combat: while face_lock runs, the body turns to face_yaw (the aim)
+var face_lock := 0.0
+var frozen := false        # dialogue, the equipment screen, a scripted moment: no movement input
 var _anim: AnimationPlayer
 var _model: Node3D
 var _air_time := 0.0
@@ -39,7 +42,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		walking = not walking
 
 func _physics_process(delta: float) -> void:
-	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	var input := Vector2.ZERO if frozen else Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var basis := camera_rig.global_transform.basis if camera_rig else global_transform.basis
 	var forward := -basis.z; forward.y = 0.0; forward = forward.normalized()
 	var right := basis.x; right.y = 0.0; right = right.normalized()
@@ -52,7 +55,7 @@ func _physics_process(delta: float) -> void:
 	var speed := RUN_SPEED
 	if walking:
 		speed = WALK_SPEED
-	if Input.is_action_pressed("sprint") and not walking:
+	if Input.is_action_pressed("sprint") and not walking and not frozen:
 		speed = SPRINT_SPEED
 	var target := dir * speed * speed_scale
 	if control_lock > 0.0:
@@ -62,7 +65,7 @@ func _physics_process(delta: float) -> void:
 	velocity.z = lerp(velocity.z, target.z, 1.0 - exp(-ACCEL * delta))
 
 	if is_on_floor():
-		if Input.is_action_just_pressed("jump") and control_lock <= 0.0:
+		if Input.is_action_just_pressed("jump") and control_lock <= 0.0 and not frozen:
 			velocity.y = JUMP_VELOCITY
 			if _tree: (_tree.get("parameters/playback") as AnimationNodeStateMachinePlayback).travel("takeoff")   # at once, not when airborne
 	else:
@@ -75,7 +78,10 @@ func _physics_process(delta: float) -> void:
 	_air_time = 0.0 if is_on_floor() else _air_time + delta
 	_landing = max(0.0, _landing - delta)
 
-	if dir.length() > 0.05:   # face where we go
+	if face_lock > 0.0:
+		face_lock -= delta
+		_model.rotation.y = lerp_angle(_model.rotation.y, face_yaw, 1.0 - exp(-24.0 * delta))
+	elif dir.length() > 0.05:   # face where we go
 		var want := atan2(dir.x, dir.z)
 		_model.rotation.y = lerp_angle(_model.rotation.y, want, 1.0 - exp(-TURN_SPEED * delta))
 	_animate(Vector2(velocity.x, velocity.z).length())
