@@ -12,14 +12,27 @@ prompts for making them. Choices made with the user are marked **(chosen)**; the
 | **Gunpowder** | pistol, pepperbox | rifle, musket, blunderbuss, hand cannon | powder horn, cartridge box (belt) | pistols in a hip or thigh holster; long guns slung from the shoulder |
 | **Caster foci** | wand, rod, relic focus | staff | tome, lantern focus | staff kept in hand or across the back; wands and rods at the hip |
 
-**Tools that fight** *(proposal)*: early weapons are tools first (woodsman's hatchet, fisher's spear, smith's hammer,
-boat hook, pitchfork, cleaver). They count as their family (the hatchet is an axe, the fisher's spear a spear) and are
-how the prologue arms the player (lore.md, beat 3).
+**Steampunk types (chosen):** three more kinds join the families:
+
+| Type | Examples | Notes |
+| --- | --- | --- |
+| **Fist weapons** (melee) | knuckles, claws, steam fists | main and off hand; the colossus gauntlets and colossus arms are the heaviest (see below) |
+| **Harpoon and grapple guns** (gunpowder) | harpoon gun, grapple launcher | pull an enemy to you or yourself to a ledge; tied to ships and getting about |
+| **Mechanical melee** (melee) | chain blade, steam hammer, spring spear | melee with an engine; epic and up only, since the mechanism is the epic step |
+
+**Cybernetics and weapons (chosen):** a normal-sized cybernetic arm works as an arm and holds any weapon. Huge ones,
+the colossus gauntlets and colossus arms, are the weapon: they fill the main and off hand, can't hold anything, and
+fight as fist weapons with moves by their rarity like any weapon. Back arms take the back slot and block nothing.
+
+**Tools that fight (chosen, and they stay useful):** early weapons are tools first (woodsman's hatchet, fisher's spear,
+smith's hammer, boat hook, pitchfork, cleaver). They count as their family (the hatchet is an axe, the fisher's spear a
+spear), are how the prologue arms the player (lore.md, beat 3), and keep their work use all game: the hatchet still
+chops wood, so a gatherer can fight with the tool in their hand.
 
 ## What a weapon can do: rarity decides (chosen)
 
 Common weapons only have a normal attack. What else a weapon can do comes from its rarity, so the rarest weapons are
-truly unique. *(proposal for the steps between:)*
+truly unique. The steps between **(chosen)**:
 
 | Rarity | Capabilities | Look (design.md) |
 | --- | --- | --- |
@@ -37,7 +50,7 @@ builds momentum, bows reward the draw, caster foci spend Fog shards. See design.
 ## Guns (chosen: rare, more common higher up, several types, crude early ones)
 
 Guns are rare in the start regions and grow more common at higher levels and farther from Aldrath's heartland toward the
-Ferrin's Slag Isles. Early guns are crude and badly made. *(proposal for the tiers:)*
+Ferrin's Slag Isles. Early guns are crude and badly made. The tiers **(chosen)**:
 
 | Tier | Where and when | Examples | How it handles |
 | --- | --- | --- | --- |
@@ -47,9 +60,10 @@ Ferrin's Slag Isles. Early guns are crude and badly made. *(proposal for the tie
 | **Ferrin rifles** | high levels, the Slag Isles | rifled long gun, pepperbox, breech-loading pistol | accurate and long-ranged, faster to reload |
 | **Steam and arcane guns** | endgame (steam and arcane eras) | pressure rifle, rotary hand cannon | late inventions; very rare |
 
-## Sets: weapons made to match (proposal)
+## Sets: weapons made to match (chosen: looks only)
 
-Weapons are designed and made as **sets**: one look carried across every type in that set, so a sword, a bow and a
+Weapons are designed and made as **sets**, design families that affect looks only (stats come from rarity and item
+power, never from the set, so no look is forced by numbers): one look carried across every type in that set, so a sword, a bow and a
 pistol from one set clearly belong together. The first sets:
 
 1. **Farhallow tools** (prologue): hatchet, fisher's spear, smith's hammer, the old blade above the smithy door, boat
@@ -67,11 +81,16 @@ pistol from one set clearly belong together. The first sets:
 
 Every set covers the same type list, so a player who likes a look can keep it whatever they fight with.
 
-## Making them
+## Making them (voxels)
 
-- **Budget:** one-handers 300-800 triangles, two-handers and guns 600-1,500, staffs 500-1,200; one 512 px texture per
-  set (atlas), from the palette (scripts/palette.gd); real-world size (a one-handed sword about 0.9 m, a longbow 1.8 m).
-- **Pivot and grip:** the pivot at the main grip, blade or barrel along +Y (Godot), a second grip marker for
-  two-handers; sockets for the belt, back and holster mounts.
-- **Prompts:** `art/weapon-prompts.md` has the 2D (concept) and 3D (model) prompts, starting with the Farhallow tools
-  and the Wayfolk common iron set.
+- **Chunky and oversized (chosen):** weapons are about 1.3 times real size next to the stylized bodies, with thick
+  blades and hafts, as in the style references, so they read from the high camera.
+- **Recipes, like the armour:** each weapon is generated (`tools/voxel/make_equipment.py`) at the head's finer voxels
+  (1.25 cm), fitted to each body: a version **in hand** riding the right hand (the grip in the fist, the head up) and a
+  version **carried** where the weapon belongs (design.md, *Weapons on the body*): hatchets, hammers, blades and
+  cleavers at the hip, spears, boat hooks and pitchforks across the back.
+- **A set is a palette and a few shape rules** (pommel, guard, wraps, trims) over each type's base shape, so a new set
+  is cheap and every set covers the same type list.
+- **Budget:** a weapon about 200-900 triangles after merging same-coloured faces.
+- The first set built is the **Farhallow tools** (the prologue). `art/weapon-prompts.md` keeps the 2D and 3D prompts
+  for reference art.
