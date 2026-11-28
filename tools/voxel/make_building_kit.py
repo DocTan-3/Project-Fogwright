@@ -392,6 +392,44 @@ for (x0, y0, w, d, h) in ((0, 0, 7, 6, 4), (6, 2, 5, 5, 3), (2, 5, 4, 4, 2)):
             for z in range(h):
                 if (x - w / 2 + 0.5) ** 2 / (w / 2) ** 2 + (y - d / 2 + 0.5) ** 2 / (d / 2) ** 2 + (z / h) ** 2 <= 1.05:
                     fput('rocks', x0 + x, y0 + y, z, 'fst_g' if z == h - 1 and _h(x, y, 3) > 0.6 else ('fst_d' if _h(x0 + x, y, z) < 0.4 else 'fst'))
+# ---------------------------------------------------------------- the hall (5 cm)
+FPAL.update(horn=(214, 200, 168), horn_d=(176, 160, 128), candle=(226, 216, 190), sh_blue=(92, 112, 128), sh_red=(136, 82, 66),
+            sh_ochre=(170, 140, 84), sh_wood=(132, 104, 76))
+# round shields off wrecks, hung as trophies: planks, a painted face in halves or quarters, an iron rim and boss
+def shield(name, paint_a, paint_b, quarters):
+    for x in range(16):
+        for z in range(16):
+            d = (x - 7.5) ** 2 + (z - 7.5) ** 2
+            if d > 64: continue
+            if d > 49: c = 'iron'
+            elif d < 4: c = 'iron'
+            else:
+                a = (x >= 8) != (z >= 8) if quarters else x >= 8
+                c = paint_a if a else paint_b
+                if _h(x // 3, z, 5) > 0.85: c = 'sh_wood'
+            fput(name, x, 0, z, c); fput(name, x, 1, z, 'sh_wood' if d <= 49 else 'iron')
+    fput(name, 7, 0, 7, 'hoop'); fput(name, 8, 0, 8, 'hoop')
+shield('shield', 'sh_blue', 'sh_wood', False); shield('shield_b', 'sh_red', 'sh_ochre', True)
+# a horn sconce for a post: an iron strap round the post, a cow horn bent up, a candle in its mouth
+fbox('sconce', 1, 6, 3, 3, 0, 1, 'iron')
+for k in range(7):
+    fput('sconce', 3, 2 - k // 3, 2 + k, 'horn' if k < 5 else 'horn_d'); fput('sconce', 4, 2 - k // 3, 2 + k, 'horn')
+fbox('sconce', 3, 4, 0, 0, 9, 11, 'candle'); fput('sconce', 3, 0, 12, 'flame'); fput('sconce', 4, 0, 12, 'flame')
+# a ring chandelier: a cartwheel off a wreck's cart hung on chains, candles round it
+for x in range(20):
+    for y in range(20):
+        d = ((x - 9.5) ** 2 + (y - 9.5) ** 2) ** 0.5
+        if 8 <= d <= 10: fput('chandelier', x, y, 0, 'oak'); fput('chandelier', x, y, 1, 'oak_d')
+        if d < 1.5: fput('chandelier', x, y, 0, 'oak_d')
+        if abs(x - 9.5) < 1 and d < 9 or abs(y - 9.5) < 1 and d < 9: fput('chandelier', x, y, 0, 'oak_d')
+import math
+for k in range(8):
+    a = k * math.pi / 4; cx = int(round(9.5 + 9 * math.cos(a))); cy = int(round(9.5 + 9 * math.sin(a)))
+    fbox('chandelier', cx, cx, cy, cy, 2, 4, 'candle'); fput('chandelier', cx, cy, 5, 'flame')
+for z in range(2, 44):
+    for (cx, cy) in ((2, 9), (17, 10), (9, 2), (10, 17)):
+        t = (z - 2) / 42.0
+        fput('chandelier', int(round(cx + (9.5 - cx) * t)), int(round(cy + (9.5 - cy) * t)), z, 'iron' if z % 2 else 'hoop')
 mb.COL = FPAL; mb.NAMES = list(FPAL)
 mb.write(os.path.join(out, 'kit_fittings.vox'), {n: F[n] for n in sorted(F)})
 for name in sorted(F):

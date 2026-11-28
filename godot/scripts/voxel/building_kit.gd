@@ -33,6 +33,7 @@ static var _meshes := {}
 static var _dormers := []
 static var _openings := []   # [set, o, d, x0, x1, z0, z1, kind] of the outer doors and windows, for KitDress
 static var _seed := 0
+static var _attached := ""   # the gable side a wing leans on its house with
 static var _porch_bays := Vector2i(-1, -2)   # the front bays under a porch (their doors get no hood)
 static var _leaf := ""      # the layout's door leaf, if it names one   # [bay origin, direction, face] of the dormers this build, set into the roof once it is laid
 static var _fittings := {}  # the 5 cm fittings (kit_fittings.vox): name -> {Vector3i: Color}
@@ -118,7 +119,7 @@ static func _g(p: Vector3) -> Vector3: return Vector3(p.x, p.z, -p.y) * V
 static func build(layout: Dictionary) -> Node3D:
 	var t0 := Time.get_ticks_msec()
 	pieces()
-	_dormers = []; _openings = []; _seed = layout.get("seed", 0)
+	_dormers = []; _openings = []; _seed = layout.get("seed", 0); _attached = layout.get("attached", "")
 	_porch_bays = Vector2i(layout.porch.from, layout.porch.to) if layout.has("porch") else Vector2i(-1, -2)
 	var root := Node3D.new(); root.name = "Building"
 	var body := StaticBody3D.new(); body.name = "Body"; root.add_child(body)
@@ -144,16 +145,19 @@ static func build(layout: Dictionary) -> Node3D:
 			for k in flags: var q: Vector3i = k; g0[Vector3i(i * BAY + q.x, j * BAY + q.y, PLINTH - 1)] = flags[k]
 	boxes.append([Vector3(0, 0, 0), Vector3(W, D, PLINTH)])
 	var tris := 0; var parts := {}
+	var floor_zs := []   # the top of each storey's floor, for the wainscot
 	fittings()
 	for s in storeys.size():
 		var st: Dictionary = storeys[s]; var h: int = st.h; var vs: Dictionary = sets[s]
 		var face: String = st.get("face", "frame")
+		floor_zs.append(z)
 		# the floor of this storey, if it is an upper one: boards over the room below, its joists that room's ceiling,
 		# with a well cut where the stair below comes up
 		if s > 0:
 			var below: Dictionary = storeys[s - 1]
 			var wells := []
 			for sr in below.get("stairs", []): wells.append(_stair_well(sr, below.h))
+			for vd in st.get("voids", []): wells.append([vd.position, vd.size])   # a hall open to the roof
 			_floor(vs, W, D, z - 3, wells, boxes, layout.get("floor", "boards"))
 		# walls: the inner partitions first, so the outer walls win where they meet
 		for iw in st.get("inner", []):
@@ -172,6 +176,8 @@ static func build(layout: Dictionary) -> Node3D:
 		for sr in st.get("stairs", []): _stair(vs, ramps, sr, z, h)
 		for pc in st.get("pieces", []):   # kit pieces inside (a hearth): at is the piece's corner in voxels, z from the floor
 			var at3: Vector3i = pc.at; _stamp(vs, pc.p, Vector3i(at3.x, at3.y, z + at3.z), _run_dir(pc.get("dir", "+x")))
+		for pp in st.get("posts", []): _carved_post(vs, boxes, pp.at, z, pp.h)
+		if st.has("firepit"): _firepit(vs, boxes, st.firepit.at, st.firepit.get("r", 9), z)
 		var fs := {}
 		for ft in st.get("fittings", []): _fitting(fs, boxes, ft, z)
 		if not fs.is_empty():
@@ -189,7 +195,10 @@ static func build(layout: Dictionary) -> Node3D:
 	else:   # partitions up there stop under the thatch, under a collar ceiling 3.0 m over the floor
 		var top: Dictionary = sets[storeys.size() - 1]
 		var cz := z - 12 + 27
-		_floor(top, W, D, cz, [], boxes, layout.get("floor", "boards"), cz - z + 3)
+		var opens := []
+		for vd in storeys[-1].get("voids", []): opens.append([vd.position, vd.size])
+		_floor(top, W, D, cz, opens, boxes, layout.get("floor", "boards"), cz - z + 3)
+		for vd in storeys[-1].get("voids", []): _trusses(top, vd, z, D)
 		for k in top.keys():
 			var q: Vector3i = k
 			if q.y >= 0 and q.y < D and q.z >= z + mini(q.y, D - 1 - q.y): top.erase(k)
@@ -198,7 +207,7 @@ static func build(layout: Dictionary) -> Node3D:
 	for dm in _dormers: _dormer(rf, dm[0], dm[1], dm[2])
 	for gy in layout.get("gable_windows", []): _gable_window(rf, W, D, z, int(gy * 10.0), top_face)
 	var dressed: bool = layout.get("dress", true)
-	if dressed: KitDress.dress(sets + [rf], W, D, _openings, PLINTH, KitDress.PAINTS.get(paint, KitDress.PAINTS.tar), _seed)
+	if dressed: KitDress.dress(sets + [rf], W, D, _openings, PLINTH, KitDress.PAINTS.get(paint, KitDress.PAINTS.tar), _seed, floor_zs)
 	if layout.get("rounded", false) and not dressed:   # corners rounded off, as drystone builders on a windy coast lay them
 		for vset in sets + [rf]:
 			for k in (vset as Dictionary).keys():
@@ -220,6 +229,12 @@ static func build(layout: Dictionary) -> Node3D:
 		body.add_child(cs)
 	for r in ramps: body.add_child(_ramp(_g(r[0]), _g(r[1]), r[2] * V))
 	for d in doors.get_children(): tris += (d as KitDoor).leaf_mesh.get_faces().size() / 3
+	for wg in layout.get("wings", []):   # lower wings against a gable: their own buildings, set beside this one
+		var saved := [_dormers, _openings, _seed, _porch_bays, _leaf]
+		var wb := build(wg.layout); var at: Vector2 = wg.at
+		wb.name = "Wing"; wb.position = Vector3(at.x, 0, -at.y); root.add_child(wb)
+		tris += wb.get_meta("triangles")
+		_dormers = saved[0]; _openings = saved[1]; _seed = saved[2]; _porch_bays = saved[3]; _leaf = saved[4]
 	root.set_meta("triangles", tris); root.set_meta("parts", parts); root.set_meta("height", z * V)
 	root.set_meta("build_ms", Time.get_ticks_msec() - t0)
 	return root
@@ -230,6 +245,13 @@ static func _wall_run(vs: Dictionary, boxes: Array, doors: Node3D, o: Vector3i, 
 		var c := bays[b]
 		var bo := o + Vector3i(d.x, d.y, 0) * (b * BAY)
 		if c == ".": continue
+		if c == "r":   # a gallery rail over a hall: a handrail at 1.0 m on turned posts every 0.5 m
+			for lx in BAY:
+				for lz in range(0, 11):
+					var post := lx % 5 == 0
+					if lz >= 9 or (post and lz < 9) or lz == 0: vs[_cell(bo, d, lx, 1, lz)] = Color8(86, 72, 60) if lz != 10 else Color8(104, 88, 72)
+			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(BAY, WALL, 11)))
+			continue
 		if h == 12:   # a knee wall under the roof: plain, or a dormer over it (D)
 			_stamp(vs, "wall_%s_12" % face, bo, d)
 			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(BAY, WALL, 12)))
@@ -267,14 +289,42 @@ static func _floor(vs: Dictionary, W: int, D: int, z: int, wells: Array, boxes: 
 			for lz in 3:
 				var k := Vector3i(x % BAY, y % BAY, lz)
 				if fb.has(k): vs[Vector3i(x, y, z + lz)] = fb[k]
-	var lo := Vector2i(WALL, ym); var hi := Vector2i(W - WALL, D - ym)
-	if wells.is_empty():
-		boxes.append([Vector3(lo.x, lo.y, z), Vector3(hi.x, hi.y, z + 3)]); return
-	var w0: Vector2i = wells[0][0]; var w1: Vector2i = wells[0][0] + wells[0][1]   # one well per floor for now
-	boxes.append([Vector3(lo.x, lo.y, z), Vector3(hi.x, w0.y, z + 3)])
-	boxes.append([Vector3(lo.x, w1.y, z), Vector3(hi.x, hi.y, z + 3)])
-	boxes.append([Vector3(lo.x, w0.y, z), Vector3(w0.x, w1.y, z + 3)])
-	boxes.append([Vector3(w1.x, w0.y, z), Vector3(hi.x, w1.y, z + 3)])
+	# collision: the floor in rows of 10 cm, runs of floor merged along x, equal runs merged down the rows
+	var open_rows := {}
+	var prev := ""; var y0 := ym
+	for y in range(ym, D - ym + 1):
+		var runs := []
+		if y < D - ym:
+			var x := WALL
+			while x < W - WALL:
+				var hole := false
+				for w in wells:
+					if Rect2i(w[0], w[1]).has_point(Vector2i(x, y)): hole = true
+				if hole: x += 1; continue
+				var x1 := x
+				while x1 < W - WALL:
+					var h2 := false
+					for w in wells:
+						if Rect2i(w[0], w[1]).has_point(Vector2i(x1, y)): h2 = true
+					if h2: break
+					x1 += 1
+				runs.append(Vector2i(x, x1)); x = x1
+		var key := str(runs)
+		if key != prev:
+			if prev != "":
+				for r in open_rows[prev]: boxes.append([Vector3(r.x, y0, z), Vector3(r.y, y, z + 3)])
+			prev = key; y0 = y; open_rows[key] = runs
+
+## the roof trusses over a hall open to the roof: a tie beam at the collar's height and two raking struts every 2 m
+static func _trusses(vs: Dictionary, vd: Rect2i, z: int, D: int) -> void:
+	var cz := z - 12 + 27
+	for x in range(vd.position.x + 17, vd.end.x, 20):
+		for xx in [x, x + 1]:
+			for y in range(WALL, D - WALL):
+				if z + mini(y, D - 1 - y) > cz + 1: vs[Vector3i(xx, y, cz)] = Color8(72, 62, 54); vs[Vector3i(xx, y, cz + 1)] = Color8(86, 72, 60)
+			for k in range(0, 12):   # struts from the tie beam up toward the ridge
+				vs[Vector3i(xx, D / 2 - 6 + k / 2, cz + 2 + k)] = Color8(72, 62, 54); vs[Vector3i(xx, D / 2 + 5 - k / 2, cz + 2 + k)] = Color8(72, 62, 54)
+			for zz in range(cz + 2, cz + 14): vs[Vector3i(xx, D / 2, zz)] = Color8(86, 72, 60)   # the king post
 
 # ---------------------------------------------------------------- stairs and steps
 static func _run_dir(r: String) -> Vector2i:
@@ -361,7 +411,7 @@ static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: Str
 			if q.x != sx: continue
 			vs[Vector3i(q.y, D - 1 - y, z + q.z)] = gb[k]            # left gable, its outer face on x = 0
 			vs[Vector3i(W - 1 - q.y, D - 1 - y, z + q.z)] = gb[k]    # right gable
-	_roof_dress(vs, W, D, z, mat)
+	_roof_dress(vs, W, D, z, mat, _attached)
 	# collision: each slope a sheet along its top, from the eave to the ridge
 	var top := float(D) / 2.0
 	ramps.append([Vector3(W * 0.5, -OVERHANG, z), Vector3(W * 0.5, top, z + top + OVERHANG), L])
@@ -405,7 +455,7 @@ static func _door(bo: Vector3i, d: Vector2i, swing := 1, leaf := "door_leaf") ->
 ## dark rope bands across each slope, rolled verges that sweep up at the gable ends, a heavy ridge bound with sways,
 ## rafter ends under the eave and ship-rib bargeboards that run up the gables and cross over the ridge; slate gets
 ## its courses, one lip each, and quieter tones
-static func _roof_dress(vs: Dictionary, W: int, D: int, z: int, mat: String) -> void:
+static func _roof_dress(vs: Dictionary, W: int, D: int, z: int, mat: String, attached := "") -> void:
 	var run := D / 2 + OVERHANG; var L := W + 2 * OVERHANG
 	var soft := mat in ["heather", "thatch", "turf"]
 	var band := Color8(78, 66, 56) if mat != "turf" else Color8(84, 90, 58)
@@ -452,6 +502,7 @@ static func _roof_dress(vs: Dictionary, W: int, D: int, z: int, mat: String) -> 
 				for zz in range(zr + 1, zr + 4 - dy / 4): vs[Vector3i(x, y, zz)] = col
 	# bargeboards of salvaged ship ribs along both gables, from the eave up past the ridge, where they cross like horns
 	for gx in [-OVERHANG - 1, W + OVERHANG]:
+		if (attached == "left" and gx < 0) or (attached == "right" and gx > 0): continue
 		for side in 2:
 			for r in range(0, run + 7):
 				var y := r - OVERHANG if side == 0 else D - 1 + OVERHANG - r
@@ -496,7 +547,12 @@ static func _porch(vs: Dictionary, ramps: Array, boxes: Array, layout: Dictionar
 		elif not on_step.call(x):
 			for zz in [PLINTH + 8, PLINTH + 9, PLINTH + 4]: vs[Vector3i(x, -dep, zz)] = Color8(96, 82, 68) if zz != PLINTH + 9 else Color8(110, 96, 80)
 	boxes.append([Vector3(x0, -dep, 0), Vector3(x1, 0, PLINTH)])
-	boxes.append([Vector3(x0, -dep, PLINTH), Vector3(x1, -dep + 1, PLINTH + 10)])   # the rail, as a fence (steps are left open by the ramps above it)
+	var rx := x0   # the rail, as a fence, in runs between the steps
+	while rx < x1:
+		var ex := rx
+		while ex < x1 and not on_step.call(ex): ex += 1
+		if ex > rx: boxes.append([Vector3(rx, -dep, PLINTH), Vector3(ex, -dep + 1, PLINTH + 10)])
+		rx = ex + 1
 	# the steps: two treads of boards on stone, down to the ground
 	for st in steps:
 		for x in range(st[0], st[1] + 1):
@@ -520,3 +576,40 @@ static func _porch(vs: Dictionary, ramps: Array, boxes: Array, layout: Dictionar
 				vs[Vector3i(x, y, zr + t)] = c
 			if false: vs[Vector3i(x, y, zr + 2)] = Color8(150, 138, 114) if mat != "turf" else Color8(118, 125, 82)
 			if k == dep + 3 and mat != "slate" and KitDress._h(x, 3, _seed) > 0.5: vs[Vector3i(x, y, zr - 1)] = Color8(126, 114, 94)
+
+# ---------------------------------------------------------------- hall pieces
+## a carved post, 0.4 m square, from the floor up h voxels: a ship's mast cut down, tarred, with carved rings and a
+## knot band every 0.6 m and a bracket head that spreads under the beam it holds
+static func _carved_post(vs: Dictionary, boxes: Array, at: Vector2i, z: int, h: int) -> void:
+	for zz in h:
+		var ring := zz % 6 == 0; var band := zz % 12 == 6
+		for x in range(-2, 2):
+			for y in range(-2, 2):
+				var corner := (x == -2 or x == 1) and (y == -2 or y == 1)
+				if corner and not ring and zz < h - 3: continue   # rounded off between the rings
+				var c := Color8(92, 78, 66)
+				if ring: c = Color8(70, 60, 52)
+				elif band and (x + y + zz) % 2 == 0: c = Color8(118, 100, 80)
+				elif KitDress._h(x, y, zz / 3) > 0.8: c = Color8(80, 68, 58)
+				vs[Vector3i(at.x + x, at.y + y, z + zz)] = c
+	for k in 3:   # the bracket head
+		for x in range(-3 - k, 3 + k):
+			for y in range(-2, 2): vs[Vector3i(at.x + x, at.y + y, z + h - 3 + k)] = Color8(72, 62, 54)
+	boxes.append([Vector3(at.x - 2, at.y - 2, z), Vector3(at.x + 2, at.y + 2, z + h)])
+
+## a round fire pit in the middle of a hall: a ring of dressed stones 0.4 m high round a bed of embers and burning logs
+static func _firepit(vs: Dictionary, boxes: Array, at: Vector2i, r: int, z: int) -> void:
+	for x in range(-r - 1, r + 2):
+		for y in range(-r - 1, r + 2):
+			var d := sqrt(float(x * x + y * y))
+			if d > r + 0.5: continue
+			var p := Vector2i(at.x + x, at.y + y)
+			if d > r - 2.0:
+				for zz in 4: vs[Vector3i(p.x, p.y, z + zz)] = KitDress._tone(KitDress._h(int(atan2(y, x) * 3.0), zz / 2, 5), false) if zz < 3 else KitDress.DRESSED
+			else:
+				var e := KitDress._h(x, y, 9)
+				vs[Vector3i(p.x, p.y, z)] = Color8(40, 34, 30)
+				vs[Vector3i(p.x, p.y, z + 1)] = Color8(255, 140, 60) if e > 0.6 else (Color8(200, 80, 40) if e > 0.3 else Color8(56, 46, 40))
+	for k in range(-r + 3, r - 2):   # two logs crossed over the embers
+		vs[Vector3i(at.x + k, at.y, z + 2)] = Color8(88, 70, 54); vs[Vector3i(at.x, at.y + k, z + 3)] = Color8(76, 60, 48)
+	boxes.append([Vector3(at.x - r, at.y - r, z), Vector3(at.x + r, at.y + r, z + 4)])

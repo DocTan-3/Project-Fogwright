@@ -44,6 +44,8 @@ const GULL_LANTERN := {
 			{"at": Vector2i(0, 4), "dir": "x", "bays": "pdppp", "face": "board"},    # taproom | stair hall
 			{"at": Vector2i(5, 3), "dir": "x", "bays": "pdp", "face": "board"}],     # hall | kitchen
 		 "stairs": [{"at": Vector2i(27, 103), "run": "+x"}],
+		 "posts": [{"at": Vector2i(20, 38), "h": 41}, {"at": Vector2i(60, 38), "h": 41}],   # carved masts under the gallery's edge
+		 "firepit": {"at": Vector2i(40, 22), "r": 8},
 		 "pieces": [{"p": "hearth", "at": Vector3i(3, 50, 0), "dir": "-y"},         # the taproom's, on the gable wall
 			{"p": "hearth", "at": Vector3i(150, 117, 0), "dir": "-x"},               # the kitchen range
 			{"p": "waystone", "at": Vector3i(8, -9, -5)}],                           # Hollin's, by the porch
@@ -51,11 +53,11 @@ const GULL_LANTERN := {
 			{"p": "bar_keel", "at": Vector2(8.0, 7.0), "dir": "-y"}, {"p": "bar_keel", "at": Vector2(8.0, 5.0), "dir": "-y"},
 			{"p": "shelf", "at": Vector2(9.85, 4.2), "dir": "+y"},
 			{"p": "barrel", "at": Vector2(9.15, 6.0)}, {"p": "barrel", "at": Vector2(9.15, 6.8)},
-			{"p": "table", "at": Vector2(1.2, 1.2)}, {"p": "bench", "at": Vector2(1.2, 0.8)}, {"p": "bench", "at": Vector2(1.2, 2.1)},
-			{"p": "table", "at": Vector2(6.2, 1.2)}, {"p": "bench", "at": Vector2(6.2, 0.8)}, {"p": "bench", "at": Vector2(6.2, 2.1)},
+			{"p": "table", "at": Vector2(0.9, 0.7)}, {"p": "bench", "at": Vector2(0.9, 0.3)}, {"p": "bench", "at": Vector2(0.9, 1.6)},
+			{"p": "table", "at": Vector2(6.6, 0.7)}, {"p": "bench", "at": Vector2(6.6, 0.3)}, {"p": "bench", "at": Vector2(6.6, 1.6)},
 			{"p": "table", "at": Vector2(2.2, 4.2)}, {"p": "bench", "at": Vector2(2.2, 3.8)}, {"p": "bench", "at": Vector2(2.2, 5.1)},
 			{"p": "table", "at": Vector2(5.4, 4.6)}, {"p": "bench", "at": Vector2(5.4, 4.2)}, {"p": "bench", "at": Vector2(5.4, 5.5)},
-			{"p": "lantern", "at": Vector2(4.8, 3.4), "z": 3.0},
+			{"p": "sconce", "at": Vector2(1.9, 3.4), "z": 2.2}, {"p": "sconce", "at": Vector2(5.9, 3.4), "z": 2.2},
 			{"p": "desk", "at": Vector2(12.0, 3.0)}, {"p": "shelf", "at": Vector2(15.6, 5.9), "dir": "-x"},
 			{"p": "chest", "at": Vector2(14.6, 0.5)},
 			{"p": "table", "at": Vector2(11.0, 9.6)},
@@ -70,20 +72,24 @@ const GULL_LANTERN := {
 			{"p": "ivy", "at": Vector2(-0.1, 3.0), "dir": "-y", "z": 0.0}, {"p": "ivy", "at": Vector2(16.1, 6.0), "dir": "+y", "z": 0.0},
 			{"p": "rocks", "at": Vector2(-0.9, 10.0), "dir": "+y", "z": -0.5}, {"p": "rocks", "at": Vector2(16.6, 1.0), "dir": "+y", "z": -0.5}],
 		 "lights": [{"at": Vector3(1.6, 1.0, -4.0), "energy": 2.7, "range": 6.0, "color": Color(1.0, 0.62, 0.32)},   # the hearth
-			{"at": Vector3(4.9, 3.3, -3.5), "energy": 2.2, "range": 8.0},                                       # the lantern
+			{"at": Vector3(4.0, 1.2, -2.2), "energy": 3.6, "range": 9.0, "color": Color(1.0, 0.6, 0.3)},       # the fire pit
+			{"at": Vector3(4.0, 3.6, -2.2), "energy": 2.6, "range": 9.0},                                       # the chandelier
+			{"at": Vector3(4.0, 7.5, -2.0), "energy": 1.6, "range": 8.0, "color": Color(0.95, 0.85, 0.7)},       # light high in the roof, from the dormers
 			{"at": Vector3(13.0, 3.4, -9.0), "energy": 1.9, "range": 6.0},                                      # the kitchen
 			{"at": Vector3(6.15, 2.4, 0.3), "energy": 2.4, "range": 6.0, "color": Color(1.0, 0.72, 0.42)}]},    # the Vigil lantern
 		{"h": 12, "face": "dry",
+		 "voids": [Rect2i(3, 3, 76, 36)],   # the taproom open to the roof, the gallery along its back
 		 "walls": {"front": "pDpDpDpD", "right": "pppppp", "back": "pDppppDp", "left": "pppppp"},
 		 "inner": [
-			{"at": Vector2i(0, 2), "dir": "x", "bays": "pdpdpdpd", "swing": -1, "face": "board", "h": 30},   # front rooms | corridor
+			{"at": Vector2i(0, 2), "dir": "x", "bays": "rrrrpdpd", "swing": -1, "face": "board", "h": 30},   # gallery rail | front rooms | corridor
 			{"at": Vector2i(0, 3), "dir": "x", "bays": "pd...dpp", "face": "board", "h": 30},   # corridor | back room, landing, keeper
-			{"at": Vector2i(2, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30}, {"at": Vector2i(4, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},
+			{"at": Vector2i(4, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},
 			{"at": Vector2i(6, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},
 			{"at": Vector2i(2, 3), "dir": "y", "bays": "ppp", "face": "board", "h": 30}, {"at": Vector2i(5, 3), "dir": "y", "bays": "ppp", "face": "board", "h": 30}],
 		 "fittings": [
-			{"p": "bed", "at": Vector2(0.4, 0.4)}, {"p": "chest", "at": Vector2(1.6, 0.4)},
-			{"p": "bed", "at": Vector2(4.4, 0.4)}, {"p": "chest", "at": Vector2(5.6, 0.4)},
+			{"p": "shield", "at": Vector2(0.42, 0.5), "dir": "+y", "z": 0.9}, {"p": "shield", "at": Vector2(0.42, 1.5), "dir": "+y", "z": 1.3},
+			{"p": "shield", "at": Vector2(0.42, 2.6), "dir": "+y", "z": 0.9}, {"p": "shield_b", "at": Vector2(0.42, 3.0), "dir": "+y", "z": 1.9},
+			{"p": "chandelier", "at": Vector2(3.5, 1.7), "z": -1.4},
 			{"p": "bed", "at": Vector2(8.4, 0.4)}, {"p": "chest", "at": Vector2(9.6, 0.4)},
 			{"p": "bed", "at": Vector2(12.4, 0.4)}, {"p": "chest", "at": Vector2(13.6, 0.4)},
 			{"p": "bed", "at": Vector2(0.4, 9.6)}, {"p": "bed", "at": Vector2(2.4, 9.6)},
@@ -105,9 +111,9 @@ const GULL_LANTERN := {
 ## w, h: the plot in metres (w along the door face); doors: the plot's doors in its own frame (x across, z from the
 ## centre, the door face at z = -h/2 being the front); key: a number to vary houses of one type by.
 const STYLES := {
-	"cottage": {"porch": true, "face": "dry", "roof": ["heather", "turf"], "hearth": true, "fit": "home", "upper": true},
+	"cottage": {"porch": true, "wing": true, "face": "dry", "roof": ["heather", "turf"], "hearth": true, "fit": "home", "upper": true},
 	"street_house": {"porch": true, "face": "dry", "roof": ["heather"], "hearth": true, "fit": "home", "upper": true},
-	"farmstead": {"porch": true, "face": "dry", "roof": ["heather"], "hearth": true, "fit": "farm", "upper": true},
+	"farmstead": {"porch": true, "wing": true, "face": "dry", "roof": ["heather"], "hearth": true, "fit": "farm", "upper": true},
 	"merchant_house": {"face": "dry", "roof": ["slate"], "hearth": true, "fit": "hall", "upper": true},
 	"merchant_house_small": {"face": "dry", "roof": ["slate"], "hearth": true, "fit": "hall", "upper": true},
 	"workshop": {"face": "dry", "h": 44, "roof": ["slate"], "hearth": true, "fit": "forge"},
@@ -175,13 +181,25 @@ static func for_plot(type: String, w: float, h: float, doors: Array, key: int) -
 		g.lights.append({"at": Vector3(W / 10.0 - 1.3, 0.9, -yc / 10.0), "energy": 1.6, "range": 5.0, "color": Color(1.0, 0.62, 0.32)})
 	_fit(g, st.fit, W / 10.0, D / 10.0, hearth_side, sides)
 	if st.get("porch", false) and not sides.front.is_empty(): layout.porch = {"from": 0, "to": nx - 1, "depth": 16}
-	_yard(g, type, W / 10.0, D / 10.0, sides, hearth_side, key, layout.has("porch"))
+	var other := "right" if hearth_side == "left" else "left"
+	var wing := ""
+	if st.get("wing", false) and sides[other].is_empty() and ny >= 3: wing = other
+	_yard(g, type, W / 10.0, D / 10.0, sides, hearth_side, key, layout.has("porch"), wing)
+	if wing != "":   # a lower wing on that gable: the byre or the store, set back a module, its own door at the front
+		var wd := ny - 1
+		var wl := {"size": Vector2i(2, wd), "roof": "turf" if roof == "heather" else "heather", "floor": "salvage", "ground": "slabs",
+			"door_leaf": "door_leaf_dry", "paint": layout.paint, "seed": key + 101, "attached": "right" if wing == "left" else "left",
+			"storeys": [{"h": 30, "face": "dry", "walls": {"front": "dp" if wing == "left" else "pd", "right": "." .repeat(wd) if wing == "left" else "p".repeat(wd),
+				"back": "pp", "left": "." .repeat(wd) if wing == "right" else "p".repeat(wd)}, "pieces": [], "lights": [],
+				"fittings": [{"p": "barrel", "at": Vector2(0.5, wd * 2.0 - 1.0)}, {"p": "barrel", "at": Vector2(1.2, wd * 2.0 - 1.0)},
+					{"p": "crate", "at": Vector2(2.6, wd * 2.0 - 0.9)}, {"p": "woodpile", "at": Vector2(0.4, wd * 2.0 - 0.1), "dir": "-x"}]}]}
+		layout.wings = [{"layout": wl, "at": Vector2(-4.0 if wing == "left" else W / 10.0, 2.0)}]
 	return layout
 
 ## what stands round a house outside (5 cm fittings, on the ground: z -0.5 under the floor): a woodpile by the hearth's
 ## wall, creels and a net rack and a little wattle-fenced garden on the other side, ivy, stones by the footing, a barrel
 ## by the door, and a sign on a post for the houses that sell. Sides with doors are left clear.
-static func _yard(g: Dictionary, type: String, Wm: float, Dm: float, sides: Dictionary, hearth: String, key: int, porch: bool) -> void:
+static func _yard(g: Dictionary, type: String, Wm: float, Dm: float, sides: Dictionary, hearth: String, key: int, porch: bool, wing := "") -> void:
 	var f: Array = g.fittings
 	if type in ["boat_shed", "hen_house", "guard_post", "granary"]: return
 	# a side's item: along is the distance from the front of its far end, out the distance of its outer face from the wall
@@ -192,7 +210,7 @@ static func _yard(g: Dictionary, type: String, Wm: float, Dm: float, sides: Dict
 	if hearth != "" and sides[hearth].is_empty():
 		side.call(hearth, "woodpile", Dm - 0.4, 0.65)
 		side.call(hearth, "ivy", 1.2, 0.1, 0.0)
-	if sides[other].is_empty():
+	if sides[other].is_empty() and wing == "":
 		if type in ["cottage", "street_house", "farmstead", "smokehouse", "salt_works"]:
 			side.call(other, "net_rack", 2.6, 0.75)
 			side.call(other, "creels", Dm - 0.3, 0.5)

@@ -44,7 +44,8 @@ static func _tone(r: float, low: bool) -> Color:
 
 ## sets: the storeys' voxel sets and the roof's (all in file space voxels); W, D: the footprint; openings: [set, o, d,
 ## x0, x1, z0, z1, kind] from the builder; plinth: its height; paint: the house's colour; seed: per house
-static func dress(sets: Array, W: int, D: int, openings: Array, plinth: int, paint: Color, seed: int) -> void:
+static func dress(sets: Array, W: int, D: int, openings: Array, plinth: int, paint: Color, seed: int, floors := []) -> void:
+	_inside(sets, W, D, floors, seed)
 	# the courses run round the whole house at the same heights, so they meet at the corners
 	var course_of := PackedInt32Array(); var start_of := PackedInt32Array()
 	var z := plinth; var c := 0
@@ -176,3 +177,32 @@ static func _footing(vs: Dictionary, W: int, D: int, plinth: int, seed: int) -> 
 						var k := Vector3i(w.x, w.y, zz)
 						if not vs.has(k): vs[k] = col
 				u += ln; s += 1
+
+## the inside of the outer walls: a wainscot of tarred and driftwood planks to 1.2 m over each floor, and above it the
+## daub, limewashed in two tones, worn through here and there to the stones under it
+static func _inside(sets: Array, W: int, D: int, floors: Array, seed: int) -> void:
+	const DAUB := 0xb6aa91
+	var w := BuildingKit.WALL
+	for vs in sets:
+		for k in (vs as Dictionary).keys():
+			var q: Vector3i = k
+			if _key(vs[k]) != DAUB: continue
+			var u := -1
+			if q.y == w - 1 or q.y == D - w: u = q.x
+			elif q.x == w - 1 or q.x == W - w: u = q.y
+			if u < 0: continue
+			var low := false
+			for fz in floors:
+				if q.z >= fz and q.z < fz + 12: low = true
+			if low:
+				vs[k] = Color8(72, 62, 54) if q.z == 11 + _floor_of(floors, q.z) else (Color8(118, 102, 84) if (u / 3) % 2 == 0 else Color8(134, 118, 96))
+				if u % 3 == 0: vs[k] = Color8(96, 82, 68)
+			else:
+				var r := _h(u / 3, q.z / 2, seed + 61)
+				vs[k] = _tone(_h(u / 5, q.z / 3, seed), false).darkened(0.05) if r < 0.07 else (Color8(176, 164, 140) if r < 0.35 else Color8(186, 175, 151))
+
+static func _floor_of(floors: Array, z: int) -> int:
+	var best := 0
+	for fz in floors:
+		if fz <= z: best = maxi(best, fz)
+	return best
