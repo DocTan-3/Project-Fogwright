@@ -11,7 +11,7 @@ voxel kit in the freehold's way: drystone with sunk joints and corner stones, th
 ship-rib bargeboards, raised porches, side wings, painted doors and shutters, and yards with woodpiles, creels, nets,
 wattle fences and ivy. Doors open as you walk up. Walk into the Gull & Lantern on the square: its taproom is open to
 the roof, with a gallery, carved posts, a fire pit and the hearth on the gable. The village is heavy for now (about a
-million triangles: detail first, cost later), and loading takes a little longer while the houses are built.
+million triangles: detail first, cost later), and the houses are baked, so they load in a moment.
 
 Controls: WASD or the arrows to move (you run by default), Shift to sprint, Space to jump, Ctrl to switch between walking
 and running, move the mouse to turn the camera (Esc frees the cursor, a click takes it back), the mouse wheel to zoom
