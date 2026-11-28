@@ -31,39 +31,66 @@ static func build(height_fn: Callable, rect: Rect2, kind_fn: Callable, grass_per
 	var rock := SurfaceTool.new(); rock.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var grass_tris := []   # [a, b, c] world points of grassy triangles, where the tufts grow
 	var counts := {}
+	# first pass: which cells are cliffs, and which are drawn in 25 cm squares (where the ground's kind changes inside the
+	# cell: a path's edge, the beach), so edges run in fine voxel-like steps rather than a 1 m saw-tooth
+	var cliff := PackedByteArray(); cliff.resize(nx * nz)
+	var mixed := PackedByteArray(); mixed.resize(nx * nz)
 	for j in nz:
 		for i in nx:
 			var p0 := rect.position + Vector2(i, j) * CELL
 			var h := [H[j * (nx + 1) + i], H[j * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i]]
-			var mn: float = h.min(); var mx: float = h.max()
+			if h.max() - h.min() > 2.0 * STEP + 0.001: cliff[j * nx + i] = 1; continue
+			var k0: String = kind_fn.call(p0 + Vector2(0.5, 0.5) * CELL, 0.0)
+			for q in [Vector2(0.1, 0.1), Vector2(0.9, 0.1), Vector2(0.9, 0.9), Vector2(0.1, 0.9)]:
+				if kind_fn.call(p0 + q * CELL, 0.0) != k0: mixed[j * nx + i] = 1; break
+	var fine := func(i: int, j: int) -> bool: return i >= 0 and j >= 0 and i < nx and j < nz and mixed[j * nx + i] == 1
+	for j in nz:
+		for i in nx:
+			var p0 := rect.position + Vector2(i, j) * CELL
+			var h := [H[j * (nx + 1) + i], H[j * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i]]
+			var mn: float = h.min()
 			var c := [Vector3(p0.x, h[0], p0.y), Vector3(p0.x + CELL, h[1], p0.y), Vector3(p0.x + CELL, h[2], p0.y + CELL), Vector3(p0.x, h[3], p0.y + CELL)]
-			if mx - mn <= 2.0 * STEP + 0.001:
+			if cliff[j * nx + i] == 0:
 				var piece := _piece_name(h); counts[piece] = counts.get(piece, 0) + 1
 				# the diagonal that keeps the piece's fold along its steps: across the pair of corners that differ least
 				var d02 := absf(h[0] - h[2]) <= absf(h[1] - h[3])
-				# where the ground's kind changes inside the cell (a path's edge, the beach), it is drawn in 25 cm squares on the same
-				# two planes, so edges run in fine voxel-like steps rather than a 1 m saw-tooth
-				var k0: String = kind_fn.call(p0 + Vector2(0.5, 0.5) * CELL, 0.0); var mixed := false
-				for q in [Vector2(0.1, 0.1), Vector2(0.9, 0.1), Vector2(0.9, 0.9), Vector2(0.1, 0.9)]:
-					if kind_fn.call(p0 + q * CELL, 0.0) != k0: mixed = true
-				var sub := SUB if mixed else 1
-				for a in sub:
-					for b in sub:
-						var u0 := float(a) / sub; var u1 := float(a + 1) / sub; var v0 := float(b) / sub; var v1 := float(b + 1) / sub
-						var q := func(u: float, v: float) -> Vector3: return Vector3(p0.x + u * CELL, _surf(h, d02, u, v), p0.y + v * CELL)
-						var Q := [q.call(u0, v0), q.call(u1, v0), q.call(u1, v1), q.call(u0, v1)]
-						var tris: Array = [[Q[0], Q[1], Q[2]], [Q[0], Q[2], Q[3]]] if d02 else [[Q[0], Q[1], Q[3]], [Q[1], Q[2], Q[3]]]
-						for t in tris:
-							var n: Vector3 = (t[2] - t[0]).cross(t[1] - t[0]).normalized()
-							if n.y < 0: n = -n
-							var slope := rad_to_deg(acos(clampf(n.y, -1.0, 1.0)))
-							var mid: Vector3 = (t[0] + t[1] + t[2]) / 3.0
-							var kind: String = kind_fn.call(Vector2(mid.x, mid.z), slope)
-							var col: Color = COLS[kind]
-							if kind == "grass":   # a darker turf on steep banks, patchy tones on the level
-								col = col.lerp(COLS.grass_d, 0.35 * _hash2(floori(mid.x * 0.5), floori(mid.z * 0.5), seed) + clampf((slope - 20.0) / 40.0, 0.0, 0.65))
-							_tri(st, t, n, col)
-							if kind == "grass": grass_tris.append(t)
+				var q := func(u: float, v: float) -> Vector3: return Vector3(p0.x + u * CELL, _surf(h, d02, u, v), p0.y + v * CELL)
+				var tris: Array = []
+				if mixed[j * nx + i] == 1:
+					for a in SUB:
+						for b in SUB:
+							var u0 := float(a) / SUB; var u1 := float(a + 1) / SUB; var v0 := float(b) / SUB; var v1 := float(b + 1) / SUB
+							var Q := [q.call(u0, v0), q.call(u1, v0), q.call(u1, v1), q.call(u0, v1)]
+							tris += [[Q[0], Q[1], Q[2]], [Q[0], Q[2], Q[3]]] if d02 else [[Q[0], Q[1], Q[3]], [Q[1], Q[2], Q[3]]]
+				else:
+					# a plain cell beside fine ones shares their 25 cm points along that edge, or the edge would be a T-junction
+					# and crack open into a dark seam. It is fanned from its centre, which lies on the fold, so every
+					# triangle stays on one of the cell's two planes.
+					var edges := [[Vector2(0, 0), Vector2(1, 0), fine.call(i, j - 1)], [Vector2(1, 0), Vector2(1, 1), fine.call(i + 1, j)],
+						[Vector2(1, 1), Vector2(0, 1), fine.call(i, j + 1)], [Vector2(0, 1), Vector2(0, 0), fine.call(i - 1, j)]]
+					var any := false
+					for e in edges: any = any or e[2]
+					if not any:
+						var Q := [q.call(0, 0), q.call(1, 0), q.call(1, 1), q.call(0, 1)]
+						tris = [[Q[0], Q[1], Q[2]], [Q[0], Q[2], Q[3]]] if d02 else [[Q[0], Q[1], Q[3]], [Q[1], Q[2], Q[3]]]
+					else:
+						var ctr: Vector3 = q.call(0.5, 0.5)
+						for e in edges:
+							var n_seg: int = SUB if e[2] else 1
+							for s in n_seg:
+								var A: Vector2 = e[0].lerp(e[1], float(s) / n_seg); var B: Vector2 = e[0].lerp(e[1], float(s + 1) / n_seg)
+								tris.append([q.call(A.x, A.y), q.call(B.x, B.y), ctr])
+				for t in tris:
+					var n: Vector3 = (t[2] - t[0]).cross(t[1] - t[0]).normalized()
+					if n.y < 0: n = -n
+					var slope := rad_to_deg(acos(clampf(n.y, -1.0, 1.0)))
+					var mid: Vector3 = (t[0] + t[1] + t[2]) / 3.0
+					var kind: String = kind_fn.call(Vector2(mid.x, mid.z), slope)
+					var col: Color = COLS[kind]
+					if kind == "grass":   # a darker turf on steep banks, patchy tones on the level
+						col = col.lerp(COLS.grass_d, 0.35 * _hash2(floori(mid.x * 0.5), floori(mid.z * 0.5), seed) + clampf((slope - 20.0) / 40.0, 0.0, 0.65))
+					_tri(st, t, n, col)
+					if kind == "grass": grass_tris.append(t)
 			else:
 				counts["cliff"] = counts.get("cliff", 0) + 1
 				_cliff(rock, c, h, mn, seed)
