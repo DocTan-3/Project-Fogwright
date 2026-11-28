@@ -45,9 +45,24 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
 
 - **Triangles:** a geared character is about 2,800–3,900 triangles after greedy meshing. Keep peoples in that range.
 
+## The peoples and equipment (character-system branch)
+
+- **Every people, both sexes:** `tools/voxel/make_character.py` writes `godot/assets/voxel/characters/peoples/`:
+  `<people>_<sex>.vox` is the base body in its underwear (what the creator shows), `<people>_<sex>_clothes.vox` the
+  starting clothes as a layer of replacement parts. The head is `head#2`, at 1.25 cm, carved and painted.
+  `build(people, sex, dressed)` also records the body's measurements in `build.frame`.
+- **Equipment:** `tools/voxel/make_equipment.py` fits every item to every body from those measurements and writes
+  `godot/assets/voxel/gear/<item>/<people>_<sex>.vox` and `godot/data/equipment.json` (slots, layering order, what an
+  item hides). `godot/scripts/voxel/equipment.gd` dresses a character: `Equipment.dress(people, sex, items)`.
+- **Tests:** `godot/tests/voxel_peoples.tscn` (the lineup, face close-ups; `clothes=1` for the starting clothes) and
+  `godot/tests/voxel_equipment.tscn` (every armour tier on five bodies).
+- **Rules learnt:** keep colours within real reflectance (sRGB about 200 at most for pale skin); give the test sun a
+  shadow bias or flat voxel faces show acne; carve faces with whole features (sockets, jaw, lips), since single-voxel
+  steps read as creases.
+
 ## Not settled yet
 
-- **Women and other peoples:** not drawn yet.
+- **Face presets and sliders:** next, for the character creator.
 - **Animation:** none yet. Parts are rigid and pivot at joints, and animation adds to the rest pose (`get_meta("rest")`).
 - **Metrics:** a 1.6 m stylized character, against the research's 1.8 m person and 2.4 m door. The current proposal is
   doors of about 2.2 × 1.4 m for the WoW camera.
