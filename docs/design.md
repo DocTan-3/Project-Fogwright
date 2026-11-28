@@ -170,7 +170,7 @@ There are no classes. Every character can fight and craft completely without the
 | Gods' magic | A mysterious bonus that shapes both combat and crafting                   | Being claimed by a god              |
 | Relics      | Reverse-engineered devices of old that any adventurer can use             | Found, bought or crafted, like gear |
 
-**Paths.** Every character can enter every path, but progress is slow and limited: in the base game a character has enough skill points to finish one path and maybe half of another. Working names: Tinker, Technomancer, Ironclad, Fogstalker, Sapper, Lanternbearer, Beastbinder, Warpwalker. Proposed utility examples: Tinkers deploy inventions anywhere; Technomancers move their mind into a machine; Ironclads become cover; Fogstalkers endure thick Fog; Sappers blast open shortcuts; Lanternbearers push back the Fog around their group; Beastbinders bond with a creature; Warpwalkers set warp anchors.
+**Paths.** Every character can enter every path; with no level cap, a character can eventually walk them all. Working names: Tinker, Technomancer, Ironclad, Fogstalker, Sapper, Lanternbearer, Beastbinder, Warpwalker. Proposed utility examples: Tinkers deploy inventions anywhere; Technomancers move their mind into a machine; Ironclads become cover; Fogstalkers endure thick Fog; Sappers blast open shortcuts; Lanternbearers push back the Fog around their group; Beastbinders bond with a creature; Warpwalkers set warp anchors.
 
 **Gods.** Being claimed by a god does not decide your role. It grants a **starting node** in that god's region of the skill tree, placed far from the other gods' regions; every player can eventually walk the tree to other gods' magic too *(decided 2026-11-28)*. Claiming also gives a seat in that god's city (a warp bind and favour), not a new home. Aldrath claims no one. Magic is mysterious and a bonus, not a tool for everyday use.
 
@@ -184,7 +184,18 @@ There are no classes. Every character can fight and craft completely without the
 
 **Building in the open world.** Some open-world areas are buildable, for camps at dungeon entrances and outposts at the frontier. These are never permanent: regular world events, such as monsters attacking settlements or dungeon entrances leaking creatures, can kill everyone there and let the monsters destroy what players built. This keeps the world from filling with clutter and gives defending a camp real stakes. Anything a player wants to keep belongs in their warp space, which events cannot reach.
 
-**Open:** none for now.
+### The skill web *(decided 2026-11-28)*
+
+- **Shape: one big web**, like Path of Exile's passive tree, joined with **Albion-style mastery** (below).
+- **One centre for all.** Every character starts at the shared freefolk centre and grows outward. Nothing is truly locked; choices open footholds.
+- **Starting nodes.** At creation a player picks **one path and one craft** (the old classes); each grants a node or two that change a mechanic, as a head start, not a lock.
+- **Five wedges.** The web is cut into wedges running from the centre to the edge: **Combat, Crafting, Gathering, Utility** (the paths), and a separate **Magic** wedge holding the gods' regions.
+- **The Magic wedge** stays shut until a god claims you. Claiming opens your god's foothold there, far from the other gods' regions, and from it you can walk to any other god's magic. Aldrath has no region; Vael's region is hidden until he is freed.
+- **Node kinds:** **small** nodes (stats), **notables** (strong perks or moves) and rare **keystones** that change a rule (the dodge becomes a dash, blocks can stop heavy blows).
+- **Every node you own is always active**; there are no loadout limits.
+- **Points:** each level gives node points; there is no level cap.
+- **Mastery by use:** weapon, armour, gathering and craft lines also gain mastery as you use them, Albion-style. Any tier of gear can be equipped, but it works weaker below the mastery it needs, and mastery adds small bonuses to that line.
+- **Respec:** at a dedicated respec NPC, and expensive.
 
 - **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, armour proficiencies, movement moves, path moves and modifiers to the moves weapons give (see *Moves, the bar and defence*).
 
@@ -192,7 +203,7 @@ There are no classes. Every character can fight and craft completely without the
 
 - **Wear everything, eventually.** Enough points let any build use every armor tier. Balance is tuned later; this is the intent, not final numbers.
 
-- **Respecs** cost resources, not real money, so groups can rebalance roles.
+- **Respecs** are done at a dedicated respec NPC and are expensive (marks, never real money).
 
 | Armor tier                                                               | Arrives in      | Crafts nearest to it        | Trade-offs                                              |
 |--------------------------------------------------------------------------|-----------------|-----------------------------|---------------------------------------------------------|

@@ -35,6 +35,7 @@ The basics, settled first:
 | **Recipes** | Basics known; the rest from ruins, trainers and experimenting. Pick a recipe, choose materials, a short timer, a queue. One refining step. Quality fixed by recipe; some recipes make higher tiers; some legendaries are craft-only. Inventions are normal recipes (no part slots). Maker's name in the tooltip |
 | **Repair, salvage, stations** | Smiths repair; gear salvages to materials and Fog shards. Public stations in cities for a fee, own stations at home or in a freehold |
 | **Players as NPCs** | Implants are fitted by an NPC or a player with the node. Generally, skill nodes let players do NPC services in the field, so players can trade services on trust |
+| **Skill web** | One Path of Exile-style web plus Albion-style mastery by use. One centre for all; pick one path and one craft at creation for a node or two each. Wedges: Combat, Crafting, Gathering, Utility, and a Magic wedge (gods) shut until claimed; Aldrath has none. Small, notable and keystone nodes, all always active. Mastery soft-gates gear tiers. Respec at an expensive NPC |
 
 ## Things in design.md that clash with the lore
 
