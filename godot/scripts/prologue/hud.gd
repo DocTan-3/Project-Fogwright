@@ -110,7 +110,9 @@ func lesson(title_: String, text: String, key: String) -> void:
 			vb.add_child(l)
 	var ls := _lesson.get_child(0).get_children()
 	(ls[0] as Label).text = title_; (ls[1] as Label).text = text; (ls[2] as Label).text = "[ " + key + " ]" if key != "" else ""
-	_lesson.visible = title_ != ""; _lesson.reset_size(); _lesson.position = Vector2(-_lesson.size.x / 2, 90)
+	_lesson.visible = title_ != ""; _lesson.reset_size()
+	var vp := get_viewport().get_visible_rect().size
+	_lesson.set_anchors_preset(Control.PRESET_TOP_LEFT); _lesson.position = Vector2((vp.x - _lesson.size.x) * 0.5, vp.y * 0.5 + 70.0)
 
 func set_tag(id: String, node: Node3D, name_: String, up := 2.05, foe := false) -> void:
 	tags[id] = {"node": node, "name": name_, "up": up, "quest": tags.get(id, {}).get("quest", false), "hp": tags.get(id, {}).get("hp", -1.0), "foe": foe}
