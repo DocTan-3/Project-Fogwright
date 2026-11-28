@@ -258,6 +258,7 @@ func _build(i: int) -> void:
 	# yards: a wall round the well-off's, a fence round the others, open where a building or a gate meets them
 	for r in rooms:
 		if r[5] == "yard" and not str(r[4]).begins_with("arch"):
+			cur_roofs = roofs
 			for e in _edges(r, roofs):
 				_fence_run(e, ty, L, b.zone, mir)
 	# wings and roofs
@@ -429,16 +430,28 @@ func _inner_edges(roofs: Array) -> Array:
 				out.append([Vector2(lo, ln) if side[2] else Vector2(ln, lo), Vector2(hi, ln) if side[2] else Vector2(ln, hi), side[3]])
 	return out
 
+var cur_roofs := []   # the roofed rooms of the building being built (floorplan metres)
+func _touches_room(p: Vector2, roofs: Array) -> bool:   # does a floorplan point lie on a roofed room's edge or inside it
+	for r in roofs:
+		if p.x >= r[0] - 0.05 and p.x <= r[0] + r[2] + 0.05 and p.y >= r[1] - 0.05 and p.y <= r[1] + r[3] + 0.05: return true
+	return false
+
 func _fence_run(e: Array, ty: Dictionary, L: Callable, zone: String, mir: bool) -> void:
 	var a: Vector2 = e[0]; var bb: Vector2 = e[1]; var n: Vector2 = e[2]
 	for pc in _segments(a, bb, n, ty):
 		if pc[2] in ["d", "g", "o", "s"]: continue                     # the gate
-		var p0: Vector2 = pc[0]; var p1: Vector2 = pc[1]; var mid := (p0 + p1) * 0.5; var seg := p0.distance_to(p1)
+		var p0: Vector2 = pc[0]; var p1: Vector2 = pc[1]; var dir := (p1 - p0).normalized()
+		# where a fence meets a building it stops 0.5 m short (the wall's thickness and its corner post); elsewhere pieces
+		# reach 0.17 m past their ends, so joins and free corners close
+		p0 -= dir * (-0.5 if _touches_room(p0, cur_roofs) else 0.17); p1 += dir * (-0.5 if _touches_room(p1, cur_roofs) else 0.17)
+		var mid := (p0 + p1) * 0.5; var seg := p0.distance_to(p1)
+		if seg < 0.3: continue
 		var yaw := atan2(-n.x if mir else n.x, n.y)
 		var f := _piece_any(_fence_model(zone), L.call(mid.x, mid.y), yaw)
 		if f:
-			f.scale = Vector3((seg + 0.35) / 2.0, 1.0, 1.0)            # overlapping a little at the joins and corners
-			_on_ground(f, seg + 0.35)
+			f.scale = Vector3(seg / 2.0, 1.0, 1.0)
+			_on_ground(f, seg)
+			fence_nodes.append([f, "fence", "a yard's fence or wall"])
 
 ## a fence or wall piece set on the ground under it: at the drawn ground's height, tilted from one end to the other
 func _on_ground(f: Node3D, length: float) -> void:
@@ -524,11 +537,16 @@ func _plot(pl: Dictionary) -> void:
 			var gate := si == 1 and k == cnt / 2                  # the back gate
 			if gate and not walled: continue
 			var path := "res://assets/props/fogwright/Garden_Gate.glb" if gate else _fence_model(zone)
+			var dir := (q1 - q0).normalized()
+			if not gate:   # pieces reach 0.17 m past their ends to close joins, but stop 0.5 m short of the house's back wall
+				q0 -= dir * (-0.5 if (si == 0 and k == 0) else 0.17); q1 += dir * (-0.5 if (si == 2 and k == cnt - 1) else 0.17)
+			mid = (q0 + q1) * 0.5
 			var len := q0.distance_to(q1)
 			var f := put(path, W(mid, height(mid)), yaw, 1.0, true, "fixture", "the plot's gate" if gate else "the plot's wall or fence")
 			if f:
-				f.scale = Vector3((len + (0.0 if gate else 0.35)) / (2.06 if gate else 2.0), 1.0, 1.0)   # a little overlap closes the corners
+				f.scale = Vector3(len / (2.06 if gate else 2.0), 1.0, 1.0)
 				_on_ground(f, len)                            # on the drawn ground, tilted with the slope
+				fence_nodes.append([f, "gate" if gate else "fence", "the plot's gate" if gate else "the plot's wall or fence"])
 
 func _in_roofed(p: Vector2, grow := 0.0) -> bool:
 	for r in roofed:
@@ -795,6 +813,7 @@ const DOCK := "res://assets/props/docks/%s.glb"
 ## the plan (which reserves each prop's real size, measured in godot/data/model_sizes.json)
 var DOODAD_MODELS := {}
 var doodad_nodes := []   # [node, kind, purpose], for the collision check
+var fence_nodes := []    # fences, yard and garden walls and gates: checked against buildings and props
 
 func _doodads() -> void:
 	DOODAD_MODELS = JSON.parse_string(FileAccess.get_file_as_string("res://data/doodad_models.json"))
@@ -1175,9 +1194,13 @@ func check_clip() -> Array:
 	var space := get_world_3d().direct_space_state
 	var ground_rids := []
 	for b in find_children("TerrainBody*", "CollisionObject3D", true, false): ground_rids.append((b as CollisionObject3D).get_rid())
-	for d in doodad_nodes:
+	var fence_rids := []
+	for f in fence_nodes:
+		for b in (f[0] as Node).find_children("*", "CollisionObject3D", true, false): fence_rids.append((b as CollisionObject3D).get_rid())
+	for d in doodad_nodes + fence_nodes:
 		var n: Node3D = d[0]
 		var own := ground_rids.duplicate()
+		if d in fence_nodes: own.append_array(fence_rids)           # fence pieces overlap at their joins on purpose
 		for b in n.find_children("*", "CollisionObject3D", true, false): own.append((b as CollisionObject3D).get_rid())
 		var box := AABB(); var first := true
 		for mi in n.find_children("*", "MeshInstance3D", true, false):

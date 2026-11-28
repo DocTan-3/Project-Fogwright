@@ -143,6 +143,11 @@ its spot. Props keep 35 cm inside any room, yard or garden edge (the wall or fen
 open boat has bottom boards (a plank floor) just above its waterline and floats at that waterline; check a close look
 down into each boat before committing.
 
+**Everything built is collision-checked, not just props:** fences, yard and garden walls and gates too (against
+buildings and props; fence pieces may overlap each other at their joins). Where a fence meets a building it stops short
+of the wall's thickness and its corner post (0.5 m). Prove a new check by running it on the old, broken placement first
+and seeing it fail.
+
 **Collision check in 3D:** the game's checker asks the physics world, for every prop, whether its real box reaches into
 any wall, fence, roof or other prop (`CLIP` problems). It catches what a plan cannot see: a model that hangs below its
 base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the plan or the model, never the check.
