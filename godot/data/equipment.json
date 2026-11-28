@@ -652,6 +652,18 @@
    "carried": "res://assets/voxel/gear/iron_pistol_carried/%s_%s.vox",
    "stance": "pistol"
   },
+  "iron_musket": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_musket/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_musket_carried/%s_%s.vox",
+   "stance": "longgun"
+  },
   "iron_shield": {
    "tier": "common",
    "slots": [
@@ -1225,6 +1237,54 @@
    "file": "res://assets/voxel/gear/pistol_t5/%s_%s.vox",
    "carried": "res://assets/voxel/gear/pistol_t5_carried/%s_%s.vox",
    "stance": "pistol"
+  },
+  "musket_t2": {
+   "tier": "uncommon",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/musket_t2/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/musket_t2_carried/%s_%s.vox",
+   "stance": "longgun"
+  },
+  "musket_t3": {
+   "tier": "rare",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/musket_t3/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/musket_t3_carried/%s_%s.vox",
+   "stance": "longgun"
+  },
+  "musket_t4": {
+   "tier": "epic",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/musket_t4/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/musket_t4_carried/%s_%s.vox",
+   "stance": "longgun"
+  },
+  "musket_t5": {
+   "tier": "legendary",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/musket_t5/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/musket_t5_carried/%s_%s.vox",
+   "stance": "longgun"
   }
  },
  "sets": {

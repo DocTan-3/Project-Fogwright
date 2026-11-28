@@ -958,7 +958,8 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
     'spear': ('back', 2, 'polearm'),
     'bow': ('back', 2, 'bow'),       # one bow; its damage to speed ratio is a stat, not a model
     'heavy_crossbow': ('back', 2, 'crossbow'),
-    'pistol': ('holster', 1, 'pistol'),         # the scrap pipe pistol at T1, a pepperbox at T3 (docs/weapons.md)
+    'pistol': ('holster', 1, 'pistol'),
+    'musket': ('back', 2, 'longgun'),         # the scrap pipe pistol at T1, a pepperbox at T3 (docs/weapons.md)
     'shield': ('shield', 0, 'shield'), 'tower_shield': ('tower', 0, 'shield'),
 }
 # ---------------------------------------------------------------- tiers (one version per tier, by rarity: weapons.md)
@@ -1580,6 +1581,86 @@ def pistol_shape(t):
         for dh in (41, 42): V[(0, WC, dh)] = 'arc'
     return V
 
+def musket_shape(t):
+    """the musket at tiers 1-5 (docs/weapons.md, Guns), in the weapon frame: h forward along the barrel from the fist at
+    the stock's wrist, w up (the barrel on top), u across (+u the right side and its lock). The butt runs back and
+    drops. T1 a cracked matchlock, T2 a flintlock musket, T3 a fine musket with a socket bayonet, T4 a Ferrin steam
+    musket, T5 an arcane musket"""
+    V = {}
+    def b(u0, u1, w0, w1, h0, h1, c):
+        for u in range(u0, u1 + 1):
+            for w in range(w0, w1 + 1):
+                for h in range(h0, h1 + 1): V[(u, w, h)] = c(u, w, h) if callable(c) else c
+    WC, L, BUTT = 4, {1: 66, 2: 72, 3: 72, 4: 74, 5: 74}[t], -40
+    wood, wood_d = {1: ('wood_d', 'black_d'), 2: ('wood', 'wood_d'), 3: ('wood_d', 'black_d'), 4: ('black', 'black_d'), 5: ('blued_d', 'blued')}[t]
+    metal, metal_d = {1: ('iron_d', 'iron'), 2: ('steel', 'steel_d'), 3: ('steel_d', 'steel'), 4: ('black', 'black_d'), 5: ('blued', 'blued_d')}[t]
+    trim = {1: 'iron_l', 2: 'brass', 3: 'brass', 4: 'copper', 5: 'gilt'}[t]
+    for h in range(-6, L + 1):                                         # the barrel
+        for u in range(-2, 3):
+            for w in range(WC - 2, WC + 3):
+                if abs(u) == 2 and abs(w - WC) == 2: continue
+                if t == 3 and abs(u) == 2 and abs(w - WC) == 1: continue   # an octagonal barrel
+                V[(u, w, h)] = metal_d if (h + u + w) % 7 == 0 else metal
+    b(-1, 1, WC - 1, WC + 1, L, L, 'black_d')
+    for h in range(-12, L - 12):                                       # the fore-stock under the barrel
+        b(-2, 2, 0, WC - 2, h, h, lambda u, w, hh: wood_d if (hh % 11 == 0 or (abs(u) == 2 and w == 0)) else wood)
+    for h in range(BUTT, -11):                                         # the wrist and butt, dropping as they run back
+        k = (-12 - h) / (-12 - BUTT)
+        top = WC + 1 - round(2 * k); bot = -1 - round(9 * k ** 1.2)
+        for w in range(bot, top + 1):
+            for u in range(-2, 3):
+                if abs(u) == 2 and w in (bot, top): continue
+                V[(u, w, h)] = wood_d if ((h + w) % 9 == 0) else wood
+    b(-2, 2, -11, WC - 1, BUTT - 1, BUTT, trim if t > 1 else 'wood_d')  # the butt plate
+    for h in range(-6, 6): V[(0, -1, h)] = trim                        # the trigger guard
+    V[(0, 0, 6)] = V[(0, 0, -6)] = trim; V[(0, 0, 0)] = V[(0, 1, 0)] = 'iron_d'
+    for h in range(-4, L - 14): V[(0, -1, h + 8)] = V.get((0, -1, h + 8), 'iron_d') if h + 8 < 6 else 'iron_d'   # the ramrod
+    for h in (L - 14, 30, 8):                                          # barrel bands
+        if t == 1: b(-3, 3, -1, WC + 3, h, h, lambda u, w, hh: 'cord' if abs(u) == 3 or w in (-1, WC + 3) else V.get((u, w, hh), 'cord'))
+        else: b(-3, 3, -1, WC + 3, h, h, lambda u, w, hh: trim if abs(u) == 3 or w in (-1, WC + 3) else V.get((u, w, hh), trim))
+    if t == 1:      # a cracked matchlock: a serpentine holding a smouldering match, a mended crack in the butt
+        b(3, 3, 2, 5, -8, 0, 'iron_d')
+        for k in range(5): V[(4, 4 + k // 2, -6 + k)] = 'iron_d'
+        V[(4, 7, -1)] = 'cord'; V[(4, 8, 0)] = V[(4, 8, 1)] = 'glow'
+        for h in range(-34, -20): V[(2, -3 - (h + 34) // 4, h)] = 'black_d'        # the crack
+        for h in (-30, -24): b(-3, 3, -7, 3, h, h, lambda u, w, hh: 'cord' if abs(u) == 3 else V.get((u, w, hh), None) or 'cord')
+        for k in list(V):
+            if V[k] is None: del V[k]
+    if t in (2, 3):  # the flintlock: a lock plate, the cock with its flint, the frizzen and pan
+        b(3, 3, 0, 5, -10, 2, lambda u, w, h: trim if (w, h) in ((0, -10), (5, 2)) else metal_d)
+        b(4, 4, 5, 8, -7, -6, 'steel_l'); V[(4, 9, -5)] = V[(4, 9, -4)] = 'iron_d'
+        b(4, 4, 5, 7, -2, -1, 'steel'); V[(4, 5, -3)] = 'steel_d'
+        b(0, 0, -2, -1, -20, -19, 'iron_d'); b(0, 0, -2, -1, 40, 41, 'iron_d')    # sling swivels
+        for h in range(-19, 41): V[(0, -5 - round(3 * (1 - ((h - 10) / 30) ** 2)), h)] = 'leather'   # the sling, hanging
+    if t == 3:      # brass inlay and patch box, and a socket bayonet under the muzzle
+        b(3, 3, -6, -2, -34, -26, 'brass'); V[(3, -4, -30)] = 'brass_l'
+        for h in range(-22, -14, 3): V[(-3, -1, h)] = 'brass'
+        b(-1, 1, 0, 1, L - 6, L, 'steel_d')                              # the socket
+        for h in range(L + 1, L + 34):
+            hw = 1 if h < L + 28 else 0
+            b(0, 0, -hw, hw + 1, h, h, lambda u, w, hh: 'steel_l' if w == -hw else 'steel')
+    if t == 4:      # a Ferrin steam musket: a copper tank in the butt, a pipe to the breech, fins, a gauge and a scope
+        for h in range(-36, -16): b(-3, 3, -6, 0, h, h, lambda u, w, hh: 'copper_d' if hh % 5 == 0 else ('copper' if abs(u) < 3 else 'copper_d'))
+        for h in range(-16, -6): V[(3, 2 + (h + 16) // 4, h)] = 'copper'
+        for h in range(10, 40, 3): b(-3, 3, WC - 3, WC + 3, h, h, lambda u, w, hh: 'steel_l' if max(abs(u), abs(w - WC)) == 3 else V.get((u, w, hh), 'black'))
+        for dw in range(-3, 4):
+            for dh in range(-3, 4):
+                if dw * dw + dh * dh <= 10: V[(3, WC + dw, -4 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+        V[(4, WC, -4)] = V[(4, WC + 1, -3)] = 'red'
+        for h in range(-4, 22): V[(0, WC + 4, h)] = 'brass'
+        b(-1, 1, WC + 4, WC + 6, -4, -2, 'brass'); b(-1, 1, WC + 4, WC + 6, 20, 22, 'brass')
+        V[(0, WC + 5, -5)] = V[(0, WC + 5, 23)] = 'glass_l'
+        for dh in range(3): V[(-3, 1, 12 + dh)] = 'potion' if dh < 2 else 'glass_l'
+    if t == 5:      # an arcane musket: a crystal chamber at the breech, glowing runes, gilt fittings, a muzzle crystal
+        for h in range(-8, 2):
+            for u in range(-3, 4):
+                for w in range(WC - 3, WC + 4):
+                    if u * u + (w - WC) ** 2 <= 10: V[(u, w, h)] = 'arc' if (u + w + h) % 3 else 'arc_d'
+        for h in range(4, L - 2, 4): V[(0, WC + 2, h)] = 'arc'; V[(2, WC, h + 2)] = V[(-2, WC, h + 2)] = 'arc'
+        for h in range(-36, -14, 3): V[(2, -3, h)] = V[(-2, -3, h)] = 'arc'
+        for k in range(5): r = 2 - k // 2; b(-r, r, WC - r, WC + r, L + 1 + k, L + 1 + k, 'arc' if k < 4 else 'arc_d')
+    return V
+
 def iron_shape(kind, floor, tier=1):
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
@@ -1600,6 +1681,8 @@ def iron_shape(kind, floor, tier=1):
                 thick = abs(w) < max(1, w_ - 1) and h < h1 - 2
                 col = 'iron_d' if (fuller and w == 0 and h < h1 - tip - 2) else ('iron_l' if abs(w) == w_ else 'iron')
                 b(-1 if thick else 0, 1 if thick else 0, w, w, h, h, col)
+    if kind == 'musket':
+        V.update(musket_shape(tier)); return V
     if kind == 'pistol':                # in the hand the grip runs through the fist (along h), the muzzle down (-w)
         P_ = pistol_shape(tier)
         if floor == 999: V.update(P_); return V
@@ -1830,7 +1913,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear', 'bow', 'heavy_crossbow', 'pistol']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear', 'bow', 'heavy_crossbow', 'pistol', 'musket']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)

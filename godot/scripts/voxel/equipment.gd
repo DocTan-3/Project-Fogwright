@@ -26,6 +26,9 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
+	# a long gun held like the crossbow, across the body in both hands (aimed in _hold_crossbow)
+	"longgun": {"arm_upper_r": Vector3(-14, 0, 0), "arm_lower_r": Vector3(-48, 0, 0), "arm_upper_l": Vector3(-30, 0, -4), "arm_lower_l": Vector3(-24, 0, 0),
+		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 	# a pistol held low at the side, the grip through the fist and the muzzle down at the ground
 	"pistol": {"arm_upper_r": Vector3(-6, 0, 4), "arm_lower_r": Vector3(-22, 0, 0), "leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 	# a crossbow at rest in both hands (Doc Tan's references): the right fist at the grip before the right hip, the
@@ -77,7 +80,7 @@ static func _aim(root: Node3D) -> void:
 const CROSS_ACROSS := 55.0
 ## a pistol at rest: the muzzle forward and PISTOL_DOWN degrees down, the grip hanging below the barrel
 const PISTOL_DOWN := 35.0
-static func _hold_crossbow(root: Node3D, pistol := false) -> void:
+static func _hold_crossbow(root: Node3D, pistol := false, longgun := false) -> void:
 	for node in root.find_children("weapon*", "Node3D", true, false):
 		if not String(node.get_meta("piece", "")).ends_with("@hand_r"): continue
 		var hand := node.get_parent() as Node3D
@@ -91,14 +94,14 @@ static func _hold_crossbow(root: Node3D, pistol := false) -> void:
 		var mi := node as MeshInstance3D; var box: AABB = mi.get_aabb()
 		var ax := [0, 1, 2]; ax.sort_custom(func(i, j): return box.size[i] > box.size[j])
 		var pa := Vector3.ZERO; pa[ax[1]] = 1.0
-		var gi: int = ax[1] if pistol else ax[2]                      # a pistol's grip is its second axis
+		var gi: int = ax[1] if (pistol or longgun) else ax[2]                      # a pistol's grip is its second axis
 		var ga := Vector3.ZERO; ga[gi] = 1.0 if box.end[gi] + box.position[gi] > 0.0 else -1.0   # the grip's side
 		var M: Basis = aimed * mi.basis.orthonormalized()
 		var best := aimed; var low := INF
 		for k in 72:
 			var r := Basis(d, deg_to_rad(k * 5.0)) * aimed
 			var Mk: Basis = r * mi.basis.orthonormalized()
-			var score: float = (0.0 if pistol else absf((Mk * pa).normalized().y) * 4.0) + (Mk * ga).normalized().y
+			var score: float = (0.0 if (pistol or longgun) else absf((Mk * pa).normalized().y) * 4.0) + (Mk * ga).normalized().y
 			if score < low: low = score; best = r
 		hand.basis = arm.basis.inverse() * best
 		hand.set_meta("rest", hand.rotation_degrees)
@@ -202,6 +205,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 		if "polearm" in kinds: _aim(root)
 		if "bow" in kinds: _rest_bow(root)
 		if "crossbow" in kinds: _hold_crossbow(root)
+		if "longgun" in kinds: _hold_crossbow(root, false, true)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue
 		var bare := String(node.get_meta("piece")).get_slice("@", 0)
