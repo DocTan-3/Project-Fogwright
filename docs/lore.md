@@ -16,7 +16,7 @@ The split of Erde ends the first age; the 13th God's sacrifice ends the second a
 
 ## The first age
 
-The first age is ancient history: an empire of men ruled the whole world, every domain and every place, on the single continent of Erde.
+The first age is ancient history: an empire of men, **the Concord of Erde**, ruled the whole world, every domain and every place, on the single continent of Erde, from its capital **Aumenor, the Crown of Erde** *(decided 2026-11-28)*.
 
 The Gods blessed the empire with everything, on two conditions:
 
@@ -68,6 +68,10 @@ There were once many gods; over the ages they dwindled to thirteen, then twelve.
 
 **The reveal:** the head of the Gods and the 14th are one and the same. He was corrupted first, ordered the ban so the others would weaken, and absorbed the evil gods to rise anew. Players do not know this at the start.
 
+**How he is in two places** *(decided 2026-11-28)*: Aldrath made a second body from the magic his well pulls in and sent it, in secret, into the Godless Reach, where it devoured the corrupt gods one by one. That second body is the 14th. To the twelve he still sits behind his walls; to the Godless Reach he is the only god. One will moves both.
+
+**Why he does it** *(decided 2026-11-28)*: "one Rule, one God". Aldrath is the god of the Rule, and he believes the first age fell because there were too many wills in the world. One god, one law, one Return: in his eyes that is order, and order is mercy. He sees the twelve as a failed experiment and the peoples as rivers to be straightened. A villain who believes he is right.
+
 ### The twelve
 
 Each god is the best of their people made divine, not a god of an element. Names are working names.
@@ -93,13 +97,15 @@ The 13th, **Merrith the Merciful**, goddess of compassion, is gone; her sacrific
 
 Four of the twelve stand apart. Oriel and Vael lost their peoples before the third age; those peoples live on only in writings, stories and relics that players can uncover. Verdane never chose a people. Galeth falls during the story.
 
-**Oriel the Lucid and the Animari.** The Animari were exceptionally intelligent humans who could use magic to move their minds into machines for a time. They gave birth to technomancy, Fogwright's answer to necromancy. The greatest technomancers of old may have raised mountains of metal as armies; today the art is crude, archaic and outlawed for its unexplained tie to magic. In play, technomancers summon a few small, special creations rather than armies, and summons can gather resources in crafting.
+**Oriel the Lucid and the Animari.** The Animari were exceptionally intelligent humans who could use magic to move their minds into machines for a time. They gave birth to technomancy, Fogwright's answer to necromancy. **Their fate** *(decided 2026-11-28)*: when the Ban came, most refused to give up magic, and moved their minds into their machines one last time and never came back. Their machine cities are not empty: the minds still sleep in the machines, some gone mad, and they can wake. The greatest technomancers of old may have raised mountains of metal as armies; today the art is crude, archaic and outlawed for its unexplained tie to magic. In play, technomancers summon a few small, special creations rather than armies, and summons can gather resources in crafting.
 
-**Vael the Unseen and the warps.** Vael was thought to be among the first gods to die out. In truth he hid. His people's ancient civilization left behind the warps: portals between places. The great cities grew around them, often with a warp at their heart. Only those chosen by a god can use a warp, and warps link only the great cities, so ships and roads still matter. One class wields warp-style magic. Vael accidentally warped into the place where the 1st God hides his plans. He knows the truth, but chose to hide and abandoned his people; their anger at him lives on in their history.
+**Vael the Unseen and the warps.** Vael was thought to be among the first gods to die out. In truth he hid. His people, **the Sennari**, called the Doorfolk *(decided 2026-11-28)*, and their ancient civilization left behind the warps: portals between places. The great cities grew around them, often with a warp at their heart. Only those chosen by a god can use a warp, and warps link only the great cities, so ships and roads still matter. One class wields warp-style magic. Vael accidentally warped into the place where the 1st God hides his plans. He knows the truth, but chose to hide and abandoned his people; their anger at him lives on in their history, and the Wayfolk still say "gone like Vael" of someone who walks out on their family. **Where he is now** *(decided 2026-11-28)*: Aldrath found him in the end, and locked him in a broken warp. He is a prisoner, and players can free him.
 
 **Verdane the Open-Handed and nature magic.** Verdane chose no people. Instead she taught her magic to all peoples: weather, growth and the living world.
 
-**Galeth the Vigilant and the Lantern Vigil.** Galeth, god of protection, becomes the first of the remaining gods to be devoured by the Fog, as an event during the story. His crusader-like order of men, fiercely loyal, journeys into the Fog to search for him. Their search is part of the main story.
+**Galeth the Vigilant and the Lantern Vigil.** Galeth, god of protection, becomes the first of the remaining gods to be devoured by the Fog, as an event during the story. His crusader-like order of men, fiercely loyal, journeys into the Fog to search for him, **marching as one** *(decided 2026-11-28)*. Their search is part of the main story. **The truth** *(decided 2026-11-28)*: Galeth is not dead. The 14th took him and holds him in the Godless Reach, and he can be freed.
+
+**The Fog-pusher lamps** *(decided 2026-11-28)*: the street lamps that push the Fog back burn copper coils made by the Ferrin and wound and blessed in the Vigil's chapter houses, humming at a pitch the Fog shies from. On the night Galeth falls, every one of them flickers at once.
 
 ### How the truth comes out *(decided 2026-11-28)*
 
@@ -113,6 +119,10 @@ Slowly, as a trail of clues across the story, so players can suspect before they
 6. The Undercroft of the Rule, under the sealed city.
 
 The acts built on these are drafted in lore-proposals.md.
+
+### The Ordinal and the Censors *(decided 2026-11-28)*
+
+Aldrath's faith is **the Ordinal**, the official church of the Rule. It runs the plaza of the twelve, the courts of the outer city and the licences of the chosen. Its priests, **Ordinants**, are judges, record keepers and preachers of order. Its arm, **the Censure**, enforces the Ban: grey-coated **Censors** hunt illegal magic, cogwitches and Briarkin, carrying sounding bells that ring near unlicensed magic. Most of the Ordinal are good people who believe in order and mercy; only a few at the very top know the truth.
 
 ## Magic
 
@@ -249,6 +259,42 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | The Sere (Zarhim) | Date palms at oases, tamarisk, thornbush, desert blooms after rain | Dates, millet, figs | Oases sink; dunes march; mirages show the Fog's memories |
 | The Godless Reach | Dead forest, black reeds, grey grass that grows in spirals | None | It is the Fog |
 
+### The Fog and what lives in it *(decided 2026-11-28)*
+
+The Fog remembers what it touches and copies it badly. Five kinds of thing live in it:
+
+| Kind | What it is | Examples |
+| --- | --- | --- |
+| **Fogtouched** | Animals the Fog has seeped into: still themselves, but wrong | Grey wolves with too many eyes, boars with bone through the hide, gulls that fly in silence |
+| **Greyed** | People taken slowly by the Fog: grey veins, then grey eyes, then they move as the Fog moves. The 14th remakes them as Forsaken | The half-changed neighbour in Farhallow; Greyed villages still living their last day |
+| **Wrought** | Big shapes the Fog builds from memories of many things: part beast, part wall, part ship | The huge shape tearing down Farhallow's gate |
+| **Echoes** | The Fog's memory of the dead or of the past, replaying where it happened | A battle that fights itself every night on an old field; Sennari walking through warps that no longer open |
+| **Remnants** | In the Sundering: the Fog's memory of the first-age beings who split the world | Endgame foes, still to design |
+
+### Time and money *(decided 2026-11-28)*
+
+- **Years** are counted from Merrith's sacrifice: the game begins in 312 TA.
+- **Twelve months** of 30 days, one named for each of the twelve, and **the Mourning**: five days at the year's end that belong to Merrith, when nobody works or fights, even raiders.
+- **Weeks** of six days, five to a month.
+- **Festivals** in each god's month: the Feast of Roads (Hollin), the Long Night (Hrothvar), the Charter Days (Maelis), Ashwake (Ostrak), the Wellnight (Khesra), the Beast Fair (Brannoch), the Lamplighting (Galeth).
+- **Money:** one coin everywhere, struck by Aldrath's mint (its name is still open).
+
+| Month | God | Season (main continent) |
+| --- | --- | --- |
+| 1 Rulemonth | Aldrath | Late winter |
+| 2 Thaw | Verdane | Early spring |
+| 3 Charter | Maelis | Spring |
+| 4 Roads | Hollin | Late spring |
+| 5 Bonds | Brannoch | Early summer |
+| 6 Wells | Khesra | High summer |
+| 7 Anvil | Ostrak | Summer |
+| 8 Lamps | Galeth | Late summer |
+| 9 Memory | Seraveth | Autumn |
+| 10 Lucid | Oriel | Late autumn |
+| 11 Passing | Vael | Early winter |
+| 12 Unbowed | Hrothvar | Midwinter |
+| The Mourning | Merrith | Five days between years |
+
 **The three moons.** Three moons cross the night sky on their own paths, so they rise and set at different times and change position from night to night: a large pale moon, a small violet moon, and a broken moon split by a jagged crack, its fragments drifting beside it. The three moons are gods themselves, who chose to seclude themselves from the world. The gods behind them are forgotten; only the names people gave the moons remain. The large pale moon is barren, devoid of everything. The small violet moon is a god's own self and the home of his people, a mysterious race he placed there; this is a secret for now, and reaching it belongs to a future expansion. The broken moon is a consequence of the first war: it was struck by a stray attack from one of the beings of the first age, whose actions brought cataclysm upon the world (which being does not matter), and remains broken as a permanent reminder that some forces in the world can move more than just mountains, or so the legends say.
 
 | Moon | Common name | Hrimfolk | Zarhim | Aurelans |
@@ -257,13 +303,15 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | Violet, a god's self | The Veiled | Dreamlight | the Night Rose | the Shrouded Bell |
 | Broken | The Shard | the Godscar | the Broken Cup | the Wound |
 
+The moons are lore and sky only: they do not change play *(decided 2026-11-28)*.
+
 **Aldrath's city and where the journey begins.** The outer city is alive, the greatest city of the third age, reachable by ship and by warp. It is about 600 metres across, the trading hub and main town of the world, with a quarter for each people around a grand plaza where statues of the twelve face the sealed walls. Aldrath sealed the inner city himself, as a safe haven for the weaker gods, at least in theory; in truth it is where he devours them. Every player arrives as one of the freefolk of their people, a survivor of Farhallow, not yet claimed by any god. Being claimed by a god later in the journey decides which magic a player can take; there are no classes.
 
 **The Forsaken on the mainland.** The Forsaken have reached the mainlands, bringing portions of the Fog with them: lighter and manageable, unlike the Sundering. Some ports still stand in these lands. The wilds there are more untamed than corrupted, because magic may still linger.
 
 **Places without a living people**
 
-- **The shattered capital of the first age**: the endgame. Where it lies, perhaps sunk in the Sundering, is still open.
+- **Aumenor, the shattered capital of the first age**: sunk in the tear of the Sundering. The endgame there is still open *(decided 2026-11-28)*.
 - **Animari ruins**: machine cities of the lost technomancers, in the mountain spine *(proposal)*.
 - **Vael's ruins**: the ancient civilization that built the warps, with broken warps that no longer open *(proposal)*.
 - **Verdane's groves**: shrines of nature magic scattered across every region, since she taught all peoples *(proposal)*.
@@ -280,6 +328,9 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 **Open:** which peoples share which lands; where the Forsaken came from and where the shattered capital lies; which smaller lands are saved for future releases.
 
 ## Open questions
+
+- [ ] The endgame at Aumenor.
+- [ ] The name of the one coin.
 
 - [ ] The Penitent's town: its name and where it stands.
 

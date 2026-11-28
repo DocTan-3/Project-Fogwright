@@ -114,7 +114,7 @@ Every god has a **Grace** value from 0 to 100 on the server, shared by everyone 
 ### Fog density
 
 Each place has a density from 0 to 5, from the lore's gradient (thinnest near Aldrath and the gods' cities, thickest at
-the Sundering), raised by night, storms, the Shard moon and magic use, and lowered by lanterns, lamps, pylons and cleared
+the Sundering), raised by night, storms and magic use, and lowered by lanterns, lamps, pylons and cleared
 ruins.
 
 | Density | Name | What happens |
@@ -215,9 +215,8 @@ Oriel's chosen with the Ride move, for a while.
   upgrades and progression), so early on **bulk trade goods** (crates, barrels, bales) must go by cart, mount or ship,
   and later players can carry more through. This makes the ships and
   roads in design.md matter, and gives non-fighting players a real job.
-- **Trade runs** as quests and as free play: buy at one port, ship to another. Ships can be attacked at sea under the
-  Shard.
-- **Regional coin** (lore-proposals.md): trading in a people's own money gives better prices; money changers take a cut.
+- **Trade runs** as quests and as free play: buy at one port, ship to another. Ships can be attacked at sea.
+- **One coin** (decided) everywhere.
 - **Player trade** (design.md: gear is the build, so gear is traded): a market board in each city, and stalls in the
   Aldrath market for players later.
 
@@ -228,7 +227,7 @@ Players have standing with each **people** (eight), and with some **factions**:
 | Faction | Who | What standing gives |
 | --- | --- | --- |
 | The Ordinal and Censure | Aldrath's church | Writs, pardons, the Ordinal's sealed archives; falls if you are caught with illegal magic or seen with cogwitches |
-| The Lantern Vigil | Galeth's order | Vigil wicks, coil schematics, the march into the Fog; splits after Galeth falls |
+| The Lantern Vigil | Galeth's order | Vigil wicks, coil schematics, the march into the Fog after Galeth falls |
 | The Archive of Seraveth | The Ilvari | Lore, relic schematics, languages; hunted by the Censure |
 | The Waylodges | Hollin's priests | Free beds, rumours (quest leads), help for the Penitent |
 | Cogwitch circles | Outlaw technomancers | Technomancy schematics, Animari relics; illegal |
@@ -247,8 +246,7 @@ Standing with one often costs standing with another: the Censure and the cogwitc
 
 - **Days:** design.md's day and night, with the six-day week and twelve months of the lore proposal: one in-game day
   about an hour of real time (proposal), so a month is about 30 hours of play and a year a few months of real time.
-- **Moons** (lore-proposals.md): the Hollow full lowers Fog density by one at night; the Veiled full raises magic
-  strength by 10%; the Shard rising raises surge and Breach chances and keeps ships in port.
+- **Moons:** looks only (decided); no effect on play.
 - **The Mourning** (five days, once a year): no surges, every Merrith shrine lit, a world event where players lay
   candles and the year's Greyed who were brought back are counted for Merrith's thread (the endgame).
 - **Festivals** of each god in their month: small events with their own quests and goods.

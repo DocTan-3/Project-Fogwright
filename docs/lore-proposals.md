@@ -19,7 +19,11 @@ back to does not vanish: it pools, sours and becomes the Fog. Almost every myste
 Answered on 2026-11-28 and merged into lore.md: **kept** the Return (1), Aldrath's well (2), the inner city as a larder
 (3), the Fog remembers (4), Merrith spread through the Fog (5) and the year 312 TA (7). **Dropped:** players being
 claimed by Aldrath (6); he claims no one (below). **Reworked:** the Forsaken's origin (8) is now the Greyed, remade (in lore.md).
-The rest of this file is still open.
+Second round, also merged into lore.md: the Concord and Aumenor; Aldrath's motive ("one Rule, one God"); the 14th
+as his second body; Galeth alive and held in the Godless Reach; the Animari asleep in their machines; Vael **imprisoned
+by Aldrath** in a broken warp; the Sennari; the Vigil **marches as one** (no split); the pusher lamps; the Ordinal and
+Censors; the calendar; **one coin only**; the moons are **looks only**; the five kinds of Fog creature. The endgame is
+left open. Sections below that disagree with these are being kept only as history of the idea; lore.md wins.
 
 **Aldrath claims no one.** The Ordinal teaches that the Rule is above choosing favourites: Aldrath gives his grace to the
 whole world through his circle, not to a few. It sounds generous. It is also one more clue, since a god who claims no
@@ -153,8 +157,8 @@ that if Aldrath knew he had seen, he and his people would die. So he hid: he fak
 warp he could, and left his people behind without a word. Without their god the Sennari faded within two generations.
 Their last writings curse him. The Wayfolk still say "gone like Vael" for a man who walks out on his family.
 
-**Where Vael is now:** between places, in the folds of his own warps. He watches. He is the one being alive who knows the
-truth, and the story's turning point is when he finally decides to speak (Act III).
+**Where Vael is now (decided):** imprisoned. After years in hiding, Aldrath found him and locked him in a broken warp.
+He is the one being alive who knows the truth, and freeing him is the story's turning point (Act III).
 
 **Broken warps:** Sennari ruins hold warps that no longer open. A Warpwalker can wake some of them for a moment,
 which is how players reach places no ship can.
@@ -171,8 +175,7 @@ stand between the world and what would harm it. They are the **Lantern Vigil**, 
   blessed in the chapter houses, which hum at a pitch the Fog shies away from. When Galeth falls, the lamps flicker
   across the world for one night: the first sign every player sees that something is badly wrong.
 - **Ranks:** Wick (novice), Lamplighter, Warden-Knight, Flamekeeper, and the Lord-Commander at the Bastion.
-- **After Galeth falls,** the Vigil splits: most march into the Fog to find him, and a minority, led by a hard-faced
-  Flamekeeper, decide Galeth is dead and swear themselves to Aldrath instead. That split is a story choice point.
+- **After Galeth falls,** the whole Vigil marches into the Fog to find him, as one (decided).
 
 ### Verdane's groves
 
@@ -278,26 +281,14 @@ the paving.
 | 12 Unbowed | Hrothvar | Midwinter |
 | The Mourning | Merrith | Five days between years |
 
-### Money
+### Money (decided: one coin)
 
-Aldrath's mint strikes the only coin everyone takes, which is itself part of how the centre holds the world:
+Aldrath's mint strikes the one coin everyone uses, which is itself part of how the centre holds the world. Its name is
+open.
 
-- **Sovereign** (gold), rare; most players will see few.
-- **Mark** (silver), the coin of trade. 20 marks to a sovereign.
-- **Ring** (copper, with a hole), strung on cords by the Wayfolk. 12 rings to a mark.
-- Regional money: Ferrin **slugs** (iron bars stamped by a clan), Zarhim **water tokens** (clay, redeemable at wells),
-  Hrimfolk **hacksilver** (cut by weight). Trade with each people is better in its own money.
+### The moons (decided: looks only)
 
-### The moons in play
-
-The three moons already cross the sky on their own paths. In the lore:
-
-- **The Hollow** (pale, barren): when full, nights are brighter and the Fog lies lower and slower.
-- **The Veiled** (violet, a god's own self): when full, grace runs stronger and the chosen feel it; magic is easier.
-  Nobody knows why. (Its people and secret wait for the expansion.)
-- **The Shard** (broken): when it rises, the Fog stirs. Sailors will not leave port under the Shard; surges and Breaches
-  are likeliest then.
-- **A Threefold Night**, when all three are full together, happens a few times a year and is a world event.
+The moons are lore and sky; they do not change play.
 
 ## The Fog and what lives in it
 
@@ -347,7 +338,6 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
   players can join the march.
 - In the Fog they find not Galeth's remains but **a drag trail**: a path where the Fog itself was pulled toward the
   south-west. Toward the Godless Reach, everyone assumes.
-- The Vigil splits (see above). Players pick a side, or neither.
 - An Ilvari archivist, **Ithel Varr** (working name), shows the players the Verdane clue: the one god ordinary people
   still use is the one not fading. She is arrested by the Censure the next day.
 - Ends with the Sundering coast and the first Sennari ruins.
@@ -356,8 +346,8 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 
 - The expedition to the Godless Reach. There are no evil gods: their seats are empty, their temples gnawed.
 - One will rules the Forsaken now: the 14th. The Lessborn tribes march under him for the first time in history.
-- **Vael speaks.** In a broken Sennari warp, Vael finally appears to the players, tired and ashamed, and tells them what
-  he saw in the Undercroft of the Rule. He cannot prove it.
+- **Vael freed.** In a broken Sennari warp the players find where Aldrath locked Vael away, and free him. Tired and
+  ashamed, he tells them what he saw in the Undercroft of the Rule. He cannot prove it.
 - Players must decide whom to tell, knowing the Censure will call it heresy.
 - Ends with Vael's broken warps, which lead under Aldrath.
 
@@ -370,7 +360,7 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 - The remaining gods are told. Some refuse to believe it.
 - Ends with the road to Aumenor.
 
-### Endgame: The Crown of Erde
+### Endgame: The Crown of Erde (left open; an early idea)
 
 - Aumenor, sunk in the Sundering, where the Concord fell and the Splitting began. The Remnants guard it.
 - At its heart is **the Root**: the place where all the Return of the first age met. Whoever holds it holds the
