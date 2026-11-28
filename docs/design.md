@@ -520,7 +520,7 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 | Waist | Belts, tool belts, belt stacks, sashes; each belt has sockets (hips and back) for pouches, tools, weapons and, later, relics | From the start; sockets unlock with progress |
 | Legs | Light (reinforced trousers, chaps) to heavy (greaves, plate legs, armoured skirts) | From the start |
 | Feet | Boots; they replace wardrobe shoes | From the start |
-| Back | Utility items: jetpack, boiler, glider frame, canister pack, Fog lantern, packs, quivers, cloaks | Skill-gated: what you can wear depends on your skills |
+| Back | Utility items: jetpack, boiler, glider frame, canister pack, Fog lantern, packs, quivers, cloaks, back arms | Skill-gated: what you can wear depends on your skills |
 | Trinkets | Two rings and a necklace; not shown on the character for now | From the start |
 | Main and off hand | Weapons and tools, held or carried on the body | From the start |
 | Rig | A powered suit you climb into; it replaces the body rather than being worn | Arcane engine era |
@@ -582,6 +582,17 @@ Crafted items show who made them: a small stamped sigil in a fixed place on each
 | Heavy | Steamwright's brass | A respirator, a brass cuirass with a pressure gauge, pauldrons on fur with a gauge and a pipe, a boiler with a glowing firebox and a chimney, greaves with glowing knee cores, work gloves |
 | Plate | Ironclad | A full helm with an eye slit and a crest, a ridged breastplate with a fauld, plate arms with exposed pistons, gauntlets, plate legs with tassets, sabatons |
 | Rig | Arcane engine rig | An exosuit you climb into: it replaces the body with its frame and lifts the pilot 25 cm; a glowing arcane core, an engine with exhaust stacks, a roll cage, clamp hands; still inside the door (at most 2.0 x 1.25 m) |
+
+**Back arms.** A mechanical arm worn in the back slot, mounted on a pack or on an iron spine down the back. It rises
+over the left shoulder, high above the head, and arcs forward, its joints cogs with glowing cores, so the weapon hand
+stays free. It gives one action of its own, like any back item: a **utility** arm grabs, carries and repairs at arm's
+length (a claw, here holding a potion); a **combat** arm strikes alongside your weapon (a guarded saw), or, at its
+largest, two arms spread from a tall mast and each fires a triple-barrelled cannon; a **defence** arm swings a
+shield before your chest so your hands stay on the weapon, two-handers included. Two-handers then hang at the hip,
+as with any back item.
+
+**Colossus gauntlets** are the colossus arms from the elbow down only: huge plated forearms and fists in blued steel
+and brass, a glowing gem at the wrist, filling the wrist and hand slots and leaving the upper arms and sleeves seen.
 
 **Mechanical arms over any tier.** The heaviest cybernetics are arms, not suits: the colossus arms (huge bronze arms
 with domed shoulders, a round port, red hoses, corrugated cables to the neck and brass-capped fists hanging low) fill
