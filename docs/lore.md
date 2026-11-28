@@ -233,6 +233,7 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | The Last Bastion | The northern continent's far coast, facing the Sundering | The Lantern Vigil | Galeth | Fortress-monastery of the Vigil | Besieged: it stands at the edge of the Fog; it falls during the story |
 | The Godless Reach | Beyond the southern continent's far coast, with a landing on that coast | The Forsaken | The 14th, hidden | Unknown | The evil lands: no gods remain there |
 | (none) | Everywhere | Ilvari | Seraveth | No hometown: enclaves and caravans | Fading: their numbers dwindle as their magic did |
+| The hidden enclave *(decided 2026-11-28; name and place open)* | Main continent, a hidden forest or valley | Ilvari | Seraveth | One hidden Ilvari enclave, found through a quest; their quarter in Aldrath is small | Fading, and guarded |
 
 **The start: the fall of Farhallow.** Players begin as freefolk in **Farhallow** *(working name)*, a fishing and farming village on the main continent's far coast, outside any god's circle: home to freefolk of every people who could not afford to move inward. The Fog takes it on the first evening of the game.
 
