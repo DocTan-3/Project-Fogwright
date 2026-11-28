@@ -15,6 +15,8 @@ const ROCK := 0.25         # a cliff's rock columns
 const COLS := {"grass": Color("5f7a3a"), "grass_d": Color("4e6a30"), "dirt": Color("7a6448"), "path": Color("9a7d58"),
 	"sand": Color("c2ad80"), "rock": Color("77736b"), "rock_d": Color("5e5b55"), "moss": Color("5d6b3a")}
 const MAX_PUSH := 8
+const GRASS_CHUNK := 16.0
+const GRASS_RANGE := 45.0   # grass is drawn this far from the camera (the Albion view's height reaches about this)
 const SUB := 4            # where kinds meet, a cell is drawn in 4 x 4 squares (25 cm)
 
 ## kind_fn(Vector2 xz, slope_deg) -> "grass" | "dirt" | "path" | "sand" (what the ground is there); grass grows on "grass"
@@ -166,10 +168,11 @@ void fragment() {
 ## the tip, each a little different in height and lean. The shader sways them in the wind and bends them away from
 ## whoever is near (push()), springing back as they leave.
 static var _clump := FastNoiseLite.new()
-static func _grass(tris: Array, per_m2: float, seed: int) -> MultiMeshInstance3D:
+static func _grass(tris: Array, per_m2: float, seed: int) -> Node3D:
 	_clump.seed = seed; _clump.frequency = 0.09
 	var rng := RandomNumberGenerator.new(); rng.seed = seed * 7919 + 13
-	var xs := []
+	var chunks := {}   # Vector2i -> [Transform3D]: grass is drawn in 16 m chunks, each only near the camera
+	var total := 0
 	for t in tris:
 		var a: Vector3 = t[0]; var b: Vector3 = t[1]; var c: Vector3 = t[2]
 		var area := (b - a).cross(c - a).length() * 0.5
@@ -181,16 +184,25 @@ static func _grass(tris: Array, per_m2: float, seed: int) -> MultiMeshInstance3D
 			if r1 + r2 > 1.0: r1 = 1.0 - r1; r2 = 1.0 - r2
 			var p := a + (b - a) * r1 + (c - a) * r2
 			var s := rng.randf_range(0.55, 1.1) * lerpf(0.7, 1.15, _clump.get_noise_2d(p.x * 2.0, p.z * 2.0) * 0.5 + 0.5)
-			xs.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s * rng.randf_range(0.8, 1.2), s)), p))
-	var mm := MultiMesh.new(); mm.transform_format = MultiMesh.TRANSFORM_3D; mm.use_colors = true
-	mm.mesh = _tuft(); mm.instance_count = xs.size()
-	for i in xs.size():
-		mm.set_instance_transform(i, xs[i])
-		mm.set_instance_color(i, Color(1, 1, 1).lerp(Color(1.12, 1.05, 0.7) if rng.randf() < 0.3 else Color(0.82, 0.92, 0.78), rng.randf()))   # some sun-dried
-	var mi := MultiMeshInstance3D.new(); mi.name = "Grass"; mi.multimesh = mm; mi.material_override = _grass_mat()
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.set_meta("tufts", xs.size())
-	return mi
+			var key := Vector2i(floori(p.x / GRASS_CHUNK), floori(p.z / GRASS_CHUNK))
+			if not chunks.has(key): chunks[key] = []
+			chunks[key].append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s * rng.randf_range(0.8, 1.2), s)), p))
+			total += 1
+	var root := Node3D.new(); root.name = "Grass"
+	var tuft := _tuft()
+	for key in chunks:
+		var xs: Array = chunks[key]
+		var mm := MultiMesh.new(); mm.transform_format = MultiMesh.TRANSFORM_3D; mm.use_colors = true
+		mm.mesh = tuft; mm.instance_count = xs.size()
+		for i in xs.size():
+			mm.set_instance_transform(i, xs[i])
+			mm.set_instance_color(i, Color(1, 1, 1).lerp(Color(1.12, 1.05, 0.7) if rng.randf() < 0.3 else Color(0.82, 0.92, 0.78), rng.randf()))   # some sun-dried
+		var mi := MultiMeshInstance3D.new(); mi.multimesh = mm; mi.material_override = _grass_mat()
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visibility_range_end = GRASS_RANGE; mi.visibility_range_end_margin = 6.0
+		root.add_child(mi)
+	root.set_meta("tufts", total)
+	return root
 
 static func _tuft() -> ArrayMesh:
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)

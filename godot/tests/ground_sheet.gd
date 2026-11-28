@@ -31,7 +31,7 @@ func _ready() -> void:
 	var g := GroundKit.build(height, Rect2(-24, -22, 48, 40), kind); add_child(g)
 	var tris := 0
 	for mi in g.find_children("*", "MeshInstance3D", true, false): tris += (mi as MeshInstance3D).mesh.get_faces().size() / 3
-	var gm: MultiMeshInstance3D = g.get_node("Grass")
+	var gm: Node3D = g.get_node("Grass")
 	print("GROUND built in %d ms: %d ground triangles, %d grass tufts (%d triangles), pieces %s" % [Time.get_ticks_msec() - t0, tris, gm.get_meta("tufts"), gm.get_meta("tufts") * 15, g.get_meta("pieces")])
 	var house := Vox.prop("res://assets/buildings/medieval_voxel/Houses/House_3.glb"); add_child(house); house.position = Vector3(-4, height(Vector2(-4, -17)), -17)
 	const G := "res://assets/voxel/gear/"
