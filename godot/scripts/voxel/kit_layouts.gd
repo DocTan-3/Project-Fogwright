@@ -44,8 +44,9 @@ const GULL_LANTERN := {
 			{"at": Vector2i(0, 4), "dir": "x", "bays": "pdppp", "face": "board"},    # taproom | stair hall
 			{"at": Vector2i(5, 3), "dir": "x", "bays": "pdp", "face": "board"}],     # hall | kitchen
 		 "stairs": [{"at": Vector2i(27, 103), "run": "+x"}],
-		 "posts": [{"at": Vector2i(20, 38), "h": 41}, {"at": Vector2i(60, 38), "h": 41}],   # carved masts under the gallery's edge
-		 "firepit": {"at": Vector2i(40, 22), "r": 8},
+		 "posts": [{"at": Vector2i(25, 38), "h": 38}, {"at": Vector2i(50, 38), "h": 38}, {"at": Vector2i(75, 38), "h": 38}],   # carved masts under the gallery's edge
+		 "beams": [[Vector3i(3, 36, 38), Vector3i(98, 39, 40)]],                           # and the beam along it they carry
+		 "firepit": {"at": Vector2i(50, 22), "r": 8},
 		 "pieces": [{"p": "hearth", "at": Vector3i(3, 50, 0), "dir": "-y"},         # the taproom's, on the gable wall
 			{"p": "hearth", "at": Vector3i(150, 117, 0), "dir": "-x"},               # the kitchen range
 			{"p": "waystone", "at": Vector3i(8, -9, -5)}],                           # Hollin's, by the porch
@@ -57,7 +58,7 @@ const GULL_LANTERN := {
 			{"p": "table", "at": Vector2(6.6, 0.7)}, {"p": "bench", "at": Vector2(6.6, 0.3)}, {"p": "bench", "at": Vector2(6.6, 1.6)},
 			{"p": "table", "at": Vector2(2.2, 4.2)}, {"p": "bench", "at": Vector2(2.2, 3.8)}, {"p": "bench", "at": Vector2(2.2, 5.1)},
 			{"p": "table", "at": Vector2(5.4, 4.6)}, {"p": "bench", "at": Vector2(5.4, 4.2)}, {"p": "bench", "at": Vector2(5.4, 5.5)},
-			{"p": "sconce", "at": Vector2(1.9, 3.4), "z": 2.2}, {"p": "sconce", "at": Vector2(5.9, 3.4), "z": 2.2},
+			{"p": "sconce", "at": Vector2(2.25, 3.2), "z": 2.0}, {"p": "sconce", "at": Vector2(7.25, 3.2), "z": 2.0},
 			{"p": "desk", "at": Vector2(12.0, 3.0)}, {"p": "shelf", "at": Vector2(15.6, 5.9), "dir": "-x"},
 			{"p": "chest", "at": Vector2(14.6, 0.5)},
 			{"p": "table", "at": Vector2(11.0, 9.6)},
@@ -72,25 +73,25 @@ const GULL_LANTERN := {
 			{"p": "ivy", "at": Vector2(-0.1, 3.0), "dir": "-y", "z": 0.0}, {"p": "ivy", "at": Vector2(16.1, 6.0), "dir": "+y", "z": 0.0},
 			{"p": "rocks", "at": Vector2(-0.9, 10.0), "dir": "+y", "z": -0.5}, {"p": "rocks", "at": Vector2(16.6, 1.0), "dir": "+y", "z": -0.5}],
 		 "lights": [{"at": Vector3(1.6, 1.0, -4.0), "energy": 2.7, "range": 6.0, "color": Color(1.0, 0.62, 0.32)},   # the hearth
-			{"at": Vector3(4.0, 1.2, -2.2), "energy": 3.6, "range": 9.0, "color": Color(1.0, 0.6, 0.3)},       # the fire pit
+			{"at": Vector3(5.0, 1.2, -2.2), "energy": 4.0, "range": 10.0, "color": Color(1.0, 0.6, 0.3)},       # the fire pit
 			{"at": Vector3(4.0, 3.6, -2.2), "energy": 2.6, "range": 9.0},                                       # the chandelier
-			{"at": Vector3(4.0, 7.5, -2.0), "energy": 1.6, "range": 8.0, "color": Color(0.95, 0.85, 0.7)},       # light high in the roof, from the dormers
+			{"at": Vector3(5.0, 4.6, -2.0), "energy": 2.2, "range": 10.0, "color": Color(0.95, 0.85, 0.7)},
+			{"at": Vector3(4.0, 3.2, -6.0), "energy": 1.6, "range": 6.0},                                       # under the gallery       # light high in the roof, from the dormers
 			{"at": Vector3(13.0, 3.4, -9.0), "energy": 1.9, "range": 6.0},                                      # the kitchen
 			{"at": Vector3(6.15, 2.4, 0.3), "energy": 2.4, "range": 6.0, "color": Color(1.0, 0.72, 0.42)}]},    # the Vigil lantern
 		{"h": 12, "face": "dry",
-		 "voids": [Rect2i(3, 3, 76, 36)],   # the taproom open to the roof, the gallery along its back
+		 "voids": [Rect2i(3, 3, 96, 36)],   # the taproom open to the roof, the gallery along its back
 		 "walls": {"front": "pDpDpDpD", "right": "pppppp", "back": "pDppppDp", "left": "pppppp"},
 		 "inner": [
-			{"at": Vector2i(0, 2), "dir": "x", "bays": "rrrrpdpd", "swing": -1, "face": "board", "h": 30},   # gallery rail | front rooms | corridor
+			{"at": Vector2i(0, 2), "dir": "x", "bays": "rrrrrpdp", "swing": -1, "face": "board", "h": 30},   # gallery rail over the taproom | front room | corridor
 			{"at": Vector2i(0, 3), "dir": "x", "bays": "pd...dpp", "face": "board", "h": 30},   # corridor | back room, landing, keeper
-			{"at": Vector2i(4, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},
-			{"at": Vector2i(6, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},
+			{"at": Vector2i(5, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},   # over the taproom's own wall
 			{"at": Vector2i(2, 3), "dir": "y", "bays": "ppp", "face": "board", "h": 30}, {"at": Vector2i(5, 3), "dir": "y", "bays": "ppp", "face": "board", "h": 30}],
 		 "fittings": [
 			{"p": "shield", "at": Vector2(0.42, 0.5), "dir": "+y", "z": 0.9}, {"p": "shield", "at": Vector2(0.42, 1.5), "dir": "+y", "z": 1.3},
 			{"p": "shield", "at": Vector2(0.42, 2.6), "dir": "+y", "z": 0.9}, {"p": "shield_b", "at": Vector2(0.42, 3.0), "dir": "+y", "z": 1.9},
 			{"p": "chandelier", "at": Vector2(3.5, 1.7), "z": -1.4},
-			{"p": "bed", "at": Vector2(8.4, 0.4)}, {"p": "chest", "at": Vector2(9.6, 0.4)},
+			{"p": "bed", "at": Vector2(10.4, 0.4)}, {"p": "chest", "at": Vector2(11.6, 0.4)},
 			{"p": "bed", "at": Vector2(12.4, 0.4)}, {"p": "chest", "at": Vector2(13.6, 0.4)},
 			{"p": "bed", "at": Vector2(0.4, 9.6)}, {"p": "bed", "at": Vector2(2.4, 9.6)},
 			{"p": "bed", "at": Vector2(11.0, 9.6)}, {"p": "chest", "at": Vector2(12.4, 11.1)}],

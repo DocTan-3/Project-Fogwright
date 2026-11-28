@@ -410,11 +410,13 @@ def shield(name, paint_a, paint_b, quarters):
             fput(name, x, 0, z, c); fput(name, x, 1, z, 'sh_wood' if d <= 49 else 'iron')
     fput(name, 7, 0, 7, 'hoop'); fput(name, 8, 0, 8, 'hoop')
 shield('shield', 'sh_blue', 'sh_wood', False); shield('shield_b', 'sh_red', 'sh_ochre', True)
-# a horn sconce for a post: an iron strap round the post, a cow horn bent up, a candle in its mouth
-fbox('sconce', 1, 6, 3, 3, 0, 1, 'iron')
-for k in range(7):
-    fput('sconce', 3, 2 - k // 3, 2 + k, 'horn' if k < 5 else 'horn_d'); fput('sconce', 4, 2 - k // 3, 2 + k, 'horn')
-fbox('sconce', 3, 4, 0, 0, 9, 11, 'candle'); fput('sconce', 3, 0, 12, 'flame'); fput('sconce', 4, 0, 12, 'flame')
+# a horn sconce for a post: an iron strap round the post, a big pale cow horn curving out and up, a candle in its mouth
+fbox('sconce', 0, 9, 7, 7, 0, 2, 'iron'); fbox('sconce', 4, 5, 5, 6, 1, 2, 'iron')
+for k in range(12):
+    y = 5 - int(round(4 * (k / 11.0) ** 0.7)); w = 3 if k < 6 else 2
+    fbox('sconce', 3, 3 + w - 1, y, y, 2 + k, 2 + k, 'horn_d' if k % 4 == 0 else 'horn')
+    fbox('sconce', 3, 3 + w - 1, y + 1, y + 1, 2 + k, 2 + k, 'horn_d')
+fbox('sconce', 3, 4, 1, 2, 14, 17, 'candle'); fbox('sconce', 3, 4, 1, 2, 18, 19, 'flame')
 # a ring chandelier: a cartwheel off a wreck's cart hung on chains, candles round it
 for x in range(20):
     for y in range(20):
@@ -426,9 +428,9 @@ import math
 for k in range(8):
     a = k * math.pi / 4; cx = int(round(9.5 + 9 * math.cos(a))); cy = int(round(9.5 + 9 * math.sin(a)))
     fbox('chandelier', cx, cx, cy, cy, 2, 4, 'candle'); fput('chandelier', cx, cy, 5, 'flame')
-for z in range(2, 44):
+for z in range(2, 84):
     for (cx, cy) in ((2, 9), (17, 10), (9, 2), (10, 17)):
-        t = (z - 2) / 42.0
+        t = min(1.0, (z - 2) / 12.0)
         fput('chandelier', int(round(cx + (9.5 - cx) * t)), int(round(cy + (9.5 - cy) * t)), z, 'iron' if z % 2 else 'hoop')
 mb.COL = FPAL; mb.NAMES = list(FPAL)
 mb.write(os.path.join(out, 'kit_fittings.vox'), {n: F[n] for n in sorted(F)})

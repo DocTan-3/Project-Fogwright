@@ -158,6 +158,13 @@ static func build(layout: Dictionary) -> Node3D:
 			var wells := []
 			for sr in below.get("stairs", []): wells.append(_stair_well(sr, below.h))
 			for vd in st.get("voids", []): wells.append([vd.position, vd.size])   # a hall open to the roof
+			for vd in st.get("voids", []):   # a trimmer beam round the void's open edges, so the joists end on it
+				var r2: Rect2i = vd
+				for x in range(r2.position.x - 2, r2.end.x + 2):
+					for y in range(r2.position.y - 2, r2.end.y + 2):
+						var edge := x >= r2.end.x or y >= r2.end.y or x < r2.position.x or y < r2.position.y
+						if edge and x >= WALL and y >= WALL and x < W - WALL and y < D - WALL:
+							for zz in range(z - 4, z): vs[Vector3i(x, y, zz)] = Color8(72, 62, 54) if zz > z - 4 else Color8(62, 54, 46)
 			_floor(vs, W, D, z - 3, wells, boxes, layout.get("floor", "boards"))
 		# walls: the inner partitions first, so the outer walls win where they meet
 		for iw in st.get("inner", []):
@@ -177,6 +184,11 @@ static func build(layout: Dictionary) -> Node3D:
 		for pc in st.get("pieces", []):   # kit pieces inside (a hearth): at is the piece's corner in voxels, z from the floor
 			var at3: Vector3i = pc.at; _stamp(vs, pc.p, Vector3i(at3.x, at3.y, z + at3.z), _run_dir(pc.get("dir", "+x")))
 		for pp in st.get("posts", []): _carved_post(vs, boxes, pp.at, z, pp.h)
+		for bm in st.get("beams", []):   # [Vector3i from, Vector3i to] in voxels, z from the floor: a tarred timber
+			var a: Vector3i = bm[0]; var b2: Vector3i = bm[1]
+			for x in range(a.x, b2.x + 1):
+				for y in range(a.y, b2.y + 1):
+					for zz in range(a.z, b2.z + 1): vs[Vector3i(x, y, z + zz)] = Color8(72, 62, 54) if zz > a.z else Color8(62, 54, 46)
 		if st.has("firepit"): _firepit(vs, boxes, st.firepit.at, st.firepit.get("r", 9), z)
 		var fs := {}
 		for ft in st.get("fittings", []): _fitting(fs, boxes, ft, z)
@@ -204,6 +216,13 @@ static func build(layout: Dictionary) -> Node3D:
 			if q.y >= 0 and q.y < D and q.z >= z + mini(q.y, D - 1 - q.y): top.erase(k)
 	var top_face: String = storeys[-1].get("face", "frame")
 	_roof(rf, ramps, W, D, z, layout.get("roof", "thatch"), top_face)
+	if knee:   # over a hall open to the roof, the thatch's underside is boarded: pale wreck boards between the rafters
+		for vd in storeys[-1].get("voids", []):
+			var r2: Rect2i = vd
+			for x in range(r2.position.x, r2.end.x):
+				for y in range(WALL, D - WALL):
+					var k := Vector3i(x, y, z + mini(y, D - 1 - y))
+					if rf.has(k): rf[k] = Color8(160, 144, 120) if (x / 3) % 2 == 0 else Color8(146, 130, 108)
 	for dm in _dormers: _dormer(rf, dm[0], dm[1], dm[2])
 	for gy in layout.get("gable_windows", []): _gable_window(rf, W, D, z, int(gy * 10.0), top_face)
 	var dressed: bool = layout.get("dress", true)
@@ -215,6 +234,7 @@ static func build(layout: Dictionary) -> Node3D:
 				if (q.x == 0 or q.x == W - 1) and (q.y == 0 or q.y == D - 1) and q.z < z: vset.erase(k)
 	for ch in layout.get("chimneys", []): _chimney(rf, boxes, ch.at, PLINTH + ch.get("from", 15), z + ch.get("above", 0))
 	sets.append(rf)
+	if layout.get("debug", false): root.set_meta("sets", sets)
 	for s in sets.size():
 		var vset: Dictionary = sets[s]
 		if vset.is_empty(): continue
@@ -325,6 +345,14 @@ static func _trusses(vs: Dictionary, vd: Rect2i, z: int, D: int) -> void:
 			for k in range(0, 12):   # struts from the tie beam up toward the ridge
 				vs[Vector3i(xx, D / 2 - 6 + k / 2, cz + 2 + k)] = Color8(72, 62, 54); vs[Vector3i(xx, D / 2 + 5 - k / 2, cz + 2 + k)] = Color8(72, 62, 54)
 			for zz in range(cz + 2, cz + 14): vs[Vector3i(xx, D / 2, zz)] = Color8(86, 72, 60)   # the king post
+	# the rafters under the thatch every 0.5 m, on a wall plate along the top of each knee wall, and a purlin halfway up
+	for x in range(vd.position.x, vd.end.x):
+		for y in range(WALL, D - WALL):
+			var zr := z + mini(y, D - 1 - y) - 1
+			if x % 5 == 0: vs[Vector3i(x, y, zr)] = Color8(78, 66, 56)
+			elif mini(y, D - 1 - y) % 20 == 10: vs[Vector3i(x, y, zr)] = Color8(66, 56, 48)
+		for y in [WALL, D - WALL - 1]:
+			for zz in [z - 2, z - 1]: vs[Vector3i(x, y, zz)] = Color8(72, 62, 54)
 
 # ---------------------------------------------------------------- stairs and steps
 static func _run_dir(r: String) -> Vector2i:

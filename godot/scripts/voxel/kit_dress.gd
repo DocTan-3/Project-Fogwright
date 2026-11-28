@@ -191,15 +191,14 @@ static func _inside(sets: Array, W: int, D: int, floors: Array, seed: int) -> vo
 			if q.y == w - 1 or q.y == D - w: u = q.x
 			elif q.x == w - 1 or q.x == W - w: u = q.y
 			if u < 0: continue
-			var low := false
-			for fz in floors:
-				if q.z >= fz and q.z < fz + 12: low = true
+			var low: bool = floors.size() > 0 and q.z >= floors[0] and q.z < floors[0] + 12   # the ground floor's only: upstairs is under the roof
 			if low:
 				vs[k] = Color8(72, 62, 54) if q.z == 11 + _floor_of(floors, q.z) else (Color8(118, 102, 84) if (u / 3) % 2 == 0 else Color8(134, 118, 96))
 				if u % 3 == 0: vs[k] = Color8(96, 82, 68)
 			else:
 				var r := _h(u / 3, q.z / 2, seed + 61)
-				vs[k] = _tone(_h(u / 5, q.z / 3, seed), false).darkened(0.05) if r < 0.07 else (Color8(176, 164, 140) if r < 0.35 else Color8(186, 175, 151))
+				var big := _h(u / 9, q.z / 6, seed + 62)   # limewash in big soft patches, a little smoke-darkened higher up
+				vs[k] = Color8(170, 158, 134) if big < 0.25 else (Color8(178, 167, 143) if r < 0.5 else Color8(186, 175, 151))
 
 static func _floor_of(floors: Array, z: int) -> int:
 	var best := 0
