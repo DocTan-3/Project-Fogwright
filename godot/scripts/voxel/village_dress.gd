@@ -381,6 +381,7 @@ func _ship(c: Vector2, a: float) -> void:
 			v.put(Vector3i(i - nl / 2, int(deck_y / 0.1) - 10, k), C.drift if (k / 2) % 2 else C.drift_d, 0.03)
 			if t < 0.22: v.put(Vector3i(i - nl / 2, int(deck_y / 0.1) - 10 + 10, k), C.drift_d, 0.03)   # the stern castle's deck
 		for s in [-1, 1]:   # rails
+			if s < 0 and i - nl / 2 >= 5 and i - nl / 2 <= 15 and t >= 0.22: continue   # the gangway: a gap in the rail where the plank comes aboard
 			for y in 5: if y == 4 or i % 6 == 0: v.put(Vector3i(i - nl / 2, int(deck_y / 0.1) - 10 + 1 + y + (10 if t < 0.22 else 0), int(round(s * db / 0.1))), C.tar_l, 0.03)
 	for i in int(0.22 * nl):   # the stern castle's walls and a door forward
 		var t := float(i) / nl; var db := _half(t, deck_y / depth, beam) - 0.2
@@ -414,15 +415,22 @@ func _ship(c: Vector2, a: float) -> void:
 	rm.material_override = rmat; mi.add_child(rm)
 	# collision: the hull as a box, the deck walkable, the stern castle
 	var sb := StaticBody3D.new(); mi.add_child(sb)
-	for bx in [[Vector3(0, deck_y - 2.0, 0), Vector3(L * 0.85, 2.0, beam * 0.75)], [Vector3(-L * 0.39, deck_y + 0.5, 0), Vector3(L * 0.2, 1.0, beam * 0.7)]]:
+	var top := (int(deck_y / 0.1) - 10 + 1) * 0.1   # the deck's walking surface (the deck voxels' top)
+	for bx in [[Vector3(0, top - 1.0, 0), Vector3(L * 0.85, 2.0, beam * 0.75)], [Vector3(-L * 0.39, top + 0.5, 0), Vector3(L * 0.2, 1.0, beam * 0.7)]]:
 		var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = bx[1]; cs.shape = bs; cs.position = bx[0]; sb.add_child(cs)
-	# the gangplank from the pier's head up onto the deck
+	for rail in [[-L * 0.42, L * 0.43, 1], [-L * 0.42, 0.5, -1], [1.5, L * 0.43, -1]]:   # the rails: you cannot walk off, but in at the gangway
+		var cs := CollisionShape3D.new(); var bs := BoxShape3D.new(); bs.size = Vector3(rail[1] - rail[0], 1.0, 0.15); cs.shape = bs
+		cs.position = Vector3((rail[0] + rail[1]) * 0.5, top + 0.5, rail[2] * beam * 0.375); sb.add_child(cs)
+	# the gangplank: from the pier's boards (1.2 m in from its edge) through the gap in the rail onto the deck, a gentle
+	# slope you walk up, with cleats across it for the feet and a rope rail on the sea side
+	var z0 := -3.85; var z1 := -1.9; var rise := top - (DECK + 0.08); var run := z1 - z0; var lp := sqrt(rise * rise + run * run)
 	var gp := VBox.new(0.05)
-	gp.box(Vector3(-0.4, 0, 0), Vector3(0.4, 0.08, 2.4), C.drift_d)
-	for k in 8: gp.box(Vector3(-0.4, 0.08, 0.15 + k * 0.3), Vector3(0.4, 0.12, 0.2 + k * 0.3), C.tar_d)
-	var g := gp.node(Vector3.ZERO, "Gangplank"); mi.add_child(g); g.position = Vector3(1.0, 1.05, -2.6); g.rotation.x = -atan2(deck_y - 1.05, 1.6)
-	var gsb := StaticBody3D.new(); var gcs := CollisionShape3D.new(); var gbs := BoxShape3D.new(); gbs.size = Vector3(0.8, 0.1, 2.4)
-	gcs.shape = gbs; gcs.position = Vector3(0, 0.05, 1.2); gsb.add_child(gcs); g.add_child(gsb)
+	gp.box(Vector3(-0.4, 0, 0), Vector3(0.4, 0.08, lp), C.drift_d)
+	for k in int(lp / 0.3): gp.box(Vector3(-0.38, 0.08, 0.15 + k * 0.3), Vector3(0.38, 0.12, 0.2 + k * 0.3), C.tar_d)
+	var g := gp.node(Vector3.ZERO, "Gangplank"); mi.add_child(g); g.position = Vector3(1.0, DECK, z0); g.rotation.x = -atan2(rise, run)
+	var gsb := StaticBody3D.new(); var gcs := CollisionShape3D.new(); var gbs := BoxShape3D.new(); gbs.size = Vector3(0.8, 0.12, lp + 0.9)
+	# the collision runs on under the pier's boards, so there is no lip to stub a toe on
+	gcs.shape = gbs; gcs.position = Vector3(0, 0.0, (lp - 0.9) * 0.5); gsb.add_child(gcs); g.add_child(gsb)
 	mi.set_meta("deck_y", deck_y)
 	placed.append(["ship", c, 8.0, "the last ship out"])
 	_count("ship voxels", v.cells.size())

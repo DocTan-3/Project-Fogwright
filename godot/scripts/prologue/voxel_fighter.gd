@@ -20,6 +20,8 @@ var hp := 100.0
 var stamina := 100.0
 var enabled := true
 var invulnerable := false
+var min_hp := 0.0                # the first fight teaches: it can hurt you, it cannot down you
+var auto_guard := 0.0            # tests: the guard held for this long, as if right click were down
 var _swing := -1.0               # time into the current swing, -1 when none
 var _side := 1
 var _hit_done := false
@@ -47,7 +49,8 @@ func _physics_process(delta: float) -> void:
 	invulnerable = _dodge > 0.1
 	var can: bool = enabled and not player.frozen
 	if can and Input.is_action_just_pressed("attack") and _swing < 0.0 and weapon != "" and _dodge <= 0.0: start_swing()
-	var g: bool = can and Input.is_action_pressed("block") and weapon != "" and _swing < 0.0
+	auto_guard = maxf(0.0, auto_guard - delta)
+	var g: bool = can and (Input.is_action_pressed("block") or auto_guard > 0.0) and weapon != "" and _swing < 0.0
 	if g and not _guard: _guard_t = 0.0
 	_guard = g; _guard_t += delta
 	player.speed_scale = 0.45 if _guard else 1.0
@@ -113,6 +116,7 @@ func take_hit(amount: float, from: Vector3, attacker: Node = null) -> String:
 	return "hit"
 
 func _check() -> void:
+	if min_hp > 0.0: hp = maxf(hp, min_hp)
 	if hp <= 0.0:
 		hp = 0.0; enabled = false; downed.emit()
 

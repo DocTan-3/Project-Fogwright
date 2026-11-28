@@ -26,6 +26,11 @@ var title: Label
 var subtitle_card: Label
 var hurt: ColorRect
 var glow: ColorRect
+## over people and beasts in the world: a name (only those that matter), a small quest mark when they have something
+## for you, a health bar on what you fight; each hidden when a wall or the land stands between it and the camera
+var tags := {}                # id -> {"node": Node3D, "name": String, "up": float, "quest": bool, "hp": float (-1 none), "foe": bool}
+var tag_layer: Control
+var _tag_seen := {}           # id -> 0..1, eased, so a tag fades as it goes behind a wall
 var _hurt := 0.0
 var _glow := 0.0
 
@@ -51,6 +56,8 @@ func _ready() -> void:
 	sub_text = Label.new(); sub_text.add_theme_font_size_override("font_size", 21); sub_text.add_theme_color_override("font_color", INK)
 	sub_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; sub_text.custom_minimum_size = Vector2(820, 0); vb.add_child(sub_text)
 	sub_panel.visible = false
+	tag_layer = Control.new(); tag_layer.set_anchors_preset(Control.PRESET_FULL_RECT); tag_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tag_layer.draw.connect(_draw_tags); root.add_child(tag_layer)
 	bars = Control.new(); bars.set_anchors_preset(Control.PRESET_CENTER_BOTTOM); bars.position = Vector2(-180, -70); bars.size = Vector2(360, 40)
 	bars.mouse_filter = Control.MOUSE_FILTER_IGNORE; root.add_child(bars)
 	hp_bar = _bar(bars, Vector2(0, 0), Vector2(360, 14), Color(0.62, 0.16, 0.14)); st_bar = _bar(bars, Vector2(40, 20), Vector2(280, 8), Color(0.72, 0.62, 0.3))
@@ -83,9 +90,76 @@ func _bar(parent: Control, pos: Vector2, sz: Vector2, col: Color) -> ProgressBar
 	parent.add_child(b); return b
 
 func _process(delta: float) -> void:
-	compass.queue_redraw()
+	compass.queue_redraw(); tag_layer.queue_redraw()
 	_hurt = maxf(0.0, _hurt - delta * 1.5); (hurt.material as ShaderMaterial).set_shader_parameter("a", _hurt)
 	_glow = maxf(0.0, _glow - delta * 0.35); (glow.material as ShaderMaterial).set_shader_parameter("a", _glow)
+
+## a lesson while the world is stopped: a title, what it is, and the key, in the middle of the screen
+var _lesson: PanelContainer
+func lesson(title_: String, text: String, key: String) -> void:
+	if _lesson == null:
+		_lesson = PanelContainer.new(); _lesson.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_lesson.set_anchors_preset(Control.PRESET_CENTER); _lesson.position = Vector2(-300, 90); _lesson.size = Vector2(600, 10)
+		var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.05, 0.05, 0.06, 0.72); sb.set_corner_radius_all(6); sb.border_color = GOLD; sb.set_border_width_all(1)
+		for m in ["left", "right", "top", "bottom"]: sb.set("content_margin_" + m, 16)
+		_lesson.add_theme_stylebox_override("panel", sb); tag_layer.get_parent().add_child(_lesson)
+		var vb := VBoxContainer.new(); _lesson.add_child(vb)
+		for k in 3:
+			var l := Label.new(); l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.custom_minimum_size = Vector2(560, 0); l.add_theme_font_size_override("font_size", [26, 19, 22][k]); l.add_theme_color_override("font_color", [GOLD, INK, Color.WHITE][k])
+			vb.add_child(l)
+	var ls := _lesson.get_child(0).get_children()
+	(ls[0] as Label).text = title_; (ls[1] as Label).text = text; (ls[2] as Label).text = "[ " + key + " ]" if key != "" else ""
+	_lesson.visible = title_ != ""; _lesson.reset_size(); _lesson.position = Vector2(-_lesson.size.x / 2, 90)
+
+func set_tag(id: String, node: Node3D, name_: String, up := 2.05, foe := false) -> void:
+	tags[id] = {"node": node, "name": name_, "up": up, "quest": tags.get(id, {}).get("quest", false), "hp": tags.get(id, {}).get("hp", -1.0), "foe": foe}
+func clear_tag(id: String) -> void: tags.erase(id); _tag_seen.erase(id)
+func tag_quest(id: String, on: bool) -> void: if tags.has(id): tags[id].quest = on
+func tag_hp(id: String, frac: float) -> void: if tags.has(id): tags[id].hp = frac
+
+func _physics_process(delta: float) -> void:   # which tags the camera can see (rays need the physics frame)
+	if camera == null: return
+	var space := camera.get_world_3d().direct_space_state; var eye := camera.global_position
+	for id in tags.keys():
+		var t: Dictionary = tags[id]; var n: Node3D = t.node
+		if not is_instance_valid(n) or not n.is_visible_in_tree(): _tag_seen[id] = 0.0; continue
+		var at: Vector3 = n.global_position + Vector3(0, t.up, 0)
+		var far := eye.distance_to(at); var want := 1.0
+		if far > (40.0 if t.foe or t.quest else 22.0) or camera.is_position_behind(at): want = 0.0
+		else:
+			var ex: Array[RID] = []
+			if n is CollisionObject3D: ex.append((n as CollisionObject3D).get_rid())
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(eye, at, 1, ex))
+			if not hit.is_empty() and (hit.collider as Node) != n and not ((hit.collider as Node) is CharacterBody3D): want = 0.0
+		_tag_seen[id] = move_toward(_tag_seen.get(id, 0.0), want, delta * 6.0)
+
+func _draw_tags() -> void:
+	if camera == null: return
+	var font := ThemeDB.fallback_font
+	for id in tags:
+		var a: float = _tag_seen.get(id, 0.0)
+		if a <= 0.01: continue
+		var t: Dictionary = tags[id]; var n: Node3D = t.node
+		if not is_instance_valid(n): continue
+		var at: Vector3 = n.global_position + Vector3(0, t.up, 0)
+		var p := camera.unproject_position(at); var far := camera.global_position.distance_to(at)
+		var k := clampf(1.2 - far / 40.0, 0.55, 1.0)   # smaller further off
+		var y := p.y
+		if t.hp >= 0.0:   # a health bar
+			var w := 70.0 * k; var r := Rect2(p.x - w / 2, y - 6, w, 6.0 * k)
+			tag_layer.draw_rect(r.grow(1.5), Color(0, 0, 0, 0.6 * a)); tag_layer.draw_rect(Rect2(r.position, Vector2(w * clampf(t.hp, 0, 1), r.size.y)), Color(0.75, 0.16, 0.12, a))
+			y -= 10.0
+		if t.name != "":
+			var fs := int(15 * k); var sz := font.get_string_size(t.name, HORIZONTAL_ALIGNMENT_CENTER, -1, fs)
+			var col := Color(0.95, 0.55, 0.45, a) if t.foe else Color(INK, a)
+			tag_layer.draw_string_outline(font, Vector2(p.x - sz.x / 2, y), t.name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 4, Color(0, 0, 0, 0.8 * a))
+			tag_layer.draw_string(font, Vector2(p.x - sz.x / 2, y), t.name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+			y -= sz.y + 2
+		if t.quest:   # a small gold diamond
+			var r2 := 5.0 * k + 1.0; var c := Vector2(p.x, y - r2)
+			var pts := PackedVector2Array([c + Vector2(0, -r2), c + Vector2(r2 * 0.75, 0), c + Vector2(0, r2), c + Vector2(-r2 * 0.75, 0)])
+			tag_layer.draw_colored_polygon(pts, Color(GOLD, a)); tag_layer.draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0, 0, 0, 0.7 * a), 1.2)
 
 func flash_hurt(a := 0.7) -> void: _hurt = a
 func flash_glow(a := 1.4) -> void: _glow = a

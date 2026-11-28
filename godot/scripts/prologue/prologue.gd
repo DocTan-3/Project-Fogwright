@@ -88,6 +88,7 @@ func _ready() -> void:
 	eq.closed.connect(func(): player.frozen = false)
 	_afternoon()
 	_villagers()
+	for id in ["Maren", "Brann", "Hew", "Dunn", "Garr"]: hud.set_tag(id, npcs[id], id)
 	_world_items()
 	_run()
 
@@ -203,6 +204,8 @@ func _process(_d: float) -> void:
 	if hud == null or not is_instance_valid(hud) or hud.prompt == null: return
 	var best := ""; var bd := 2.3; var label := ""
 	var me := player.global_position
+	for id in npcs: hud.tag_quest(id, talkable.has(id))
+	if is_instance_valid(dog) and dog.state != "dead": hud.tag_hp("dog", dog.hp / FogDog.MAX_HP)
 	for id in talkable:
 		var v: Node3D = npcs[id]; var d := v.global_position.distance_to(me)
 		if d < bd: bd = d; best = id; label = talkable[id]
@@ -361,32 +364,89 @@ func _beat3() -> void:
 	await _shot("3b_armed", player.global_position + Vector3(4, 0, -4))
 
 func _beat4() -> void:
+	# the first fight is the combat lesson: it can hurt you but not down you, it will not die before the lessons are
+	# done, and at each new thing the world stops while the game shows you what to press
 	beat = 4
 	hud.bars.visible = true
 	dog = FogDog.new(); dog.name = "FogDog"; level.add_child(dog)
-	dog.global_position = _open_spot(7.0, 13.0) + Vector3(0, 0.3, 0); dog.target = player; dog.fighter = fighter
+	hud.set_tag("dog", dog, "Fog-warped dog", 1.35, true); hud.tag_hp("dog", 1.0)
+	dog.died.connect(func(): hud.clear_tag("dog"))
+	# it comes in along a road out of the Fog, far enough off to be a shape first, then a dog
+	dog.global_position = _open_spot(17.0, 26.0) + Vector3(0, 0.3, 0); dog.target = player; dog.fighter = fighter
+	dog.hold = true; dog.min_hp = 50.0; fighter.min_hp = 30.0
 	_objective("Survive", dog.global_position + Vector3(0, 1, 0), "")
-	await _say([["", "(Something comes out of the mist, low to the ground. It was a dog, once.)"]])
-	hud.show_hint("Left click strikes where you look.\nHold right click to guard: raised just before a bite, it parries.\nAlt or C dodges.")
+	await _say([["", "(Something comes out of the mist, low to the ground, along the road. It was a dog, once.)"]])
 	checkpoint = player.global_position
 	var alive := [true]; dog.died.connect(func(): alive[0] = false)
-	var shot_taken := false
+	var lunged := [0]; dog.lunging.connect(func(): lunged[0] += 1)
 	var t_fight := Time.get_ticks_msec()
-	while alive[0]:
-		if is_instance_valid(dog): hud.set_marker("objective", dog.global_position + Vector3(0, 1, 0))
-		if auto:   # the autopilot fights: face the dog and swing when it is near
-			if Time.get_ticks_msec() - t_fight > 90000 and is_instance_valid(dog): dog.take_hit(999.0, Vector3.FORWARD)
-			var d := dog.global_position - player.global_position
-			rig.yaw = atan2(-d.x, -d.z)
-			if d.length() < 2.2 and fighter._swing < 0.0 and shot_taken: fighter.start_swing()
-			d.y = 0; player.auto_dir = d.normalized() if d.length() > 1.6 else Vector3.ZERO
-			if not shot_taken and d.length() < 4.0: shot_taken = true; await _shot("4a_fight", dog.global_position)
-		hud.hp_bar.value = fighter.hp; hud.st_bar.value = fighter.stamina
-		await get_tree().process_frame
+	# 1. the strike
+	hud.show_hint("STRIKE\nLeft click swings the hatchet where you look. Turn the view onto it and hit it.")
+	var full := dog.hp
+	while dog.hp >= full: await _fight_frame(t_fight, true)
+	await _shot("4a_fight", dog.global_position)
+	# 2. the guard and the parry: the next lunge stops in the air
+	hud.show_hint("It's going to lunge. Watch for the red mark on the ground: that is where it will leap.")
+	dog.hold = false
+	var n: int = lunged[0]
+	while lunged[0] == n: await _fight_frame(t_fight, false)
+	await _lesson("GUARD", "Hold RIGHT MOUSE to raise your guard.\nRaised just as it leaps, that is a parry: it costs nothing and throws it off its feet. Held early, it is a block: you take a little, and it costs stamina.", "block")
+	await _settle(t_fight)
+	# 3. the dodge
+	hud.show_hint("Again. This time, get out of its way.")
+	n = lunged[0]
+	while lunged[0] == n: await _fight_frame(t_fight, false)
+	await _lesson("DODGE", "Press C (or Alt) with a direction to roll out of the way. For a moment nothing can touch you. It costs stamina; resting brings it back.", "dodge")
+	await _settle(t_fight)
+	# 4. now the fight is yours
+	hud.show_hint("Now finish it. Strike, guard, dodge.")
+	dog.min_hp = 0.0
+	while alive[0]: await _fight_frame(t_fight, false)
+	fighter.min_hp = 0.0
 	hud.show_hint(""); player.auto_dir = Vector3.ZERO
 	await _wait(1.0)
 	await _shot("4b_dead")
 	await _say([["", "(It does not get up. Under the matted grey there is a collar.)"]])
+
+## one frame of the first fight (auto: the autopilot closes in and swings, or keeps its distance)
+func _fight_frame(t_fight: int, strike: bool) -> void:
+	if is_instance_valid(dog): hud.set_marker("objective", dog.global_position + Vector3(0, 1, 0))
+	if auto and is_instance_valid(dog):
+		if Time.get_ticks_msec() - t_fight > 240000: dog.min_hp = 0.0; dog.take_hit(999.0, Vector3.FORWARD)
+		var d := dog.global_position - player.global_position
+		rig.yaw = atan2(-d.x, -d.z)
+		var go_in := strike or (dog.min_hp == 0.0)
+		if go_in and d.length() < 2.2 and fighter._swing < 0.0: fighter.start_swing()
+		d.y = 0; player.auto_dir = d.normalized() if go_in and d.length() > 1.6 else Vector3.ZERO
+	hud.hp_bar.value = fighter.hp; hud.st_bar.value = fighter.stamina
+	await get_tree().process_frame
+
+## the world stops; the lesson shows; it goes on when the player does the thing (held guard, or dodge)
+func _lesson(title_: String, text: String, action: String) -> void:
+	player.auto_dir = Vector3.ZERO
+	Engine.time_scale = 0.0
+	hud.show_hint(""); hud.lesson(title_, text, "Hold RIGHT MOUSE" if action == "block" else "Press C or Alt")
+	await _shot("4_lesson_" + action, dog.global_position)
+	var t0 := Time.get_ticks_msec()
+	while true:
+		await get_tree().process_frame
+		if auto and Time.get_ticks_msec() - t0 > 600: break
+		if action == "block" and Input.is_action_pressed("block"): break
+		if action == "dodge" and Input.is_action_just_pressed("dodge"): break
+	hud.lesson("", "", "")
+	Engine.time_scale = 1.0
+	if action == "dodge": fighter.dodge()
+	elif auto: fighter.auto_guard = 0.5
+
+## after a lesson: the lunge plays out, then a word on how it went
+func _settle(t_fight: int) -> void:
+	var was := fighter.hp
+	var t := 0.0
+	while t < 1.4: await _fight_frame(t_fight, false); t += get_process_delta_time()
+	var how := "Parried! It's down for a moment: hit it now." if dog.state == "stagger" else ("You took it on the guard." if fighter.hp < was and fighter.hp > was - 10.0 else ("Out of its reach." if fighter.hp >= was else "It caught you. Watch for the red mark."))
+	hud.show_hint(how)
+	t = 0.0
+	while t < 2.5: await _fight_frame(t_fight, dog.state == "stagger"); t += get_process_delta_time()
 
 func _beat5() -> void:
 	beat = 5

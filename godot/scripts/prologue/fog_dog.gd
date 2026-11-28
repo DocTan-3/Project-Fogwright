@@ -7,9 +7,13 @@ class_name FogDog
 extends CharacterBody3D
 
 signal died
+signal lunging                # it has left the ground: the tutorial stops the world here to teach the guard and the dodge
 var target: Node3D            # the player
 var fighter: VoxelFighter
-var hp := 100.0
+const MAX_HP := 170.0         # five clean hits: long enough a fight to learn in
+var hp := MAX_HP
+var hold := false             # the tutorial keeps it circling, never committing, until the player has struck it
+var min_hp := 0.0             # and it cannot die before the lessons are done
 var radius := 0.5
 var state := "stalk"          # stalk, windup, lunge, recover, snap, stagger, dead
 var _t := 0.0
@@ -105,7 +109,7 @@ func _physics_process(delta: float) -> void:
 			var side := Vector3(-dir.z, 0, dir.x) * _circle
 			want = (side * 3.2 + dir * (dist - 4.2) * 1.5).limit_length(4.0)
 			_face(dir, delta)
-			if _t > 1.8 and dist < 6.5: _go("windup")
+			if _t > 1.8 and dist < 6.5 and not hold: _go("windup")
 			elif dist < 1.6: _go("snap")
 		"windup":
 			_face(dir, delta, 14.0); _lunge_dir = dir
@@ -113,7 +117,7 @@ func _physics_process(delta: float) -> void:
 			telegraph.global_position = global_position + _lunge_dir * 2.4 + Vector3(0, 0.06, 0)
 			telegraph.global_rotation = Vector3(0, atan2(_lunge_dir.x, _lunge_dir.z), 0)
 			(telegraph.material_override as ShaderMaterial).set_shader_parameter("fill", clampf(_t / 0.75, 0, 1))
-			if _t > 0.75: telegraph.visible = false; _hit_this = false; _go("lunge")
+			if _t > 0.75: telegraph.visible = false; _hit_this = false; _go("lunge"); lunging.emit()
 		"lunge":
 			want = _lunge_dir * 11.0
 			if not _hit_this and dist < 1.15:
@@ -169,7 +173,7 @@ func _animate(delta: float) -> void:
 
 func take_hit(amount: float, from_dir: Vector3) -> void:
 	if state == "dead": return
-	hp -= amount
+	hp = maxf(hp - amount, min_hp if min_hp > 0.0 else -1.0)
 	velocity += from_dir * 3.0
 	if hp <= 0.0:
 		_go("dead"); remove_from_group("fog_enemy"); died.emit()
