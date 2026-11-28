@@ -1,8 +1,8 @@
 ## Farhallow in the voxel style, on its real plan (scripts/farhallow.gd's land and data/farhallow.json): the ground kit
 ## (scripts/voxel/ground_kit.gd) laid over the village's terrain - the coast, the beach, the rise to the north-east, each
 ## building's level terrace - with its roads, lanes and trails worn into the turf, the sea, swaying grass that parts round
-## the player, and the buildings as stand-ins from Medieval Voxel Assets (CC0), sized to each plot, until Fogwright's own
-## voxel buildings are made.
+## the player, and the buildings: the inn from Fogwright's own voxel building kit, the rest still stand-ins from Medieval
+## Voxel Assets (CC0), sized to each plot, until the kit has their types.
 extends Node3D
 
 const FH := preload("res://scripts/farhallow.gd")
@@ -10,6 +10,8 @@ const MED := "res://assets/buildings/medieval_voxel/"
 # stand-in buildings and their footprints (metres, x by z), the nearest in shape is sized to each plan building
 const STANDINS := [["Houses/House_1", 6.5, 6.4], ["Houses/House_2", 4.8, 6.1], ["Houses/House_3", 4.1, 4.0],
 	["Shops/Shop_Closed", 2.8, 2.4], ["Towers/Tower_Simple", 6.0, 6.0]]
+# plan building types built from the voxel building kit instead of a stand-in (scripts/voxel/kit_layouts.gd)
+const KITS := {"inn": KitLayouts.GULL_LANTERN}
 const MR := 0.25             # the path mask's resolution (m)
 var fh: Node3D
 var mask := PackedByteArray()
@@ -89,6 +91,15 @@ func _buildings() -> void:
 	var o: Vector2 = fh.ORIGIN
 	for i in fh.BUILDINGS.size():
 		var b: Dictionary = fh.BUILDINGS[i]
+		if KITS.has(b.type):   # built from the voxel building kit: true size, with its rooms inside
+			var kit_holder := Node3D.new(); kit_holder.name = "Building%d" % i; add_child(kit_holder)
+			var bk := BuildingKit.build(KITS[b.type]); kit_holder.add_child(bk)
+			var sz: Vector2i = KITS[b.type].size
+			# the kit's front (+Z) turned to face the plot's door side (its local -Z), centred on the plot
+			bk.rotation.y = PI; bk.position = Vector3(sz.x, 0, -sz.y)
+			kit_holder.position = Vector3(b.x - o.x, fh.pads[i][3], b.y - o.y); kit_holder.rotation.y = -float(b.a)
+			print("FARHALLOW %s from the kit: %d triangles" % [b.name, bk.get_meta("triangles")])
+			continue
 		var w := float(b.w); var d := float(b.h)
 		var best: Array = STANDINS[0]; var err := INF
 		for s in STANDINS:

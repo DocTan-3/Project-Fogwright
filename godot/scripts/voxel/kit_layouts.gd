@@ -36,7 +36,7 @@ const GULL_LANTERN := {
 	"door_leaf": "door_leaf_dry",
 	"storeys": [
 		{"h": 44, "face": "dry",
-		 "walls": {"front": "wpdpwpwp", "right": "pwppdp", "back": "pwpppppp", "left": "pwpppw"},
+		 "walls": {"front": "wpdpwdwp", "right": "pwppdp", "back": "pwpppppp", "left": "pwpppw"},   # doors to the taproom and the hall
 		 "inner": [
 			{"at": Vector2i(5, 0), "dir": "y", "bays": "dpppdp", "face": "board"},   # taproom | hall, stair hall | kitchen
 			{"at": Vector2i(0, 4), "dir": "x", "bays": "pdppp", "face": "board"},    # taproom | stair hall
