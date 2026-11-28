@@ -780,7 +780,8 @@ def tool_shape(kind, floor):
         haft(-12, 36)
         for h in range(26, 38):                 # a bearded head: wider toward the edge
             reach = 12 + max(0, 33 - h) // 2 if h < 33 else 12
-            b(-2, 2, -reach, 3, h, h, lambda u, w, hh: 'iron_l' if w <= -reach + 1 else ('iron_d' if w >= 2 else 'iron'))
+            b(-1, 1, -reach + 3, 3, h, h, lambda u, w, hh: 'iron_d' if w >= 2 else 'iron')
+            b(0, 0, -reach, -reach + 2, h, h, 'iron_l')          # the edge: one voxel thin
     if kind == 'spear':                         # the fisher's spear: a barbed head on a long haft
         haft(-70, 78, (-8, 8))
         b(-1, 1, -1, 1, 74, 78, 'cord')
@@ -795,10 +796,10 @@ def tool_shape(kind, floor):
     if kind == 'blade':                         # the old blade from above the smithy door: worn, a little rust
         b(-1, 1, -1, 1, -8, 8, lambda u, w, h: 'leather_d' if h % 3 else 'cord')
         b(-2, 2, -2, 2, -11, -9, 'brass_d')
-        b(-11, 11, -2, 2, 9, 11, lambda u, w, h: 'iron_d' if abs(u) < 10 else 'brass_d')
-        for h in range(12, 80):
+        b(-2, 2, -11, 11, 9, 11, lambda u, w, h: 'iron_d' if abs(w) < 10 else 'brass_d')
+        for h in range(12, 80):      # the flat runs front to back, so the edge faces whoever the wielder faces
             hw = 4 if h < 72 else max(0, 4 - (h - 72) // 2)
-            b(-hw, hw, -1, 1, h, h, lambda u, w, hh: 'copper_d' if (u * 5 + hh * 3) % 23 == 0 else ('iron_d' if u == 0 else ('iron_l' if abs(u) == hw else 'iron')))
+            b(-1, 1, -hw, hw, h, h, lambda u, w, hh: 'copper_d' if (w * 5 + hh * 3) % 23 == 0 else ('iron_d' if w == 0 else ('iron_l' if abs(w) == hw else 'iron')))
     if kind == 'boathook':
         haft(-70, 70, (-8, 8))
         b(-1, 1, -1, 1, 70, 84, lambda u, w, h: 'iron_l' if h > 80 else 'iron')
@@ -820,7 +821,7 @@ def tool_item(kind, carry):
         gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0        # the fist's centre, in fine voxels
         if carry == 'back':     # polearm stance: the forearm forward, the haft upright in the fist (the tilt undoes the
             # arm's bend), the butt clear of the ground; the fist sits near elbow height
-            V = tool_shape(kind, 2 * au0 - (au0 - h0) - 10)
+            V = tool_shape(kind, 30)         # gripped well up the haft: about 40 cm of it behind the fist
             P['weapon@hand_r#2~x%d' % POLE_TILT] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
         else:                   # one-handers point forward from the fist, the edge or face down (raised by the stance)
             V = tool_shape(kind, gz - 2)
@@ -829,22 +830,24 @@ def tool_item(kind, carry):
     def fn_carried(F, Pb, Pc):
         P = {}; top, hip, TW, TD, cx = F['top'], F['hip'], F['TW'], F['TD'], F['cx']
         V = tool_shape(kind, 999)
-        if carry == 'hip':                      # hanging at the back of the left hip
+        where = carry
+        if kind == 'blade' and 2 * (hip + 4) - 80 < 6: where = 'back'   # too long for this hip: across the back
+        if where == 'hip':                      # hanging at the back of the left hip
             if kind == 'blade':                 # sheathed, hilt up
                 V = {k: c for k, c in V.items() if k[2] < 9}
                 for h in range(9, 80):
-                    for u in range(-5, 6):
-                        for w in (-2, -1, 0, 1, 2):
-                            if abs(u) == 5 or abs(w) == 2: V[(u, w, h)] = 'leather_d' if h > 76 or h < 12 else 'leather'
+                    for w in range(-5, 6):
+                        for u in (-2, -1, 0, 1, 2):
+                            if abs(w) == 5 or abs(u) == 2: V[(u, w, h)] = 'leather_d' if h > 76 or h < 12 else 'leather'
                 part = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * (hip + 4) - h): c for (u, w, h), c in V.items()}
             else:                               # through a belt loop, head up
                 part = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * hip - 22 + h): c for (u, w, h), c in V.items()}
             P['weapon@torso#2'] = part
         else:                                   # across the back, tilted
-            P['weapon@torso#2~z35'] = {(2 * cx + u, 2 * TD + 8 + w, 2 * (hip + 4) + h): c for (u, w, h), c in V.items()}
+            P['weapon@torso#2~z35'] = {(2 * cx + u, 2 * TD + 8 + w, 2 * (hip + 10) + h): c for (u, w, h), c in V.items()}
         return P
     return fn, fn_carried
-POLE_TILT = 85      # the polearm stance bends the arm about 85 degrees forward in all (equipment.gd, STANCES)
+POLE_TILT = 20      # the polearm stance bends the arm about 85 degrees forward (equipment.gd, STANCES); the haft keeps 20 of it back: pointing forward, about 25 degrees up
 TOOLS = {'hatchet': 'hip', 'spear': 'back', 'hammer': 'hip', 'blade': 'hip', 'boathook': 'back', 'cleaver': 'hip', 'pitchfork': 'back'}
 
 # ---------------------------------------------------------------- the catalogue
