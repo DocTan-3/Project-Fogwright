@@ -29,7 +29,7 @@ MAT = {   # kept within real reflectance, like the skins: metals read by their t
     'ash': (164, 128, 86), 'ash_d': (128, 96, 62),
     # the higher tiers' steels: bright steel (uncommon, rare), blackened (epic), blued with arcane light (legendary)
     'steel': (138, 146, 156), 'steel_l': (184, 192, 200), 'steel_d': (92, 100, 110), 'black': (52, 52, 58), 'black_d': (34, 34, 40),
-    'gilt': (214, 176, 84),
+    'gilt': (214, 176, 84), 'ivory': (206, 200, 184), 'ivory_d': (170, 160, 138), 'teal': (64, 150, 138),
 }
 SIDES = ('l', 'r')
 def out_side(F, s): return 1 if s == 'l' else -1      # the left arm is at large x: its outer side faces +x
@@ -1198,6 +1198,143 @@ def blunt_tier(V, b, t, kind, floor=999):
         crystal(a0 - 1, False, 5)
     return V
 
+def spear_tier(V, b, t, floor=999):
+    """the spear at tiers 2-5, in the iron one's frame: haft along h, the leaf head flat across w, u the thickness"""
+    a0 = max(-70, -floor + 3)
+    s0, h0, top = 76, 83, {2: 106, 3: 110, 4: 110, 5: 114}[t]       # socket, head start, point
+    hw = {2: 4, 3: 4, 4: 5, 5: 5}[t]
+    mid = h0 + (top - h0) * 2 // 5                                    # widest point of the leaf
+    def width(h):
+        if h <= mid: return min(hw, 1 + (h - h0) * hw // max(1, mid - h0))
+        return max(0, round(hw * (top - h) / (top - mid)))
+    def head(body, edge, rib, fuller=None, rune=None):
+        for h in range(h0, top + 1):
+            w_ = width(h)
+            for w in range(-w_, w_ + 1):
+                c = edge if abs(w) == w_ else body
+                if fuller and w == 0 and h < top - 4: c = fuller
+                if rune and abs(w) == 1 and h < top - 6 and h % 3 == 0: c = rune
+                V[(0, w, h)] = c
+            if h < top - 2: b(-1, 1, 0, 0, h, h, rib if not (fuller and h < top - 4) else fuller)
+    def haft(wood, wood_d, grip, rings={}):
+        for h in range(a0, s0):
+            if -8 <= h <= 8: c = grip(h)
+            elif h in rings: c = rings[h]
+            else: c = wood_d if h % 11 == 0 else wood
+            b(-1, 1, -1, 1, h, h, c)
+    def wings(c, reach=5):                                            # parrying lugs below the head
+        for k in range(1, reach + 1):
+            b(0, 0, -1 - k, -1 - k, s0 + 3 - k // 2, s0 + 4 - k // 2, c); b(0, 0, 1 + k, 1 + k, s0 + 3 - k // 2, s0 + 4 - k // 2, c)
+    def crystal(h, up, n=6):
+        for dh in range(n):
+            r = 2 - dh // 3
+            b(-r, r, -r, r, h + (dh if up else -dh), h + (dh if up else -dh), 'arc' if dh < n - 1 else 'arc_d')
+    if t == 2:      # uncommon: a bright steel leaf, a brass socket and collar, brass rings and a wired grip
+        haft('ash', 'ash_d', lambda h: 'brass' if h % 4 == 0 else 'leather_d', {h: 'brass' for h in (a0 + 10, 40)})
+        b(-2, 2, -2, 2, s0, h0 - 1, lambda u, w, h: 'brass_l' if h == h0 - 1 else 'brass')
+        head('steel', 'steel_l', 'steel_d')
+        b(-2, 2, -2, 2, a0 - 3, a0 - 1, 'brass')
+    if t == 3:      # rare: a longer leaf with a dark fuller, parrying wings, an iron-ringed dark haft, a butt spike
+        haft('wood', 'wood_d', lambda h: 'leather_l' if h % 3 == 0 else 'leather', {h: 'iron_d' for h in range(a0 + 4, s0, 14)})
+        b(-2, 2, -2, 2, s0, h0 - 1, lambda u, w, h: 'brass' if abs(u) == 2 and w == 0 and h % 3 == 0 else 'iron_d')
+        wings('steel_d', 4)
+        head('steel', 'steel_l', 'steel', fuller='iron_d')
+        for k in range(6): r = 1 if k < 3 else 0; b(-r, r, -r, r, a0 - 1 - k, a0 - 1 - k, 'iron_d')
+    if t == 4:      # epic: a blackened leaf with steel edges, a glowing vial in the socket, a copper pipe to a gauge
+        haft('black', 'black_d', lambda h: 'rubber' if h % 2 else 'black')
+        b(-2, 2, -2, 2, s0 - 6, h0 - 1, lambda u, w, h: 'potion' if abs(w) < 2 and abs(u) == 2 and s0 - 5 <= h <= s0 - 1 else ('brass' if h in (s0 - 6, h0 - 1) else 'black_d'))
+        wings('steel_l', 4)
+        head('black', 'steel_l', 'black_d', fuller='copper')
+        for h in range(14, s0 - 6): V[(0, 2, h)] = 'copper' if h % 6 else 'copper_d'
+        for dw in range(-3, 4):
+            for dh in range(-3, 4):
+                if dw * dw + dh * dh <= 10: V[(-2, dw, 12 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+        V[(-3, 0, 12)] = V[(-3, 1, 13)] = 'red'
+        b(-2, 2, -2, 2, a0 - 3, a0 - 1, lambda u, w, h: 'copper' if h == a0 - 2 else 'brass')
+    if t == 5:      # legendary: a blued leaf with arc runes, gilt wings and socket, crystals at the socket and the butt
+        haft('blued_d', 'blued_d', lambda h: 'gilt' if h % 3 == 0 else 'blued_d', {h: 'gilt' for h in range(a0 + 3, s0, 9)})
+        b(-2, 2, -2, 2, s0, h0 - 1, lambda u, w, h: 'arc' if abs(u) == 2 and abs(w) < 1 and h == s0 + 3 else 'gilt')
+        wings('gilt', 6)
+        head('blued', 'blued_l', 'blued_d', fuller='blued_d', rune='arc')
+        crystal(a0 - 1, False, 5)
+    return V
+
+def hammer_line(V, b, t, kind, floor=999):
+    """the hammer and warhammer at every tier, after Doc Tan's T4 reference: a long double-faced head with vented
+    ends, a strap round its middle, a bracket under it; haft along h, the head long along w, u the thickness"""
+    big = kind == 'warhammer'
+    a0, hc = (-60, 70) if big else (-12, 38)
+    a0 = max(a0, -floor + 3)
+    L, hd, hh, gh, D, S = (15, 6, 7, 10, 16, 6) if big else (10, 4, 5, 7, 10, 4)
+    P = {1: dict(body='iron', face='iron_l', vent=None, n=0, band='iron_d', inlay=None, rivet='iron_l', wood='ash', wood_d='ash_d', grip=lambda h: 'leather', rings={}, trim='iron_d', br=None),
+         2: dict(body='steel', face='steel_l', vent=None, n=0, band='brass', inlay=None, rivet='brass_l', wood='ash', wood_d='ash_d', grip=lambda h: 'brass' if h % 4 == 0 else 'leather_d', rings={}, trim='brass', br='langet'),
+         3: dict(body='steel', face='steel_l', vent='iron_d', n=2, band='bronze', inlay=None, rivet='brass', wood='wood', wood_d='wood_d', grip=lambda h: 'leather_l' if h % 3 == 0 else 'leather', rings={h: 'iron_d' for h in range(a0 + 4, hc - hh - 4, 14)}, trim='iron_d', br='iron_d'),
+         4: dict(body='ivory', face='ivory_d', vent='black', n=4, band='copper', inlay='teal', rivet='gilt', wood='black', wood_d='black_d', grip=lambda h: 'rubber' if h % 2 else 'black', rings={h: 'gilt' for h in (0 + gh + 2, (gh + hc) // 2)}, trim='gilt', br='gilt'),
+         5: dict(body='ivory', face='ivory_d', vent='arc', n=4, band='blued', inlay='arc', rivet='gilt', wood='blued_d', wood_d='blued_d', grip=lambda h: 'gilt' if h % 3 == 0 else 'blued_d', rings={h: 'gilt' for h in range(a0 + 3, hc - hh - 4, 9)}, trim='gilt', br='gilt')}[t]
+    hb = hc - hh                                                       # the head's underside
+    for h in range(a0, hb):                                            # the haft
+        c = P['grip'](h) if -gh <= h <= gh else P['rings'].get(h, P['wood_d'] if h % 11 == 0 else P['wood'])
+        b(-1, 1, -1, 1, h, h, c)
+    vents = {L - 2 - 2 * k for k in range(P['n'])}
+    for w in range(-L, L + 1):                                         # the head, bevelled, its ends chamfered
+        for u in range(-hd, hd + 1):
+            for h in range(hb, hc + hh + 1):
+                eu, eh, ew = abs(u) == hd, abs(h - hc) == hh, abs(w) == L
+                if eu and eh or ew and (eu or eh): continue
+                c = P['face'] if ew else P['body']
+                if t == 5 and ((abs(u) >= hd - 1 and abs(h - hc) >= hh - 1) or (abs(w) >= L - 1 and (abs(u) >= hd - 1 or abs(h - hc) >= hh - 1))): c = 'gilt'
+                V[(u, w, h)] = c
+    for w0 in vents:                                                   # vent slots cut into the sides and top
+        for w in (w0, -w0):
+            for h in range(hb + 2, hc + hh - 1):
+                for u in (-hd, hd): V.pop((u, w, h), None); V[(u - (1 if u > 0 else -1), w, h)] = P['vent']
+            for u in range(-hd + 2, hd - 1):
+                for h in (hb, hc + hh): V.pop((u, w, h), None); V[(u, w, h + (1 if h == hb else -1))] = P['vent']
+    for w in range(-2, 3):                                             # the strap round the middle
+        for u in range(-hd - 1, hd + 2):
+            for h in range(hb - 1, hc + hh + 2):
+                eu, eh = abs(u) == hd + 1, abs(h - hc) == hh + 1
+                if eu and eh or not (eu or eh): continue
+                c = P['inlay'] if P['inlay'] and w == 0 else P['band']
+                if abs(w) == 2 and ((eu and abs(h - hc) == hh - 1) or (eh and abs(u) == hd - 1)): c = P['rivet']
+                V[(u, w, h)] = c
+    b(-2, 2, -2, 2, hb - 3, hb - 1, P['trim'])                         # the collar
+    def line(w0, h0, w1, h1, c, us=(0,)):
+        n = max(abs(w1 - w0), abs(h1 - h0))
+        for k in range(n + 1):
+            for u in us: V[(u, round(w0 + (w1 - w0) * k / n), round(h0 + (h1 - h0) * k / n))] = c
+    if P['br'] == 'langet':                                            # T2: two brass straps down the haft
+        for w in (-2, 2): b(-1, 1, w, w, hb - 9, hb - 4, 'brass')
+    elif P['br']:                                                      # T3+: a diamond bracket under the head
+        c, top, bot = P['br'], hb - 2, hb - 2 - D
+        mid = (top + bot) // 2
+        for sg in (-1, 1):
+            line(0, bot, sg * S, mid, c); line(sg * S, mid, sg * 2, top, c)
+            if t >= 4:                                                 # curls and knobs off the corners
+                line(sg * S, mid, sg * (S + 2), mid - 1, c); V[(0, sg * (S + 3), mid - 2)] = c; V[(0, sg * (S + 2), mid - 3)] = c
+                b(-1, 1, sg * S, sg * S, mid, mid, c)
+                V[(0, sg * (S - 1), top)] = c
+                for k in range(1, 3): V[(0, sg * (L - 3 - k), hb - k)] = c   # spurs up into the head's belly
+            if t == 5:                                                 # an outer wing
+                line(0, bot - 3, sg * (S + 4), mid + 1, c); line(sg * (S + 4), mid + 1, sg * (L - 2), hb - 1, c)
+        b(-1, 1, -1, 1, bot - 1, bot, c)
+    if t == 1: b(-2, 2, -2, 2, a0 - 2, a0 - 1, 'iron_d')
+    if t == 2: b(-2, 2, -2, 2, a0 - 2, a0 - 1, 'brass')
+    if t == 3: b(-2, 2, -2, 2, a0 - 3, a0 - 1, lambda u, w, h: 'brass' if abs(u) == 2 and w == 0 else 'iron_d')
+    if t == 4:                                                         # a gilt pommel with a teal stone and a tassel
+        b(-2, 2, -2, 2, a0 - 4, a0 - 1, lambda u, w, h: 'teal' if h == a0 - 2 and (abs(u) == 2) != (abs(w) == 2) and min(abs(u), abs(w)) == 0 else 'gilt')
+        b(-1, 1, -1, 1, a0 - 5, a0 - 5, 'gilt')
+        for k in range(4): V[(0, 0, a0 - 6 - k)] = 'teal' if k < 3 else 'gilt'
+    if t == 5:
+        b(-2, 2, -2, 2, a0 - 2, a0 - 1, 'gilt')
+        for dh in range(5):
+            r = 2 - dh // 2
+            b(-r, r, -r, r, a0 - 3 - dh, a0 - 3 - dh, 'arc' if dh < 4 else 'arc_d')
+        for dh in range(5):
+            r = 2 - dh // 2
+            b(-r, r, -r, r, hc + hh + 1 + dh, hc + hh + 1 + dh, 'arc' if dh < 4 else 'arc_d')
+    return V
+
 def iron_shape(kind, floor, tier=1):
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
@@ -1222,8 +1359,12 @@ def iron_shape(kind, floor, tier=1):
         blade_tier(V, b, tier, kind)
     elif kind in AXES and tier > 1:
         axe_tier(V, b, tier, kind, floor)
+    elif kind in ('hammer', 'warhammer'):
+        hammer_line(V, b, tier, kind, floor)
     elif kind in BLUNT and tier > 1:
         blunt_tier(V, b, tier, kind, floor)
+    elif kind == 'spear' and tier > 1:
+        spear_tier(V, b, tier, floor)
     elif kind in ('sword', 'dagger', 'greatsword'):
         g, bl, hw, gw = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}[kind]
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'leather_d' if h % 3 == 0 else 'leather')
@@ -1253,16 +1394,16 @@ def iron_shape(kind, floor, tier=1):
             for r in range(3, 6):
                 b(du * r, du * r, dw * r, dw * r, 36 + (r == 5), 46 - (r == 5), 'iron' if r < 5 else 'iron_l')
         b(-1, 1, -1, 1, 49, 50, 'iron_l')
-    if kind in ('hammer', 'warhammer') and tier == 1:
+    if False:   # the old iron hammer, superseded by hammer_line
         top, hl, hd = (38, 8, 4) if kind == 'hammer' else (70, 11, 6)
         haft(-12 if kind == 'hammer' else -60, top, (-7, 7) if kind == 'hammer' else (-10, 10))
         b(-hd, hd, -hl, 2, top - hd, top + hd, lambda u, w, h: 'iron_l' if w == -hl else ('iron_d' if h in (top - hd, top + hd) else 'iron'))   # the square face
         for k in range(hl):              # the back spike, tapering
             r = max(0, 2 - k // 3)
             b(-r, r, 3 + k, 3 + k, top - r, top + r, 'iron')
-    if kind == 'spear':
+    if kind == 'spear' and tier == 1:
         haft(-70, 80, (-8, 8))
-    if kind == 'spear':                 # a leaf head and an iron socket
+    if kind == 'spear' and tier == 1:                 # a leaf head and an iron socket
         b(-1, 1, -1, 1, 76, 82, 'iron_d')
         for h in range(83, 104):
             hw = min(3, (h - 82) // 2) if h < 94 else max(0, 3 - (h - 94) // 3)
@@ -1425,7 +1566,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)
