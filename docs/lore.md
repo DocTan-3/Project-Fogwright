@@ -222,6 +222,9 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | Hollin's Cross | Main continent, near Aldrath: the starter port | Wayfolk | Hollin | **Hollin's Cross**: crossroads and port where all peoples meet, and where the survivors of Farhallow come ashore | Thriving: close to the centre, busy with trade |
 | Farhallow *(working name)* | The main continent's far coast, outside any god's circle | Freefolk of every people | None | A fishing and farming village | Falls to the Fog in the prologue |
 | The Redwold | Main continent, the western hills and forests | Ruadhan | Brannoch | **Dun Brannoch**: hill fort above the forest | Struggling: the forests sicken and the herds thin; many Ruadhan go to Aldrath as traders and beast-dealers |
+| The Greying Coast *(working name)* | The main continent's far coast, around Farhallow | None: Greyed villagers, scavengers | None | Fallen freeholds, Farhallow among them | Lost: the thickest Fog on the continent; Greyed villagers still living their last day |
+| The Old Front *(working name)* | Main continent, between the heartland and the Redwold | None | None | Second-age forts, gun towers, trenches, rusted war machines | A battlefield never cleaned up; Echoes of battles replay in the Fog |
+| Ostrevan *(working name)* | Main continent, a half-sunk Concord city | None | None (statues of more than twelve gods) | First-age white stone, huge arches, persistent dungeons under its towers | The continent's great exploration zone |
 | The Aurelan Isles | Isles to the east | Aurelans | Maelis | **Solmere**: walled river city on a stone crossing | Declining: once the breadbasket of the world, now its fields fail; proud lords hold on to empty manors |
 | The Rimeholds | The northern continent | Hrimfolk | Hrothvar | **Skarvhold**: on a stone arch above a fjord | Enduring: crops never grew there; the Hrimfolk live by sea, hunt and trade, and the Fog has made little worse |
 | The Slag Isles | Isles to the west | Ferrin | Ostrak | **Ashforge**: carved into a volcano's flank | Thriving against the odds: volcanic heat and forge smoke keep the Fog thinner; they trade metal for food |
@@ -332,6 +335,8 @@ The moons are lore and sky only: they do not change play *(decided 2026-11-28)*.
 - [ ] The endgame at Aumenor.
 
 - [ ] The Penitent's town: its name and where it stands.
+
+- [x] What is playable: **the main continent at launch**; the other homelands open later by ship. Three godless frontier regions fill it: the Greying Coast, the Old Front and Ostrevan *(decided 2026-11-28)*. A Sennari warp-hall valley (the Doorless Vale) waits for a later update.
 
 - [x] Final names for the gods and peoples: keep the working names for now *(decided 2026-11-28)*; a naming pass comes later.
 - [x] The Hrimfolk name for the Shard: **the Godscar**. (Moon names among the Ruadhan, Ferrin and others are drafted in lore-proposals.md.)
