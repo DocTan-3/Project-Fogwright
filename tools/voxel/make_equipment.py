@@ -764,10 +764,9 @@ def knapsack(F, Pb, Pc):
     box(P, part, cx - 1, cx + 1, TD + 5, TD + 6, top - 9, top - 7, 'iron_l')
     return P
 
-# ---------------------------------------------------------------- ammunition (the ammunition slot, back of the belt)
-# Worn behind the belt so a knapsack or anything on the back can still be worn. Finer voxels (#2): the torso's back face
-# is at y = 2 * TD, the belt at z = 2 * hip + 2 .. 2 * hip + 5; low x is the wearer's right, so the quiver's mouth sits
-# behind the right hip, where the drawing hand finds it.
+# ---------------------------------------------------------------- ammunition (the ammunition slot, on the belt)
+# Worn on the belt (the quiver at the right hip, the others behind) so a knapsack or anything on the back can still be worn. Finer voxels (#2): the torso's back face
+# is at y = 2 * TD, the belt at z = 2 * hip + 2 .. 2 * hip + 5; low x is the wearer's right, y below 0 is in front.
 def _rod(P, part, a, b, c, r=0.0):
     """voxels along the line a -> b (r: a thicker rod)"""
     n = max(abs(b[i] - a[i]) for i in range(3)) or 1
@@ -775,33 +774,49 @@ def _rod(P, part, a, b, c, r=0.0):
         q = tuple(round(a[i] + (b[i] - a[i]) * t / n) for i in range(3))
         P[part][q] = c
 def quiver(F, Pb, Pc):
-    """a hip quiver for bows, slung behind the belt: a leather tube slanting from the right hip down toward the left,
-    banded where the belt holds it and at its foot; arrows with red and grey fletching stand out of its mouth"""
-    P = {}; TW, TD, hip = F['TW'], F['TD'], F['hip']; part = 'ammo@torso#2'; P[part] = {}
-    yb = 2 * TD + 5                                    # the tube's axis, behind the belt
-    m = (6, yb, 2 * hip + 12); L = 40
-    a = (math.sin(math.radians(28)), 0.0, -math.cos(math.radians(28)))       # down and toward the left hip
-    R = 3.6
-    for x in range(m[0] - 6, m[0] + 26):
-        for y in range(yb - 5, yb + 6):
-            for z in range(m[2] - L - 4, m[2] + 4):
-                d = (x - m[0], y - m[1], z - m[2]); t = d[0] * a[0] + d[2] * a[2]
+    """a side quiver for bows (Doc Tan's references): hung from the belt by two straps on the right hip, just outside
+    the hanging arm so the arm clears it; a flat leather case slanting from a wide laced mouth in front, higher, to a narrow capped foot
+    behind; brass studs round the mouth and along the top, a tooled panel; arrows standing forward and up out of it"""
+    P = {}; hip = F['hip']; part = 'ammo@torso#2'; P[part] = {}
+    ax0 = F['arms']['r'][0]
+    sl = math.radians(18); L = 46
+    m = (2 * ax0 - 4, -8, 2 * hip - 8)                  # the mouth's centre: before the hip, outside the arm
+    ay, az = math.cos(sl), -math.sin(sl)                # mouth -> foot: back and down
+    for x in range(m[0] - 4, m[0] + 5):
+        for y in range(m[1] - 6, m[1] + L + 6):
+            for z in range(m[2] - L // 2 - 8, m[2] + 8):
+                dy, dz = y - m[1], z - m[2]; t = dy * ay + dz * az
                 if not (0 <= t <= L): continue
-                e = (d[0] - t * a[0], d[1], d[2] - t * a[2]); rr = math.sqrt(e[0] ** 2 + e[1] ** 2 + e[2] ** 2)
-                if rr > R: continue
-                if rr < R - 1.6 and t > 1.5: continue      # hollow; only the shell and the foot are drawn
-                if t < 2 or 14 <= t < 17: c = 'leather_d'  # the rim and the band the belt goes through
-                elif t > L - 3: c = 'iron'                 # the foot cap
-                elif 30 <= t < 32: c = 'leather_d'
-                else: c = 'leather_l' if (round(t) % 6 == 0 and e[1] > 2.5) else 'leather'   # stitching on the outside
+                n = -dy * az + dz * ay                 # up the case's side, across the axis
+                hz = 5.0 - 2.4 * t / L; hx = 3.2 - 1.0 * t / L    # wide at the mouth, narrow at the foot
+                ex, ez = (x - m[0]) / hx, n / hz
+                if ex * ex + ez * ez > 1.0: continue
+                if t < 1.5 and ex * ex + ez * ez < 0.5: c = 'wood_d'       # the dark mouth the arrows stand in
+                elif t < 2.5: c = 'leather_d'                              # the laced rim
+                elif t > L - 3: c = 'leather_d'                            # the capped foot
+                elif ez > 0.75 and round(t) % 4 == 0: c = 'brass'          # studs along the top
+                elif t < 3.5 and round(n) % 2 == 0: c = 'brass'            # studs round the mouth
+                elif 5 <= t <= 15 and ex < -0.7 and (round(t) + round(n)) % 3 == 0: c = 'leather_l'   # the tooled panel
+                elif ez < -0.8 and round(t) % 3 == 0: c = 'cord'           # the lacing along the bottom seam
+                else: c = 'leather'
                 P[part][(x, y, z)] = c
-    for i, (dx, dy) in enumerate(((0, -1), (1, 1), (-1, 1), (0, 2), (1, -2))):     # the arrows, standing out of the mouth
-        base = (m[0] + dx, yb + dy, m[2]); top_ = (base[0] - round(a[0] * (12 + i % 2 * 3)), base[1], base[2] + round(-a[2] * (17 + i % 2 * 4)))
+    for tt in (4, 31):                                  # the two straps, before and behind the arm
+        y = round(m[1] + tt * ay); ztop = round(m[2] + tt * az + 5.0 - 2.4 * tt / L)
+        # each strap drops from the belt at the hip and slants out over the arm's shoulder line to the case
+        for z in range(ztop - 1, 2 * hip + 4):
+            f = (2 * hip + 4 - z) / max(1, 2 * hip + 4 - ztop)
+            x = round(-2 + (m[0] + 1 - -2) * min(1.0, f * 1.6))
+            for yy in (y, y + 1): P[part][(x, yy, z)] = 'leather_d'
+        P[part][(-2, y, 2 * hip + 1)] = 'brass'         # the strap's buckle
+    dy_, dz_ = -math.cos(math.radians(28)), math.sin(math.radians(28))     # the arrows: forward and up
+    for i, (dx, dn) in enumerate(((0, 0), (-1, 2), (1, -1), (0, -2), (-1, 1))):
+        base = (m[0] + dx, m[1] + 3, m[2] + dn); ln = 16 + (i % 3) * 3
+        top_ = (base[0], round(base[1] + dy_ * ln), round(base[2] + dz_ * ln))
         _rod(P, part, base, top_, 'ash')
-        fl = 'red' if i % 2 == 0 else 'wool'
+        fl = ('red', 'wool', 'canvas')[i % 3]
         for k in range(1, 6):
-            q = (top_[0] + round(a[0] * k), top_[1], top_[2] + round(a[2] * k))
-            for o in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0)): P[part].setdefault((q[0] + o[0], q[1] + o[1], q[2] + o[2]), fl)
+            q = (top_[0], round(top_[1] - dy_ * k), round(top_[2] - dz_ * k))
+            for o in ((1, 0, 0), (-1, 0, 0), (0, 0, 1)): P[part].setdefault((q[0] + o[0], q[1] + o[1], q[2] + o[2]), fl)
         P[part][top_] = 'cord'                         # the nock
     return P
 def bolt_case(F, Pb, Pc):
@@ -941,7 +956,7 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
     'greatsword': ('back', 2, 'one_hand'), 'greataxe': ('back', 2, 'one_hand'), 'warhammer': ('back', 2, 'one_hand'),
     'spear': ('back', 2, 'polearm'), 'halberd': ('back', 2, 'polearm'), 'glaive': ('back', 2, 'polearm'),
     'shortbow': ('back', 2, 'bow'), 'longbow': ('back', 2, 'bow'),
-    'hand_crossbow': ('hip', 1, 'one_hand'), 'heavy_crossbow': ('back', 2, 'one_hand'),
+    'heavy_crossbow': ('back', 2, 'one_hand'),
     'shield': ('shield', 0, 'shield'), 'tower_shield': ('tower', 0, 'shield'),
     'wand': ('hip', 1, 'one_hand'), 'staff': ('back', 1, 'staff'),
 }
@@ -1047,8 +1062,8 @@ def iron_shape(kind, floor):
             th = 1 if abs(h) > L * 0.6 else 2
             b(-1, 1, bend - th + 1, bend, h, h, lambda u, w, hh: 'leather' if abs(hh) <= 5 else ('ash_d' if abs(hh) > L - 3 else 'ash'))
         for h in range(-L + 1, L): V[(0, 11, h)] = 'cord'
-    if kind in ('hand_crossbow', 'heavy_crossbow'):     # the stock along h, pointing forward from the grip; the prod across
-        n, pw, back = (34, 16, 6) if kind == 'hand_crossbow' else (60, 26, 14)
+    if kind == 'heavy_crossbow':     # the stock along h, pointing forward from the grip; the prod across
+        n, pw, back = 60, 26, 14
         b(-1, 1, -2, 2, -back, n, lambda u, w, h: 'ash_d' if h < 0 or h % 7 == 0 else 'ash')
         b(-1, 1, 3, 6, -4, 2, 'ash_d')                       # the grip under the stock
         for u in range(-pw, pw + 1):                         # the prod, bowed forward

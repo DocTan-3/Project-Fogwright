@@ -3,7 +3,7 @@ extends Node3D
 ## then everything carried, on one body; prints GROUND FAIL for anything below the ground and the triangle counts
 ##   godot --path . --rendering-driver opengl3 res://tests/voxel_weapons.tscn -- out=<png prefix> [people=hrimfolk] [sex=m]
 const KINDS := ["sword", "axe", "mace", "hammer", "dagger", "greatsword", "greataxe", "warhammer", "spear", "halberd", "glaive",
-	"shortbow", "longbow", "hand_crossbow", "heavy_crossbow", "shield", "tower_shield", "wand", "staff"]
+	"shortbow", "longbow", "heavy_crossbow", "shield", "tower_shield", "wand", "staff"]
 func _ready() -> void:
 	var out := "/tmp/weapons"; var people := "hrimfolk"; var sex := "m"
 	for a in OS.get_cmdline_user_args():

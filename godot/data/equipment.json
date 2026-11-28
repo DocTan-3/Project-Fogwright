@@ -665,17 +665,6 @@
    "carried": "res://assets/voxel/gear/iron_longbow_carried/%s_%s.vox",
    "stance": "bow"
   },
-  "iron_hand_crossbow": {
-   "tier": "common",
-   "slots": [
-    "main_hand"
-   ],
-   "order": 11,
-   "hides": [],
-   "file": "res://assets/voxel/gear/iron_hand_crossbow/%s_%s.vox",
-   "carried": "res://assets/voxel/gear/iron_hand_crossbow_carried/%s_%s.vox",
-   "stance": "one_hand"
-  },
   "iron_heavy_crossbow": {
    "tier": "common",
    "slots": [
