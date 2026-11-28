@@ -31,7 +31,7 @@ func _ready() -> void:
 	var shots := []
 	for r in 2:
 		var x := 2.0 + r * 20.0; var sx: String = ["men", "women"][r]
-		shots.append(["%s_front" % sx, Vector3(x, 1.2, 4.0), Vector3(x, 1.1, 0)]); shots.append(["%s_threequarter" % sx, Vector3(x + 2.4, 1.3, 3.3), Vector3(x, 1.1, 0)])
+		shots.append(["%s_front" % sx, Vector3(x, 1.2, 4.0), Vector3(x, 1.1, 0)]); shots.append(["%s_threequarter" % sx, Vector3(x + 2.4, 1.3, 3.3), Vector3(x, 1.1, 0)]); shots.append(["%s_back" % sx, Vector3(x, 1.3, -4.0), Vector3(x, 1.1, 0)])
 	for sh in shots:
 		cam.position = sh[1]; cam.look_at(sh[2]); cam.fov = 34.0
 		for k in 8: await get_tree().process_frame

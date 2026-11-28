@@ -69,6 +69,12 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
   base head and everything riding on it (`Vox.character`); `Equipment.dress(..., face)` puts it under any helm.
   `godot/tests/voxel_faces.tscn -- people=<people>` renders the presets. Sliders (height and bulk within each people's
   range, skin tone) are still to do.
+- **Each people looks its own (the user's rule):** `SIGNATURE` gives every people its brow style (Hrimfolk shaped and
+  heavy, Ruadhan high arches, Aurelan level, Zarhim joined, Ilvari fine, Ferrin a bushy shelf, Penitent none) and marks
+  (kohl, pointed ears, a high bridge, hollow eyes, rosy cheeks, freckles); `STYLES` its own hair and beards (Ruadhan
+  manes and drooping moustaches, Aurelan side parts and goatees, Zarhim tails, Ilvari sleek, Ferrin forked beards,
+  Penitent shorn). The Wayfolk are the plain ones, and that is their signature. Presets must use their people's styles
+  (the generator asserts it).
 - **Animation:** none yet. Parts are rigid and pivot at joints, and animation adds to the rest pose (`get_meta("rest")`).
 - **Metrics:** a 1.6 m stylized character, against the research's 1.8 m person and 2.4 m door. The current proposal is
   doors of about 2.2 × 1.4 m for the WoW camera.
