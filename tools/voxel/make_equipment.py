@@ -25,7 +25,7 @@ MAT = {   # kept within real reflectance, like the skins: metals read by their t
     'brass_l': (208, 170, 96), 'copper': (160, 90, 56), 'copper_d': (112, 60, 38), 'rubber': (40, 36, 34), 'glass': (96, 160, 168),
     'glass_l': (176, 214, 216), 'glow': (255, 168, 64), 'arc': (110, 200, 255), 'arc_d': (50, 110, 170), 'leather': (96, 60, 38),
     'leather_d': (66, 42, 26), 'leather_l': (128, 86, 56), 'wool': (78, 86, 60), 'wool_d': (58, 64, 44), 'fur': (150, 132, 108),
-    'fur_d': (112, 96, 76), 'canvas': (120, 100, 72), 'red': (120, 42, 36), 'red_d': (86, 30, 26), 'cord': (170, 150, 110), 'bronze': (138, 88, 54), 'bronze_d': (90, 56, 34), 'bronze_l': (182, 128, 82), 'hose': (150, 44, 40), 'hose_d': (104, 30, 28),
+    'fur_d': (112, 96, 76), 'canvas': (120, 100, 72), 'red': (120, 42, 36), 'red_d': (86, 30, 26), 'cord': (170, 150, 110), 'bronze': (138, 88, 54), 'bronze_d': (90, 56, 34), 'bronze_l': (182, 128, 82), 'hose': (150, 44, 40), 'potion': (80, 168, 96), 'blued': (50, 62, 100), 'blued_d': (34, 42, 70), 'blued_l': (76, 92, 136), 'hose_d': (104, 30, 28),
 }
 SIDES = ('l', 'r')
 def out_side(F, s): return 1 if s == 'l' else -1      # the left arm is at large x: its outer side faces +x
@@ -489,6 +489,141 @@ def colossus_arms(F, Pb, Pc):
                 P['cables@torso'][(x, y, top + 2)] = 'rubber' if k % 2 else 'iron_d'
     return P
 
+# ---------------------------------------------------------------- back arms: a third arm on a pack (back slot)
+# The references: an arm that rises from the upper back well above the head and arcs forward like a scorpion's tail,
+# its joints glowing; a buckled leather pack with a cog at every joint, the claw holding a potion; a mast on the pack
+# with two arms spread wide, each ending in a triple-barrelled cannon. Our own design in brass, iron and leather.
+def beam(P, part, a, b, w, col):
+    """a thick straight segment from a to b (any angle, stepped on the grid), w voxels across"""
+    n = max(abs(b[i] - a[i]) for i in range(3)) * 2 or 1; h = w // 2
+    for i in range(n + 1):
+        p = tuple(round(a[k] + (b[k] - a[k]) * i / n) for k in range(3))
+        for dx in range(-h, w - h):
+            for dy in range(-h, w - h):
+                for dz in range(-h, w - h):
+                    P.setdefault(part, {})[(p[0] + dx, p[1] + dy, p[2] + dz)] = col(i, n) if callable(col) else col
+def cog(P, part, c, r=3, side=1, core='glow'):
+    """a brass cog turned to face sideways, teeth round its rim and a glowing core: a joint"""
+    import math
+    for dy in range(-r - 1, r + 2):
+        for dz in range(-r - 1, r + 2):
+            d = (dy * dy + dz * dz) ** 0.5
+            tooth = r < d <= r + 1 and int(round(math.atan2(dz, dy) * 8 / math.pi)) % 2 == 0
+            if d <= r or tooth:
+                for dx in (0, side):
+                    P.setdefault(part, {})[(c[0] + dx, c[1] + dy, c[2] + dz)] = core if d < 1.2 else ('brass_d' if d > r - 0.6 and not tooth else 'brass')
+def pack(F, P):
+    """a buckled leather pack on the back, straps over the shoulders, a cog on its side"""
+    top, TW, TD = F['top'], F['TW'], F['TD']; part = 'pack@torso'
+    box(P, part, 3, TW - 4, TD, TD + 4, top - 12, top - 1, lambda x, y, z: 'leather_l' if z >= top - 3 else ('leather_d' if z == top - 12 else 'leather'), bev=1)
+    for x in (6, TW - 7):                       # buckled straps down the back of the pack
+        for z in range(top - 11, top - 1): P[part][(x, TD + 5, z)] = 'leather_d'
+        P[part][(x, TD + 6, top - 6)] = 'brass'
+    for x in (4, TW - 5):                       # shoulder straps
+        for y in range(-1, TD): P[part][(x, y, top + 1)] = 'leather_d'
+        for z in range(top - 7, top + 1): P[part][(x, -1, z)] = 'leather_d'
+        P[part][(x, -2, top - 4)] = 'brass'
+    cog(P, part, (2, TD + 2, top - 7), r=2, side=-1, core='brass_l')
+def spine(F, P):
+    """an iron spine down the back, its vertebrae plated, a glowing core between the shoulder blades, straps over the
+    shoulders: the other way to carry an arm (or two)"""
+    top, hip, TD, cx = F['top'], F['hip'], F['TD'], F['cx']; part = 'spine@torso'
+    for z in range(hip + 2, top + 1):
+        wide = (z - hip) % 3 == 0
+        for x in range(cx - (3 if wide else 1), cx + (3 if wide else 1)):
+            for y in (TD, TD + 1) if not wide else (TD, TD + 1, TD + 2): P.setdefault(part, {})[(x, y, z)] = 'iron_l' if wide and y == TD + 2 else ('iron_d' if wide else 'iron')
+    for x in range(cx - 2, cx + 2):
+        for z in range(top - 6, top - 2): P[part][(x, TD + 3, z)] = 'glow' if 0 <= x - cx + 1 <= 1 and top - 5 <= z <= top - 4 else 'brass'
+    for x in (4, F['TW'] - 5):
+        for y in range(-1, TD): P[part][(x, y, top + 1)] = 'leather_d'
+        for z in range(top - 7, top + 1): P[part][(x, -1, z)] = 'leather_d'
+def seg(i, n): return 'brass' if i % 6 == 0 else ('iron_d' if i % 6 == 3 else 'iron')
+def back_arm(F, head):
+    P = {}; top, TW, TD = F['top'], F['TW'], F['TD']
+    (pack if head == 'claw' else spine)(F, P); A = 'backarm@torso'
+    ax = max(TW - 1, TW // 2 + 8)               # outside the head, behind the left shoulder
+    if head == 'cannons':                       # a mast with a lamp, two arms spread wide, triple barrels
+        m = TW // 2
+        beam(P, A, (m, TD + 2, top - 1), (m, TD + 2, top + 21), 3, seg)
+        for x in (m - 1, m, m + 1):
+            for z in (top + 22, top + 23, top + 24): P[A][(x, TD + 2, z)] = 'glow' if x == m and z < top + 24 else 'brass'
+        for o, ex in ((-1, -9), (1, TW + 8)):
+            sh = (m + 2 * o, TD + 2, top + 18); el = (ex, TD, top + 18); hd = (ex, -1, top + 12)
+            beam(P, A, sh, el, 3, seg); cog(P, A, el, 2, side=o); beam(P, A, el, hd, 3, seg)
+            box(P, A, ex - 3, ex + 3, -10, -2, top + 9, top + 15, lambda x, y, z: 'brass' if y in (-2, -3) else 'iron_d', bev=2)
+            for bx, bz in ((ex - 2, top + 13), (ex + 2, top + 13), (ex, top + 10)):    # three barrels
+                for y in range(-13, -9):
+                    for dx in (0, 1):
+                        for dz in (0, 1): P[A][(bx + dx - 1 if bx > ex else bx + dx, y, bz + dz)] = 'rubber' if (y == -13 and dx == dz) else 'brass_d'
+        return P
+    base = (ax - 2, TD + 2, top)
+    if head == 'shield':                        # over the shoulder and down before the chest
+        j1 = (ax, TD + 1, top + 14); j2 = (ax + 1, -3, top + 16); tool = (ax - 2, -8, top - 2)
+    else:                                       # high above the head, arcing forward, the tool out in front
+        j1 = (ax + 1, TD + 1, top + 24); j2 = (ax, -4, top + 28); tool = (ax, -9, top + 20)
+    cog(P, A, base, 3, side=1)
+    beam(P, A, base, j1, 3, seg)
+    for i in range(1, 9):                       # a piston alongside the first segment
+        p = tuple(round(base[k] + (j1[k] - base[k]) * i / 10) for k in range(3))
+        P[A][(p[0] + 2, p[1] + 1, p[2])] = 'copper' if i > 4 else 'iron_l'
+    cog(P, A, j1, 3, side=1)
+    beam(P, A, j1, j2, 3, seg)
+    cog(P, A, j2, 2, side=1)
+    beam(P, A, j2, tool, 2, seg)
+    tx, ty, tz = tool
+    if head == 'claw':                          # three fingers round a potion bottle
+        for k in range(4):
+            for fx, fz in ((tx - 2, tz + 2 - k // 2), (tx + 2, tz + 2 - k // 2), (tx, tz - 3 + k // 3)):
+                P[A][(fx, ty - 1 - k, fz)] = 'brass' if k < 3 else 'iron_l'
+        box(P, A, tx - 1, tx + 1, ty - 4, ty - 2, tz - 1, tz + 1, lambda x, y, z: 'glass_l' if (x, z) == (tx - 1, tz + 1) else 'potion')
+        P[A][(tx, ty - 3, tz + 2)] = 'leather'                 # the cork
+    if head == 'saw':                           # a toothed disc, half in its guard
+        import math
+        cy, cz, r = ty - 6, tz, 6
+        for y in range(cy - r - 1, cy + r + 2):
+            for z in range(cz - r - 1, cz + r + 2):
+                d = ((y - cy) ** 2 + (z - cz) ** 2) ** 0.5
+                if d <= r: P[A][(tx, y, z)] = 'brass_l' if d < 1.5 else ('iron_l' if d > r - 1 else 'iron')
+                elif d <= r + 1 and int(round(math.atan2(z - cz, y - cy) * 4)) % 2 == 0: P[A][(tx, y, z)] = 'iron_l'
+                if z >= cz + 2 and r - 0.5 <= d <= r + 2: P[A][(tx - 1, y, z)] = 'copper'; P[A][(tx + 1, y, z)] = 'copper'
+    if head == 'shield':                        # a broad plate guarding the chest and the left side
+        sx0, sx1 = tx - 9, tx + 4; sz0, sz1 = top - 12, top + 2
+        for x in range(sx0, sx1 + 1):
+            for z in range(sz0, sz1 + 1):
+                if (x in (sx0, sx1)) and (z in (sz0, sz1)): continue
+                rim = x in (sx0, sx1) or z in (sz0, sz1)
+                boss = abs(x - (sx0 + sx1) // 2) <= 1 and abs(z - (sz0 + sz1) // 2) <= 1
+                P[A][(x, ty - 1, z)] = 'brass' if rim else ('glow' if boss and (x, z) == ((sx0 + sx1) // 2, (sz0 + sz1) // 2) else ('brass_l' if boss else ('iron_d' if (x - sx0) % 4 == 0 else 'iron')))
+                if rim or boss: P[A][(x, ty - 2, z)] = 'brass_d'
+    return P
+def arm_claw(F, Pb, Pc): return back_arm(F, 'claw')
+def arm_saw(F, Pb, Pc): return back_arm(F, 'saw')
+def arm_bulwark(F, Pb, Pc): return back_arm(F, 'shield')
+def arm_cannons(F, Pb, Pc): return back_arm(F, 'cannons')
+
+def colossus_gauntlets(F, Pb, Pc):
+    """the colossus arms as gauntlets only (the Vi reference): huge plated forearms and fists from the elbow down, blued
+    steel panels in brass frames, a glowing gem at the wrist, segmented fingers; the upper arm and sleeve stay"""
+    P = {}; AW = F['AW']
+    for s in SIDES:
+        x0, x1, ay0, au0, al0, h0 = F['arms'][s]; o = out_side(F, s)
+        X0, X1, Y0, Y1 = x0 - 3, x1 + 3, ay0 - 3, ay0 + AW + 2
+        def plate(x, y, z, zb, zt):
+            edge = x in (X0, X1) or y in (Y0, Y1)
+            if z in (zb, zt) or (edge and (z - zb) % 4 == 0): return 'brass'
+            if y == Y0 and abs(x - (X0 + X1) / 2) < 2: return 'brass_l'
+            return 'blued' if not edge or (x + z) % 5 else 'blued_d'
+        box(P, 'arm_lower_' + s, X0, X1, Y0, Y1, al0, au0 - 1, lambda x, y, z: plate(x, y, z, al0, au0 - 1), bev=2)
+        gx = X1 + 1 if o > 0 else X0 - 1         # the gem on the outer side of the wrist
+        for y in range(ay0, ay0 + 3):
+            for z in range(al0 + 2, al0 + 5): P['arm_lower_' + s][(gx, y, z)] = 'arc' if (y - ay0, z - al0) in ((1, 3), (1, 2)) else 'brass'
+        hz0 = h0 - 4
+        box(P, 'hand_' + s, X0, X1, Y0 - 1, Y1, hz0, al0 - 1, lambda x, y, z: 'brass' if z == al0 - 1 else ('blued_d' if (y == Y0 - 1 and (x - X0) % 3 == 0) or z == hz0 else 'blued'), bev=2)
+        for x in range(X0 + 1, X1):              # the knuckle row
+            P['hand_' + s][(x, Y0 - 2, hz0 + 5)] = 'brass_l' if (x - X0) % 3 else 'brass_d'
+            P['hand_' + s][(x, Y0 - 2, hz0 + 4)] = 'brass_d'
+    return P
+
 # ---------------------------------------------------------------- the catalogue
 # order: the fixed layering from the inside out (design doc): wardrobe, legs and feet, chest, coat, arms, belt,
 # shoulders, back, head; a later layer wins where two would take the same part.
@@ -516,6 +651,11 @@ ITEMS = {
     'iron_legs':          (plate_legs, 'plate', ['legs'], 1, []),
     'iron_sabatons':      (sabatons, 'plate', ['feet'], 1, []),
     'arcane_rig':         (rig, 'rig', ['rig'], 10, []),
+    'arm_claw':           (arm_claw, 'medium', ['back'], 7, []),
+    'arm_saw':            (arm_saw, 'heavy', ['back'], 7, []),
+    'arm_bulwark':        (arm_bulwark, 'heavy', ['back'], 7, []),
+    'arm_cannons':        (arm_cannons, 'heavy', ['back'], 7, []),
+    'colossus_gauntlets': (colossus_gauntlets, 'heavy', ['wrists', 'hands'], 4, []),
     'colossus_arms':      (colossus_arms, 'heavy', ['shoulder_l', 'shoulder_r', 'arms', 'wrists', 'hands'], 6, []),
 }
 SETS = {
@@ -524,6 +664,11 @@ SETS = {
     'heavy':  ("Steamwright's brass", ['steam_respirator', 'steam_cuirass', 'steam_pauldrons', 'steam_boiler', 'steam_greaves', 'steam_gloves']),
     'plate':  ('Ironclad plate', ['iron_helm', 'iron_breastplate', 'iron_arms', 'iron_gauntlets', 'iron_legs', 'iron_sabatons']),
     'rig':    ('Arcane engine rig', ['tinker_goggles', 'arcane_rig']),
+    'arm_utility': ('Tinkerer with a third arm (utility)', ['tinker_goggles', 'tinker_brigandine', 'canister_gauntlet', 'tinker_belt', 'arm_claw']),
+    'arm_combat': ('Warden with a saw arm (combat)', ['warden_jerkin', 'warden_bracers', 'warden_boots', 'warden_belt', 'arm_saw']),
+    'arm_defence': ('Ironclad with a bulwark arm (defence)', ['iron_breastplate', 'iron_arms', 'iron_gauntlets', 'iron_legs', 'iron_sabatons', 'arm_bulwark']),
+    'arm_cannons': ('Steamwright with twin cannon arms (combat)', ['steam_respirator', 'steam_cuirass', 'steam_greaves', 'steam_gloves', 'arm_cannons']),
+    'gauntlets': ('Colossus gauntlets over light leathers', ['warden_hood', 'warden_jerkin', 'warden_boots', 'warden_belt', 'colossus_gauntlets']),
     'colossus': ('Colossus arms over light leathers', ['warden_jerkin', 'warden_boots', 'warden_belt', 'colossus_arms']),
 }
 

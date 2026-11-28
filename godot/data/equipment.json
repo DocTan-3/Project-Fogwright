@@ -226,6 +226,52 @@
    "hides": [],
    "file": "res://assets/voxel/gear/arcane_rig/%s_%s.vox"
   },
+  "arm_claw": {
+   "tier": "medium",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_claw/%s_%s.vox"
+  },
+  "arm_saw": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_saw/%s_%s.vox"
+  },
+  "arm_bulwark": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_bulwark/%s_%s.vox"
+  },
+  "arm_cannons": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arm_cannons/%s_%s.vox"
+  },
+  "colossus_gauntlets": {
+   "tier": "heavy",
+   "slots": [
+    "wrists",
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/colossus_gauntlets/%s_%s.vox"
+  },
   "colossus_arms": {
    "tier": "heavy",
    "slots": [
@@ -288,6 +334,57 @@
    "items": [
     "tinker_goggles",
     "arcane_rig"
+   ]
+  },
+  "arm_utility": {
+   "name": "Tinkerer with a third arm (utility)",
+   "items": [
+    "tinker_goggles",
+    "tinker_brigandine",
+    "canister_gauntlet",
+    "tinker_belt",
+    "arm_claw"
+   ]
+  },
+  "arm_combat": {
+   "name": "Warden with a saw arm (combat)",
+   "items": [
+    "warden_jerkin",
+    "warden_bracers",
+    "warden_boots",
+    "warden_belt",
+    "arm_saw"
+   ]
+  },
+  "arm_defence": {
+   "name": "Ironclad with a bulwark arm (defence)",
+   "items": [
+    "iron_breastplate",
+    "iron_arms",
+    "iron_gauntlets",
+    "iron_legs",
+    "iron_sabatons",
+    "arm_bulwark"
+   ]
+  },
+  "arm_cannons": {
+   "name": "Steamwright with twin cannon arms (combat)",
+   "items": [
+    "steam_respirator",
+    "steam_cuirass",
+    "steam_greaves",
+    "steam_gloves",
+    "arm_cannons"
+   ]
+  },
+  "gauntlets": {
+   "name": "Colossus gauntlets over light leathers",
+   "items": [
+    "warden_hood",
+    "warden_jerkin",
+    "warden_boots",
+    "warden_belt",
+    "colossus_gauntlets"
    ]
   },
   "colossus": {

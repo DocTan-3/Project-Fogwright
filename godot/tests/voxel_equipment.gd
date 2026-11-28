@@ -3,7 +3,7 @@ extends Node3D
 ## recipe-fitted item is seen to fit every people and both sexes; plus the wardrobe alone for comparison
 ##   godot --path . --rendering-driver opengl3 res://tests/voxel_equipment.tscn -- out=<png prefix>
 const BODIES := [["hrimfolk", "m"], ["ilvari", "f"], ["ferrin", "m"], ["zarhim", "f"], ["aurelan", "m"]]
-const TIERS := ["wardrobe", "light", "medium", "heavy", "plate", "rig", "colossus"]
+const TIERS := ["wardrobe", "light", "medium", "heavy", "plate", "rig", "colossus", "gauntlets", "arm_utility", "arm_combat", "arm_defence", "arm_cannons"]
 func _ready() -> void:
 	var out := "/tmp/equip"
 	for a in OS.get_cmdline_user_args():
@@ -29,8 +29,9 @@ func _ready() -> void:
 	var cam := Camera3D.new(); add_child(cam)
 	get_viewport().size = Vector2i(2400, 1000)
 	for t in TIERS.size():
-		for view in [["front", Vector3(3.0, 1.4, 6.0)], ["back", Vector3(3.0, 1.6, -6.0)]]:
+		for view in [["front", Vector3(3.0, 1.4, 6.0)], ["back", Vector3(3.0, 1.6, -6.0)], ["side", Vector3(-1.5, 1.7, 4.5)]]:
 			if view[0] == "back" and TIERS[t] in ["wardrobe", "light"]: continue
+			if view[0] == "side" and not TIERS[t].begins_with("arm_"): continue
 			cam.position = view[1] + Vector3(t * 12.0, 0, 0); cam.look_at(Vector3(3.0 + t * 12.0, 1.0, 0)); cam.fov = 42.0
 			for k in 6: await get_tree().process_frame
 			await RenderingServer.frame_post_draw
