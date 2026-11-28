@@ -61,10 +61,10 @@ const GULL_LANTERN := {
 			{"p": "barrel", "at": Vector2(0.5, 8.5)}, {"p": "barrel", "at": Vector2(0.5, 9.2)},
 			{"p": "vigil_lantern", "at": Vector2(6.4, 0.0), "dir": "-x", "z": 1.7},   # the Lantern, over the door
 			{"p": "gull", "at": Vector2(-0.25, 5.7), "dir": "+y", "z": 11.9}],        # the Gull, on the gable
-		 "lights": [{"at": Vector3(1.6, 1.0, -4.0), "energy": 1.6, "range": 6.0, "color": Color(1.0, 0.62, 0.32)},   # the hearth
-			{"at": Vector3(4.9, 3.3, -3.5), "energy": 1.3, "range": 8.0},                                       # the lantern
-			{"at": Vector3(13.0, 3.4, -9.0), "energy": 1.1, "range": 6.0},                                      # the kitchen
-			{"at": Vector3(6.15, 2.4, 0.3), "energy": 1.4, "range": 6.0, "color": Color(1.0, 0.72, 0.42)}]},    # the Vigil lantern
+		 "lights": [{"at": Vector3(1.6, 1.0, -4.0), "energy": 2.7, "range": 6.0, "color": Color(1.0, 0.62, 0.32)},   # the hearth
+			{"at": Vector3(4.9, 3.3, -3.5), "energy": 2.2, "range": 8.0},                                       # the lantern
+			{"at": Vector3(13.0, 3.4, -9.0), "energy": 1.9, "range": 6.0},                                      # the kitchen
+			{"at": Vector3(6.15, 2.4, 0.3), "energy": 2.4, "range": 6.0, "color": Color(1.0, 0.72, 0.42)}]},    # the Vigil lantern
 		{"h": 12, "face": "dry",
 		 "walls": {"front": "pDpDpDpD", "right": "pppppp", "back": "pDppppDp", "left": "pppppp"},
 		 "inner": [
@@ -80,7 +80,7 @@ const GULL_LANTERN := {
 			{"p": "bed", "at": Vector2(12.4, 0.4)}, {"p": "chest", "at": Vector2(13.6, 0.4)},
 			{"p": "bed", "at": Vector2(0.4, 9.6)}, {"p": "bed", "at": Vector2(2.4, 9.6)},
 			{"p": "bed", "at": Vector2(11.0, 9.6)}, {"p": "chest", "at": Vector2(12.4, 11.1)}],
-		 "lights": [{"at": Vector3(8.0, 7.0, -5.0), "energy": 0.9, "range": 7.0}, {"at": Vector3(13.0, 7.0, -9.0), "energy": 0.9, "range": 5.0}]},
+		 "lights": [{"at": Vector3(8.0, 7.0, -5.0), "energy": 1.5, "range": 7.0}, {"at": Vector3(13.0, 7.0, -9.0), "energy": 1.5, "range": 5.0}]},
 	],
 	"roof": "heather",
 	"gable_windows": [5.0],

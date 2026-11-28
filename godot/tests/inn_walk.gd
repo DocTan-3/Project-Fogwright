@@ -17,6 +17,9 @@ func _ready() -> void:
 	pl.global_position = b.global_position + Vector3(-6.0, 0.1, 12.0)
 	rig.yaw = atan2(-14.0, 18.0); rig.pitch = deg_to_rad(-8.0); rig.distance = 12.0
 	await _shot("outside")
+	pl.global_position = b.global_position + Vector3(2.6, 0.1, 3.2)
+	rig.yaw = atan2(-0.8, 1.0); rig.pitch = deg_to_rad(4.0); rig.distance = 4.5
+	await _shot("front")
 	pl.global_position = start
 	rig.yaw = 0.0; rig.pitch = deg_to_rad(-10.0); rig.distance = 6.0
 	await _walk(Vector3(5.05, 0, -1.5), 0.4)

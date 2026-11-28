@@ -294,6 +294,44 @@ static func material() -> StandardMaterial3D:
 		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0
 	return _mat
 
+## the voxel material with grain, for buildings and props (the ground has its own, ground_kit.gd): each voxel's face is
+## a touch lighter or darker than its neighbours (one voxel in five or so), and a finer speckle, a quarter of a voxel,
+## breaks up the flat inside of each face, so a wall of one colour reads as stone or thatch or wood, not plastic. The grain
+## costs nothing in triangles: it is worked out per pixel from where on the voxel grid the pixel lies (in the mesh's own
+## space, so a swinging door keeps its grain), and fades out where a voxel shrinks to a pixel or two, so nothing crawls.
+## `size` is the voxel's size in metres (0.1 for buildings, 0.05 for fittings and props).
+static var _grain := {}
+static func grain_material(size := WORLD) -> ShaderMaterial:
+	if _grain.has(size): return _grain[size]
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode cull_back;
+uniform float vox = 0.1;
+varying vec3 lp;
+varying vec3 ln;
+void vertex() { lp = VERTEX; ln = NORMAL; }
+float h3(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+void fragment() {
+	vec3 q = lp / vox - ln * 0.5;               // into the voxel this face belongs to
+	vec3 cell = floor(q);
+	float k = h3(cell);
+	float g = k < 0.2 ? 0.92 : (k > 0.85 ? 1.06 : 1.0);
+	vec3 sub = floor(q * 4.0);                   // a quarter-voxel speckle on the face
+	float s = h3(sub + cell * 0.37);
+	g *= s < 0.25 ? 0.965 : (s > 0.8 ? 1.025 : 1.0);
+	float px = length(fwidth(q));                // how many voxels one pixel spans
+	g = mix(g, 1.0, smoothstep(0.3, 0.9, px));
+	vec3 c = COLOR.rgb;
+	ALBEDO = c * c * g;                          // the palette's colours are sRGB
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.2;
+}
+"""
+	var m := ShaderMaterial.new(); m.shader = sh; m.set_shader_parameter("vox", size)
+	_grain[size] = m
+	return m
+
 ## a voxel model exported from MagicaVoxel as .glb (packs such as Medieval Voxel Assets), ready to place: its palette
 ## texture read pixel-exact (no blending between neighbouring palette colours, which washes them out) and matte, as
 ## our own voxels are

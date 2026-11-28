@@ -164,7 +164,7 @@ static func build(layout: Dictionary) -> Node3D:
 		for ft in st.get("fittings", []): _fitting(fs, boxes, ft, z)
 		if not fs.is_empty():
 			var fm := MeshInstance3D.new(); fm.name = "Fittings%d" % s; fm.mesh = Vox.mesh(fs, Vector3i.ZERO, Vector3.ZERO, FV)
-			fm.material_override = Vox.material(); root.add_child(fm); tris += fm.mesh.get_faces().size() / 3; parts[fm.name] = fm.mesh.get_faces().size() / 3
+			fm.material_override = Vox.grain_material(FV); root.add_child(fm); tris += fm.mesh.get_faces().size() / 3; parts[fm.name] = fm.mesh.get_faces().size() / 3
 		for lt in st.get("lights", []):
 			var l := OmniLight3D.new(); l.position = lt.at; l.light_energy = lt.get("energy", 1.2)
 			l.light_color = lt.get("color", Color(1.0, 0.78, 0.52)); l.omni_range = lt.get("range", 7.0); l.shadow_enabled = false
@@ -196,7 +196,7 @@ static func build(layout: Dictionary) -> Node3D:
 		var vset: Dictionary = sets[s]
 		if vset.is_empty(): continue
 		var mi := MeshInstance3D.new(); mi.name = "Roof" if s == storeys.size() else "Storey%d" % s
-		mi.mesh = Vox.mesh(vset, Vector3i.ZERO, Vector3.ZERO, V); mi.material_override = Vox.material(); root.add_child(mi)
+		mi.mesh = Vox.mesh(vset, Vector3i.ZERO, Vector3.ZERO, V); mi.material_override = Vox.grain_material(V); root.add_child(mi)
 		tris += mi.mesh.get_faces().size() / 3; parts[mi.name] = mi.mesh.get_faces().size() / 3
 	for b in boxes:
 		var a: Vector3 = b[0]; var c: Vector3 = b[1]

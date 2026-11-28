@@ -148,13 +148,15 @@ cut('hearth', 4, 15, 0, 5, 1, 9)   # the fire opening, floor stone left in
 # the Fog at every dusk. So: drystone gathered from the fields and the shore in big flat stones, timbers salvaged from
 # wrecks and tarred, heather thatch held down by ropes and hanging stones against the wind, the upper floor up in the roof
 # behind a knee wall and lit by dormers, shutters to close against the Fog. Muted colours: the land is already greying.
+# (the grain shader reads these as sRGB, as they are meant: a quarter lighter than first picked, which was against a
+# material that showed them too bright)
 PAL.update({
-    'fst': (118, 116, 110), 'fst_d': (98, 97, 93), 'fst_l': (134, 131, 124), 'fst_g': (110, 114, 100),   # weathered, lichened
-    'tar': (52, 44, 38), 'tar_d': (40, 34, 30), 'tar_l': (70, 60, 50),
-    'drift': (126, 114, 98), 'drift_d': (104, 94, 80), 'drift_l': (142, 130, 112),
-    'heather': (102, 90, 74), 'heather_d': (84, 74, 62), 'heather_l': (116, 102, 82),
-    'rope': (150, 128, 92), 'turf': (86, 92, 60), 'turf_d': (70, 74, 50),
-    'daub': (146, 136, 116),   # clay and lime daub over the stones inside: one flat face, cheap to draw
+    'fst': (148, 145, 138), 'fst_d': (122, 121, 116), 'fst_l': (168, 164, 155), 'fst_g': (138, 142, 125),   # weathered, lichened
+    'tar': (92, 78, 66), 'tar_d': (72, 62, 54), 'tar_l': (112, 96, 80),
+    'drift': (158, 142, 122), 'drift_d': (130, 118, 100), 'drift_l': (178, 162, 140),
+    'heather': (128, 112, 92), 'heather_d': (105, 92, 78), 'heather_l': (145, 128, 102),
+    'rope': (156, 138, 106), 'turf': (108, 115, 75), 'turf_d': (88, 92, 62),
+    'daub': (182, 170, 145),   # clay and lime daub over the stones inside: one flat face, cheap to draw
 })
 def drystone(x, z, ln=7, ht=3, seed=11):
     """big flat field and shore stones in courses, one weathered tone each, a few with lichen"""
@@ -248,7 +250,7 @@ for name in sorted(P):
 # The inn's furniture, as the plan lists it, placed by the builder like the pieces (x along, y inward from the wall or
 # the front, z up) but meshed at 5 cm. Sizes in 5 cm voxels.
 F = {}
-FPAL = dict(PAL, board=(126, 112, 94), board_d=(104, 92, 78), board_l=(142, 128, 108), oak=(84, 70, 58), oak_d=(62, 52, 44), oak_l=(100, 86, 70), straw=(196, 168, 104), wool=(120, 46, 40), wool_d=(96, 36, 32), linen=(200, 192, 170), ale=(150, 104, 52),
+FPAL = dict(PAL, board=(156, 140, 118), board_d=(130, 115, 98), board_l=(176, 160, 135), oak=(105, 88, 72), oak_d=(78, 65, 55), oak_l=(125, 108, 88), straw=(196, 168, 104), wool=(120, 46, 40), wool_d=(96, 36, 32), linen=(200, 192, 170), ale=(150, 104, 52),
             pewter=(128, 130, 132), flame=(255, 196, 92), hoop=(70, 68, 66))
 def fput(part, x, y, z, c): F.setdefault(part, {})[(x, y, z)] = c
 def fbox(part, x0, x1, y0, y1, z0, z1, c):

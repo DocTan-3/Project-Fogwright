@@ -15,7 +15,7 @@ var _angle := 0.0
 
 func _ready() -> void:
 	_swing = Node3D.new(); _swing.name = "Swing"; add_child(_swing)
-	var leaf := MeshInstance3D.new(); leaf.name = "Leaf"; leaf.mesh = leaf_mesh; leaf.material_override = Vox.material(); _swing.add_child(leaf)
+	var leaf := MeshInstance3D.new(); leaf.name = "Leaf"; leaf.mesh = leaf_mesh; leaf.material_override = Vox.grain_material(0.1); _swing.add_child(leaf)
 	var body := AnimatableBody3D.new(); body.sync_to_physics = false; _swing.add_child(body)
 	var cs := CollisionShape3D.new(); var sh := BoxShape3D.new(); sh.size = Vector3(W, H, 0.2); cs.shape = sh
 	cs.position = Vector3(W * 0.5, H * 0.5, -0.1); body.add_child(cs)
