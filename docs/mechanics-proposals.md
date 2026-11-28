@@ -22,6 +22,9 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
   every role; the skill web unlocks extra skill choices and modifies them; soft roles with threat; no friendly fire;
   PvP opt-in only (duels, arenas); cooldowns plus pool costs; large bar with extra rows on PC, six plus the page
   switcher on mobile.
+- **Summons and mounts (decided):** summons from gear and skills (drones, sentries), attack or support, last until
+  destroyed, cap from nodes starting at 0; taming is for mounts only; built mounts need specialisation; mounts are
+  travel only with their own moves, have their own health (knocked out on a cooldown), equip as items, tradeable.
 
 ## Core mechanics (decided 2026-11-28)
 
@@ -100,7 +103,7 @@ moves and modifiers. The moves are quiet and strange, never fireballs. They shap
 | **Seraveth**, Remembrance | Read ruin inscriptions without the language skill | **Recall** (step back to where you stood 4 s ago), **Echo** (see a fallen enemy's last moves replayed), **Mend** (restore a broken item's durability) | See Echoes of the past at ruins (lore discovery), restore relics |
 | **Ostrak**, Valor | Deal more damage the lower your health | **Anvil Skin** (block takes no stamina for a while), **Ember** (weapon hits burn), **Stand Fast** (heal from damage you block) | Better forging quality; heat a forge without fuel for a time |
 | **Khesra**, Survival | Thirst and heat drain more slowly | **Shed** (cure one affliction or wound), **Mirage** (leave a decoy and slip away), **Adapt** (resist the last damage type that hit you) | Find water anywhere |
-| **Brannoch**, Bonds | Tamed beasts and mounts take less damage | **Bond** (link to an ally or beast: share healing), **Call** (summon your bonded beast to you), **Kinship** (calm a wild animal) | Better prices with traders who know you; tame more easily |
+| **Brannoch**, Bonds | Your mount has more health and recovers faster | **Bond** (link to an ally: share healing), **Call** (your mount comes back sooner after it is knocked out), **Kinship** (calm a wild animal) | Better prices with traders who know you; tame more easily |
 | **Hollin**, the Road | Faster on roads and paths | **Stride** (a long sprint with no stamina cost), **Waystone** (recall to the last waystone you prayed at), **Welcome** (a safe camp circle: no Fog, enemies won't enter for a time) | Travel time between ports shortens; better at inns |
 | **Oriel**, Understanding | See enemies' weak points (more critical hits) | **Ride** (move your mind into a beast or machine for a while), **Know** (reveal a creature's moves and weaknesses), **Wake** (start a dead Animari machine) | Technomancy: summons gather resources; repair machines |
 | **Vael**, Passage (after Act III) | Fall damage greatly reduced | **Fold** (a short blink), **Door** (a two-way gate between two points for your group), **Slip** (pass through a thin wall) | Open broken Sennari warps for a time |
@@ -234,8 +237,20 @@ Zarhim and Ruadhan start with a small bonus to taming, as the peoples known for 
 | The Rimeholds | Snow wolves, shaggy draught oxen, sea eagles |
 | Aldrath's heartland | Horses, oxen, hounds |
 
-**Mounts** (design.md plans them): horses first, then larger beasts. Fogtouched beasts can never be tamed, except by
-Oriel's chosen with the Ride move, for a while.
+**Taming is for mounts only** *(decided 2026-11-28)*: there are no fighting pets. Fogtouched beasts can never be
+tamed, except by Oriel's chosen with the Ride move, for a while.
+
+## Summons and mounts *(decided 2026-11-28)*
+
+- **Summons come from gear and skills:** drones, sentries and turrets you build or deploy. They can attack or support
+  (heal, shield, buff). They **last until destroyed**. The **cap starts at 0** and skill nodes raise it, so a summoner
+  starts with the class that has it or builds toward it in the web.
+- **Mounts** are tamed beasts, or **built mounts** that need deeper specialisation (a craft path in the web).
+- **Travel only:** your own skills are off while riding. Some mounts have **their own special moves**, like Albion.
+- **Mount health:** a mount has its own health. When it runs out you are dismounted and the mount is on a
+  **cooldown** before you can ride again; it is not lost.
+- **Equipped as an item:** the mount takes a gear slot and counts toward weight; you mount it after a short cast.
+- **Tradeable:** tamed and built mounts are items, sold on the market or traded like any gear.
 
 ## Trade, cargo and the economy *(decided 2026-11-28)*
 

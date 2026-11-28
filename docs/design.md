@@ -161,6 +161,13 @@ Decided with the user; items marked *(proposal)* are still open.
 
 - **Open:** the numbers; how many moves each rarity gives; clips still missing (a bow draw, two-handed weapons, a parry of its own).
 
+#### Summons and mounts *(decided 2026-11-28)*
+
+- **Summons** come from gear and skills: drones, sentries and turrets that attack or support. They last until destroyed. The summon cap starts at **0** and skill nodes raise it, so summoners pick the class that has it or build toward it.
+- **Taming is for mounts only**; there are no fighting pets. Some mounts are **built**, which needs deeper specialisation.
+- **Mounts are for travel.** Personal skills are off in the saddle, but some mounts have their own special moves, like Albion. A mount has its own health: when it runs out you are dismounted and it goes on a cooldown.
+- A mount is **equipped as an item** (a gear slot and weight, mounted after a short cast) and can be **traded or sold**.
+
 ### Skill tree, paths and gods
 
 There are no classes. Every character can fight and craft completely without the Gods; who you are comes from where you grow in the skill tree. Players start as freefolk in Farhallow and arrive at Hollin's Cross after its fall.
