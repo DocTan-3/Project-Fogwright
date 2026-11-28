@@ -25,7 +25,7 @@ MAT = {   # kept within real reflectance, like the skins: metals read by their t
     'brass_l': (208, 170, 96), 'copper': (160, 90, 56), 'copper_d': (112, 60, 38), 'rubber': (40, 36, 34), 'glass': (96, 160, 168),
     'glass_l': (176, 214, 216), 'glow': (255, 168, 64), 'arc': (110, 200, 255), 'arc_d': (50, 110, 170), 'leather': (96, 60, 38),
     'leather_d': (66, 42, 26), 'leather_l': (128, 86, 56), 'wool': (78, 86, 60), 'wool_d': (58, 64, 44), 'fur': (150, 132, 108),
-    'fur_d': (112, 96, 76), 'canvas': (120, 100, 72), 'red': (120, 42, 36), 'red_d': (86, 30, 26), 'cord': (170, 150, 110), 'bronze': (138, 88, 54), 'bronze_d': (90, 56, 34), 'bronze_l': (182, 128, 82), 'hose': (150, 44, 40), 'potion': (80, 168, 96), 'blued': (50, 62, 100), 'blued_d': (34, 42, 70), 'blued_l': (76, 92, 136), 'hose_d': (104, 30, 28),
+    'fur_d': (112, 96, 76), 'canvas': (120, 100, 72), 'red': (120, 42, 36), 'red_d': (86, 30, 26), 'cord': (170, 150, 110), 'bronze': (138, 88, 54), 'bronze_d': (90, 56, 34), 'bronze_l': (182, 128, 82), 'hose': (150, 44, 40), 'potion': (80, 168, 96), 'blued': (50, 62, 100), 'quilt': (150, 134, 104), 'quilt_d': (116, 100, 74), 'cloth_b': (66, 76, 92), 'cloth_b_d': (46, 54, 66), 'wood': (132, 96, 62), 'wood_d': (100, 70, 44), 'blued_d': (34, 42, 70), 'blued_l': (76, 92, 136), 'hose_d': (104, 30, 28),
 }
 SIDES = ('l', 'r')
 def out_side(F, s): return 1 if s == 'l' else -1      # the left arm is at large x: its outer side faces +x
@@ -624,6 +624,226 @@ def colossus_gauntlets(F, Pb, Pc):
             P['hand_' + s][(x, Y0 - 2, hz0 + 4)] = 'brass_d'
     return P
 
+# ---------------------------------------------------------------- the basics: one common item in every slot
+# Plain, everyday gear for the start: wool, canvas, quilting and leather, simple stitching (common rarity, design.md).
+def cap(F, Pb, Pc):
+    """a flat cloth cap with a short brim; long hair falls below it"""
+    h = Head(F); P = {}; X0, Y0, Z0, W, D, H = h.X0, h.Y0, h.Z0, h.W, h.D, h.H; part = 'cap@head#2'
+    for x in range(X0 - 1, X0 + W + 1):
+        for y in range(Y0 - 1, Y0 + D + 1):
+            for z in range(Z0 + H - 6, Z0 + H + 2):
+                if X0 <= x < X0 + W and Y0 <= y < Y0 + D and z < Z0 + H: continue
+                if (x in (X0 - 1, X0 + W)) and (y in (Y0 - 1, Y0 + D)): continue
+                P.setdefault(part, {})[(x, y, z)] = 'wool_d' if z == Z0 + H - 6 else ('wool' if (x + y) % 5 else 'wool_d')
+    for x in range(X0 + 1, X0 + W - 1):
+        for y in range(Y0 - 5, Y0 - 1):
+            for z in (Z0 + H - 6, Z0 + H - 5): P[part][(x, y, z)] = 'wool_d'
+    return P
+def spectacles(F, Pb, Pc):
+    """round wire spectacles: rims round each eye, a bridge, arms back to the ears"""
+    h = Head(F); P = {}; part = 'specs@head#2'
+    for c0 in h.eyes:
+        for c in range(c0 - 1, c0 + 7):
+            for v in range(12, 18):
+                if (c in (c0 - 1, c0 + 6) or v in (12, 17)) and not ((c in (c0 - 1, c0 + 6)) and (v in (12, 17))): h.put(P, part, c, -2, v, 'iron_d')
+    for c in range(h.eyes[0] + 7, h.eyes[1] - 1): h.put(P, part, c, -2, 13, 'iron_d')
+    for d in range(-2, h.D // 2): h.put(P, part, -1, d, 14, 'iron_d'); h.put(P, part, h.W, d, 14, 'iron_d')
+    return P
+def scarf(F, Pb, Pc):
+    """a wool scarf wound round the neck and pulled up over mouth and nose, its tail hanging down the back"""
+    h = Head(F); P = {}; part = 'scarf@head#2'
+    for v in range(19, 31):
+        for c in range(-1, h.W + 1):
+            h.put(P, part, c, -3, v, 'red_d' if v % 3 == 0 else 'red')
+        for d in range(-3, h.D + 1):
+            h.put(P, part, -1, d, v, 'red'); h.put(P, part, h.W, d, v, 'red')
+        for c in range(-1, h.W + 1): h.put(P, part, c, h.D, v, 'red')
+    top, TD, cx = F['top'], F['TD'], F['cx']
+    for z in range(top - 10, top + 1):
+        for x in (cx + 1, cx + 2, cx + 3): P.setdefault('scarf@torso', {})[(x, TD, z)] = 'red_d' if z == top - 10 or x == cx + 3 else 'red'
+    return P
+def shoulder_pads(F, Pb, Pc):
+    """quilted shoulder pads, stitched in rows"""
+    P = {}; AW = F['AW']; top = F['top']
+    for s in SIDES:
+        x0, x1, ay0, au0, al0, h0 = F['arms'][s]
+        box(P, 'pad_%s@arm_upper_%s' % (s, s), x0 - 1, x1 + 1, ay0 - 1, ay0 + AW, top - 3, top + 1, lambda x, y, z: 'quilt_d' if (z - top) % 2 == 0 else 'quilt', bev=1)
+    return P
+def armbands(F, Pb, Pc):
+    """a leather band round each upper arm, buckled"""
+    P = {}; AW = F['AW']; top = F['top']
+    for s in SIDES:
+        x0, x1, ay0, au0, al0, h0 = F['arms'][s]; part = 'band_%s@arm_upper_%s' % (s, s)
+        for x in range(x0 - 1, x1 + 2):
+            for y in range(ay0 - 1, ay0 + AW + 1):
+                if x in (x0 - 1, x1 + 1) or y in (ay0 - 1, ay0 + AW):
+                    for z in (top - 7, top - 6): P.setdefault(part, {})[(x, y, z)] = 'leather_d'
+        P[part][((x0 + x1) // 2, ay0 - 2, top - 7)] = 'brass'
+    return P
+def gambeson(F, Pb, Pc):
+    """a quilted gambeson: replaces the torso; diamond stitching, a standing collar, ties down the front"""
+    top, cx = F['top'], F['cx']
+    def col(x, y, z, front, back, xmin, xmax):
+        if z >= top - 1: return 'quilt_d'
+        if y == front and cx - 1 <= x <= cx and z % 3 == 0: return 'cord'
+        return 'quilt_d' if (x + z) % 4 == 0 or (x - z) % 4 == 0 else 'quilt'
+    return {'torso': paint(grow(Pc['torso']), col)}
+def long_coat(F, Pb, Pc):
+    """a long travelling coat: a shell outside the chest, open down the front with brass buttons, a raised collar, and a
+    skirt riding each thigh down to the knee (as WoW skins its coat skirts to the thighs)"""
+    P = {}; top, hip, cx, LL = F['top'], F['hip'], F['cx'], F['LL']
+    t = Pc['torso']; outer = grow(t, 2)
+    fy = {}
+    for (x, y, z) in outer: fy[(x, z)] = min(fy.get((x, z), 99), y)
+    for (x, y, z) in outer:
+        if (x, y, z) in grow(t, 1): continue
+        if y == fy[(x, z)] and cx - 2 <= x <= cx + 1 and z < top: continue          # open at the front
+        col = 'cloth_b'
+        if y == fy[(x, z)] and x in (cx - 3, cx + 2) and z % 4 == 0: col = 'brass'
+        if z >= top - 1: col = 'cloth_b_d'
+        P.setdefault('coat@torso', {})[(x, y, z)] = col
+    for (x, y, z) in list(P['coat@torso']):
+        if z == top: P['coat@torso'][(x, y, z + 1)] = 'cloth_b_d'; P['coat@torso'][(x, y, z + 2)] = 'cloth_b_d'
+    for s in SIDES:
+        x0, x1, yc = F['legs'][s]; inner = x0 if s == 'l' else x1
+        for z in range(9 + LL - 1, hip + 1):
+            for x in range(x0 - 2, x1 + 3):
+                for y in range(yc - 2, yc + 10):
+                    edge = x in (x0 - 2, x1 + 2) or y in (yc - 2, yc + 9)
+                    if not edge: continue
+                    if x == (x0 - 2 if s == 'l' else x1 + 2): continue                 # open on the inner side
+                    if y == yc - 2 and (x <= x0 if s == 'l' else x >= x1): continue    # and at the front
+                    P.setdefault('coatskirt_%s@leg_upper_%s' % (s, s), {})[(x, y, z)] = 'cloth_b_d' if z == 9 + LL - 1 else 'cloth_b'
+    return P
+def wrist_wraps(F, Pb, Pc):
+    """cloth wraps round the wrists: replace the forearms (bare inside, with their marks)"""
+    P = {}; AW = F['AW']
+    for s in SIDES:
+        x0, x1, ay0, au0, al0, h0 = F['arms'][s]
+        P['arm_lower_' + s] = dict(Pb['arm_lower_' + s])
+        box(P, 'arm_lower_' + s, x0 - 1, x1 + 1, ay0 - 1, ay0 + AW, al0, al0 + 4, lambda x, y, z: 'canvas' if (x + z) % 3 else 'linen_d')
+    return P
+def leather_gloves(F, Pb, Pc):
+    P = {}; AW = F['AW']
+    for s in SIDES:
+        x0, x1, ay0, au0, al0, h0 = F['arms'][s]
+        P['hand_' + s] = paint(grow(Pb['hand_' + s], 1, zs={al0 - 1}), lambda x, y, z, f, b, a, m: 'leather_d' if z == al0 - 1 or (y == f and z % 2) else 'leather')
+    return P
+def plain_belt(F, Pb, Pc):
+    P = {}; hip = F['hip']; fy = belt(F, P, Pc, mat='leather', buckle='iron_l')
+    pouch(P, 'belt@torso', 1, fy - 1, hip - 2, w=3, d=2, h=3)
+    return P
+def work_trousers(F, Pb, Pc):
+    """reinforced work trousers: replace the legs; leather knee patches, seams; no boot cuff"""
+    P = {}; LL, hip = F['LL'], F['hip']
+    for s in SIDES:
+        x0, x1, yc = F['legs'][s]
+        box(P, 'leg_upper_' + s, x0, x1, yc, yc + 7, 9 + LL, hip, lambda x, y, z: 'trousers_d' if x in (x0, x1) and z % 3 == 0 else 'trousers')
+        box(P, 'leg_lower_' + s, x0, x1, yc, yc + 7, 7, 8 + LL, lambda x, y, z: 'leather' if (y == yc and 6 + LL <= z and x0 < x < x1) else ('trousers_d' if z == 7 else 'trousers'))
+    return P
+def shoes(F, Pb, Pc):
+    """low leather shoes, the trouser leg falling to them"""
+    P = {}
+    for s in SIDES:
+        x0, x1, yc = F['legs'][s]
+        box(P, 'foot_' + s, x0, x1, yc - 1, yc + 7, 0, 3, lambda x, y, z: 'leather_d' if z == 0 else ('leather_l' if z == 3 else 'leather'), bev=1)
+        box(P, 'foot_' + s, x0, x1, yc, yc + 7, 4, 6, 'trousers')
+    return P
+def knapsack(F, Pb, Pc):
+    """a canvas knapsack with a bedroll strapped on top and a tin cup"""
+    P = {}; top, TW, TD, cx = F['top'], F['TW'], F['TD'], F['cx']; part = 'knapsack@torso'
+    box(P, part, 3, TW - 4, TD, TD + 4, top - 11, top - 3, lambda x, y, z: 'canvas' if z > top - 10 else 'leather_d', bev=1)
+    for x in range(2, TW - 2):                  # the bedroll
+        for y in range(TD + 1, TD + 5):
+            for z in (top - 2, top - 1, top):
+                if (y - TD - 3) ** 2 + (z - top + 1) ** 2 <= 3: P[part][(x, y, z)] = 'wool_d' if x in (4, TW - 5) else 'wool'
+    for x in (4, TW - 5):
+        for y in range(-1, TD): P[part][(x, y, top + 1)] = 'leather_d'
+        for z in range(top - 7, top + 1): P[part][(x, -1, z)] = 'leather_d'
+    box(P, part, cx - 1, cx + 1, TD + 5, TD + 6, top - 9, top - 7, 'iron_l')
+    return P
+
+# ---------------------------------------------------------------- the Farhallow tools (the prologue's weapons)
+# Chunky and about 1.3x real size (weapons.md), at the head's finer voxels (1.25 cm). Each is drawn in its own frame -
+# u across, w forward (negative) and back, h up the haft from the grip - then placed in the right fist (head up) or
+# carried where it belongs: hatchets, hammers, blades and cleavers at the back of the left hip, long tools across the back.
+def tool_shape(kind, floor):
+    """the tool's voxels in its own frame; floor: how far below the grip the haft may reach (the ground)"""
+    V = {}
+    def b(u0, u1, w0, w1, h0, h1, c):
+        for u in range(u0, u1 + 1):
+            for w in range(w0, w1 + 1):
+                for h in range(h0, h1 + 1): V[(u, w, h)] = c(u, w, h) if callable(c) else c
+    def haft(h0, h1, wrap=(-6, 6)):
+        b(-1, 1, -1, 1, max(h0, -floor), h1, lambda u, w, h: ('cord' if (h % 2) else 'leather_d') if wrap[0] <= h <= wrap[1] else ('wood_d' if (u + w + h) % 7 == 0 else 'wood'))
+    if kind == 'hatchet':
+        haft(-12, 36)
+        for h in range(26, 38):                 # a bearded head: wider toward the edge
+            reach = 12 + max(0, 33 - h) // 2 if h < 33 else 12
+            b(-2, 2, -reach, 3, h, h, lambda u, w, hh: 'iron_l' if w <= -reach + 1 else ('iron_d' if w >= 2 else 'iron'))
+    if kind == 'spear':                         # the fisher's spear: a barbed head on a long haft
+        haft(-70, 78, (-8, 8))
+        b(-1, 1, -1, 1, 74, 78, 'cord')
+        for h in range(79, 100):
+            r = max(0, 2 - (h - 79) // 8)
+            b(-r, r, -r, r, h, h, 'iron_l' if h > 94 else 'iron')
+        for side in (-1, 1):                    # two barbs
+            for k in range(5): V[(side * (2 + k // 2), 0, 84 - k)] = 'iron'
+    if kind == 'hammer':                        # the smith's hammer
+        haft(-10, 32)
+        b(-4, 4, -10, 8, 32, 42, lambda u, w, h: 'iron_l' if w in (-10, 8) else ('iron_d' if h in (32, 42) else 'iron'))
+    if kind == 'blade':                         # the old blade from above the smithy door: worn, a little rust
+        b(-1, 1, -1, 1, -8, 8, lambda u, w, h: 'leather_d' if h % 3 else 'cord')
+        b(-2, 2, -2, 2, -11, -9, 'brass_d')
+        b(-11, 11, -2, 2, 9, 11, lambda u, w, h: 'iron_d' if abs(u) < 10 else 'brass_d')
+        for h in range(12, 80):
+            hw = 4 if h < 72 else max(0, 4 - (h - 72) // 2)
+            b(-hw, hw, -1, 1, h, h, lambda u, w, hh: 'copper_d' if (u * 5 + hh * 3) % 23 == 0 else ('iron_d' if u == 0 else ('iron_l' if abs(u) == hw else 'iron')))
+    if kind == 'boathook':
+        haft(-70, 70, (-8, 8))
+        b(-1, 1, -1, 1, 70, 84, lambda u, w, h: 'iron_l' if h > 80 else 'iron')
+        for k in range(9):                      # the hook, curling back and down
+            w = 2 + min(k, 5); h = 74 - max(0, k - 5) * 2
+            b(-1, 1, w, w + 1, h, h + 1, 'iron')
+    if kind == 'cleaver':
+        b(-1, 1, -1, 1, -8, 8, lambda u, w, h: 'brass' if h in (-4, 2) else 'wood')
+        b(-1, 1, -18, 3, 9, 26, lambda u, w, h: 'iron_l' if w <= -17 else ('rubber' if (w, h) in ((0, 23), (-1, 23), (0, 22), (-1, 22)) else 'iron'))
+    if kind == 'pitchfork':
+        haft(-70, 62, (-8, 8))
+        b(-9, 9, -1, 1, 62, 64, 'iron_d')
+        for u in (-8, 0, 8):
+            b(u - 1, u + 1, -1, 1, 65, 84, lambda uu, w, h: 'iron_l' if h > 81 else 'iron')
+    return V
+def tool_item(kind, carry):
+    def fn(F, Pb, Pc):
+        P = {}; x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
+        gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0        # the fist's centre, in fine voxels
+        V = tool_shape(kind, gz - 2)
+        if carry == 'back':     # long tools stand upright beside the body, the butt near the ground, like a staff
+            P['weapon@hand_r#2'] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
+        else:                   # one-handers point forward from the fist, the edge or face down
+            P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
+        return P
+    def fn_carried(F, Pb, Pc):
+        P = {}; top, hip, TW, TD, cx = F['top'], F['hip'], F['TW'], F['TD'], F['cx']
+        V = tool_shape(kind, 999)
+        if carry == 'hip':                      # hanging at the back of the left hip
+            if kind == 'blade':                 # sheathed, hilt up
+                V = {k: c for k, c in V.items() if k[2] < 9}
+                for h in range(9, 80):
+                    for u in range(-5, 6):
+                        for w in (-2, -1, 0, 1, 2):
+                            if abs(u) == 5 or abs(w) == 2: V[(u, w, h)] = 'leather_d' if h > 76 or h < 12 else 'leather'
+                part = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * (hip + 4) - h): c for (u, w, h), c in V.items()}
+            else:                               # through a belt loop, head up
+                part = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * hip - 22 + h): c for (u, w, h), c in V.items()}
+            P['weapon@torso#2'] = part
+        else:                                   # across the back, tilted
+            P['weapon@torso#2~z35'] = {(2 * cx + u, 2 * TD + 8 + w, 2 * (hip + 4) + h): c for (u, w, h), c in V.items()}
+        return P
+    return fn, fn_carried
+TOOLS = {'hatchet': 'hip', 'spear': 'back', 'hammer': 'hip', 'blade': 'hip', 'boathook': 'back', 'cleaver': 'hip', 'pitchfork': 'back'}
+
 # ---------------------------------------------------------------- the catalogue
 # order: the fixed layering from the inside out (design doc): wardrobe, legs and feet, chest, coat, arms, belt,
 # shoulders, back, head; a later layer wins where two would take the same part.
@@ -655,9 +875,27 @@ ITEMS = {
     'arm_saw':            (arm_saw, 'heavy', ['back'], 7, []),
     'arm_bulwark':        (arm_bulwark, 'heavy', ['back'], 7, []),
     'arm_cannons':        (arm_cannons, 'heavy', ['back'], 7, []),
-    'colossus_gauntlets': (colossus_gauntlets, 'heavy', ['wrists', 'hands'], 4, []),
-    'colossus_arms':      (colossus_arms, 'heavy', ['shoulder_l', 'shoulder_r', 'arms', 'wrists', 'hands'], 6, []),
+    'colossus_gauntlets': (colossus_gauntlets, 'heavy', ['wrists', 'hands', 'main_hand', 'off_hand'], 4, []),
+    'colossus_arms':      (colossus_arms, 'heavy', ['shoulder_l', 'shoulder_r', 'arms', 'wrists', 'hands', 'main_hand', 'off_hand'], 6, []),
 }
+ITEMS.update({
+    'cloth_cap':      (cap, 'common', ['head'], 8, ['bun', 'crown']),
+    'spectacles':     (spectacles, 'common', ['eyes'], 9, []),
+    'wool_scarf':     (scarf, 'common', ['mouth'], 9, ['beard', 'braid']),
+    'shoulder_pads':  (shoulder_pads, 'common', ['shoulder_l', 'shoulder_r'], 6, []),
+    'armbands':       (armbands, 'common', ['arms'], 4, []),
+    'gambeson':       (gambeson, 'common', ['chest'], 2, []),
+    'long_coat':      (long_coat, 'common', ['coat'], 3, []),
+    'wrist_wraps':    (wrist_wraps, 'common', ['wrists'], 4, []),
+    'leather_gloves': (leather_gloves, 'common', ['hands'], 4, []),
+    'plain_belt':     (plain_belt, 'common', ['waist'], 5, []),
+    'work_trousers':  (work_trousers, 'common', ['legs'], 1, []),
+    'shoes':          (shoes, 'common', ['feet'], 1, []),
+    'knapsack':       (knapsack, 'common', ['back'], 7, []),
+})
+for _k, _c in TOOLS.items():
+    _h, _cr = tool_item(_k, _c)
+    ITEMS[_k] = (_h, 'common', ['main_hand'] + (['off_hand'] if _c == 'back' else []), 11, [], _cr)
 SETS = {
     'light':  ("Warden's leathers", ['warden_hood', 'warden_jerkin', 'warden_bracers', 'warden_boots', 'warden_belt']),
     'medium': ("Tinkerer's brigandine", ['tinker_goggles', 'tinker_brigandine', 'tinker_pauldron', 'canister_gauntlet', 'tinker_belt']),
@@ -669,14 +907,18 @@ SETS = {
     'arm_defence': ('Ironclad with a bulwark arm (defence)', ['iron_breastplate', 'iron_arms', 'iron_gauntlets', 'iron_legs', 'iron_sabatons', 'arm_bulwark']),
     'arm_cannons': ('Steamwright with twin cannon arms (combat)', ['steam_respirator', 'steam_cuirass', 'steam_greaves', 'steam_gloves', 'arm_cannons']),
     'gauntlets': ('Colossus gauntlets over light leathers', ['warden_hood', 'warden_jerkin', 'warden_boots', 'warden_belt', 'colossus_gauntlets']),
+    'basics': ('Basics: one common item in every slot', ['cloth_cap', 'spectacles', 'wool_scarf', 'shoulder_pads', 'armbands', 'gambeson', 'long_coat', 'wrist_wraps', 'leather_gloves', 'plain_belt', 'work_trousers', 'shoes', 'knapsack', 'hatchet']),
     'colossus': ('Colossus arms over light leathers', ['warden_jerkin', 'warden_boots', 'warden_belt', 'colossus_arms']),
 }
 
 if __name__ == '__main__':
     db = {'items': {}, 'sets': {k: {'name': n, 'items': v} for k, (n, v) in SETS.items()}}
-    for name, (fn, tier, slots, order, hides) in ITEMS.items():
+    for name, (fn, tier, slots, order, hides, *carried) in ITEMS.items():
         db['items'][name] = {'tier': tier, 'slots': slots, 'order': order, 'hides': hides, 'file': 'res://assets/voxel/gear/%s/%%s_%%s.vox' % name}
         os.makedirs(os.path.join(ROOT, 'assets', 'voxel', 'gear', name), exist_ok=True)
+        if carried:
+            db['items'][name]['carried'] = 'res://assets/voxel/gear/%s_carried/%%s_%%s.vox' % name
+            os.makedirs(os.path.join(ROOT, 'assets', 'voxel', 'gear', name + '_carried'), exist_ok=True)
     tall = {}
     for people in mc.PEOPLES:
         for sex in ('m', 'f'):
@@ -684,10 +926,11 @@ if __name__ == '__main__':
             Pc, _ = mc.build(people, sex, dressed=True)
             pal = dict(PAL); pal.update(MAT); mb.COL = pal; mb.NAMES = list(pal)
             for name, (fn, *_r) in ITEMS.items():
-                parts = {k: v for k, v in fn(F, Pb, Pc).items() if v}
-                path = os.path.join(ROOT, 'assets', 'voxel', 'gear', name, '%s_%s.vox' % (people, sex))
                 import contextlib, io
-                with contextlib.redirect_stdout(io.StringIO()): mb.write(path, parts)
+                for suffix, f_ in (('', fn),) + ((('_carried', _r[-1]),) if len(_r) == 5 else ()):
+                    parts = {k: v for k, v in f_(F, Pb, Pc).items() if v}
+                    path = os.path.join(ROOT, 'assets', 'voxel', 'gear', name + suffix, '%s_%s.vox' % (people, sex))
+                    with contextlib.redirect_stdout(io.StringIO()): mb.write(path, parts)
                 if name == 'arcane_rig':
                     z = [vz / (2 if '#2' in k else 1) for k, v in {**Pb, **parts}.items() for (_, _, vz) in v]
                     x = [vx for k, v in parts.items() for (vx, _, _) in v]

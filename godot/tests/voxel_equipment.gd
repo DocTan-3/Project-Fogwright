@@ -3,7 +3,9 @@ extends Node3D
 ## recipe-fitted item is seen to fit every people and both sexes; plus the wardrobe alone for comparison
 ##   godot --path . --rendering-driver opengl3 res://tests/voxel_equipment.tscn -- out=<png prefix>
 const BODIES := [["hrimfolk", "m"], ["ilvari", "f"], ["ferrin", "m"], ["zarhim", "f"], ["aurelan", "m"]]
-const TIERS := ["wardrobe", "light", "medium", "heavy", "plate", "rig", "colossus", "gauntlets", "arm_utility", "arm_combat", "arm_defence", "arm_cannons"]
+const TIERS := ["wardrobe", "basics", "tools_drawn", "tools_carried", "light", "medium", "heavy", "plate", "rig", "colossus", "gauntlets", "arm_utility", "arm_combat", "arm_defence", "arm_cannons"]
+## the tool rows: each body holds (or carries) a different Farhallow tool
+const TOOLS := ["hatchet", "spear", "hammer", "blade", "pitchfork"]
 func _ready() -> void:
 	var out := "/tmp/equip"
 	for a in OS.get_cmdline_user_args():
@@ -20,8 +22,10 @@ func _ready() -> void:
 	var gm := StandardMaterial3D.new(); gm.albedo_color = Color(0.36, 0.42, 0.26); g.material_override = gm; add_child(g)
 	for t in TIERS.size():
 		for b in BODIES.size():
-			var worn: Array = [] if TIERS[t] == "wardrobe" else Equipment.set_items(TIERS[t])
-			var m := Equipment.dress(BODIES[b][0], BODIES[b][1], worn)
+			var worn: Array = []
+			if TIERS[t].begins_with("tools_"): worn = ["plain_belt", TOOLS[b]]
+			elif TIERS[t] != "wardrobe": worn = Equipment.set_items(TIERS[t])
+			var m := Equipment.dress(BODIES[b][0], BODIES[b][1], worn, true, TIERS[t] != "tools_carried")
 			add_child(m); m.position = Vector3(b * 1.5 + t * 12.0, 0, 0)
 			var tris := 0
 			for mi in m.find_children("*", "MeshInstance3D", true, false): if (mi as MeshInstance3D).visible: tris += (mi as MeshInstance3D).mesh.get_faces().size() / 3
@@ -30,8 +34,8 @@ func _ready() -> void:
 	get_viewport().size = Vector2i(2400, 1000)
 	for t in TIERS.size():
 		for view in [["front", Vector3(3.0, 1.4, 6.0)], ["back", Vector3(3.0, 1.6, -6.0)], ["side", Vector3(-1.5, 1.7, 4.5)]]:
-			if view[0] == "back" and TIERS[t] in ["wardrobe", "light"]: continue
-			if view[0] == "side" and not TIERS[t].begins_with("arm_"): continue
+			if view[0] == "back" and TIERS[t] in ["wardrobe", "light", "tools_drawn"]: continue
+			if view[0] == "side" and not (TIERS[t].begins_with("arm_") or TIERS[t] in ["basics", "tools_drawn"]): continue
 			cam.position = view[1] + Vector3(t * 12.0, 0, 0); cam.look_at(Vector3(3.0 + t * 12.0, 1.0, 0)); cam.fov = 42.0
 			for k in 6: await get_tree().process_frame
 			await RenderingServer.frame_post_draw

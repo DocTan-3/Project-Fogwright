@@ -5,7 +5,8 @@ class_name Equipment
 ##   - the base body (its underwear), then the wardrobe (starting clothes), then the items from the inside out: a later
 ##     layer's part replaces an earlier one of the same name (Vox.character's layers), so nothing pokes through;
 ##   - two items may not share a slot: dress() refuses and says which;
-##   - what an item hides (a helm the hair and hanging beard, a hood the hair) is hidden.
+##   - what an item hides (a helm the hair and hanging beard, a hood the hair) is hidden;
+##   - weapons are in hand when drawn, else carried where they belong (at the hip, across the back).
 const DATA := "res://data/equipment.json"
 const BODY := "res://assets/voxel/characters/peoples/%s_%s%s.vox"
 static var _db := {}
@@ -17,7 +18,7 @@ static func db() -> Dictionary:
 ## the items of a set, by its tier name (light, medium, heavy, plate, rig)
 static func set_items(tier: String) -> Array: return db().sets[tier].items
 
-static func dress(people: String, sex: String, worn: Array, wardrobe := true) -> Node3D:
+static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true) -> Node3D:
 	var items: Dictionary = db().items
 	var taken := {}
 	for n in worn:
@@ -31,7 +32,8 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true) ->
 	if wardrobe: layers.append(BODY % [people, sex, "_clothes"])
 	var hides := []
 	for n in order:
-		layers.append(items[n].file % [people, sex])
+		var file: String = items[n].carried if (not drawn and items[n].has("carried")) else items[n].file
+		layers.append(file % [people, sex])
 		hides.append_array(items[n].hides)
 	var root := Vox.character(BODY % [people, sex, ""], Vox.FINE, [], layers)
 	for node in root.find_children("*", "Node3D", true, false):

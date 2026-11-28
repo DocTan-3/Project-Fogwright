@@ -266,7 +266,9 @@
    "tier": "heavy",
    "slots": [
     "wrists",
-    "hands"
+    "hands",
+    "main_hand",
+    "off_hand"
    ],
    "order": 4,
    "hides": [],
@@ -279,11 +281,210 @@
     "shoulder_r",
     "arms",
     "wrists",
-    "hands"
+    "hands",
+    "main_hand",
+    "off_hand"
    ],
    "order": 6,
    "hides": [],
    "file": "res://assets/voxel/gear/colossus_arms/%s_%s.vox"
+  },
+  "cloth_cap": {
+   "tier": "common",
+   "slots": [
+    "head"
+   ],
+   "order": 8,
+   "hides": [
+    "bun",
+    "crown"
+   ],
+   "file": "res://assets/voxel/gear/cloth_cap/%s_%s.vox"
+  },
+  "spectacles": {
+   "tier": "common",
+   "slots": [
+    "eyes"
+   ],
+   "order": 9,
+   "hides": [],
+   "file": "res://assets/voxel/gear/spectacles/%s_%s.vox"
+  },
+  "wool_scarf": {
+   "tier": "common",
+   "slots": [
+    "mouth"
+   ],
+   "order": 9,
+   "hides": [
+    "beard",
+    "braid"
+   ],
+   "file": "res://assets/voxel/gear/wool_scarf/%s_%s.vox"
+  },
+  "shoulder_pads": {
+   "tier": "common",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/shoulder_pads/%s_%s.vox"
+  },
+  "armbands": {
+   "tier": "common",
+   "slots": [
+    "arms"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/armbands/%s_%s.vox"
+  },
+  "gambeson": {
+   "tier": "common",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/gambeson/%s_%s.vox"
+  },
+  "long_coat": {
+   "tier": "common",
+   "slots": [
+    "coat"
+   ],
+   "order": 3,
+   "hides": [],
+   "file": "res://assets/voxel/gear/long_coat/%s_%s.vox"
+  },
+  "wrist_wraps": {
+   "tier": "common",
+   "slots": [
+    "wrists"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/wrist_wraps/%s_%s.vox"
+  },
+  "leather_gloves": {
+   "tier": "common",
+   "slots": [
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/leather_gloves/%s_%s.vox"
+  },
+  "plain_belt": {
+   "tier": "common",
+   "slots": [
+    "waist"
+   ],
+   "order": 5,
+   "hides": [],
+   "file": "res://assets/voxel/gear/plain_belt/%s_%s.vox"
+  },
+  "work_trousers": {
+   "tier": "common",
+   "slots": [
+    "legs"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/work_trousers/%s_%s.vox"
+  },
+  "shoes": {
+   "tier": "common",
+   "slots": [
+    "feet"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/shoes/%s_%s.vox"
+  },
+  "knapsack": {
+   "tier": "common",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/knapsack/%s_%s.vox"
+  },
+  "hatchet": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hatchet/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hatchet_carried/%s_%s.vox"
+  },
+  "spear": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/spear/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/spear_carried/%s_%s.vox"
+  },
+  "hammer": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hammer/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hammer_carried/%s_%s.vox"
+  },
+  "blade": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/blade/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/blade_carried/%s_%s.vox"
+  },
+  "boathook": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/boathook/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/boathook_carried/%s_%s.vox"
+  },
+  "cleaver": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/cleaver/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/cleaver_carried/%s_%s.vox"
+  },
+  "pitchfork": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/pitchfork/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/pitchfork_carried/%s_%s.vox"
   }
  },
  "sets": {
@@ -385,6 +586,25 @@
     "warden_boots",
     "warden_belt",
     "colossus_gauntlets"
+   ]
+  },
+  "basics": {
+   "name": "Basics: one common item in every slot",
+   "items": [
+    "cloth_cap",
+    "spectacles",
+    "wool_scarf",
+    "shoulder_pads",
+    "armbands",
+    "gambeson",
+    "long_coat",
+    "wrist_wraps",
+    "leather_gloves",
+    "plain_belt",
+    "work_trousers",
+    "shoes",
+    "knapsack",
+    "hatchet"
    ]
   },
   "colossus": {
