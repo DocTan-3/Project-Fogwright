@@ -47,14 +47,14 @@ const GULL_LANTERN := {
 		 "posts": [{"at": Vector2i(25, 38), "h": 38}, {"at": Vector2i(50, 38), "h": 38}, {"at": Vector2i(75, 38), "h": 38}],   # carved masts under the gallery's edge
 		 "beams": [[Vector3i(3, 36, 38), Vector3i(98, 39, 40)]],                           # and the beam along it they carry
 		 "firepit": {"at": Vector2i(50, 22), "r": 8},
-		 "pieces": [{"p": "hearth", "at": Vector3i(3, 50, 0), "dir": "-y"},         # the taproom's, on the gable wall
+		 "pieces": [{"p": "hearth", "at": Vector3i(3, 30, 0), "dir": "-y"},         # the taproom's, on the gable wall under the open roof
 			{"p": "hearth", "at": Vector3i(150, 117, 0), "dir": "-x"},               # the kitchen range
 			{"p": "waystone", "at": Vector3i(8, -9, -5)}],                           # Hollin's, by the porch
 		 "fittings": [
 			{"p": "bar_keel", "at": Vector2(8.0, 7.0), "dir": "-y"}, {"p": "bar_keel", "at": Vector2(8.0, 5.0), "dir": "-y"},
 			{"p": "shelf", "at": Vector2(9.85, 4.2), "dir": "+y"},
 			{"p": "barrel", "at": Vector2(9.15, 6.0)}, {"p": "barrel", "at": Vector2(9.15, 6.8)},
-			{"p": "table", "at": Vector2(0.9, 0.7)}, {"p": "bench", "at": Vector2(0.9, 0.3)}, {"p": "bench", "at": Vector2(0.9, 1.6)},
+			{"p": "table", "at": Vector2(2.2, 0.6)}, {"p": "bench", "at": Vector2(2.2, 0.2)}, {"p": "bench", "at": Vector2(2.2, 1.5)},
 			{"p": "table", "at": Vector2(6.6, 0.7)}, {"p": "bench", "at": Vector2(6.6, 0.3)}, {"p": "bench", "at": Vector2(6.6, 1.6)},
 			{"p": "table", "at": Vector2(2.2, 4.2)}, {"p": "bench", "at": Vector2(2.2, 3.8)}, {"p": "bench", "at": Vector2(2.2, 5.1)},
 			{"p": "table", "at": Vector2(5.4, 4.6)}, {"p": "bench", "at": Vector2(5.4, 4.2)}, {"p": "bench", "at": Vector2(5.4, 5.5)},
@@ -72,7 +72,7 @@ const GULL_LANTERN := {
 			{"p": "woodpile", "at": Vector2(17.1, 8.0), "dir": "+y", "z": -0.5}, {"p": "woodpile", "at": Vector2(17.1, 9.3), "dir": "+y", "z": -0.5},
 			{"p": "ivy", "at": Vector2(-0.1, 3.0), "dir": "-y", "z": 0.0}, {"p": "ivy", "at": Vector2(16.1, 6.0), "dir": "+y", "z": 0.0},
 			{"p": "rocks", "at": Vector2(-0.9, 10.0), "dir": "+y", "z": -0.5}, {"p": "rocks", "at": Vector2(16.6, 1.0), "dir": "+y", "z": -0.5}],
-		 "lights": [{"at": Vector3(1.6, 1.0, -4.0), "energy": 2.7, "range": 6.0, "color": Color(1.0, 0.62, 0.32)},   # the hearth
+		 "lights": [{"at": Vector3(1.4, 1.0, -2.0), "energy": 2.7, "range": 6.0, "color": Color(1.0, 0.62, 0.32)},   # the hearth
 			{"at": Vector3(5.0, 1.2, -2.2), "energy": 4.0, "range": 10.0, "color": Color(1.0, 0.6, 0.3)},       # the fire pit
 			{"at": Vector3(4.0, 3.6, -2.2), "energy": 2.6, "range": 9.0},                                       # the chandelier
 			{"at": Vector3(5.0, 4.6, -2.0), "energy": 2.2, "range": 10.0, "color": Color(0.95, 0.85, 0.7)},
@@ -88,8 +88,8 @@ const GULL_LANTERN := {
 			{"at": Vector2i(5, 0), "dir": "y", "bays": "pp", "face": "board", "h": 30},   # over the taproom's own wall
 			{"at": Vector2i(2, 3), "dir": "y", "bays": "ppp", "face": "board", "h": 30}, {"at": Vector2i(5, 3), "dir": "y", "bays": "ppp", "face": "board", "h": 30}],
 		 "fittings": [
-			{"p": "shield", "at": Vector2(0.42, 0.5), "dir": "+y", "z": 0.9}, {"p": "shield", "at": Vector2(0.42, 1.5), "dir": "+y", "z": 1.3},
-			{"p": "shield", "at": Vector2(0.42, 2.6), "dir": "+y", "z": 0.9}, {"p": "shield_b", "at": Vector2(0.42, 3.0), "dir": "+y", "z": 1.9},
+			{"p": "shield", "at": Vector2(0.42, 0.55), "dir": "+y", "z": 1.0}, {"p": "shield_b", "at": Vector2(0.42, 2.6), "dir": "+y", "z": 1.0},   # either side of the chimney
+			{"p": "shield_b", "at": Vector2(9.75, 1.6), "dir": "-y", "z": 1.0}, {"p": "shield", "at": Vector2(9.75, 3.0), "dir": "-y", "z": 1.0},   # facing them across the hall
 			{"p": "chandelier", "at": Vector2(3.5, 1.7), "z": -1.4},
 			{"p": "bed", "at": Vector2(10.4, 0.4)}, {"p": "chest", "at": Vector2(11.6, 0.4)},
 			{"p": "bed", "at": Vector2(12.4, 0.4)}, {"p": "chest", "at": Vector2(13.6, 0.4)},
@@ -99,7 +99,7 @@ const GULL_LANTERN := {
 	],
 	"roof": "heather",
 	"gable_windows": [5.0],
-	"chimneys": [{"at": Vector2i(3, 32), "from": 15, "above": 50}, {"at": Vector2i(136, 109), "from": 15, "above": 22}],
+	"chimneys": [{"at": Vector2i(3, 17), "from": 15, "above": 50}, {"at": Vector2i(137, 110), "from": 15, "above": 22, "along": "x"}],   # centred on their hearths
 }
 
 # ---------------------------------------------------------------- the rest of Farhallow, laid out from the plan

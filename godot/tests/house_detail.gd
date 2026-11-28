@@ -22,6 +22,7 @@ func _ready() -> void:
 		await _shot("cottage_wing", Vector3(15.0, 3.0, 7.0), Vector3(8.0, 2.2, -3.0))
 		await _shot("inn", Vector3(15.0, 4.5, 16.0), Vector3(28.0, 3.5, -6.0))
 		await _shot("inn_close", Vector3(23.5, 2.0, 5.5), Vector3(26.0, 2.6, 0.0))
+	await _shot("hearth_wall", Vector3(27.5, 2.0, -2.0), Vector3(20.3, 4.4, -2.0))
 	await _shot("hall_up", Vector3(28.6, 1.7, -0.9), Vector3(21.5, 5.6, -4.5))
 	await _shot("hall", Vector3(29.4, 2.3, -7.4), Vector3(21.0, 4.6, -1.0))
 	await _shot("gallery", Vector3(21.2, 1.6, -0.9), Vector3(27.5, 5.0, -4.2))

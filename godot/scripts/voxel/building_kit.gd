@@ -72,8 +72,17 @@ static func _fitting(fs: Dictionary, boxes: Array, ft: Dictionary, z: int) -> vo
 	if ft.p in SOLID_FITTINGS: boxes.append([Vector3(lo) * 0.5, Vector3(hi) * 0.5])
 
 ## a chimney stack of coursed stone, 0.8 m square, from z0 to z1 (voxels) at its corner at (x, y), its flue open at the top
-static func _chimney(vs: Dictionary, boxes: Array, at: Vector2i, z0: int, z1: int) -> void:
+static func _chimney(vs: Dictionary, boxes: Array, at: Vector2i, z0: int, z1: int, along := "") -> void:
 	var p: Dictionary = pieces()["chimney"]
+	if along != "":   # a chimney breast over the hearth: as wide as the hearth, stepping in to the flue's width as it rises
+		for k in 4:
+			var half := 10 - k * 2
+			for zz in range(z0 + k * 3, z0 + k * 3 + 3):
+				for a in range(4 - half, 4 + half):
+					for b in 7:
+						var c := Vector3i(at.x + a, at.y + b, zz) if along == "x" else Vector3i(at.x + b, at.y + a, zz)
+						vs[c] = KitDress._tone(KitDress._h(a / 3, zz / 2, 77), false) if not (zz == z0 + k * 3 + 2) else KitDress.DRESSED_D
+		boxes.append([Vector3(at.x - (6 if along == "x" else 0), at.y - (6 if along == "y" else 0), z0), Vector3(at.x + (14 if along == "x" else 7), at.y + (14 if along == "y" else 7), z0 + 12)])
 	for z in range(z0, z1):
 		var from_top := z1 - 1 - z
 		var lz := 39 - from_top if from_top < 3 else (z - z0) % 36
@@ -232,7 +241,7 @@ static func build(layout: Dictionary) -> Node3D:
 			for k in (vset as Dictionary).keys():
 				var q: Vector3i = k
 				if (q.x == 0 or q.x == W - 1) and (q.y == 0 or q.y == D - 1) and q.z < z: vset.erase(k)
-	for ch in layout.get("chimneys", []): _chimney(rf, boxes, ch.at, PLINTH + ch.get("from", 15), z + ch.get("above", 0))
+	for ch in layout.get("chimneys", []): _chimney(rf, boxes, ch.at, PLINTH + ch.get("from", 15), z + ch.get("above", 0), ch.get("along", "y"))
 	sets.append(rf)
 	if layout.get("debug", false): root.set_meta("sets", sets)
 	for s in sets.size():
