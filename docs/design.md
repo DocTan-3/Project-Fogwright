@@ -497,7 +497,7 @@ person and door metrics in `docs/research/skyrim-scenes.md` (a 1.8 m person, 1.2
 | Wall thickness | 0.3 m | 3 |
 | Window, sill to head | 0.9 to 1.9 m | 10 tall |
 | Storey, houses and upper floors | 3.0 m floor to floor | 30 |
-| Storey, inn taprooms and halls | 4.5 m floor to floor | 45 |
+| Storey, inn taprooms and halls | 4.4 m floor to floor (22 even stair risers) | 44 |
 | Stair | 0.2 m rise, 0.3 m tread, 1.4 m wide | 2 x 3, 14 wide |
 | Narrowest path or corridor | 1.6 m | 16 |
 | Plinth over the ground | 0.5 m (one ground-kit step) | 5 |
