@@ -1039,6 +1039,80 @@ def blade_tier(V, b, t, kind):
               profile=lambda h: hw + 1 if h < L(66) else (hw + 2 if h < L(80) else hw + 1))
     return V
 
+AXES = {   # haft from, haft to, grip half, head's lowest and highest rows, reach of the bit, double-bitted
+    'axe': (-12, 42, 7, 28, 45, 11, False), 'greataxe': (-60, 74, 10, 52, 77, 14, True)}
+def axe_tier(V, b, t, kind, floor=999):
+    """an axe or greataxe at tiers 2-5, in the iron axe's frame: the haft along h, the bit out along -w (both ways
+    when double), u its thickness; the sword's tier steps in an axe's terms"""
+    a0, a1, gh, r0, r1, R, double = AXES[kind]
+    a0 = max(a0, -floor + 3)                             # the butt stays clear of the ground when held
+    hc = (r0 + r1) // 2
+    def haft(wood, wood_d, grip, rings=()):
+        for h in range(a0, top):
+            if -gh <= h <= gh: c = grip(h) if callable(grip) else grip
+            elif h in rings: c = rings[h]
+            else: c = wood_d if h % 11 == 0 else wood
+            b(-1, 1, -1, 1, h, h, c)
+    def bit(body, edge, eye, extra=0, rune=None, spike=None):
+        # a flaring bit: a narrow neck at the eye widening toward a convex edge, horns at its ends; a single axe drops a
+        # beard below; the eye a short socket round the haft
+        H = (r1 - r0) // 2 + (1 if t >= 3 else 0); he = max(4, H // 2 - 1); Rm = R + extra + 2
+        for h in range(hc - he, hc + he + 1):
+            b(-2, 2, -3, 3, h, h, lambda u, w, hh: eye(u, w, hh) if callable(eye) else eye)
+        for o in ((-1, 1) if double else (-1,)):
+            for w in range(4, Rm + 1):
+                f = (w - 4) / max(1, Rm - 4)
+                up = he + round((H - he) * f ** 0.8); dn = up + (round(4 * f) if not double else 0)     # the beard
+                for h in range(hc - dn, hc + up + 1):
+                    d = (h - hc) / (dn if h < hc else up or 1)
+                    reach = Rm - round(2.5 * d * d)                      # the edge bulges out at the middle
+                    if w > reach: continue
+                    if w >= reach - 1: c = edge
+                    elif rune and rune(w, h): c = rune(w, h)
+                    else: c = body
+                    thick = w < 4 + (Rm - 4) // 3 and t >= 3          # a thicker cheek near the eye on the better tiers
+                    b(-1 if thick else 0, 1 if thick else 0, o * w, o * w, h, h, c)
+        if spike and not double:                             # a back spike behind the eye
+            for k in range(8):
+                r = 1 if k < 6 else 0
+                b(-r, r, 4 + k, 4 + k, hc - r, hc + r, spike)
+    top = hc + max(4, (r1 - r0) // 2 - 1) + 1
+    if t == 2:      # uncommon: a bright steel head, brass langets down the haft, brass-wired grip, a brass butt cap
+        haft('ash', 'ash_d', lambda h: 'brass' if h % 4 == 0 else 'leather_d')
+        bit('steel', 'steel_l', 'steel_d')
+        b(-2, 2, -2, 2, top, top + 1, 'brass_l')
+        el = hc - max(4, (r1 - r0) // 2 - 1)
+        for h in range(el - 8, el): V[(2, 0, h)] = V[(-2, 0, h)] = 'brass'           # the langets
+        b(-2, 2, -2, 2, el - 2, el - 1, 'brass')
+        b(-2, 2, -2, 2, a0 - 2, a0 - 1, 'brass')
+    if t == 3:      # rare: a dark haft ringed in iron, a broad riveted bit with a back spike, a tooled grip, a riveted cap
+        rings = {h: 'iron_d' for h in range(a0 + 4, a1, 14)}
+        haft('wood', 'wood_d', lambda h: 'leather_l' if (h % 3 == 0) else 'leather', rings)
+        bit('steel', 'steel_l', lambda u, w, h: 'brass' if (abs(u) == 2 and w in (-2, 2) and h in (hc - 3, hc + 3)) else 'iron_d', 3, spike='iron_d')
+        b(-2, 2, -2, 2, top, top + 2, 'iron_d'); b(-2, 2, -2, 2, a0 - 3, a0 - 1, lambda u, w, h: 'brass' if abs(u) == 2 and w == 0 else 'iron_d')
+    if t == 4:      # epic: a blackened head with a bright edge, a glowing vial in the eye, a copper pipe down the haft to a
+        # gauge above the grip
+        haft('black', 'black_d', lambda h: 'rubber' if h % 2 else 'black')
+        bit('black', 'steel_l', lambda u, w, h: ('glass_l' if abs(w) == 2 or abs(h - hc) == 3 else 'potion') if (abs(u) == 2 and abs(w) <= 2 and abs(h - hc) <= 3) else 'black_d', 2)
+        for h in range(gh + 6, hc - 4): V[(0, 2, h)] = 'copper' if h % 6 else 'copper_d'   # the pipe
+        for dw in range(-3, 4):                                                          # the gauge
+            for dh in range(-3, 4):
+                if dw * dw + dh * dh <= 10: V[(-2, dw, gh + 4 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+        V[(-3, 0, gh + 4)] = V[(-3, 1, gh + 5)] = 'red'
+        b(-2, 2, -2, 2, a0 - 3, a0 - 1, lambda u, w, h: 'copper' if h == a0 - 2 else 'brass')
+    if t == 5:      # legendary: a blued head with glowing runes along the bit, an arcane crystal in the eye and on top,
+        # gilt bands down the haft, a crystal butt
+        haft('blued_d', 'blued_d', lambda h: 'gilt' if h % 3 == 0 else 'blued_d', {h: 'gilt' for h in range(a0 + 3, a1, 9)})
+        rune = lambda w, h: ('arc' if (w + h) % 4 == 0 else 'arc_d') if 8 <= w <= R + 1 and abs(h - hc) <= (r1 - r0) // 2 - 2 else None
+        bit('blued', 'blued_l', lambda u, w, h: 'arc' if (abs(u) == 2 and abs(w) <= 1 and abs(h - hc) <= 2) else 'gilt', 3, rune=rune, spike='gilt')
+        for dh in range(0, 7):                                                           # the crystal on top
+            r = 2 - dh // 3
+            b(-r, r, -r, r, top + dh, top + dh, 'arc' if dh < 5 else 'arc_d')
+        for dh in range(-4, 1):                                                          # the butt crystal
+            r = 2 - (abs(dh + 2) + 1) // 2
+            b(-r, r, -r, r, a0 - 1 + dh, a0 - 1 + dh, 'arc')
+    return V
+
 def iron_shape(kind, floor, tier=1):
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
@@ -1061,20 +1135,22 @@ def iron_shape(kind, floor, tier=1):
                 b(-1 if thick else 0, 1 if thick else 0, w, w, h, h, col)
     if kind in BLADES and tier > 1:
         blade_tier(V, b, tier, kind)
+    elif kind in AXES and tier > 1:
+        axe_tier(V, b, tier, kind, floor)
     elif kind in ('sword', 'dagger', 'greatsword'):
         g, bl, hw, gw = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}[kind]
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'leather_d' if h % 3 == 0 else 'leather')
         pommel(-g - 1)
         b(-2, 2, -gw, gw, g + 1, g + 3, lambda u, w, h: 'iron_d' if abs(w) < gw else 'iron_l')     # the cross guard
         blade(g + 4, bl, hw)
-    if kind == 'axe':
+    if kind == 'axe' and tier == 1:
         haft(-12, 42)
         for h in range(28, 46):         # a bearded bit: thick at the eye, thinning to a flared one-voxel edge
             reach = 11 + abs(h - 39) // 2 + (2 if h < 32 else 0)
             b(-1, 1, -5, 3, h, h, lambda u, w, hh: 'iron_d' if w >= 2 else 'iron')
             b(0, 0, -reach + 2, -6, h, h, 'iron'); b(0, 0, -reach, -reach + 1, h, h, 'iron_l')
         V[(2, 0, 37)] = V[(-2, 0, 37)] = 'iron_l'     # nail heads through the eye
-    if kind == 'greataxe':
+    if kind == 'greataxe' and tier == 1:
         haft(-60, 74, (-10, 10))
         for h in range(52, 78):         # a double bit, crescent edges flaring at the horns, one voxel thin
             reach = 14 + abs(h - 65) // 2
@@ -1262,7 +1338,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword', 'greatsword', 'dagger']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)
