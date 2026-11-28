@@ -39,6 +39,15 @@ var beat := 0
 var from_beat := 1          # tests: start at a later beat
 
 func O() -> Vector2: return level.fh.ORIGIN
+## a spot `d` metres out from building i's door k, past everything the kit built on that side (porch, steps, yard)
+func _door_out(i: int, k := 0, d := 1.6, side := 0.0) -> Vector3:
+	var b: Dictionary = level.fh.BUILDINGS[i]; var c := Vector2(b.x, b.y); var a: float = b.a
+	var dr: Array = b.doors[mini(k, b.doors.size() - 1)]; var l := (Vector2(dr[0], dr[1]) - c).rotated(-a)
+	var f: Array = b.get("foot", [-b.w * 0.5, -b.h * 0.5, b.w * 0.5, b.h * 0.5])
+	var q: Vector2
+	if absf(l.x) / (b.w * 0.5) > absf(l.y) / (b.h * 0.5): q = Vector2((f[2] if l.x > 0 else f[0]) + signf(l.x) * d, l.y + side)
+	else: q = Vector2(l.x + side, (f[3] if l.y > 0 else f[1]) + signf(l.y) * d)
+	var w := c + q.rotated(a); return P(w.x, w.y)
 func P(x: float, y: float) -> Vector3:   # plan metres -> the drawn ground there
 	var p := Vector2(x, y); return Vector3(x - O().x, _ground(p), y - O().y)
 func _ground(p: Vector2) -> float:
@@ -152,9 +161,9 @@ func _npc(id: String, people_: String, sex_: String, worn: Array, face_: int, at
 
 func _villagers() -> void:
 	_npc("Maren", "wayfolk", "f", [], 2, P(61.6, 48.2), 0.9)
-	_npc("Brann", "hrimfolk", "m", [], 3, P(58.6, 41.6), 1.6)
-	_npc("Hew", "ruadhan", "m", [], 4, P(74.6, 68.6), 2.4, "mend")
-	_npc("Dunn", "ferrin", "m", ["hammer"], 2, P(84.6, 61.6), 0.6, "hammer")
+	_npc("Brann", "hrimfolk", "m", [], 3, _door_out(0, 0, 1.4), 1.6)
+	_npc("Hew", "ruadhan", "m", [], 4, _door_out(10, 0, 1.4, 1.5), 2.4, "mend")
+	_npc("Dunn", "ferrin", "m", ["hammer"], 2, _door_out(4, 0, 1.8, 1.2), 0.6, "hammer")
 	_npc("Garr", "hrimfolk", "f", ["spear"], 1, P(64.6, 8.2), 0.0)
 	_npc("Ysolde", "ilvari", "f", [], 3, P(87.5, 90.0), PI * 0.5, "mend")
 	_npc("Tamsin", "zarhim", "f", [], 2, P(66.5, 47.0), -2.3)
@@ -175,13 +184,13 @@ func _world_items() -> void:
 	var jug := VBox.new(0.025)   # a clay jug with a stopper and a rope handle
 	jug.blob(Vector3(0, 0.14, 0), Vector3(0.1, 0.14, 0.1), Color8(150, 104, 70), 0.06); jug.box(Vector3(-0.035, 0.26, -0.035), Vector3(0.035, 0.33, 0.035), Color8(130, 90, 60))
 	jug.box(Vector3(-0.025, 0.33, -0.025), Vector3(0.025, 0.36, 0.025), Color8(160, 130, 90)); jug.beam(Vector3(0.05, 0.3, 0), Vector3(0.1, 0.18, 0), 0.025, Color8(156, 138, 106))
-	_pickup("oil", "Take the jug of lamp oil", _vbox_node(jug), P(57.9, 42.6) + Vector3(0, 0.0, 0))
+	_pickup("oil", "Take the jug of lamp oil", _vbox_node(jug), _door_out(0, 0, 1.0, 1.2))
 	var hat := VBox.new(0.025)   # the hatchet, its head bitten into the block
 	hat.box(Vector3(-0.015, 0, -0.015), Vector3(0.015, 0.42, 0.015), Color8(150, 120, 80)); hat.box(Vector3(-0.02, 0.0, -0.06), Vector3(0.02, 0.1, 0.05), Color8(90, 92, 96))
 	hat.box(Vector3(-0.012, -0.02, -0.08), Vector3(0.012, 0.11, -0.06), Color8(150, 152, 156))
 	var hn := _vbox_node(hat)
 	var block := level.find_child("ChoppingBlock", true, false) as Node3D
-	var at := block.global_position + Vector3(0, 0.48, 0) if block else P(86.3, 55.0) + Vector3(0, 0.48, 0)
+	var at := block.global_position + Vector3(0, 0.48, 0) if block else _door_out(4, 0, 2.6) + Vector3(0, 0.48, 0)
 	_pickup("hatchet", "Take the hatchet", hn, at)
 	hn.rotation = Vector3(0.0, 0.5, -0.6)
 
@@ -329,7 +338,7 @@ func _beat2() -> void:
 	_bell(); _fog_rolls_in(22.0)
 	await _say([["", "(A bell. The gate bell, ringing and ringing.)"], ["Hew", "That's Garr on the bell. That's the Fog."],
 		["Hew", "Dunn keeps a hatchet in the block by the smithy. Take it. Then get to the ship - don't wait for me."]])
-	var hew: PrologueVillager = npcs.Hew; hew.go([P(73.4, 67.6), P(72.4, 66.6)], 1.4)   # inside, to bar his door
+	var hew: PrologueVillager = npcs.Hew; hew.go([_door_out(10, 0, 0.6), _door_out(10, 0, -1.0)], 1.4)   # inside, to bar his door
 	for id in ["Ysolde", "Tamsin", "Oro", "Brann"]: _flee(id, 0 if id != "Ysolde" else 6, 4.2)
 	npcs.Dunn.working = ""; npcs.Maren.go([P(64.0, 51.6)], 1.2)
 	pickups.hatchet.live = true
@@ -382,7 +391,7 @@ func _beat4() -> void:
 func _beat5() -> void:
 	beat = 5
 	var hew: PrologueVillager = npcs.Hew
-	hew.route.clear(); hew.global_position = P(76.5, 64.0) + Vector3(0, 0.1, 0); hew.set_greyed(1.0); hew.working = ""
+	hew.route.clear(); hew.global_position = _door_out(4, 0, 5.0, -2.0) + Vector3(0, 0.1, 0); hew.set_greyed(1.0); hew.working = ""
 	hew.face(player.global_position)
 	await _wait(0.5)
 	await _say([["Hew", "...lad?"], ["Hew", "It's so quiet in here. Go home, lad. Go home. Home. Home."]])
@@ -421,7 +430,7 @@ func _beat7() -> void:
 	hud.show_hint("A thread of gold in the compass. Follow it.")
 	checkpoint = player.global_position
 	if auto:
-		await _reach(P(65, 57), 3.0); await _shot("7a_fires", P(64, 70) + Vector3(0, 4, 0))
+		await _reach(P(65, 57), 3.0); await _shot("7a_fires", P(level.fh.BUILDINGS[10].x, level.fh.BUILDINGS[10].y) + Vector3(0, 4, 0))
 		await _reach(P(87.5, 92), 3.0); await _shot("7b_pier", ship_at)
 	await _reach(ship_at, 2.2)
 	hud.show_hint(""); hud.clear_marker("objective"); hud.clear_marker("thread")

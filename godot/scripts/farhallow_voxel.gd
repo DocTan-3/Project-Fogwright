@@ -29,11 +29,14 @@ func _ready() -> void:
 	fh._enter_tree()                                        # the plan: buildings, roads, lanes, trails
 	fh.noise.seed = 7; fh.noise.frequency = 0.035           # as farhallow.gd shapes its land
 	for b in fh.BUILDINGS:                                  # each building's terrace, as farhallow.gd cuts it
-		var c := Vector2(b.x, b.y); var a: float = b.a; var corners := 0.0
+		# on what the kit really builds (walls, porch, wing, yard: tools/map/fit_kit.py measured it), half a metre round
+		var a: float = b.a; var f: Array = b.get("foot", [-float(b.w) * 0.5, -float(b.h) * 0.5, float(b.w) * 0.5, float(b.h) * 0.5])
+		var mid := Vector2((f[0] + f[2]) * 0.5, (f[1] + f[3]) * 0.5); var half := Vector2((f[2] - f[0]) * 0.5, (f[3] - f[1]) * 0.5) + Vector2(0.5, 0.5)
+		var c := Vector2(b.x, b.y) + mid.rotated(a); var corners := 0.0
 		for k in 4:
-			var u := (float(b.w) * 0.5) * (1 if k % 2 == 0 else -1); var v := (float(b.h) * 0.5) * (1 if k < 2 else -1)
+			var u := half.x * (1 if k % 2 == 0 else -1); var v := half.y * (1 if k < 2 else -1)
 			corners += fh._base(c + Vector2(u, v).rotated(a))
-		fh.pads.append([c, Vector2(b.w, b.h) * 0.5, a, max(corners / 4.0, fh._base(c)) + 0.05])
+		fh.pads.append([c, half, a, max(corners / 4.0, fh._base(c)) + 0.05])
 	fh.pads.append([fh.WELL, Vector2(6, 6), 0.0, fh._base(fh.WELL)])
 	_paths_mask()
 	var t0 := Time.get_ticks_msec()

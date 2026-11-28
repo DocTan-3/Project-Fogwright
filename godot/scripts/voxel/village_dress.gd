@@ -602,9 +602,13 @@ func _in_building(p: Vector2, grow := 0.0) -> bool:
 
 ## a point out in front of building b's door d: `out` metres from the door, `side` to its right
 func _outside_door(b: int, d: int, out: float, side: float) -> Vector2:
-	var bd: Dictionary = fh.BUILDINGS[b]; var door := Vector2(bd.doors[d][0], bd.doors[d][1])
-	var n := (door - Vector2(bd.x, bd.y)).normalized()
-	return door + n * out + Vector2(-n.y, n.x) * side
+	# `out` metres past what the kit built on the door's side (its real footprint), `side` along that wall
+	var bd: Dictionary = fh.BUILDINGS[b]; var c := Vector2(bd.x, bd.y); var a: float = bd.a
+	var l := (Vector2(bd.doors[d][0], bd.doors[d][1]) - c).rotated(-a)
+	var f: Array = bd.get("foot", [-bd.w * 0.5, -bd.h * 0.5, bd.w * 0.5, bd.h * 0.5]); var q: Vector2
+	if absf(l.x) / (bd.w * 0.5) > absf(l.y) / (bd.h * 0.5): q = Vector2((f[2] if l.x > 0 else f[0]) + signf(l.x) * (out - 1.4), l.y + side)
+	else: q = Vector2(l.x + side, (f[3] if l.y > 0 else f[1]) + signf(l.y) * (out - 1.4))
+	return c + q.rotated(a)
 
 ## flowers in a bed: flora, so low-poly heads on stalks
 func _flowers(w: float, h: float) -> MultiMeshInstance3D:
