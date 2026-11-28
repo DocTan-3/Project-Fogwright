@@ -393,8 +393,16 @@ names. Distances are rough, from Aldrath at the centre.
 | **The Kingsteeth** | The north, east to west | The main mountain range, 500 to 800 m, snow on the peaks; passes, cliff paths, mines. Highest peak: **Old Crown** |
 | **The Redwold hills** | The west | Forested hills of the Ruadhan, sickening at their outer edge |
 | **The Downs** | South of Aldrath, toward Hollin's Cross | Rolling farm hills, the safest country in the world |
-| **The Aldwater** | From the Kingsteeth, south through Aldrath, to the sea at Hollin's Cross | The great river; mills and waterwheels along it, barges to the port |
+| **The Aldwater** | From Crownmere, south through Aldrath, to the sea at Hollin's Cross | The great river; mills and waterwheels along it, barges to the port. Aldrath's city was raised where it meets the Stillwater |
 | **The Rede** | From the Redwold hills east into the Aldwater | A fast forest river, rapids and fords |
+| **The Stillwater** | From Stillmere west into the Aldwater at Aldrath | A slow, clear stream; Aldrath's fountains draw on it |
+| **The Greyrun** | From Stillmere south-east past Lampwatch into the Weeping Fen | It runs clear near the lake and turns grey toward the coast, as the Fog follows water; the lantern road to Farhallow runs beside it |
+| **The Brack** | From the eastern Kingsteeth to the Scar | It pours over the cliff as **the Long Fall** into the chasm, misting Ostrevan's fallen half |
+| **Thornwater** | From the Redwold south past Thornby to the south coast | A dark forest river; the Ruadhan float timber down it |
+| **The Spill** | From the Sunken Field down into the Rede | Born when the war dam broke; still runs with rust |
+| **Crownmere** | A glacial tarn below Old Crown | The source of the Aldwater. Concord carvings ring its shore: the empire held the river sacred as the first gift of the gods |
+| **Stillmere** | East of Aldrath, inside his circle's edge | A mirror-still lake where Merrith's thread runs thickest. The Fog never settles on its water, Greyed people standing in it remember their names for a moment, and pilgrims come during the Mourning. A clue on the trail: Aldrath's well draws from everywhere but here |
+| **The Sunken Field** | The Old Front | A lake made in the second age when a war dam was blown to drown an army. Gun towers and war machines stand under the water; on still days Echoes march across it |
 | **The Weeping Fen** | The Greying Coast | A grey salt marsh where the Fog pools, around Farhallow's bay |
 | **The Scar** | The north-east coast | The cliff and chasm where Erde was split; Ostrevan hangs over it |
 
