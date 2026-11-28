@@ -24,11 +24,12 @@ func _ready() -> void:
 	var rack_len := 0.0; var rack_x := 0.0
 	var names := ["iron_" + type]
 	for t in range(2, 6): names.append("%s_t%d" % [type, t])
-	for r in 2:
+	for r in 3:
 		for i in names.size():
-			var m := Equipment.dress(people, sex, [names[i]], true, r == 0); add_child(m)
+			var m := Equipment.dress(people, sex, [names[i]], true, r != 1); add_child(m)
 			m.position = Vector3(i * 1.3, 0, r * 30.0)
 			if r == 1: m.rotation_degrees.y = 180.0
+			if r == 2: m.rotation_degrees.y = 90.0      # drawn, the right side to the camera
 			var low := INF; var tris := 0
 			for mi in m.find_children("*", "MeshInstance3D", true, false):
 				if not (mi as MeshInstance3D).is_visible_in_tree(): continue
@@ -37,6 +38,7 @@ func _ready() -> void:
 				if String(mi.name).begins_with("weapon"): tris += (mi as MeshInstance3D).mesh.get_faces().size() / 3
 			if low < -0.01: print("GROUND FAIL %s on %s_%s: %.3f m below" % [names[i], people, sex, -low])
 			print("TIER %s%s: %d triangles" % [names[i], " carried" if r == 1 else "", tris])
+			if r == 2: continue
 			if r == 0:      # the weapon alone on a rack, its flat to the camera, to compare the tiers' detail
 				for w in m.find_children("weapon*", "MeshInstance3D", true, false):
 					var mi := (w as MeshInstance3D).duplicate() as MeshInstance3D; add_child(mi)
@@ -56,6 +58,7 @@ func _ready() -> void:
 	var cx := (names.size() - 1) * 0.65
 	for sh in [["drawn", Vector3(cx + 0.5, 1.3, 5.6), Vector3(cx, 0.9, 0), 40.0],
 			["close", Vector3(cx - 0.6, 1.1, 2.6), Vector3(cx - 0.6, 0.95, 0), 40.0],
+			["side", Vector3(cx, 1.0, 60.0 + 4.2), Vector3(cx, 0.8, 60.0), 40.0],
 			["carried", Vector3(cx - 0.5, 1.3, 30.0 + 5.6), Vector3(cx, 0.9, 30.0), 40.0],
 			["rack", Vector3(rack_x * 0.5, rack_len * 0.5 + 0.15, -60.0 + maxf(2.1, maxf(rack_len * 1.75, rack_x * 0.9))), Vector3(rack_x * 0.5, rack_len * 0.5 + 0.15, -60.0), 40.0]]:
 		cam.position = sh[1]; cam.look_at(sh[2]); cam.fov = sh[3]

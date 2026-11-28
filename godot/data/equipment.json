@@ -641,6 +641,17 @@
    "carried": "res://assets/voxel/gear/iron_heavy_crossbow_carried/%s_%s.vox",
    "stance": "crossbow"
   },
+  "iron_pistol": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_pistol/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_pistol_carried/%s_%s.vox",
+   "stance": "pistol"
+  },
   "iron_shield": {
    "tier": "common",
    "slots": [
@@ -1170,6 +1181,50 @@
    "file": "res://assets/voxel/gear/heavy_crossbow_t5/%s_%s.vox",
    "carried": "res://assets/voxel/gear/heavy_crossbow_t5_carried/%s_%s.vox",
    "stance": "crossbow"
+  },
+  "pistol_t2": {
+   "tier": "uncommon",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/pistol_t2/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/pistol_t2_carried/%s_%s.vox",
+   "stance": "pistol"
+  },
+  "pistol_t3": {
+   "tier": "rare",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/pistol_t3/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/pistol_t3_carried/%s_%s.vox",
+   "stance": "pistol"
+  },
+  "pistol_t4": {
+   "tier": "epic",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/pistol_t4/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/pistol_t4_carried/%s_%s.vox",
+   "stance": "pistol"
+  },
+  "pistol_t5": {
+   "tier": "legendary",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/pistol_t5/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/pistol_t5_carried/%s_%s.vox",
+   "stance": "pistol"
   }
  },
  "sets": {
