@@ -109,6 +109,12 @@ Combat is **action aim** everywhere *(decided 2026-11-28)*: swings, shots and sp
 
 - **Roles and threat:** tank, support and damage are soft roles that come from gear. Enemies keep a **threat** table, so a tank can hold them off the group *(decided)*.
 
+- **Tanks** *(decided 2026-11-28)*: taunts force normal enemies onto the tank for a few seconds; bosses and elites only gain threat and resist repeated taunts. A tank lives on both a heavy-gear base (health, armour, resistances) and tank skills on cooldown (short walls, guards, damage cuts). **Protecting yourself and protecting others are different builds**: guarding an ally, intercepting hits and raising shield walls are their own nodes, placed close to the self-protection nodes in the web.
+
+- **Support** *(decided 2026-11-28)*: there is **no healing weapon family**. Heals come from drones, sentries, back arms and tool-belt items, and **snap to the ally you aim near**; area heals are aimed circles. A skill node lets you **throw potions at allies**. Buffs, cleanses (poison, burn, Fog effects), shields and faster revives are each their own node clusters, and a support picks a mix.
+
+- **Downed, not dead** *(decided)*: at 0 health a player falls and slowly bleeds out. Any ally can revive them by holding a button; supports with revive nodes do it faster. Bleeding out is death (gear durability loss).
+
 - **No friendly fire:** attacks pass through party members and other players *(decided)*.
 
 - **PvP is opt-in only:** duel requests and arena events. The open world stays safe *(decided)*.

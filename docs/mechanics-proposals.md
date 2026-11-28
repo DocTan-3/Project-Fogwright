@@ -27,6 +27,10 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
   travel only with their own moves, have their own health (knocked out on a cooldown), equip as items, tradeable.
 - **Quests (decided):** personal story plus server-wide world beats; marked givers and notice boards; small choices;
   light dailies; compass marks.
+- **Tank and support (decided):** taunts that bosses resist; heavy-gear base plus tank skills; self-protection and
+  protecting others are separate, neighbouring node groups; no healing weapon family, heals from drones, sentries, back
+  arms and belt tools, soft-targeted; throw potions at allies; buffs, cleanses, shields and revives as node clusters;
+  a downed state anyone can revive.
 
 ## Core mechanics (decided 2026-11-28)
 
