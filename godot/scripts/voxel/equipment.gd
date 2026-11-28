@@ -90,13 +90,15 @@ static func _rest_bow(root: Node3D) -> void:
 		if not String(node.get_meta("piece", "")).ends_with("@hand_l"): continue
 		var hand := node.get_parent() as Node3D
 		var arm := _to_root(hand.get_parent(), root)
-		for step in 16:
+		var now: Basis = arm.basis * hand.basis          # upright first, whatever the arm does
+		hand.basis = arm.basis.inverse() * (Basis(Quaternion((now * Vector3.UP).normalized(), Vector3.UP)) * now)
+		for step in 30:
 			var bb: AABB = (arm * hand.transform * (node as Node3D).transform) * (node as MeshInstance3D).get_aabb()
 			var low := INF
 			for k in 8: low = minf(low, bb.get_endpoint(k).y)
-			if low >= POLE_CLEAR: break
+			if low >= 0.0: break                  # the lower tip may rest on the ground
 			# tip the hand about the body's side-to-side axis: the lower limb swings forward (+Z)
-			hand.basis = arm.basis.inverse() * (Basis(Vector3.RIGHT, deg_to_rad(-5)) * (arm.basis * hand.basis))
+			hand.basis = arm.basis.inverse() * (Basis(Vector3.RIGHT, deg_to_rad(-3)) * (arm.basis * hand.basis))
 		hand.set_meta("rest", hand.rotation_degrees)
 
 static func db() -> Dictionary:
