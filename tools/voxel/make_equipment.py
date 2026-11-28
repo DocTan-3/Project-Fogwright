@@ -13,7 +13,7 @@
 #   python3 tools/voxel/make_equipment.py   -> godot/assets/voxel/gear/<item>/<people>_<sex>.vox, godot/data/equipment.json
 # Base parts are in 2.5 cm voxels, head pieces ("@head#2") in the head's 1.25 cm voxels. MagicaVoxel axes: x across
 # (0 = the character's right as you face it), y front (small) to back, z up.
-import json, os, importlib.util
+import json, math, os, importlib.util
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location('mc', os.path.join(HERE, 'make_character.py')); mc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mc)
@@ -26,6 +26,7 @@ MAT = {   # kept within real reflectance, like the skins: metals read by their t
     'glass_l': (176, 214, 216), 'glow': (255, 168, 64), 'arc': (110, 200, 255), 'arc_d': (50, 110, 170), 'leather': (96, 60, 38),
     'leather_d': (66, 42, 26), 'leather_l': (128, 86, 56), 'wool': (78, 86, 60), 'wool_d': (58, 64, 44), 'fur': (150, 132, 108),
     'fur_d': (112, 96, 76), 'canvas': (120, 100, 72), 'red': (120, 42, 36), 'red_d': (86, 30, 26), 'cord': (170, 150, 110), 'bronze': (138, 88, 54), 'bronze_d': (90, 56, 34), 'bronze_l': (182, 128, 82), 'hose': (150, 44, 40), 'potion': (80, 168, 96), 'blued': (50, 62, 100), 'quilt': (150, 134, 104), 'quilt_d': (116, 100, 74), 'cloth_b': (66, 76, 92), 'cloth_b_d': (46, 54, 66), 'wood': (132, 96, 62), 'wood_d': (100, 70, 44), 'blued_d': (34, 42, 70), 'blued_l': (76, 92, 136), 'hose_d': (104, 30, 28),
+    'ash': (164, 128, 86), 'ash_d': (128, 96, 62),
 }
 SIDES = ('l', 'r')
 def out_side(F, s): return 1 if s == 'l' else -1      # the left arm is at large x: its outer side faces +x
@@ -849,6 +850,176 @@ def tool_item(kind, carry):
     return fn, fn_carried
 TOOLS = {'hatchet': 'hip', 'spear': 'back', 'hammer': 'hip', 'blade': 'hip', 'boathook': 'back', 'cleaver': 'hip', 'pitchfork': 'back'}
 
+# ---------------------------------------------------------------- the Wayfolk common iron set (weapons.md, set 2)
+# The starter weapons bought and looted around Hollin's Cross and Aldrath: every type, in plain forged iron, ash wood,
+# leather grips, round pommels and nail heads. Common: the normal attack only. The same frame as the tools: u across,
+# w forward (negative) and back, h along the weapon from the grip. Chunky, about 1.3x real size.
+IRON = {   # kind: (where it is carried, the hands it takes, its stance when drawn)
+    'sword': ('hip', 1, 'one_hand'), 'axe': ('hip', 1, 'one_hand'), 'mace': ('hip', 1, 'one_hand'),
+    'hammer': ('hip', 1, 'one_hand'), 'dagger': ('hip', 1, 'one_hand'),
+    'greatsword': ('back', 2, 'one_hand'), 'greataxe': ('back', 2, 'one_hand'), 'warhammer': ('back', 2, 'one_hand'),
+    'spear': ('back', 2, 'polearm'), 'halberd': ('back', 2, 'polearm'), 'glaive': ('back', 2, 'polearm'),
+    'shortbow': ('back', 2, 'bow'), 'longbow': ('back', 2, 'bow'),
+    'hand_crossbow': ('hip', 1, 'one_hand'), 'heavy_crossbow': ('back', 2, 'one_hand'),
+    'shield': ('shield', 0, 'shield'), 'buckler': ('buckler', 0, 'shield'),
+    'wand': ('hip', 1, 'one_hand'), 'staff': ('back', 2, 'polearm'),
+}
+def iron_shape(kind, floor):
+    V = {}
+    def b(u0, u1, w0, w1, h0, h1, c):
+        for u in range(u0, u1 + 1):
+            for w in range(w0, w1 + 1):
+                for h in range(h0, h1 + 1): V[(u, w, h)] = c(u, w, h) if callable(c) else c
+    def haft(h0, h1, grip=(-7, 7)):    # ash, a leather grip, iron nail heads where the head is fixed
+        b(-1, 1, -1, 1, max(h0, -floor), h1, lambda u, w, h: 'leather' if grip[0] <= h <= grip[1] else ('ash_d' if (h % 11 == 0 or (u == 1 and h % 7 == 3)) else 'ash'))
+    def pommel(h):                      # a round iron pommel
+        for dh in range(-3, 1):
+            r = 2 if dh in (-3, 0) else 3
+            b(-r + 1, r - 1, -r, r, h + dh, h + dh, 'iron_d')
+    def blade(h0, h1, hw, tip=6, fuller=True):     # a straight two-edged blade, its flat front to back
+        for h in range(h0, h1 + 1):
+            w_ = hw if h < h1 - tip else max(0, hw - (h - (h1 - tip)) * hw // tip)
+            b(-1, 1, -w_, w_, h, h, lambda u, w, hh: 'iron_d' if (fuller and w == 0 and hh < h1 - tip - 2 and u == 0) else ('iron_l' if abs(w) == w_ else 'iron'))
+    if kind in ('sword', 'dagger', 'greatsword'):
+        g, bl, hw, gw = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}[kind]
+        b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'leather_d' if h % 3 == 0 else 'leather')
+        pommel(-g - 1)
+        b(-2, 2, -gw, gw, g + 1, g + 3, lambda u, w, h: 'iron_d' if abs(w) < gw else 'iron_l')     # the cross guard
+        blade(g + 4, bl, hw)
+    if kind == 'axe':
+        haft(-12, 42)
+        for h in range(30, 44):         # a plain bearded bit
+            reach = 12 + max(0, 36 - h) // 2 if h < 36 else 12
+            b(-1, 1, -reach + 3, 3, h, h, lambda u, w, hh: 'iron_d' if w >= 2 else 'iron')
+            b(0, 0, -reach, -reach + 2, h, h, 'iron_l')
+        V[(2, 0, 37)] = V[(-2, 0, 37)] = 'iron_l'     # nail heads through the eye
+    if kind == 'greataxe':
+        haft(-60, 74, (-10, 10))
+        for h in range(54, 76):         # a double bit
+            reach = 16 + max(0, 6 - abs(h - 65)) // 2
+            b(-1, 1, -reach + 3, reach - 3, h, h, lambda u, w, hh: 'iron_d' if abs(w) <= 2 else 'iron')
+            b(0, 0, -reach, -reach + 2, h, h, 'iron_l'); b(0, 0, reach - 2, reach, h, h, 'iron_l')
+        b(-2, 2, -2, 2, 75, 77, 'iron_d')
+    if kind == 'mace':
+        haft(-12, 34)
+        b(-2, 2, -2, 2, 34, 48, 'iron_d')
+        for k in range(4):              # four flanges
+            du, dw = ((1, 0), (-1, 0), (0, 1), (0, -1))[k]
+            for r in range(3, 6):
+                b(du * r, du * r, dw * r, dw * r, 36 + (r == 5), 46 - (r == 5), 'iron' if r < 5 else 'iron_l')
+        b(-1, 1, -1, 1, 49, 50, 'iron_l')
+    if kind in ('hammer', 'warhammer'):
+        top, hl, hd = (38, 8, 4) if kind == 'hammer' else (70, 11, 6)
+        haft(-12 if kind == 'hammer' else -60, top, (-7, 7) if kind == 'hammer' else (-10, 10))
+        b(-hd, hd, -hl, 2, top - hd, top + hd, lambda u, w, h: 'iron_l' if w == -hl else ('iron_d' if h in (top - hd, top + hd) else 'iron'))   # the square face
+        for k in range(hl):              # the back spike, tapering
+            r = max(0, 2 - k // 3)
+            b(-r, r, 3 + k, 3 + k, top - r, top + r, 'iron')
+    if kind in ('spear', 'halberd', 'glaive', 'staff'):
+        haft(-70, 80 if kind != 'staff' else 84, (-8, 8))
+    if kind == 'spear':                 # a leaf head and an iron socket
+        b(-1, 1, -1, 1, 76, 82, 'iron_d')
+        for h in range(83, 104):
+            hw = min(3, (h - 82) // 2) if h < 94 else max(0, 3 - (h - 94) // 3)
+            b(0, 0, -hw, hw, h, h, lambda u, w, hh: 'iron_l' if abs(w) == hw else 'iron'); b(-1, 1, 0, 0, h, h, 'iron_d')
+    if kind == 'halberd':               # an axe blade, a top spike and a back hook
+        b(-1, 1, -1, 1, 76, 92, 'iron_d')
+        for h in range(76, 92):
+            reach = 14 - abs(h - 84) // 2
+            b(0, 0, -reach, -2, h, h, lambda u, w, hh: 'iron_l' if w == -reach else 'iron')
+        for h in range(93, 110): b(0, 0, 0, 0, h, h, 'iron_l' if h > 105 else 'iron'); b(-1, 1, 0, 0, h, min(h, 100), 'iron') if h < 101 else None
+        for k in range(7): b(0, 0, 2 + k, 2 + k, 84 - k // 2, 86 - k // 2, 'iron')
+    if kind == 'glaive':                # a long single-edged blade, curving forward at the tip
+        b(-1, 1, -1, 1, 76, 82, 'iron_d')
+        for h in range(83, 118):
+            bend = max(0, h - 104) // 3
+            b(-1, 1, -6 - bend, 1 - bend, h, h, lambda u, w, hh: 'iron_l' if w == -6 - bend else ('iron_d' if w == 1 - bend else 'iron'))
+    if kind == 'staff':                 # an ash staff with an iron-bound knot and a ring
+        b(-2, 2, -2, 2, 85, 92, lambda u, w, h: 'iron_d' if h in (85, 92) else 'ash_d')
+        for k in range(10):
+            u = round(5 * math.cos(k * math.pi / 5)); w = round(5 * math.sin(k * math.pi / 5)); V[(u, w, 89)] = 'iron_l'
+        b(-1, 1, -1, 1, -70, -66, 'iron_d')
+    if kind == 'wand':
+        b(-1, 1, -1, 1, -6, 6, 'leather'); b(-1, 1, -1, 1, 7, 30, lambda u, w, h: 'ash_d' if h % 5 == 0 else 'ash')
+        b(-1, 1, -1, 1, 31, 34, 'iron_l'); pommel(-7)
+    if kind in ('shortbow', 'longbow'):     # limbs along h, curving back toward the archer (+w), the string behind
+        L = 44 if kind == 'shortbow' else 68
+        for h in range(-L, L + 1):
+            bend = round(10 * (h / L) ** 2)
+            th = 1 if abs(h) > L * 0.6 else 2
+            b(-1, 1, bend - th + 1, bend, h, h, lambda u, w, hh: 'leather' if abs(hh) <= 5 else ('ash_d' if abs(hh) > L - 3 else 'ash'))
+        for h in range(-L + 1, L): V[(0, 11, h)] = 'cord'
+    if kind in ('hand_crossbow', 'heavy_crossbow'):     # the stock along h, pointing forward from the grip; the prod across
+        n, pw, back = (34, 16, 6) if kind == 'hand_crossbow' else (60, 26, 14)
+        b(-1, 1, -2, 2, -back, n, lambda u, w, h: 'ash_d' if h < 0 or h % 7 == 0 else 'ash')
+        b(-1, 1, 3, 6, -4, 2, 'ash_d')                       # the grip under the stock
+        for u in range(-pw, pw + 1):                         # the prod, bowed forward
+            hh = n - 4 + round(4 * (1 - (u / pw) ** 2))
+            b(u, u, -1, 1, hh, hh + 1, 'iron' if abs(u) > 2 else 'iron_d')
+        for u in range(-pw + 1, pw): V[(u, 0, n - 12 + round(-4 * (1 - abs(u) / pw)))] = 'cord'
+        if kind == 'heavy_crossbow':                         # the crank at the back
+            b(-3, 3, -3, 3, -back - 3, -back - 1, 'iron_d'); b(4, 6, -1, 1, -back - 2, -back - 2, 'iron')
+    if kind in ('shield', 'buckler'):  # a disc in the u-h plane facing forward (-w): planks and iron rim, an iron boss
+        R = 26 if kind == 'shield' else 12
+        for u in range(-R, R + 1):
+            for h in range(-R, R + 1):
+                d2 = u * u + h * h
+                if d2 > R * R: continue
+                rim = d2 > (R - 2) ** 2
+                if kind == 'shield': col = 'iron_d' if rim else ('ash_d' if u % 8 in (0, 1) else 'ash')
+                else: col = 'iron_d' if rim else 'iron'
+                V[(u, 0, h)] = col; V[(u, 1, h)] = 'ash_d' if kind == 'shield' else 'iron_d'
+        Bs = 6 if kind == 'shield' else 4
+        for u in range(-Bs, Bs + 1):
+            for h in range(-Bs, Bs + 1):
+                d2 = u * u + h * h
+                if d2 <= Bs * Bs: V[(u, -1, h)] = 'iron'; V[(u, -2, h)] = 'iron_l' if d2 <= (Bs - 3) ** 2 else 'iron'
+                if d2 <= (Bs - 2) ** 2: V[(u, -3, h)] = 'iron_l'
+    return V
+def iron_item(kind):
+    carry, hands, stance = IRON[kind]
+    def fn(F, Pb, Pc):
+        P = {}
+        if carry in ('shield', 'buckler') or stance == 'bow':     # the off hand: held out in front by the stance
+            x0, x1, ay0, au0, al0, h0 = F['arms']['l']; AW = F['AW']
+            gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
+            V = iron_shape(kind, 999)
+            if stance == 'bow':       # the bow along the hand's forward axis: upright once the arm is raised level
+                P['weapon_off@hand_l#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
+            else:                     # the shield on the forearm's front, facing forward once the forearm is raised
+                P['weapon_off@hand_l#2'] = {(gx + u, gy - h, gz - AW - 2 + w): c for (u, w, h), c in V.items()}
+            return P
+        x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
+        gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
+        V = iron_shape(kind, 52 if stance == 'polearm' else gz - 2)
+        P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
+        return P
+    def fn_carried(F, Pb, Pc):
+        P = {}; top, hip, TW, TD, cx = F['top'], F['hip'], F['TW'], F['TD'], F['cx']
+        V = iron_shape(kind, 999)
+        hl = max(h for (_, _, h) in V); lo = min(h for (_, _, h) in V)
+        where = carry
+        if where == 'hip' and kind in ('sword', 'dagger', 'wand') and 2 * (hip + 4) - hl < 6: where = 'back'    # too long for this hip
+        if where == 'hip' and kind in ('sword', 'dagger', 'wand'):     # sheathed at the left hip, hilt up
+            g = {'sword': 8, 'dagger': 6, 'wand': 6}[kind]
+            W_ = {k: c for k, c in V.items() if k[2] <= g + 3}
+            for h in range(g + 4, hl + 1):
+                for w in range(-5, 6):
+                    for u in (-2, -1, 0, 1, 2):
+                        if abs(w) == 5 or abs(u) == 2: W_[(u, w, h)] = 'leather_d' if h > hl - 3 or h < g + 7 else 'leather'
+            P['weapon_hip@torso#2'] = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * (hip + 4) - h): c for (u, w, h), c in W_.items()}
+        elif where == 'hip':          # through a belt loop at the left hip, head up
+            P['weapon_hip@torso#2'] = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * hip - 22 + h): c for (u, w, h), c in V.items()}
+        elif where == 'shield':       # flat on the back, its face and boss outward
+            P['weapon_offback@torso#2'] = {(2 * cx + u, 2 * TD + 4 - w, 2 * (top - 12) + h): c for (u, w, h), c in V.items()}
+        elif where == 'buckler':      # hung on the right hip
+            P['weapon_offhip@torso#2'] = {(-2 - w, 2 * TD // 2 + u, 2 * hip - 4 + h): c for (u, w, h), c in V.items()}
+        else:                         # across the back, tilted; long ones lifted so they clear the ground
+            z0 = max(2 * (hip + 10), 4 - lo)
+            P['weapon_back@torso#2~z35'] = {(2 * cx + u, 2 * TD + 10 + w, z0 + h): c for (u, w, h), c in V.items()}
+        return P
+    return fn, fn_carried
+
 # ---------------------------------------------------------------- the catalogue
 # order: the fixed layering from the inside out (design doc): wardrobe, legs and feet, chest, coat, arms, belt,
 # shoulders, back, head; a later layer wins where two would take the same part.
@@ -886,7 +1057,7 @@ ITEMS = {
 ITEMS.update({
     'cloth_cap':      (cap, 'common', ['head'], 8, ['hair', 'hair_bun', 'hair_crown', 'hair_mane']),     # the hair on top; tails and locks hang out
     'spectacles':     (spectacles, 'common', ['eyes'], 9, []),
-    'wool_scarf':     (scarf, 'common', ['mouth'], 9, ['beard', 'braid']),
+    'wool_scarf':     (scarf, 'common', ['mouth'], 9, ['beard*']),
     'shoulder_pads':  (shoulder_pads, 'common', ['shoulder_l', 'shoulder_r'], 6, []),
     'armbands':       (armbands, 'common', ['arms'], 4, []),
     'gambeson':       (gambeson, 'common', ['chest'], 2, []),
@@ -901,6 +1072,11 @@ ITEMS.update({
 for _k, _c in TOOLS.items():
     _h, _cr = tool_item(_k, _c)
     ITEMS[_k] = (_h, 'common', ['main_hand'] + (['off_hand'] if _c == 'back' else []), 11, [], _cr)
+for _k, (_c, _n, _st) in IRON.items():
+    _h, _cr = iron_item(_k)
+    _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
+    ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
+STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
 SETS = {
     'light':  ("Warden's leathers", ['warden_hood', 'warden_jerkin', 'warden_bracers', 'warden_boots', 'warden_belt']),
     'medium': ("Tinkerer's brigandine", ['tinker_goggles', 'tinker_brigandine', 'tinker_pauldron', 'canister_gauntlet', 'tinker_belt']),
@@ -923,7 +1099,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(ROOT, 'assets', 'voxel', 'gear', name), exist_ok=True)
         if carried:
             db['items'][name]['carried'] = 'res://assets/voxel/gear/%s_carried/%%s_%%s.vox' % name
-            db['items'][name]['stance'] = 'polearm' if TOOLS.get(name) == 'back' else 'one_hand'
+            db['items'][name]['stance'] = STANCE.get(name) or ('polearm' if TOOLS.get(name) == 'back' else 'one_hand')
             os.makedirs(os.path.join(ROOT, 'assets', 'voxel', 'gear', name + '_carried'), exist_ok=True)
     tall = {}
     for people in mc.PEOPLES:

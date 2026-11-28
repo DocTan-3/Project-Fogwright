@@ -76,6 +76,13 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
   (`group()` / `Vox.group()`: face, hair, beard). `Equipment.dress(..., look={hair, beard, hair_col})`, defaults from
   the face preset in `godot/data/faces.json` (which also lists each people's styles and hair colours). Hides match a
   piece name or `name*`. `godot/tests/voxel_hair.tscn -- people=<people>` shows every style and colour.
+- **Wayfolk common iron set (weapons.md set 2):** `IRON` and `iron_shape()` in `make_equipment.py`, items `iron_<kind>`:
+  sword, axe, mace, hammer, dagger, greatsword, greataxe, warhammer, spear, halberd, glaive, short and long bow, hand
+  and heavy crossbow, shield, buckler, wand, staff. Off-hand pieces (`weapon_off@hand_l`) ride the left hand; new
+  stances `shield` and `bow` (off-hand stances win for the left arm). Carried: one-handers at the left hip, long ones
+  across the back, the shield on the back, the buckler at the right hip. `godot/tests/voxel_weapons.tscn` renders them
+  drawn and carried with a ground check. Not yet: two-handers held in both hands (they use the one-hand grip), arrows
+  and quivers, and sharing one weapon model across bodies (each weapon is still written per body, about 5 MB for the set).
 - **Body sliders (the user's choice: scaled in the game, not regenerated):** `Vox.shape(root, height, bulk)`, each -1
   to 1: height stretches legs, torso and arms by up to 6%, bulk thickens or slims them by up to 12%. Heights above the
   ground scale too, so the feet stay down; the head keeps its size, gear riding on a part scales with it, weapons keep

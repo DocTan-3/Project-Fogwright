@@ -312,8 +312,7 @@
    ],
    "order": 9,
    "hides": [
-    "beard",
-    "braid"
+    "beard*"
    ],
    "file": "res://assets/voxel/gear/wool_scarf/%s_%s.vox"
   },
@@ -486,6 +485,225 @@
    "hides": [],
    "file": "res://assets/voxel/gear/pitchfork/%s_%s.vox",
    "carried": "res://assets/voxel/gear/pitchfork_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_sword": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_sword/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_sword_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_axe": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_axe/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_axe_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_mace": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_mace/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_mace_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_hammer": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_hammer/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_hammer_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_dagger": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_dagger/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_dagger_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_greatsword": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_greatsword/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_greatsword_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_greataxe": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_greataxe/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_greataxe_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_warhammer": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_warhammer/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_warhammer_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_spear": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_spear/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_spear_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_halberd": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_halberd/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_halberd_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_glaive": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_glaive/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_glaive_carried/%s_%s.vox",
+   "stance": "polearm"
+  },
+  "iron_shortbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_shortbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_shortbow_carried/%s_%s.vox",
+   "stance": "bow"
+  },
+  "iron_longbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_longbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_longbow_carried/%s_%s.vox",
+   "stance": "bow"
+  },
+  "iron_hand_crossbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_hand_crossbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_hand_crossbow_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_heavy_crossbow": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_heavy_crossbow/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_heavy_crossbow_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_shield": {
+   "tier": "common",
+   "slots": [
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_shield/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_shield_carried/%s_%s.vox",
+   "stance": "shield"
+  },
+  "iron_buckler": {
+   "tier": "common",
+   "slots": [
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_buckler/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_buckler_carried/%s_%s.vox",
+   "stance": "shield"
+  },
+  "iron_wand": {
+   "tier": "common",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_wand/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_wand_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "iron_staff": {
+   "tier": "common",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_staff/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/iron_staff_carried/%s_%s.vox",
    "stance": "polearm"
   }
  },

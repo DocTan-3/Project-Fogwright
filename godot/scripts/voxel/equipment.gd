@@ -26,7 +26,13 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
+	# the off hand: a shield or buckler held up on the forearm in front of the body; a bow held out level, upright
+	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
+	"bow": {"arm_upper_l": Vector3(-82, 0, -4), "arm_lower_l": Vector3(-4, 0, 0), "arm_upper_r": Vector3(-40, 0, 8), "arm_lower_r": Vector3(-60, 0, 0),
+		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 }
+## stances that hold the off hand win over the main hand's for the left arm (a sword's stance with a shield's)
+const OFF_STANCES := ["shield", "bow"]
 
 ## a drawn polearm, carried low: its point slants down and forward, turned this far across the body toward the off side,
 ## at most POLE_DOWN below level; the slant eases if the point would come within POLE_CLEAR of the ground (short bodies)
@@ -44,6 +50,7 @@ static func _aim(root: Node3D) -> void:
 	# the haft runs through the fist along the hand's own +Z (forward when the hand hangs); the wrist turns the hand the
 	# least it must so the haft lies along the carry direction
 	for node in root.find_children("weapon*", "Node3D", true, false):
+		if not String(node.get_meta("piece", "")).ends_with("@hand_r"): continue   # only the main hand's polearm
 		var hand := node.get_parent() as Node3D
 		var arm := _to_root(hand.get_parent(), root)
 		var rest := hand.basis
@@ -96,13 +103,15 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 		if (g == "hair" and lk.hair == "shaved") or (g == "beard" and lk.beard == null): node.get_parent().remove_child(node); node.free()
 	if height != 0.0 or bulk != 0.0: Vox.shape(root, height, bulk)   # the creator's body sliders
 	if drawn:
+		var st := {}; var kinds := []
 		for n in order:
-			if not items[n].has("stance"): continue
-			var st: Dictionary = STANCES[items[n].stance]
-			for node in root.find_children("*", "Node3D", true, false):
-				if st.has(String(node.name)):
-					node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
-			if items[n].stance == "polearm": _aim(root)
+			if items[n].has("stance"): kinds.append(items[n].stance)
+		kinds.sort_custom(func(a, b): return not (a in OFF_STANCES) and (b in OFF_STANCES))   # off-hand stances last
+		for k in kinds: st.merge(STANCES[k], true)
+		for node in root.find_children("*", "Node3D", true, false):
+			if st.has(String(node.name)):
+				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
+		if "polearm" in kinds: _aim(root)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue
 		var bare := String(node.get_meta("piece")).get_slice("@", 0)
