@@ -84,7 +84,7 @@ def build(people, sex, dressed=True, face=0):
         for k, v in WOMAN.items(): p[k] += v
     hair_col = F['hair_col'] or p['hair_f' if sex == 'f' else 'hair_m']
     PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': p['eye'], 'eye_d': tone(p['eye'], 0.55), 'pupil': (26, 22, 22), 'lid': tone(p['skin'], 0.7), 'nostril': tone(p['skin'], 0.5), 'lip_d': tone(p['skin'], 0.55) if sex == 'm' else (120, 58, 54),
-           'brow': tone(hair_col, 0.7), 'hair': hair_col, 'hair_d': tone(hair_col, 0.72), 'hair_l': tone(hair_col, 1.25),
+           'brow': tone(hair_col, 0.7), 'brow_d': tone(hair_col, 0.48), 'hair': hair_col, 'hair_d': tone(hair_col, 0.72), 'hair_l': tone(hair_col, 1.25),
            'lip': tone(p['skin'], 0.62) if sex == 'm' else (150, 78, 70), 'scar': tone(p['skin'], 1.12),
            'tunic': p['tunic'], 'tunic_d': tone(p['tunic'], 0.76), 'leather': p['leather'], 'leather_d': tone(p['leather'], 0.72),
            'trousers': p['trousers'], 'trousers_d': tone(p['trousers'], 0.78), 'boots': (84, 52, 32), 'boots_d': (60, 36, 22),
@@ -332,15 +332,23 @@ def build(people, sex, dressed=True, face=0):
             for d in range(D // 2 - 3, D // 2 + 1):
                 covered = hs in ('long', 'braids', 'crown', 'bun') or beard_at(0, d, v)
                 hput(HP, c, d, v, 'hair' if covered else ('skin_d' if (d == D // 2 - 2 and 14 < v < 19) else 'skin'))
-    # brows: their own pieces, tilted by the expression (men heavier)
+    # brows: their own pieces, tilted by the expression. Shaped, not bars: thick at the inner end over the nose, arching
+    # up past the middle, tapering to a thin tail that drops at the outer corner (each column overlapping the next, so it
+    # reads as one stroke); a darker underside under the thick part, a heavy brow's ridge standing a voxel prouder. Men and the Ferrin heavier and flatter, women thinner and more arched.
     tilt = {'stern': 14, 'grim': 18, 'calm': 4, 'smile': -4}[expr]
-    for name, c0 in (('brow_r@head#2~z%d' % -tilt, EYES[1] - 1), ('brow_l@head#2~z%d' % tilt, EYES[0] - 1)):
-        for c in range(c0, c0 + 8):
-            if F['scar'] == 'brow' and c == EYES[1] + 4: continue     # the scar cuts the brow
-            heavy = sex == 'm' or people == 'ferrin'
-            rows = {'heavy': (9, 10, 11) if heavy else (10, 11), 'thin': (11,)}.get(F['brows'], (10, 11) if heavy else (11,))
-            for v in rows:
-                for d in (-1, 0): hput(name, c, d, v, 'brow')
+    heavy = sex == 'm' or people == 'ferrin'
+    # per column from the inner end: the bottom row and the thickness
+    if heavy: low, thick = [11, 11, 11, 10, 10, 10, 11, 11, 12], [4, 4, 4, 4, 4, 3, 3, 2, 2]
+    else:     low, thick = [11, 11, 10, 10, 10, 10, 10, 11, 11], [3, 3, 3, 3, 2, 2, 2, 2, 1]
+    extra = {'heavy': 1, 'thin': -1}.get(F['brows'], 0)
+    for name, c0, inward in (('brow_r@head#2~z%d' % -tilt, EYES[1] - 1, 1), ('brow_l@head#2~z%d' % tilt, EYES[0] + 6, -1)):
+        for t in range(9):
+            c = c0 + t * inward if inward > 0 else c0 + t * inward   # brow_r runs outward to +c, brow_l to -c
+            if F['scar'] == 'brow' and c in (EYES[1] + 4,): continue     # the scar cuts the brow
+            th = max(1, thick[t] + (extra if t < 7 else 0))
+            for v in range(low[t] - th + 1, low[t] + 1):
+                under = v == low[t] and th >= 3        # the shaded underside, under the thick part only
+                for d in ((-2, -1, 0) if heavy and t < 6 and v <= low[t] - 1 else (-1, 0)): hput(name, c, d, v, 'brow_d' if under else 'brow')
     # ---- hair pieces
     if hs in ('long', 'braids'):     # down the back
         for v in range(H, H + (16 if hs == 'long' else 8)):
