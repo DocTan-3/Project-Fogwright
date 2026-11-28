@@ -474,6 +474,40 @@ Technology level shows on the buildings: frontier villages are mostly timber and
 
 **Your direction for the cities:** Western European castles for the walls, a more urban Victorian style for the housing, medieval stone streets, and only very light steampunk imagery. The walls read as far older than the city that grew inside them.
 
+### Voxel buildings and interiors
+
+These were chosen on 2026-11-28 for the voxel art direction, which is on the `voxel` branch. For voxel art they supersede the
+person and door metrics in `docs/research/skyrim-scenes.md` (a 1.8 m person, 1.2 x 2.4 m doors). The realistic bodies keep theirs.
+
+**Interiors (chosen): Skyrim-level, under a mixed plan.**
+
+- Ground-level buildings are true-size and seamless in the open world: you open the door and walk in, with no loading screen.
+- Spaces bigger than their shell (deep cellars, delves, great halls) go below ground, or behind a gate into their own instance.
+- The Farhallow prologue is a private instance, because the Fog takes the village for every new player. Afterwards the ruin is
+  part of the open world.
+- Indoors the camera's zoom is capped to the room, and the upper floors and roof are cut away while you are under them.
+- Doors remember whether they are open. Furniture is fixed for now.
+
+**Sizes (chosen), for the 1.6 m stylized people and the WoW-style camera:**
+
+| Metric | Size | In 10 cm voxels |
+| --- | --- | --- |
+| Building module (wall bay, floor tile) | 2 x 2 m | 20 x 20 |
+| Standard door | 2.2 m tall x 1.4 m wide (some doors are larger: gates, halls, barns) | 22 x 14 |
+| Wall thickness | 0.3 m | 3 |
+| Window, sill to head | 0.9 to 1.9 m | 10 tall |
+| Storey, houses and upper floors | 3.0 m floor to floor | 30 |
+| Storey, inn taprooms and halls | 4.5 m floor to floor | 45 |
+| Stair | 0.2 m rise, 0.3 m tread, 1.4 m wide | 2 x 3, 14 wide |
+| Narrowest path or corridor | 1.6 m | 16 |
+| Plinth over the ground | 0.5 m (one ground-kit step) | 5 |
+
+**The building kit.** Fogwright's own voxel pieces, generated as `.vox` files by a script, are assembled on the 2 m grid
+and merged into one mesh per material per floor, with box collision. A building stays under about 25,000 triangles and
+8 draw calls, with at most 2 lights per room, so a browser build can still draw a whole village. The inn (the Gull &
+Lantern, 16 x 12 m) is built first, as the test of walking in with the camera. The plan is
+[Fogwright voxel building kit: plan (inn first)](https://claude.ai/artifact/SCRmEZaBvNDowucFbip9Rt).
+
 ### Character pipeline
 
 Characters are voxel models in the approved stylized look: a big head, a short broad body with no neck, thick arms
