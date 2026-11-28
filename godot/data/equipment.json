@@ -639,7 +639,7 @@
    "hides": [],
    "file": "res://assets/voxel/gear/iron_heavy_crossbow/%s_%s.vox",
    "carried": "res://assets/voxel/gear/iron_heavy_crossbow_carried/%s_%s.vox",
-   "stance": "one_hand"
+   "stance": "crossbow"
   },
   "iron_shield": {
    "tier": "common",
@@ -1122,6 +1122,54 @@
    "file": "res://assets/voxel/gear/bow_t5/%s_%s.vox",
    "carried": "res://assets/voxel/gear/bow_t5_carried/%s_%s.vox",
    "stance": "bow"
+  },
+  "heavy_crossbow_t2": {
+   "tier": "uncommon",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/heavy_crossbow_t2/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/heavy_crossbow_t2_carried/%s_%s.vox",
+   "stance": "crossbow"
+  },
+  "heavy_crossbow_t3": {
+   "tier": "rare",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/heavy_crossbow_t3/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/heavy_crossbow_t3_carried/%s_%s.vox",
+   "stance": "crossbow"
+  },
+  "heavy_crossbow_t4": {
+   "tier": "epic",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/heavy_crossbow_t4/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/heavy_crossbow_t4_carried/%s_%s.vox",
+   "stance": "crossbow"
+  },
+  "heavy_crossbow_t5": {
+   "tier": "legendary",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/heavy_crossbow_t5/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/heavy_crossbow_t5_carried/%s_%s.vox",
+   "stance": "crossbow"
   }
  },
  "sets": {

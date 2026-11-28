@@ -26,6 +26,10 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
+	# a crossbow at rest in both hands (Doc Tan's references): the right fist at the grip before the right hip, the
+	# stock level and pointing across toward the left, the left hand under the fore-stock (aimed in _hold_crossbow)
+	"crossbow": {"arm_upper_r": Vector3(-14, 0, 0), "arm_lower_r": Vector3(-48, 0, 0), "arm_upper_l": Vector3(-30, 0, -4), "arm_lower_l": Vector3(-18, 0, 0),
+		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow at rest is
 	# held low across the body (_rest_bow)
 	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
@@ -64,6 +68,33 @@ static func _aim(root: Node3D) -> void:
 			var low := INF
 			for k in 8: low = minf(low, bb.get_endpoint(k).y)
 			if low >= POLE_CLEAR: break
+		hand.set_meta("rest", hand.rotation_degrees)
+
+## a crossbow at rest: the stock runs through the right fist along the hand's own +Z; the wrist turns it level and
+## across toward the left side, CROSS_ACROSS degrees from straight ahead
+const CROSS_ACROSS := 55.0
+static func _hold_crossbow(root: Node3D) -> void:
+	for node in root.find_children("weapon*", "Node3D", true, false):
+		if not String(node.get_meta("piece", "")).ends_with("@hand_r"): continue
+		var hand := node.get_parent() as Node3D
+		var arm := _to_root(hand.get_parent(), root)
+		var a := deg_to_rad(CROSS_ACROSS)
+		var d := Vector3(sin(a), -0.05, cos(a)).normalized()
+		var now: Basis = arm.basis * hand.basis
+		var aimed: Basis = Basis(Quaternion((now * Vector3.BACK).normalized(), d)) * now
+		# then roll about the stock so the prod lies level and the grip hangs below the stock
+		var mi := node as MeshInstance3D; var box: AABB = mi.get_aabb()
+		var ax := [0, 1, 2]; ax.sort_custom(func(i, j): return box.size[i] > box.size[j])
+		var pa := Vector3.ZERO; pa[ax[1]] = 1.0
+		var ga := Vector3.ZERO; ga[ax[2]] = 1.0 if box.end[ax[2]] + box.position[ax[2]] > 0.0 else -1.0   # the grip's side
+		var M: Basis = aimed * mi.basis.orthonormalized()
+		var best := aimed; var low := INF
+		for k in 72:
+			var r := Basis(d, deg_to_rad(k * 5.0)) * aimed
+			var Mk: Basis = r * mi.basis.orthonormalized()
+			var score: float = absf((Mk * pa).normalized().y) * 4.0 + (Mk * ga).normalized().y
+			if score < low: low = score; best = r
+		hand.basis = arm.basis.inverse() * best
 		hand.set_meta("rest", hand.rotation_degrees)
 
 ## a bow at rest, held low across the body (the user's reference): the grip in the lowered off hand before the hip,
@@ -164,6 +195,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
 		if "polearm" in kinds: _aim(root)
 		if "bow" in kinds: _rest_bow(root)
+		if "crossbow" in kinds: _hold_crossbow(root)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue
 		var bare := String(node.get_meta("piece")).get_slice("@", 0)

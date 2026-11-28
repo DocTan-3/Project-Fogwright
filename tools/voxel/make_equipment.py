@@ -957,7 +957,7 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
     'greatsword': ('back', 2, 'one_hand'), 'greataxe': ('back', 2, 'one_hand'), 'warhammer': ('back', 2, 'one_hand'),
     'spear': ('back', 2, 'polearm'),
     'bow': ('back', 2, 'bow'),       # one bow; its damage to speed ratio is a stat, not a model
-    'heavy_crossbow': ('back', 2, 'one_hand'),
+    'heavy_crossbow': ('back', 2, 'crossbow'),
     'shield': ('shield', 0, 'shield'), 'tower_shield': ('tower', 0, 'shield'),
 }
 # ---------------------------------------------------------------- tiers (one version per tier, by rarity: weapons.md)
@@ -1406,6 +1406,86 @@ def bow_tier(V, b, t):
         b(-1, 1, -5, -5, -1, 1, 'arc')
     return V
 
+def crossbow_tier(V, b, t):
+    """the crossbow at tiers 2-5, in the iron one's frame: the stock along h forward from the grip, the prod across u,
+    the pistol grip hanging toward +w, the bolt groove on top (-w). T2 a brass-fitted steel prod with a stirrup,
+    T3 a riveted stock, a windlass and a loaded bolt, T4 a black skeleton stock with pulley wheels, a steam cylinder and
+    a scope, T5 a blued and gilt stock with a recurved gilt prod, crystal tips and a glowing bolt"""
+    n, pw, back = {2: (62, 27, 14), 3: (64, 28, 16), 4: (64, 26, 16), 5: (66, 30, 16)}[t]
+    wood, wood_d = {2: ('ash', 'ash_d'), 3: ('wood', 'wood_d'), 4: ('black', 'black_d'), 5: ('blued', 'blued_d')}[t]
+    def stock(h0, h1):
+        for h in range(h0, h1 + 1):
+            for u in range(-1, 2):
+                for w in range(-2, 3 + (1 if 8 < h < n - 6 else 0)):
+                    if t == 4 and abs(u) < 1 and abs(w) < 2 and 6 < h < n - 8: continue     # the skeleton frame's hollow
+                    c = wood_d if (h < 0 or h % 7 == 0) else wood
+                    if w == -2 and u == 0 and h > 2: c = wood_d                            # the bolt groove
+                    if t == 5 and abs(u) == 1 and w == 0 and h % 5 == 0 and h > 4: c = 'arc'
+                    if t == 5 and w == 2 and h % 6 == 0: c = 'gilt'
+                    V[(u, w, h)] = c
+    stock(-back, n)
+    b(-2, 2, -2, 3, n - 10, n, lambda u, w, h: {2: 'ash_d', 3: 'iron_d', 4: 'black_d', 5: 'gilt'}[t] if abs(u) == 2 else wood)   # the nose block
+    b(-1, 1, 3, 6, -4, 2, lambda u, w, h: {2: 'brass' if h % 3 == 0 else 'leather_d', 3: 'leather_l' if h % 2 else 'leather',
+                                            4: 'rubber' if h % 2 else 'black', 5: 'gilt' if h % 3 == 0 else 'blued_d'}[t])
+    for k in range(3): V[(0, 3 + k, 4 + k // 2)] = {2: 'brass', 3: 'iron_d', 4: 'steel_l', 5: 'gilt'}[t]   # the trigger lever
+    b(-2, 2, -3, 3, -back - 2, -back - 1, {2: 'brass', 3: 'iron_d', 4: 'steel_d', 5: 'gilt'}[t])         # the butt plate
+    prod, tipc = {2: ('steel', 'steel_l'), 3: ('steel', 'steel_l'), 4: ('steel_d', 'steel_l'), 5: ('gilt', 'brass_l')}[t]
+    curl = t in (3, 5)
+    def ph(u):                                                         # the prod's h at u: bowed forward, recurved tips
+        a = abs(u); hh = n - 4 + round(4 * (1 - (a / pw) ** 2))
+        if curl and a > pw - 5: hh += (a - (pw - 5)) ** 2 // 4
+        return hh
+    for u in range(-pw, pw + 1):
+        th = 3 if abs(u) < pw * 0.4 else (2 if abs(u) < pw * 0.75 else 1)
+        ww = 2 if abs(u) < pw * 0.5 else 1
+        b(u, u, -ww, ww, ph(u), ph(u) + th, lambda uu, w, hh: tipc if abs(uu) >= pw - 1 else (
+            {2: 'brass', 3: 'iron_d', 4: 'copper', 5: 'arc'}[t] if (abs(w) == ww and hh == ph(uu) + th and abs(uu) % 6 == 3) else prod))
+    b(-3, 3, -3, 3, n - 6, n - 2, {2: 'brass', 3: 'iron_d', 4: 'black_d', 5: 'gilt'}[t])                  # the prod's lath block
+    draw = n - 14                                                      # where the string is spanned
+    sc = 'arc' if t == 5 else 'cord'
+    tips = [u for u in (-pw, pw)]
+    for u in range(-pw + 1, pw):
+        V[(u, 0, draw + round((ph(pw) - draw) * abs(u) / pw))] = sc    # spanned: straight from each tip to the nut
+    b(-1, 1, -3, -3, draw - 2, draw, 'iron_d' if t < 5 else 'gilt')    # the nut
+    if t in (2, 3):                                                    # the stirrup at the nose
+        c = 'brass' if t == 2 else 'iron_d'
+        for k in range(-4, 5): V[(k, 0, n + 7)] = c
+        for k in range(1, 7): V[(-4, 0, n + k)] = V[(4, 0, n + k)] = c
+    if t == 2:
+        for h in (8, 24, 40): b(-2, 2, -2, 2, h, h, 'brass')
+    if t >= 3 and t != 4:                                              # a loaded bolt in the groove
+        bc = 'arc' if t == 5 else 'ash_d'
+        for h in range(draw - 1, n + 4): V[(0, -3, h)] = bc
+        b(-1, 1, -3, -3, n + 4, n + 5, 'arc_d' if t == 5 else 'iron_l'); V[(0, -3, n + 6)] = 'arc' if t == 5 else 'iron_l'
+        V[(1, -3, draw)] = V[(-1, -3, draw)] = 'red' if t == 3 else 'arc'
+    if t == 3:                                                         # a windlass at the butt, rivets on the stock
+        b(-4, 4, -1, 1, -back - 5, -back - 3, 'iron_d')
+        for sgn in (-1, 1): b(sgn * 5, sgn * 7, 0, 0, -back - 4, -back - 4, 'iron'); V[(sgn * 7, 1, -back - 4)] = V[(sgn * 7, 2, -back - 4)] = 'wood_d'
+        for h in range(6, n - 8, 8): V[(2, 0, h)] = V[(-2, 0, h)] = 'brass'
+    if t == 4:                                                         # pulley wheels, cables, a steam cylinder and a scope
+        for sgn in (-1, 1):
+            u0 = sgn * pw
+            for du in range(-3, 4):
+                for dh in range(-3, 4):
+                    if du * du + dh * dh <= 10: V[(u0 + du, 0, ph(pw) + dh)] = 'brass' if du * du + dh * dh > 3 else 'steel_l'
+            for u in range(1, pw): V[(sgn * u, 1, draw + 2 + round((ph(pw) - draw - 2) * u / pw))] = 'black_d'
+        for h in range(4, 40): b(-1, 1, 3, 4, h, h, 'copper' if h % 8 else 'copper_d')             # the cylinder under the stock
+        b(-2, 2, 3, 5, 40, 42, 'brass')
+        for dw in range(-3, 4):
+            for dh in range(-3, 4):
+                if dw * dw + dh * dh <= 10: V[(-2, 1 + dw, 22 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+        V[(-3, 1, 22)] = 'red'
+        for h in range(4, 26): b(0, 0, -5, -5, h, h, 'brass')                                       # the scope
+        b(-1, 1, -6, -4, 4, 6, 'brass'); b(-1, 1, -6, -4, 24, 26, 'brass'); V[(0, -5, 3)] = V[(0, -5, 27)] = 'glass_l'
+        for h in range(draw - 1, n + 4): V[(0, -3, h)] = 'steel_l'
+        b(-1, 1, -3, -3, n + 4, n + 5, 'potion')
+    if t == 5:                                                         # crystal tips and a crystal at the nose
+        for sgn in (-1, 1):
+            for k in range(4): r = 1 if k < 2 else 0; b(sgn * (pw + 1 + k) - r, sgn * (pw + 1 + k) + r, -r, r, ph(pw), ph(pw), 'arc' if k < 3 else 'arc_d')
+        for k in range(5): r = 2 - k // 2; b(-r, r, -r, r, n + 1 + k, n + 1 + k, 'arc' if k < 4 else 'arc_d')
+        for dh in (-1, 0, 1): b(-2, 2, -2, 2, -back + 2 + dh * 0, -back + 2, 'gilt')
+    return V
+
 def iron_shape(kind, floor, tier=1):
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
@@ -1434,6 +1514,8 @@ def iron_shape(kind, floor, tier=1):
         hammer_line(V, b, tier, kind, floor)
     elif kind in BLUNT and tier > 1:
         blunt_tier(V, b, tier, kind, floor)
+    elif kind == 'heavy_crossbow' and tier > 1:
+        crossbow_tier(V, b, tier)
     elif kind == 'bow' and tier > 1:
         bow_tier(V, b, tier)
     elif kind == 'spear' and tier > 1:
@@ -1488,7 +1570,7 @@ def iron_shape(kind, floor, tier=1):
             th = 1 if abs(h) > L * 0.6 else 2
             b(-1, 1, bend - th + 1, bend, h, h, lambda u, w, hh: 'leather' if abs(hh) <= 5 else ('ash_d' if abs(hh) > L - 3 else 'ash'))
         for h in range(-L + 1, L): V[(0, 11, h)] = 'cord'
-    if kind == 'heavy_crossbow':     # the stock along h, pointing forward from the grip; the prod across
+    if kind == 'heavy_crossbow' and tier == 1:     # the stock along h, pointing forward from the grip; the prod across
         n, pw, back = 60, 26, 14
         b(-1, 1, -2, 2, -back, n, lambda u, w, h: 'ash_d' if h < 0 or h % 7 == 0 else 'ash')
         b(-1, 1, 3, 6, -4, 2, 'ash_d')                       # the grip under the stock
@@ -1639,7 +1721,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear', 'bow']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear', 'bow', 'heavy_crossbow']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)
