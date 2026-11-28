@@ -274,6 +274,20 @@ static func check(path: String, kind: String, size := CHAR) -> String:
 	var h := (hi - lo) * size; var r: Array = REAL.get(kind, [0.0, INF])
 	return "" if h >= r[0] and h <= r[1] else "%.2f m tall, a %s should be %.2f to %.2f m" % [h, kind, r[0], r[1]]
 
+## the pieces of a kit file (tools/voxel/make_building_kit.py): {name: ArrayMesh}, each greedy-meshed with its origin at
+## the corner of its box that was (0, 0, 0) in MagicaVoxel - the piece's outer face, bottom, start - so a builder places
+## it by that corner. In Godot axes the piece runs along +X, up +Y and inward along -Z (MagicaVoxel's y).
+static func pieces(path: String, size := WORLD) -> Dictionary:
+	var f := read(path); var out := {}
+	for sh in f.shapes: out[sh.name] = part_mesh(f, sh, Vector3(sh.offset), size)
+	return out
+
+## the shared matte material for vertex-coloured voxel meshes
+static func material() -> StandardMaterial3D:
+	if _mat == null:
+		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0
+	return _mat
+
 ## a voxel model exported from MagicaVoxel as .glb (packs such as Medieval Voxel Assets), ready to place: its palette
 ## texture read pixel-exact (no blending between neighbouring palette colours, which washes them out) and matte, as
 ## our own voxels are
