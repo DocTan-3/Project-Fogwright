@@ -1,0 +1,60 @@
+{
+ "hrimfolk_m": [
+  "Warden",
+  "Greybeard",
+  "Youngblood",
+  "Laughing",
+  "Raider",
+  "Shorn"
+ ],
+ "hrimfolk_f": [
+  "Braided",
+  "Bright",
+  "Shieldmaiden",
+  "Fox",
+  "Hearth",
+  "Elder"
+ ],
+ "ruadhan_m": [
+  "Default"
+ ],
+ "ruadhan_f": [
+  "Default"
+ ],
+ "aurelan_m": [
+  "Default"
+ ],
+ "aurelan_f": [
+  "Default"
+ ],
+ "zarhim_m": [
+  "Default"
+ ],
+ "zarhim_f": [
+  "Default"
+ ],
+ "ilvari_m": [
+  "Default"
+ ],
+ "ilvari_f": [
+  "Default"
+ ],
+ "ferrin_m": [
+  "Default"
+ ],
+ "ferrin_f": [
+  "Default"
+ ],
+ "wayfolk_m": [
+  "Default"
+ ],
+ "wayfolk_f": [
+  "Default"
+ ],
+ "penitent_m": [
+  "Default"
+ ],
+ "penitent_f": [
+  "Default"
+ ]
+}

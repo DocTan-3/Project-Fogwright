@@ -44,15 +44,45 @@ PEOPLES = {
 WOMAN = dict(UL=0, LL=0, TH=-2, TW=-2, TD=-1, AW=-1, AU=-1, AL=-1, LW=-1)
 # a woman's frame: shoulders pulled in (SH), hips at full width, a defined waist, a bust, smaller hands and feet, a softer jaw
 HEAD = {'ilvari': (24, 22)}   # narrower, shallower heads (width, depth, in 1.25 cm voxels); men 28 x 26, women 24 x 24
-EXPR = {}   # (people, sex) -> stern, grim, calm, smile; men default stern, women calm (presets will set it)
+EXPR = {}   # (people, sex) -> stern, grim, calm, smile; men default stern, women calm (a face preset overrides it)
+# ---- faces: what a preset (or the creator's face options) can change. Only the head's pieces change, so a preset is a
+# layer over the base body (faces/<people>_<sex>_<k>.vox) and every helm still fits (the head's box stays the same size).
+#   eyes: round | narrow (a heavy lid) | big (a taller iris);  set: the eyes' spacing, -2 close-set, 0, +2 wide-set
+#   nose: straight | broad | hooked | button | long;  mouth: normal | thin | wide | full
+#   brows: normal | heavy | thin;  scar: None | brow | cheek | lip;  expr: stern | grim | calm | smile
+#   hair, beard, hair_col: override the people's (hair_col stays within the people's own range)
+FACE = dict(eyes='round', set=0, nose='straight', mouth='normal', brows='normal', scar=None, expr=None, hair=None, beard=None, hair_col=None)
+# six presets per people and sex; preset 0 is the base body's own face (for the Hrimfolk man, the approved one)
+PRESETS = {
+ ('hrimfolk', 'm'): [
+   dict(name='Warden', scar='brow'),
+   dict(name='Greybeard', expr='grim', eyes='narrow', brows='heavy', beard='big', hair='long', hair_col=(132, 126, 116), nose='long'),
+   dict(name='Youngblood', expr='calm', eyes='big', hair='braids', beard='short', hair_col=(170, 120, 64), set=-2),
+   dict(name='Laughing', expr='smile', nose='broad', mouth='wide', hair='crop', beard='moustache', hair_col=(120, 66, 34)),
+   dict(name='Raider', expr='grim', nose='hooked', eyes='narrow', hair='long', beard='full_braid', scar='cheek', hair_col=(58, 40, 30), set=2),
+   dict(name='Shorn', expr='stern', brows='heavy', beard='stubble', scar='lip', set=2, nose='broad'),
+ ],
+ ('hrimfolk', 'f'): [
+   dict(name='Braided'),
+   dict(name='Bright', expr='smile', eyes='big', nose='button', hair='bun', hair_col=(214, 176, 112)),
+   dict(name='Shieldmaiden', expr='stern', hair='crop', hair_col=(120, 80, 44), brows='heavy', scar='brow', eyes='narrow'),
+   dict(name='Fox', expr='calm', eyes='narrow', hair='long', hair_col=(150, 74, 40), nose='long', mouth='thin'),
+   dict(name='Hearth', expr='calm', hair='crown', mouth='full', set=-2, hair_col=(176, 132, 76)),
+   dict(name='Elder', expr='grim', eyes='narrow', mouth='thin', hair='long', hair_col=(150, 146, 140), brows='heavy', nose='hooked'),
+ ],
+}
+def presets(people, sex):
+    return PRESETS.get((people, sex), [dict(name='Default')])
 
 def tone(c, f): return tuple(max(0, min(255, int(v * f))) for v in c)
-def build(people, sex, dressed=True):
-    """the character dressed in its starting clothes, or (dressed=False) the base body in its underwear"""
+def build(people, sex, dressed=True, face=0):
+    """the character dressed in its starting clothes, or (dressed=False) the base body in its underwear; face: a preset's
+    number (presets()) or a dict of FACE options"""
     p = dict(PEOPLES[people])
+    F = dict(FACE); F.update(presets(people, sex)[face] if isinstance(face, int) else face)
     if sex == 'f':
         for k, v in WOMAN.items(): p[k] += v
-    hair_col = p['hair_f' if sex == 'f' else 'hair_m']
+    hair_col = F['hair_col'] or p['hair_f' if sex == 'f' else 'hair_m']
     PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': p['eye'], 'eye_d': tone(p['eye'], 0.55), 'pupil': (26, 22, 22), 'lid': tone(p['skin'], 0.7), 'nostril': tone(p['skin'], 0.5), 'lip_d': tone(p['skin'], 0.55) if sex == 'm' else (120, 58, 54),
            'brow': tone(hair_col, 0.7), 'hair': hair_col, 'hair_d': tone(hair_col, 0.72), 'hair_l': tone(hair_col, 1.25),
            'lip': tone(p['skin'], 0.62) if sex == 'm' else (150, 78, 70), 'scar': tone(p['skin'], 1.12),
@@ -163,17 +193,17 @@ def build(people, sex, dressed=True):
     W, D = HEAD.get(people, (24, 24) if sex == 'f' and people != 'ferrin' else (28, 26)); H = 30
     if people in HEAD and sex == 'f': W, D = W - 2, D - 2
     X0 = TW - W // 2; Y0 = -4; Z0 = (top + 1) * 2
-    expr = EXPR.get((people, sex), 'stern' if sex == 'm' else 'calm')
-    hair_m, hair_f = p['hair']; hs = hair_f if sex == 'f' else hair_m
-    beard = p['beard'] if sex == 'm' else None
+    expr = F['expr'] or EXPR.get((people, sex), 'stern' if sex == 'm' else 'calm')
+    hair_m, hair_f = p['hair']; hs = F['hair'] or (hair_f if sex == 'f' else hair_m)
+    beard = F['beard'] or (p['beard'] if sex == 'm' else None)
     HP = 'head#2'
     def X(c): return X0 + W - 1 - c
     def Z(v): return Z0 + H - 1 - v
     def hput(part, c, d, v, col): put(part, X(c), Y0 + d, Z(v), col)
-    mid = W // 2; gap = 2 * (W // 8) + 2
+    mid = W // 2; gap = 2 * (W // 8) + 2 + F['set']
     FR.update(top=top, cx=cx, SH=SH, head=(X0, Y0, Z0, W, D, H), mid=mid, hair=hs, beard=beard)
     EYES = (mid - gap // 2 - 6, mid + gap // 2)          # first column of each eye
-    MW = 4 if sex == 'm' else 3                         # half the mouth's width
+    MW = (4 if sex == 'm' else 3) + {'wide': 1, 'thin': -1}.get(F['mouth'], 0)   # half the mouth's width
     def inset(v):                                       # the jaw narrowing toward the chin
         if sex == 'f' and people != 'ferrin': return max(0, (v - 20) // 2)
         return max(0, (v - 25) // 2)
@@ -196,22 +226,27 @@ def build(people, sex, dressed=True):
         return False
     marks = {}     # (c, v) -> colour on the face's front
     # eyes: 6 x 4 - a lid, the iris with its pupil and a catch-light, the lower iris in shadow
-    EYE = ["LLLLLL", "WIPPIW", "WIPPIW", ".QQQQ."] if sex == 'm' else ["ELLLLE"[::-1], "WIPPIW", "WIPPIW", ".QQQQ."]
-    EV = 13
+    EYE = {'round': ["LLLLLL", "WIPPIW", "WIPPIW", ".QQQQ."], 'narrow': ["LLLLLL", "LLLLLL", "WIPPIW", ".QQQQ."],
+           'big': ["LLLLLL", "WIPPIW", "WIPPIW", "WIIIIW", ".QQQQ."]}[F['eyes']]
+    if sex == 'f': EYE = ["ELLLLE"] + EYE[1:]
+    EV = 13; EH = len(EYE); ER = next(r for r, row in enumerate(EYE) if 'P' in row)    # the eye's height, its first open row
     for k, c0 in enumerate(EYES):
         for r, row in enumerate(EYE):
             line = row if k == 1 else row[::-1]
             for i, ch in enumerate(line):
                 if ch != '.': marks[(c0 + i, EV + r)] = {'L': 'lid', 'E': 'brow', 'W': 'eye_w', 'I': 'eye', 'P': 'pupil', 'Q': 'eye_d'}[ch]
-        marks[(c0 + 2, EV + 1)] = 'eye_w'          # the catch-light, on the same side in both eyes (one light)
+        marks[(c0 + 2, EV + ER)] = 'eye_w'         # the catch-light, on the same side in both eyes (one light)
         if sex == 'f': marks[(c0 - 1 if k == 0 else c0 + 6, EV)] = 'brow'    # lashes flick out at the outer corner
     # nose: a bridge, a broader tip, nostrils, the shadow under it
-    for v in range(15, 22): marks[(mid - 1, v)] = marks[(mid, v)] = 'skin_l' if v < 20 else 'skin'
-    for c in (mid - 2, mid + 1): marks[(c, 20)] = 'skin'; marks[(c, 21)] = 'nostril'
-    for c in range(mid - 2, mid + 2): marks[(c, 22)] = 'skin_d'
+    nose = F['nose']; NT = 21 if nose != 'long' else 22           # the row of the nostrils
+    NB = 2 if nose != 'broad' else 3                              # the tip's half-width
+    for v in range(15 if nose != 'button' else 17, NT + 1): marks[(mid - 1, v)] = marks[(mid, v)] = 'skin_l' if v < NT - 1 else 'skin'
+    for c in (mid - NB, mid + NB - 1): marks[(c, NT - 1)] = 'skin'; marks[(c, NT)] = 'nostril'
+    if nose == 'broad': marks[(mid - 2, NT)] = marks[(mid + 1, NT)] = 'skin'
+    for c in range(mid - NB, mid + NB): marks[(c, NT + 1)] = 'skin_d'
     # mouth: an upper lip line, a fuller lower lip; corners set the expression
-    for c in range(mid - MW, mid + MW): marks[(c, 24)] = 'lip_d'; marks[(c, 25)] = 'lip' if (sex == 'f' or abs(c - mid + 0.5) < MW - 1) else 'skin_d'
-    if sex == 'f':
+    for c in range(mid - MW, mid + MW): marks[(c, 24)] = 'lip_d'; marks[(c, 25)] = 'lip' if (sex == 'f' or F['mouth'] == 'full' or abs(c - mid + 0.5) < MW - 1) else 'skin_d'
+    if sex == 'f' and F['mouth'] != 'thin':
         for c in range(mid - MW + 1, mid + MW - 1): marks[(c, 23)] = 'lip'
     cy = {'smile': 23, 'stern': 25, 'calm': 24, 'grim': 25}[expr]
     marks[(mid - MW - 1, cy)] = marks[(mid + MW, cy)] = 'lip_d'
@@ -234,9 +269,14 @@ def build(people, sex, dressed=True):
         for c, v in ((EYES[0], 18), (EYES[0] + 1, 19), (EYES[0] + 2, 18), (EYES[1] + 4, 19), (EYES[1] + 5, 18), (mid + 4, 4), (mid + 5, 5)): marks[(c, v)] = 'soot'
     if p['mark'] == 'veins':
         for c, v in ((1, 8), (2, 9), (2, 10), (3, 11), (W - 2, 9), (W - 3, 10), (W - 3, 11), (W - 4, 12)): marks[(c, v)] = 'vein'
-    if people == 'hrimfolk' and sex == 'm':    # the approved man's scar, through his left brow and down the cheek
+    if F['scar'] == 'brow':    # the approved man's scar, through his left brow and down the cheek
         for v in range(10, 21):
-            if not (EV <= v <= EV + 3): marks[(EYES[1] + 4, v)] = 'scar'
+            if not (EV <= v <= EV + EH - 1): marks[(EYES[1] + 4, v)] = 'scar'
+    if F['scar'] == 'cheek':   # a slash across the right cheek
+        for k in range(6): marks[(EYES[0] + k, 17 + k // 2)] = 'scar'
+    if F['scar'] == 'lip':     # a split lip, from under the nose to the chin
+        for v in range(NT + 1, 29):
+            if not 23 <= v <= 25: marks[(mid + 2 + (v > 25), v)] = 'scar'     # broken by the lips, so it reads as a cut, not a tooth
     if beard == 'stubble':
         for c in range(W):
             for v in range(21, H):
@@ -247,7 +287,7 @@ def build(people, sex, dressed=True):
         e = min(c, W - 1 - c)                                   # distance from the face's side
         if v < 3: return 1                                      # the forehead turns over into the crown
         for c0 in EYES:                                         # the sockets: the eye sits in, under the brow
-            if c0 <= c < c0 + 6 and EV <= v <= EV + 3: return 1
+            if c0 <= c < c0 + 6 and EV <= v <= EV + EH - 1: return 1
         if people == 'penitent' and 20 <= v <= 22 and 3 <= e <= 4: return 1     # gaunt: hollow cheeks
         if v >= 27 and e < 4: return 1                          # the jaw narrows to the chin
         if v in (24, 25) and abs(c - mid + 0.5) == MW + 0.5 and not beard_at(c, 0, v): return 1   # mouth corners
@@ -268,9 +308,11 @@ def build(people, sex, dressed=True):
                 else: col = 'skin'
                 hput(HP, c, d, v, col)
     # what stands proud of the face: the nose, a moustache, the front of a full beard
-    for v in range(16, 22):
-        for c in ((mid - 1, mid) if v < 20 else (mid - 2, mid - 1, mid, mid + 1)): hput(HP, c, -1, v, 'skin' if v < 21 else 'skin_d')
-    hput(HP, mid - 1, -2, 20, 'skin'); hput(HP, mid, -2, 20, 'skin')
+    for v in range(16 if nose != 'button' else 18, NT + 1):
+        for c in ((mid - 1, mid) if v < NT - 1 else range(mid - NB, mid + NB)): hput(HP, c, -1, v, 'skin' if v < NT else 'skin_d')
+    hput(HP, mid - 1, -2, NT - 1, 'skin'); hput(HP, mid, -2, NT - 1, 'skin')
+    if nose == 'hooked':       # a high bridge with a hump
+        for v in (17, 18, 19): hput(HP, mid - 1, -2, v, 'skin_l'); hput(HP, mid, -2, v, 'skin_l')
     if beard in ('moustache', 'full_braid', 'big', 'short'):
         for c in range(mid - MW - 1, mid + MW + 1): hput(HP, c, -1, 23, 'hair_d'); hput(HP, c, -1, 22, 'hair') if abs(c - mid + 0.5) < MW else None
         if beard != 'moustache':
@@ -279,7 +321,7 @@ def build(people, sex, dressed=True):
         for v in range(26, H):
             a = inset(v)
             for c in range(a + 1, W - a - 1): hput(HP, c, -1, v, 'hair_d' if c % 3 == 0 else 'hair')
-    if sex == 'f':      # a fuller lower lip, raised
+    if sex == 'f' or F['mouth'] == 'full':      # a fuller lower lip, raised
         for c in range(mid - MW + 1, mid + MW - 1): hput(HP, c, -1, 25, 'lip')
     elif beard in (None, 'stubble', 'moustache'):      # a jutting chin
         for c in range(mid - 3, mid + 3):
@@ -294,8 +336,10 @@ def build(people, sex, dressed=True):
     tilt = {'stern': 14, 'grim': 18, 'calm': 4, 'smile': -4}[expr]
     for name, c0 in (('brow_r@head#2~z%d' % -tilt, EYES[1] - 1), ('brow_l@head#2~z%d' % tilt, EYES[0] - 1)):
         for c in range(c0, c0 + 8):
-            if people == 'hrimfolk' and sex == 'm' and c == EYES[1] + 4: continue     # the scar cuts the brow
-            for v in ((10, 11) if sex == 'm' or people == 'ferrin' else (11,)):
+            if F['scar'] == 'brow' and c == EYES[1] + 4: continue     # the scar cuts the brow
+            heavy = sex == 'm' or people == 'ferrin'
+            rows = {'heavy': (9, 10, 11) if heavy else (10, 11), 'thin': (11,)}.get(F['brows'], (10, 11) if heavy else (11,))
+            for v in rows:
                 for d in (-1, 0): hput(name, c, d, v, 'brow')
     # ---- hair pieces
     if hs in ('long', 'braids'):     # down the back
@@ -337,6 +381,8 @@ def build(people, sex, dressed=True):
 
 OUT = os.path.join(HERE, '..', '..', 'godot', 'assets', 'voxel', 'characters', 'peoples')
 CLOTHED = ['torso', 'arm_upper_l', 'arm_upper_r', 'arm_lower_l', 'arm_lower_r', 'leg_upper_l', 'leg_upper_r', 'leg_lower_l', 'leg_lower_r', 'foot_l', 'foot_r']
+def is_head(name): return name.split('~')[0].split('#')[0] == 'head' or name.split('~')[0].split('#')[0].endswith('@head')
+FACES_JSON = os.path.join(HERE, '..', '..', 'godot', 'data', 'faces.json')
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     for people in PEOPLES:
@@ -346,5 +392,13 @@ if __name__ == '__main__':
             mb.write(os.path.join(OUT, '%s_%s.vox' % (people, sex)), P)
             C, _ = build(people, sex, dressed=True)      # the starting clothes: the body parts they cover, replacing the bare ones
             mb.write(os.path.join(OUT, '%s_%s_clothes.vox' % (people, sex)), {k: v for k, v in C.items() if k in CLOTHED})
+            for k in range(1, len(presets(people, sex))):     # the other face presets: layers of the head's pieces only
+                H_, HPAL = build(people, sex, dressed=False, face=k)
+                mb.COL = HPAL; mb.NAMES = list(HPAL)
+                os.makedirs(os.path.join(OUT, 'faces'), exist_ok=True)
+                mb.write(os.path.join(OUT, 'faces', '%s_%s_%d.vox' % (people, sex, k)), {n: v for n, v in H_.items() if is_head(n)})
+            mb.COL = PAL; mb.NAMES = list(PAL)
             zs = [z / (2 if '#2' in n else 1) for n, part in P.items() for (_, _, z) in part]; xs = [x / (2 if '#2' in n else 1) for n, part in P.items() for (x, _, _) in part]
             print('%-9s %s  %d voxels tall (%.2f m), %d across (%.2f m)' % (people, sex, max(zs) - min(zs) + 1, (max(zs) - min(zs) + 1) * 0.025, max(xs) - min(xs) + 1, (max(xs) - min(xs) + 1) * 0.025))
+    import json     # the presets' names, for the creator (godot/data/faces.json): face 0 is the base body's own
+    json.dump({'%s_%s' % (pp, sx): [pr['name'] for pr in presets(pp, sx)] for pp in PEOPLES for sx in ('m', 'f')}, open(FACES_JSON, 'w'), indent=1)

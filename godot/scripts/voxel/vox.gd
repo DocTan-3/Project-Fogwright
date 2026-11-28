@@ -190,10 +190,14 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 			var cols := []
 			for i in v.size() / 4: cols.append(g.palette[v[i * 4 + 3] - 1])
 			f.models.append({"size": m.size, "voxels": v, "colors": cols})
-		for sh in g.shapes:
-			for k in range(f.shapes.size() - 1, -1, -1):
-				if _bare(f.shapes[k].name) == _bare(sh.name): f.shapes.remove_at(k)
-			f.shapes.append({"name": sh.name, "model": base_n + sh.model, "offset": sh.offset})
+		var face := false   # a face layer (it has a head): the base head's own pieces (brows, hair, beard) all go with it
+		for sh in g.shapes: face = face or _bare(sh.name) == "head"
+		var gone := {}
+		for sh in g.shapes: gone[_bare(sh.name)] = true
+		for k in range(f.shapes.size() - 1, -1, -1):
+			var bn := _bare(f.shapes[k].name)
+			if gone.has(bn) or (face and bn.ends_with("@head")): f.shapes.remove_at(k)
+		for sh in g.shapes: f.shapes.append({"name": sh.name, "model": base_n + sh.model, "offset": sh.offset})
 	if _mat == null:
 		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0   # .vox colours are sRGB
 	var lo := Vector3(INF, INF, INF); var hi := -lo; var bounds := {}; var fine := {}; var tilts := {}

@@ -10,6 +10,7 @@ class_name Equipment
 ##     drawn (the weapon in hand and its class's stance, degrees added to the rest pose; animation adds to the result).
 const DATA := "res://data/equipment.json"
 const BODY := "res://assets/voxel/characters/peoples/%s_%s%s.vox"
+const FACE := "res://assets/voxel/characters/peoples/faces/%s_%s_%d.vox"
 static var _db := {}
 ## the drawn stances, by weapon class: degrees added to Vox.REST (game axes; negative x swings a limb forward)
 const STANCES := {
@@ -58,7 +59,7 @@ static func db() -> Dictionary:
 ## the items of a set, by its tier name (light, medium, heavy, plate, rig)
 static func set_items(tier: String) -> Array: return db().sets[tier].items
 
-static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true) -> Node3D:
+static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true, face := 0) -> Node3D:
 	var items: Dictionary = db().items
 	var taken := {}
 	for n in worn:
@@ -69,6 +70,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 	var order := worn.duplicate()
 	order.sort_custom(func(a, b): return items[a].order < items[b].order)
 	var layers := []
+	if face > 0: layers.append(FACE % [people, sex, face])   # a face preset (data/faces.json), before any helm
 	if wardrobe: layers.append(BODY % [people, sex, "_clothes"])
 	var hides := []
 	for n in order:
