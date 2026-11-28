@@ -64,8 +64,8 @@ FACE = [   # S skin, T tattoo, B brow, W eye white, P pupil, N nose, n nose shad
     ".SSSTTSSSTTSS.",
     "SSSSSTTTTSSSSS",
     "SSSSSSSSSSSSSS",
-    "SBBBBSSSSBBXBS",
-    "SSBBBSSSSBBXSS",
+    "SSSSSSSSSSSXSS",
+    "SnnnnSSSSnnXnS",
     "SSWPSSSSSSPXSS",
     "SSWPSSNNSSPWSS",
     "SSSSSSNNSSSXSS",
@@ -113,7 +113,7 @@ for k, (xs, rule) in enumerate(BRAID):
         for y in (HY0 - 1, HY0):
             c = {'ring': 'iron', 'bead': 'bead', 'beard': 'beard_d', 'tuft': 'beard_l' if dx in (6, 7) else 'beard'}.get(rule)
             if rule == 'plait': c = 'beard_l' if (dx + k) % 2 else 'beard_d'      # the strands crossing
-            put('braid@head', x, y, z, c)
+            put('braid@head~x-10z4', x, y, z, c)          # tilted: it swings forward over the beard
 
 # the beard hangs over the chest: two more rows below the chin, narrowing, darker underneath
 for k, (a, b) in enumerate(((3, 10), (4, 9))):
@@ -123,6 +123,14 @@ for k, (a, b) in enumerate(((3, 10), (4, 9))):
 # beard texture: streaks of dark and light down its front
 for (x, y, z), c in list(P['head'].items()):
     if c == 'beard' and y <= HY0 and (x * 7 + z * 3) % 5 == 0: P['head'][(x, y, z)] = 'beard_d' if z % 2 else 'beard_l'
+# the brows: their own pieces standing out from the face, tilted down at the inner ends (stern) - off the grid, as in the
+# references. Each turns about its inner end (the point nearest the head's joint).
+for name, xs in (('brow_l@head~z14', range(HX0 + 9, HX0 + 14)), ('brow_r@head~z-14', range(HX0, HX0 + 5))):
+    for x in xs:
+        if x == HX0 + 2: continue          # the scar cuts through the left brow
+        for z in (HZ0 + 9, HZ0 + 10):
+            for y in (HY0 - 1, HY0):
+                put(name, x, y, z, 'brow' if z == HZ0 + 10 or y == HY0 - 1 else 'beard_d')
 for part in list(P):
     if not part.startswith(('foot', 'leg')): P[part] = {(x, y, z - LIFT): c for (x, y, z), c in P[part].items()}
 mb.COL = PAL; mb.NAMES = list(PAL)

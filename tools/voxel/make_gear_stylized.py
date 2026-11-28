@@ -62,8 +62,8 @@ def pauldron():
     box(P, n, 22, 23, -1, -1, 49, 52, 'leather'); put(P, n, 22, -2, 51, 'brass'); put(P, n, 23, -2, 51, 'brass')
     return P[n]
 pl = pauldron()
-out('hrim_pauldron_l', {'pauldron_l@arm_upper_l': pl})
-out('hrim_pauldron_r', {'pauldron_r@arm_upper_r': mirror(pl)})
+out('hrim_pauldron_l', {'pauldron_l@arm_upper_l~z10x-4': pl})            # flared out over the shoulder, off the grid
+out('hrim_pauldron_r', {'pauldron_r@arm_upper_r~z-10x-4': mirror(pl)})
 
 # ---- goggles, pushed up on the brow: brass rims, glass lenses, a leather strap round the head
 P = new(); n = 'goggles@head'
@@ -94,13 +94,17 @@ put(P, n, 9, -2, 34, 'brass_l'); put(P, n, 10, -2, 34, 'brass_l')
 for x0 in (13, 2):                                        # pouches on the front, either side of the buckle
     box(P, n, x0, x0 + 3, -3, -2, 29, 34, 'leather', bev=0)
     box(P, n, x0, x0 + 3, -4, -3, 33, 34, 'leather_d'); put(P, n, x0 + 1, -5, 33, 'brass'); put(P, n, x0 + 2, -5, 33, 'brass')
+n = 'wrench@torso~z-14x8'                                 # each tool hangs on its own, at an angle
 box(P, n, 18, 19, -1, 0, 22, 32, 'iron')                  # the wrench on the left hip: a shaft ...
 box(P, n, 17, 20, -1, 0, 20, 22, 'iron_l'); put(P, n, 18, -1, 20, None); put(P, n, 18, 0, 20, None)   # ... and its open jaw
-for k in [k for k, v in P[n].items() if v is None]: del P[n][k]
+for k in [k for k, v in P['wrench@torso~z-14x8'].items() if v is None]: del P['wrench@torso~z-14x8'][k]
+n = 'hammer@torso~z12y20'
 box(P, n, 0, 1, 0, 1, 24, 32, 'wood')                     # the hammer on the right hip: the haft ...
 box(P, n, -1, 2, -1, 2, 23, 25, 'iron'); put(P, n, -1, -1, 23, 'iron_l')   # ... and its head
+n = 'oilcan@torso~z-8'
 cyl(P, n, 10.0, 11.5, 1.6, 28, 33, lambda x, y, z: 'brass_d' if z == 28 else 'brass')   # an oil can at the back
 box(P, n, 9, 10, 11, 11, 34, 36, 'brass_l')               # its spout
+n = 'toolbelt@torso'
 out('hrim_toolbelt', P)
 
 # ---- a steam tank on the back: a copper cylinder with iron bands, a valve, a gauge, straps over the shoulders

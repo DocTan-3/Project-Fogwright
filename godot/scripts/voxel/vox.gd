@@ -6,7 +6,11 @@
 ##   and _r) at their top centre; a lower limb hangs from its upper one, a hand from the lower arm, a foot from the lower leg.
 ##   A part may be finer than the rest, named "<part>#<k>" (head#2: half-size voxels), its voxels and offset in its own
 ##   units. Meshes are greedy-meshed: flat runs of one colour merge into large faces.
-##   Modular gear is a part named "<piece>@<part>" (goggles@head, tank@torso): it rides on that part. Armour that replaces a
+##   Modular gear is a part named "<piece>@<part>" (goggles@head, tank@torso): it rides on that part.
+##   Any part may carry a tilt, "~" and degrees per axis in the game's axes (x pitch, y turn, z roll: braid@head~x-8z5):
+##   it turns about the point of its box nearest its parent's joint (a braid from its top, a brow from its inner end) -
+##   the off-grid angles that make voxel characters look alive (MagicaVoxel itself only stores quarter turns).
+##   A character stands in a relaxed rest pose (REST), not stiffly straight. Armour that replaces a
 ##   part (boots for the feet) is a file whose parts take the body part's name, loaded over the base.
 ## - Colours can be snapped to one palette (snap), so models from different packs match.
 ## - check(): the scale rule, as the city-planning checker does for buildings: a model's height against the real size of
@@ -188,15 +192,18 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 			f.models.append({"size": m.size, "voxels": v, "colors": cols})
 		for sh in g.shapes:
 			for k in range(f.shapes.size() - 1, -1, -1):
-				if f.shapes[k].name.get_slice("#", 0) == sh.name.get_slice("#", 0): f.shapes.remove_at(k)
+				if _bare(f.shapes[k].name) == _bare(sh.name): f.shapes.remove_at(k)
 			f.shapes.append({"name": sh.name, "model": base_n + sh.model, "offset": sh.offset})
 	if _mat == null:
 		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0   # .vox colours are sRGB
-	var lo := Vector3(INF, INF, INF); var hi := -lo; var bounds := {}; var fine := {}
+	var lo := Vector3(INF, INF, INF); var hi := -lo; var bounds := {}; var fine := {}; var tilts := {}
 	var shapes := []   # names without the "#k" that marks a finer part; bounds in base voxels
 	for sh0 in f.shapes:
-		var sh: Dictionary = sh0.duplicate(); var k := int(sh.name.get_slice("#", 1)) if "#" in sh.name else 1
-		sh.name = sh.name.get_slice("#", 0); fine[sh.name] = maxi(1, k); shapes.append(sh)
+		var sh: Dictionary = sh0.duplicate(); var full: String = sh.name
+		var tilt := full.get_slice("~", 1) if "~" in full else ""; full = full.get_slice("~", 0)
+		var k := int(full.get_slice("#", 1)) if "#" in full else 1
+		sh.name = full.get_slice("#", 0); fine[sh.name] = maxi(1, k); shapes.append(sh)
+		if tilt != "": tilts[sh.name] = _tilt(tilt)
 		var m: Dictionary = f.models[sh.model]; var a := Vector3(sh.offset) / float(fine[sh.name]); var b := a + Vector3(m.size) / float(fine[sh.name])
 		bounds[sh.name] = [a, b]; lo = lo.min(a); hi = hi.max(b)
 	f = f.duplicate(); f.shapes = shapes
@@ -207,6 +214,9 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 		pivots[sh.name] = Vector3((a.x + b.x) / 2.0, (a.y + b.y) / 2.0, b.z if top else a.z)
 	for sh in f.shapes:   # gear rides on its part: the same pivot, so it moves exactly with it
 		if "@" in sh.name and pivots.has(sh.name.get_slice("@", 1)): pivots[sh.name] = pivots[sh.name.get_slice("@", 1)]
+	for nm in tilts:   # a tilted piece turns about its own point nearest its parent's joint
+		var pj: Vector3 = pivots.get(_parent(nm), Vector3.ZERO)
+		pivots[nm] = pj.clamp(bounds[nm][0], bounds[nm][1])
 	var outer := {}   # bounds from body parts only, so a tank on the back does not move the feet's centre
 	lo = Vector3(INF, INF, INF); hi = -lo
 	for sh in f.shapes:
@@ -219,16 +229,39 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 		node.mesh = part_mesh(f, sh, pivots[sh.name], size, palette, fine[sh.name]); node.material_override = _mat
 		made[sh.name] = node
 	for sh in f.shapes:
-		var nm: String = sh.name; var parent_name := ""
-		if "@" in nm: parent_name = nm.get_slice("@", 1)
-		elif "_lower_" in nm: parent_name = nm.replace("_lower_", "_upper_")
-		elif nm.begins_with("hand_"): parent_name = "arm_lower_" + nm.substr(5)
-		elif nm.begins_with("foot_"): parent_name = "leg_lower_" + nm.substr(5)
+		var nm: String = sh.name; var parent_name := _parent(nm)
 		var parent: Node3D = made.get(parent_name, root)
 		parent.add_child(made[nm])
 		var base: Vector3 = pivots[parent_name] if parent != root else centre
 		made[nm].position = _g(pivots[nm] - base) * size
+		made[nm].rotation_degrees = tilts.get(nm, Vector3.ZERO) + REST.get(nm, Vector3.ZERO)
+		made[nm].set_meta("rest", made[nm].rotation_degrees)   # animation adds to this
 	return root
+
+## the rest pose, degrees per part (game axes; the character faces +Z, its left is +X): arms hang a little away from the
+## body and bent at the elbow, fists turned in, legs a little apart, feet turned out, the head tipped - as a person stands
+const REST := {
+	"arm_upper_l": Vector3(4, 0, 9), "arm_upper_r": Vector3(4, 0, -9), "arm_lower_l": Vector3(-10, 0, -2), "arm_lower_r": Vector3(-10, 0, 2),
+	"hand_l": Vector3(-4, -14, 0), "hand_r": Vector3(-4, 14, 0), "leg_upper_l": Vector3(0, 0, 3), "leg_upper_r": Vector3(0, 0, -3),
+	"leg_lower_l": Vector3(0, 0, -3), "leg_lower_r": Vector3(0, 0, 3), "foot_l": Vector3(0, 12, 0), "foot_r": Vector3(0, -12, 0),
+	"head": Vector3(-3, 4, 2), "torso": Vector3(0, -2, 0)}
+
+## a part's name without its finer-resolution mark and its tilt: the name that replaces and is replaced
+static func _bare(n: String) -> String: return n.get_slice("~", 0).get_slice("#", 0)
+
+## the part a part hangs from: gear from the part it rides on, lower limbs from upper ones, hands and feet from the lower
+static func _parent(nm: String) -> String:
+	if "@" in nm: return nm.get_slice("@", 1)
+	if "_lower_" in nm: return nm.replace("_lower_", "_upper_")
+	if nm.begins_with("hand_"): return "arm_lower_" + nm.substr(5)
+	if nm.begins_with("foot_"): return "leg_lower_" + nm.substr(5)
+	return ""
+
+## "x-8z5" -> Vector3(-8, 0, 5)
+static func _tilt(t: String) -> Vector3:
+	var v := Vector3.ZERO; var re := RegEx.create_from_string("([xyz])(-?[0-9.]+)")
+	for m in re.search_all(t): v["xyz".find(m.get_string(1))] = float(m.get_string(2))
+	return v
 
 ## the scale check: a model's height in metres against what it should be; returns "" if right, else what is wrong
 static func check(path: String, kind: String, size := CHAR) -> String:
