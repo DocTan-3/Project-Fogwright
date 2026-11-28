@@ -1113,6 +1113,91 @@ def axe_tier(V, b, t, kind, floor=999):
             b(-r, r, -r, r, a0 - 1 + dh, a0 - 1 + dh, 'arc')
     return V
 
+BLUNT = {   # haft from, the head's centre height, head half-length along w (hammers), head half-size
+    'mace': (-12, 42, 0, 5), 'hammer': (-12, 38, 8, 4), 'warhammer': (-60, 70, 11, 6)}
+def blunt_tier(V, b, t, kind, floor=999):
+    """a mace, hammer or warhammer at tiers 2-5, in the iron one's frame: the haft along h, a hammer's face toward -w
+    and its spike toward +w, u the thickness; the sword's tier steps in a blunt weapon's terms"""
+    a0, hc, hl, hd = BLUNT[kind]
+    a0 = max(a0, -floor + 3)
+    gh = 7 if kind != 'warhammer' else 10
+    mace = kind == 'mace'
+    def haft(top, wood, wood_d, grip, rings=()):
+        for h in range(a0, top):
+            if -gh <= h <= gh: c = grip(h) if callable(grip) else grip
+            elif h in rings: c = rings[h]
+            else: c = wood_d if h % 11 == 0 else wood
+            b(-1, 1, -1, 1, h, h, c)
+    def flanges(n, body, edge, reach=hd + 1, core=None, h0=hc - 7, h1=hc + 7):
+        dirs = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)][:n]
+        b(-2, 2, -2, 2, h0 - 2, h1 + 1, core or body)                    # the socket
+        for du, dw in dirs:
+            rr = reach if du == 0 or dw == 0 else reach - 1
+            for r in range(3, rr + 1):
+                span = 7 - (2 if r == rr else 0) - (1 if r == rr - 1 else 0)
+                b(du * r, du * r, dw * r, dw * r, hc - span, hc + span, edge if r == rr else body)
+    def head(body, face, band=None, spike=None, beak=0):
+        b(-hd, hd, -hl, 2, hc - hd, hc + hd, lambda u, w, h: face(u, w, h) if w == -hl else (band if band and abs(w + hl // 2) <= 1 else body))
+        for k in range(hl + beak):                                        # the back spike or beak
+            r = max(0, 2 - k // 3)
+            drop = (k * k) // 40 if beak else 0                           # a beak curves down
+            b(-r, r, 3 + k, 3 + k, hc - r - drop, hc + r - drop, spike or body)
+    def gauge(h):
+        for dw in range(-3, 4):
+            for dh in range(-3, 4):
+                if dw * dw + dh * dh <= 10: V[(-2, dw, h + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+        V[(-3, 0, h)] = V[(-3, 1, h + 1)] = 'red'
+    def crystal(h, up, n=6):
+        for dh in range(n):
+            r = 2 - dh // 3
+            b(-r, r, -r, r, h + (dh if up else -dh), h + (dh if up else -dh), 'arc' if dh < n - 1 else 'arc_d')
+    top = hc - (7 if mace else hd)                                         # where the haft meets the head
+    if t == 2:      # uncommon: bright steel, brass collar, band and butt cap, brass-wired grip
+        haft(top, 'ash', 'ash_d', lambda h: 'brass' if h % 4 == 0 else 'leather_d')
+        if mace: flanges(6, 'steel', 'steel_l'); b(-1, 1, -1, 1, hc + 8, hc + 9, 'brass_l')
+        else: head('steel', lambda u, w, h: 'steel_l', band='brass')
+        b(-2, 2, -2, 2, top - 2, top - 1, 'brass'); b(-2, 2, -2, 2, a0 - 2, a0 - 1, 'brass')
+    if t == 3:      # rare: an iron-ringed dark haft, a tooled grip; the mace grows 8 flanges and a top spike, the hammer
+        # a waffled face, a riveted band and a curved beak
+        rings = {h: 'iron_d' for h in range(a0 + 4, top, 14)}
+        haft(top, 'wood', 'wood_d', lambda h: 'leather_l' if h % 3 == 0 else 'leather', rings)
+        if mace:
+            flanges(8, 'steel', 'steel_l', hd + 2)
+            for k in range(6): r = 1 if k < 4 else 0; b(-r, r, -r, r, hc + 9 + k, hc + 9 + k, 'steel_l')
+        else:
+            head('steel', lambda u, w, h: 'iron_d' if (u + h) % 2 else 'steel_l', band='iron_d', spike='steel_d', beak=3)
+            for u in (-hd, hd): V[(u, -hl // 2, hc - hd + 1)] = V[(u, -hl // 2, hc + hd - 1)] = 'brass'
+        b(-2, 2, -2, 2, top - 3, top - 1, 'iron_d'); b(-2, 2, -2, 2, a0 - 3, a0 - 1, lambda u, w, h: 'brass' if abs(u) == 2 and w == 0 else 'iron_d')
+    if t == 4:      # epic: blackened; the mace a cage of flanges round a glowing vial, the hammer a piston face and a vial
+        # in its cheek; a copper pipe down the haft to a gauge
+        haft(top, 'black', 'black_d', lambda h: 'rubber' if h % 2 else 'black')
+        if mace:
+            flanges(8, 'black', 'steel_l', hd + 2, core='potion')
+            b(-1, 1, -1, 1, hc + 8, hc + 10, 'brass')
+        else:
+            head('black', lambda u, w, h: 'brass' if max(abs(u), abs(h - hc)) < hd - 1 else 'black_d', band='copper')
+            b(-hd + 1, hd - 1, -hl - 2, -hl - 1, hc - hd + 1, hc + hd - 1, lambda u, w, h: 'steel_l' if w == -hl - 2 else 'steel_d')   # the piston plate
+            for dw in range(-2, 1):
+                for dh in range(-2, 3): V[(-hd - 1, -hl // 2 + dw, hc + dh)] = 'potion' if abs(dh) < 2 and dw == -1 else 'glass_l'
+        for h in range(gh + 6, top - 1): V[(0, 2, h)] = 'copper' if h % 6 else 'copper_d'
+        gauge(gh + 4)
+        b(-2, 2, -2, 2, a0 - 3, a0 - 1, lambda u, w, h: 'copper' if h == a0 - 2 else 'brass')
+    if t == 5:      # legendary: blued and gilt; the mace a star of gilt flanges round an arcane core, the hammer runes and a
+        # crystal set in its face; crystals on top and at the butt
+        haft(top, 'blued_d', 'blued_d', lambda h: 'gilt' if h % 3 == 0 else 'blued_d', {h: 'gilt' for h in range(a0 + 3, top, 9)})
+        if mace:
+            flanges(8, 'gilt', 'brass_l', hd + 3, core='arc')
+            crystal(hc + 9, True)
+        else:
+            head('blued', lambda u, w, h: 'arc' if max(abs(u), abs(h - hc)) <= 1 else 'blued_l', band='gilt', spike='gilt')
+            for u in (-hd, hd):
+                for w in range(-hl + 2, 1):
+                    for h in range(hc - hd + 2, hc + hd - 1):
+                        if (w + h) % 3 == 0: V[(u, w, h)] = 'arc'
+            crystal(hc + hd + 1, True)
+        crystal(a0 - 1, False, 5)
+    return V
+
 def iron_shape(kind, floor, tier=1):
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
@@ -1137,6 +1222,8 @@ def iron_shape(kind, floor, tier=1):
         blade_tier(V, b, tier, kind)
     elif kind in AXES and tier > 1:
         axe_tier(V, b, tier, kind, floor)
+    elif kind in BLUNT and tier > 1:
+        blunt_tier(V, b, tier, kind, floor)
     elif kind in ('sword', 'dagger', 'greatsword'):
         g, bl, hw, gw = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}[kind]
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'leather_d' if h % 3 == 0 else 'leather')
@@ -1158,7 +1245,7 @@ def iron_shape(kind, floor, tier=1):
             b(0, 0, -reach + 2, -6, h, h, 'iron'); b(0, 0, 6, reach - 2, h, h, 'iron')
             b(0, 0, -reach, -reach + 1, h, h, 'iron_l'); b(0, 0, reach - 1, reach, h, h, 'iron_l')
         b(-2, 2, -2, 2, 75, 77, 'iron_d')
-    if kind == 'mace':
+    if kind == 'mace' and tier == 1:
         haft(-12, 34)
         b(-2, 2, -2, 2, 34, 48, 'iron_d')
         for k in range(4):              # four flanges
@@ -1166,7 +1253,7 @@ def iron_shape(kind, floor, tier=1):
             for r in range(3, 6):
                 b(du * r, du * r, dw * r, dw * r, 36 + (r == 5), 46 - (r == 5), 'iron' if r < 5 else 'iron_l')
         b(-1, 1, -1, 1, 49, 50, 'iron_l')
-    if kind in ('hammer', 'warhammer'):
+    if kind in ('hammer', 'warhammer') and tier == 1:
         top, hl, hd = (38, 8, 4) if kind == 'hammer' else (70, 11, 6)
         haft(-12 if kind == 'hammer' else -60, top, (-7, 7) if kind == 'hammer' else (-10, 10))
         b(-hd, hd, -hl, 2, top - hd, top + hd, lambda u, w, h: 'iron_l' if w == -hl else ('iron_d' if h in (top - hd, top + hd) else 'iron'))   # the square face
@@ -1338,7 +1425,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)

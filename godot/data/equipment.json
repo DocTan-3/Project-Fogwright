@@ -890,6 +890,142 @@
    "file": "res://assets/voxel/gear/greataxe_t5/%s_%s.vox",
    "carried": "res://assets/voxel/gear/greataxe_t5_carried/%s_%s.vox",
    "stance": "one_hand"
+  },
+  "mace_t2": {
+   "tier": "uncommon",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/mace_t2/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/mace_t2_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "mace_t3": {
+   "tier": "rare",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/mace_t3/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/mace_t3_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "mace_t4": {
+   "tier": "epic",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/mace_t4/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/mace_t4_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "mace_t5": {
+   "tier": "legendary",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/mace_t5/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/mace_t5_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "hammer_t2": {
+   "tier": "uncommon",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hammer_t2/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hammer_t2_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "hammer_t3": {
+   "tier": "rare",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hammer_t3/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hammer_t3_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "hammer_t4": {
+   "tier": "epic",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hammer_t4/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hammer_t4_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "hammer_t5": {
+   "tier": "legendary",
+   "slots": [
+    "main_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/hammer_t5/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/hammer_t5_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "warhammer_t2": {
+   "tier": "uncommon",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warhammer_t2/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/warhammer_t2_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "warhammer_t3": {
+   "tier": "rare",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warhammer_t3/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/warhammer_t3_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "warhammer_t4": {
+   "tier": "epic",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warhammer_t4/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/warhammer_t4_carried/%s_%s.vox",
+   "stance": "one_hand"
+  },
+  "warhammer_t5": {
+   "tier": "legendary",
+   "slots": [
+    "main_hand",
+    "off_hand"
+   ],
+   "order": 11,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warhammer_t5/%s_%s.vox",
+   "carried": "res://assets/voxel/gear/warhammer_t5_carried/%s_%s.vox",
+   "stance": "one_hand"
   }
  },
  "sets": {
