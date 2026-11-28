@@ -152,6 +152,19 @@ and seeing it fail.
 any wall, fence, roof or other prop (`CLIP` problems). It catches what a plan cannot see: a model that hangs below its
 base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the plan or the model, never the check.
 
+## How Skyrim does it (docs/research/skyrim-scenes.md)
+
+- **Fix the human metrics first**: person 1.8 m, door 1.2 x 2.4 m, narrowest path 1.6 m, walkable slope 30 degrees,
+  storey 3.1 m, 2 m kit module. Every building type and path is checked against them.
+- **Buildings at real size**, each a space you could walk into even if it stays closed; few large buildings rather than
+  many small ones.
+- **A building's lot** is its walls plus foundation, porch or deck, steps and roof overhang; lots stay 4 m apart; every
+  building rests on its ground (floor above the highest point, foundation down to the lowest, steps at raised doors).
+- **Repetition is hidden by dressing, light and mixing**, not new architecture: players notice repeated clutter first.
+  Dress each house for its owner; vary it by the culture's rules; one quirk per building type.
+- **Test a building kit before dressing it**: proof in blocks, loop and stack tests, no patch-up pieces; finish one
+  piece fully before its variants.
+
 ## Lessons from play (standing rules)
 
 - **Paths are painted into the ground, never laid on it.** The plan script draws every road, lane, door path, trail and
