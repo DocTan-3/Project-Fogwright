@@ -310,7 +310,7 @@ Terrain and biomes are generated from a seed, but places, regions and cities are
 
 **Determinism rule:** all generation uses a seeded random generator and integer or fixed-step math, never `Math.random()`, so every device produces exactly the same world.
 
-**World size:** about 20 km across, similar to Valheim, bounded by an impassable wall of Fog at the edge. Only the area around each player is ever built or simulated, so size does not cost performance. Because players can travel up to 10 km from the center, the client uses a floating origin, re-centring the world on the player every few kilometres, to avoid jitter from limited graphics precision.
+**World size:** the **main continent alone is about 20 km across** *(decided 2026-11-28)*, similar to Valheim; the other homelands add their own land when they open. It is bounded by an impassable wall of Fog at the edge. Only the area around each player is ever built or simulated, so size does not cost performance. Because players can travel up to 10 km from the center, the client uses a floating origin, re-centring the world on the player every few kilometres, to avoid jitter from limited graphics precision.
 
 ### Cities
 
@@ -339,7 +339,7 @@ Cities must feel like cities: hundreds of buildings across 500 m to 1 km, not a 
 
 The land must feel real at scale: mountains that feel like mountains, seas that feel like seas.
 
-**World layout (follows the lore).** Continents and isles, like World of Warcraft's, 20 km across in all, with natural coastlines (old cliffs and chasms still show where Erde tore apart):
+**World layout (follows the lore).** Continents and isles, like World of Warcraft's (the main continent about 20 km across, the others added later), with natural coastlines (old cliffs and chasms still show where Erde tore apart):
 
 - **The main continent** holds Aldrath's heartland at its centre: the outer city, by far the biggest city, and Hollin's Cross, the starter port two kilometres south, where ship routes leave. The Redwold's forested hills (the Ruadhan) lie in its west, and Farhallow, the village where the game begins, on its far coast. Three godless **frontier regions** fill the rest *(decided 2026-11-28)*: **the Greying Coast** (fallen freeholds around Farhallow, the thickest Fog), **the Old Front** (a second-age battlefield between the heartland and the Redwold) and **Ostrevan** (a half-sunk Concord city, the big exploration zone with persistent dungeons). Working names.
 - **Playable at launch** *(decided 2026-11-28)*: the main continent only. The other homelands open in later updates, reached by ship. Until then, each god is reached through a **shrine in its people's quarter of Aldrath**, where claiming trials end and the god's seat stands.
