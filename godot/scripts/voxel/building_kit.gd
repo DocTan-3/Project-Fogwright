@@ -31,6 +31,9 @@ const OVERHANG := 3
 static var _pieces := {}  # name -> {Vector3i: Color}, the kit's voxels in each piece's own box
 static var _meshes := {}
 static var _dormers := []
+static var _openings := []   # [set, o, d, x0, x1, z0, z1, kind] of the outer doors and windows, for KitDress
+static var _seed := 0
+static var _porch_bays := Vector2i(-1, -2)   # the front bays under a porch (their doors get no hood)
 static var _leaf := ""      # the layout's door leaf, if it names one   # [bay origin, direction, face] of the dormers this build, set into the roof once it is laid
 static var _fittings := {}  # the 5 cm fittings (kit_fittings.vox): name -> {Vector3i: Color}
 const FITTINGS := "res://assets/voxel/buildings/kit_fittings.vox"
@@ -78,6 +81,11 @@ static func _chimney(vs: Dictionary, boxes: Array, at: Vector2i, z0: int, z1: in
 				var k := Vector3i(x, y, lz)
 				if p.has(k): vs[Vector3i(at.x + x, at.y + y, z)] = p[k]
 				elif from_top >= 3: vs.erase(Vector3i(at.x + x, at.y + y, z))
+	for x in range(-1, 9):   # a capstone course, proud all round, and soot at the flue
+		for y in range(-1, 9):
+			if x < 0 or x > 7 or y < 0 or y > 7:
+				vs[Vector3i(at.x + x, at.y + y, z1 - 3)] = KitDress.DRESSED_D; vs[Vector3i(at.x + x, at.y + y, z1 - 2)] = KitDress.DRESSED
+			elif (x < 2 or x > 5 or y < 2 or y > 5): vs[Vector3i(at.x + x, at.y + y, z1 - 1)] = Color8(46, 42, 40)
 	boxes.append([Vector3(at.x, at.y, z0), Vector3(at.x + 8, at.y + 8, z1)])
 
 # ---------------------------------------------------------------- placing on the grid
@@ -110,7 +118,8 @@ static func _g(p: Vector3) -> Vector3: return Vector3(p.x, p.z, -p.y) * V
 static func build(layout: Dictionary) -> Node3D:
 	var t0 := Time.get_ticks_msec()
 	pieces()
-	_dormers = []
+	_dormers = []; _openings = []; _seed = layout.get("seed", 0)
+	_porch_bays = Vector2i(layout.porch.from, layout.porch.to) if layout.has("porch") else Vector2i(-1, -2)
 	var root := Node3D.new(); root.name = "Building"
 	var body := StaticBody3D.new(); body.name = "Body"; root.add_child(body)
 	var doors := Node3D.new(); doors.name = "Doors"; root.add_child(doors)
@@ -128,6 +137,8 @@ static func build(layout: Dictionary) -> Node3D:
 		for j in size.y: _stamp(g0, "plinth", Vector3i(i * BAY, j * BAY, 0), Vector2i(1, 0))
 	var flags: Dictionary = pieces()["floor_" + layout.get("ground", "flags")]
 	_leaf = layout.get("door_leaf", "")
+	var paint: String = layout.get("paint", "tar")
+	if _leaf != "" and pieces().has(_leaf + "_" + paint): _leaf += "_" + paint
 	for i in size.x:
 		for j in size.y:
 			for k in flags: var q: Vector3i = k; g0[Vector3i(i * BAY + q.x, j * BAY + q.y, PLINTH - 1)] = flags[k]
@@ -156,7 +167,8 @@ static func build(layout: Dictionary) -> Node3D:
 			_wall_run(vs, boxes, doors, r[1], r[2], bays, face, h, false)
 			if s == 0 and PLINTH > 0:
 				for b in bays.length():
-					if bays[b] == "d": _door_steps(vs, ramps, r[1] - Vector3i(0, 0, z), r[2], b)
+					if bays[b] == "d" and not (r[0] == "front" and _porch_has(layout, b)): _door_steps(vs, ramps, r[1] - Vector3i(0, 0, z), r[2], b)
+		if s == 0 and layout.has("porch"): _porch(vs, ramps, boxes, layout, st.walls.get("front", ""), z)
 		for sr in st.get("stairs", []): _stair(vs, ramps, sr, z, h)
 		for pc in st.get("pieces", []):   # kit pieces inside (a hearth): at is the piece's corner in voxels, z from the floor
 			var at3: Vector3i = pc.at; _stamp(vs, pc.p, Vector3i(at3.x, at3.y, z + at3.z), _run_dir(pc.get("dir", "+x")))
@@ -185,7 +197,9 @@ static func build(layout: Dictionary) -> Node3D:
 	_roof(rf, ramps, W, D, z, layout.get("roof", "thatch"), top_face)
 	for dm in _dormers: _dormer(rf, dm[0], dm[1], dm[2])
 	for gy in layout.get("gable_windows", []): _gable_window(rf, W, D, z, int(gy * 10.0), top_face)
-	if layout.get("rounded", false):   # corners rounded off, as drystone builders on a windy coast lay them
+	var dressed: bool = layout.get("dress", true)
+	if dressed: KitDress.dress(sets + [rf], W, D, _openings, PLINTH, KitDress.PAINTS.get(paint, KitDress.PAINTS.tar), _seed)
+	if layout.get("rounded", false) and not dressed:   # corners rounded off, as drystone builders on a windy coast lay them
 		for vset in sets + [rf]:
 			for k in (vset as Dictionary).keys():
 				var q: Vector3i = k
@@ -224,6 +238,9 @@ static func _wall_run(vs: Dictionary, boxes: Array, doors: Node3D, o: Vector3i, 
 			continue
 		var kind: String = {"p": "", "d": "_door", "w": "_window"}[c]
 		_stamp(vs, "wall_%s%s_%d" % [face, kind, h], bo, d)
+		if not close and c in ["d", "w"]:
+			var op: Array = DOOR if c == "d" else WIN
+			_openings.append([vs, bo, d, op[0], op[1], op[2], op[3], ("door_porch" if d == Vector2i(1, 0) and bo.y == 0 and b >= _porch_bays.x and b <= _porch_bays.y else "door") if c == "d" else "window"])
 		if c == "d":
 			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(DOOR[0], WALL, h)))
 			boxes.append(_box(bo, d, Vector3i(DOOR[1] + 1, 0, 0), Vector3i(BAY, WALL, h)))
@@ -333,7 +350,7 @@ static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: Str
 			if q.x == x % BAY: vs[Vector3i(x - OVERHANG, D / 2 - 2 + q.y, z - OVERHANG + run - 1 + q.z)] = ridge[k]
 	# gables over the side walls, cut from the 12 m gable to this span (its top is min(x, span - 1 - x) at any span)
 	var gb: Dictionary = pieces()["gable_%s_120" % face] if pieces().has("gable_%s_120" % face) else pieces()["gable_120"]
-	if pieces().has("eave_weights") and mat == "heather":   # the stones that hold the ropes down, along both eaves
+	if false and pieces().has("eave_weights") and mat == "heather":   # replaced by the rope bands of _roof_dress   # the stones that hold the ropes down, along both eaves
 		for x0 in range(0, L - BAY + 1, BAY):
 			_stamp(vs, "eave_weights", Vector3i(x0 - OVERHANG, -OVERHANG, z - OVERHANG - 6), Vector2i(1, 0))
 			_stamp(vs, "eave_weights", Vector3i(W + OVERHANG - x0, D + OVERHANG, z - OVERHANG - 6), Vector2i(-1, 0))
@@ -344,6 +361,7 @@ static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: Str
 			if q.x != sx: continue
 			vs[Vector3i(q.y, D - 1 - y, z + q.z)] = gb[k]            # left gable, its outer face on x = 0
 			vs[Vector3i(W - 1 - q.y, D - 1 - y, z + q.z)] = gb[k]    # right gable
+	_roof_dress(vs, W, D, z, mat)
 	# collision: each slope a sheet along its top, from the eave to the ridge
 	var top := float(D) / 2.0
 	ramps.append([Vector3(W * 0.5, -OVERHANG, z), Vector3(W * 0.5, top, z + top + OVERHANG), L])
@@ -357,6 +375,7 @@ static func _dormer(rf: Dictionary, bo: Vector3i, d: Vector2i, face: String) -> 
 		for ly in range(-OVERHANG - 1, 14):
 			for lz in range(8, 32): rf.erase(_cell(bo, d, lx, ly, lz))
 	_stamp(rf, "dormer_12", bo, d)
+	_openings.append([rf, bo, d, WIN[0], WIN[1], WIN[2], WIN[3], "window"])
 	_stamp(rf, "window_leaded", bo + Vector3i(d.x, d.y, 0) * WIN[0] + Vector3i(n.x, n.y, WIN[2]), d)
 	if face == "dry": _stamp(rf, "shutters", bo + Vector3i(d.x, d.y, 0) * (WIN[0] - 4) - Vector3i(n.x, n.y, -WIN[2]), d)
 
@@ -368,6 +387,7 @@ static func _gable_window(rf: Dictionary, W: int, D: int, z: int, y: int, face: 
 			for ly in range(0, WALL):
 				for lz in range(0, 10): rf.erase(_cell(o, d, lx, ly, lz))
 		_stamp(rf, "window_leaded", o + Vector3i(_left(d).x, _left(d).y, 0), d)
+		_openings.append([rf, o, d, 0, 7, 0, 9, "gable"])
 		for lx in range(-1, 9):
 			for ly in range(0, WALL):
 				rf[_cell(o, d, lx, ly, 10)] = Color8(52, 44, 38); rf[_cell(o, d, lx, ly, 11)] = Color8(70, 60, 50)   # a timber lintel
@@ -380,3 +400,123 @@ static func _door(bo: Vector3i, d: Vector2i, swing := 1, leaf := "door_leaf") ->
 	var door := KitDoor.new(); door.name = "Door"; door.leaf_mesh = _meshes[leaf]; door.swing_sign = swing
 	door.transform = Transform3D(Basis(dg, Vector3.UP, -ng), _g(hinge))
 	return door
+
+## the detail on a roof (KitDress's part for roofs): thatch and turf get thick and lumpy, with a ragged hanging eave,
+## dark rope bands across each slope, rolled verges that sweep up at the gable ends, a heavy ridge bound with sways,
+## rafter ends under the eave and ship-rib bargeboards that run up the gables and cross over the ridge; slate gets
+## its courses, one lip each, and quieter tones
+static func _roof_dress(vs: Dictionary, W: int, D: int, z: int, mat: String) -> void:
+	var run := D / 2 + OVERHANG; var L := W + 2 * OVERHANG
+	var soft := mat in ["heather", "thatch", "turf"]
+	var band := Color8(78, 66, 56) if mat != "turf" else Color8(84, 90, 58)
+	for side in 2:
+		for x in L:
+			var wx := x - OVERHANG
+			for r in run:
+				var y := r - OVERHANG if side == 0 else D - 1 + OVERHANG - r
+				var zb := z - OVERHANG + r
+				var top: Color = vs.get(Vector3i(wx, y, zb + 2), Color8(128, 112, 92))
+				var edge := mini(x, L - 1 - x)   # columns from the verge
+				if soft:
+					var is_band := mat != "turf" and r % 7 == 3 and r < run - 2
+					var lump := false
+					if is_band:
+						vs[Vector3i(wx, y, zb + 3)] = band; vs[Vector3i(wx, y, zb + 2)] = band.darkened(0.15)
+					else:   # combed straws: streaks down the slope, a few shades of the thatch, no lumps
+						var sk := KitDress._h(wx, r / 5 + side * 50, _seed + 31)
+						vs[Vector3i(wx, y, zb + 2)] = top.darkened(0.08) if sk < 0.25 else (top.lightened(0.05) if sk > 0.8 else top)
+					# the verges roll up and over, higher toward the gable end
+					if edge < 3:
+						for t in range(3, 3 + 3 - edge): vs[Vector3i(wx, y, zb + t + (1 if lump else 0))] = top
+					if r == 0:   # the eave: thick, and ragged where the heather hangs
+						vs[Vector3i(wx, y, zb - 1)] = top.darkened(0.12)
+						var hang := KitDress._h(wx, side, _seed + 9)
+						if hang > 0.45: vs[Vector3i(wx, y, zb - 2)] = top.darkened(0.2)
+						if hang > 0.8: vs[Vector3i(wx, y, zb - 3)] = top.darkened(0.25)
+				elif mat == "slate":
+					var sl := KitDress._h(floori((wx + (r / 3) % 2 * 2) / 4.0), r / 3, _seed + 3)
+					vs[Vector3i(wx, y, zb + 2)] = Color8(84, 90, 98) if sl < 0.7 else (Color8(72, 78, 86) if sl < 0.88 else Color8(98, 104, 112))
+					if r % 3 == 0: vs[Vector3i(wx, y, zb + 3)] = Color8(70, 76, 84)
+			# the rafter ends, every metre under the eave
+			if wx % 10 == 5 and wx > 0 and wx < W:
+				var ye := -OVERHANG - 1 if side == 0 else D + OVERHANG
+				for k in 3:
+					var yy := ye + (k if side == 0 else -k)
+					vs[Vector3i(wx, yy, z - OVERHANG - 2)] = Color8(64, 54, 46); vs[Vector3i(wx, yy, z - OVERHANG - 1)] = Color8(72, 62, 54)
+	if soft:   # the ridge: a heavy roll, bound with sways every 0.6 m
+		var zr := z - OVERHANG + run - 1
+		for x in range(-OVERHANG, W + OVERHANG):
+			for y in range(D / 2 - 3, D / 2 + 3):
+				var dy := absi(y * 2 + 1 - D)
+				var col := band if (x + 600) % 6 == 0 else (Color8(108, 115, 75) if mat != "thatch" else Color8(170, 138, 84))
+				for zz in range(zr + 1, zr + 4 - dy / 4): vs[Vector3i(x, y, zz)] = col
+	# bargeboards of salvaged ship ribs along both gables, from the eave up past the ridge, where they cross like horns
+	for gx in [-OVERHANG - 1, W + OVERHANG]:
+		for side in 2:
+			for r in range(0, run + 7):
+				var y := r - OVERHANG if side == 0 else D - 1 + OVERHANG - r
+				var zb := z - OVERHANG + r
+				var curl := maxi(0, r - run - 4)   # the tips lift a little more as they end
+				for t in range(-1, 2): vs[Vector3i(gx, y, zb + t + curl)] = Color8(64, 54, 46) if t < 1 else Color8(86, 72, 60)
+
+# ---------------------------------------------------------------- the porch
+static func _porch_has(layout: Dictionary, bay: int) -> bool:
+	if not layout.has("porch"): return false
+	var p: Dictionary = layout.porch
+	return bay >= p.from and bay <= p.to
+
+## a raised deck of salvaged boards along the front, from bay "from" to bay "to", "depth" voxels out, at the plinth's
+## height: log rails between posts, steps down in front of each door, and a lean-to roof of the house's roof stuff
+## over it from the wall at 2.9 m, falling one in two. The front doors under it lose their own steps and hoods.
+static func _porch(vs: Dictionary, ramps: Array, boxes: Array, layout: Dictionary, front: String, z: int) -> void:
+	var p: Dictionary = layout.porch; var dep: int = p.get("depth", 16)
+	var x0: int = p.from * BAY; var x1: int = (p.to + 1) * BAY + (2 if p.to + 1 < front.length() else 0)
+	var mat: String = layout.get("roof", "heather")
+	var steps := []
+	for b in range(p.from, p.to + 1):
+		if b < front.length() and front[b] == "d": steps.append([b * BAY + DOOR[0] - 1, b * BAY + DOOR[1] + 1])
+	var on_step := func(x: int) -> bool:
+		for st in steps:
+			if x >= st[0] and x <= st[1]: return true
+		return false
+	for x in range(x0, x1):
+		for y in range(-dep, 0):
+			for zz in PLINTH:
+				var c: Color
+				if zz == PLINTH - 1: c = Color8(150, 134, 112) if (y + 600) % 3 else Color8(124, 110, 92)   # deck boards
+				elif y == -dep: c = KitDress._tone(KitDress._h(x / 6, zz / 2, _seed + 70), true)            # a drystone kerb
+				else: c = Color8(90, 80, 70)
+				vs[Vector3i(x, y, zz)] = c
+		# posts at each end and every 2 m, a rail between them at 0.9 m, a lower rail at 0.45 m
+		var post := (x - x0) % BAY < 2 or x >= x1 - 2
+		if post and not on_step.call(x):
+			for zz in range(PLINTH, z + 29 - (dep - 1) / 2):   # up to the lean-to roof over it
+				for yy in [-dep, -dep + 1]: vs[Vector3i(x, yy, zz)] = Color8(72, 62, 54)
+			boxes.append([Vector3(x, -dep, PLINTH), Vector3(x + 1, -dep + 2, PLINTH + 29)])
+		elif not on_step.call(x):
+			for zz in [PLINTH + 8, PLINTH + 9, PLINTH + 4]: vs[Vector3i(x, -dep, zz)] = Color8(96, 82, 68) if zz != PLINTH + 9 else Color8(110, 96, 80)
+	boxes.append([Vector3(x0, -dep, 0), Vector3(x1, 0, PLINTH)])
+	boxes.append([Vector3(x0, -dep, PLINTH), Vector3(x1, -dep + 1, PLINTH + 10)])   # the rail, as a fence (steps are left open by the ramps above it)
+	# the steps: two treads of boards on stone, down to the ground
+	for st in steps:
+		for x in range(st[0], st[1] + 1):
+			for k in [[1, 3, 2], [4, 6, 0]]:
+				for yy in range(-dep - k[1], -dep - k[0] + 1):
+					for zz in k[2] + 1: vs[Vector3i(x, yy, zz)] = Color8(150, 134, 112) if zz == k[2] else Color8(110, 108, 102)
+		var mx: float = (st[0] + st[1] + 1) * 0.5
+		ramps.append([Vector3(mx, -dep - 8, 0), Vector3(mx, -dep + 1, PLINTH + 0.5), int(st[1]) - int(st[0]) + 1])
+	# the lean-to roof, its edges ragged where it is heather or turf
+	var top := z + 29
+	for k in range(0, dep + 4):
+		var zr := top - k / 2
+		for x in range(x0 - 2, x1 + 2):
+			var y := -1 - k
+			for t in 2:
+				var c: Color
+				if mat == "slate": c = Color8(84, 90, 98) if t == 1 else Color8(66, 72, 80)
+				elif mat == "turf": c = Color8(108, 115, 75) if KitDress._h(x / 2, k / 2, _seed) > 0.25 else Color8(88, 92, 62)
+				else: c = Color8(150, 138, 114) if (k % 7) != 3 else Color8(78, 66, 56)
+				if t == 0: c = Color8(72, 62, 54)
+				vs[Vector3i(x, y, zr + t)] = c
+			if false: vs[Vector3i(x, y, zr + 2)] = Color8(150, 138, 114) if mat != "turf" else Color8(118, 125, 82)
+			if k == dep + 3 and mat != "slate" and KitDress._h(x, 3, _seed) > 0.5: vs[Vector3i(x, y, zr - 1)] = Color8(126, 114, 94)

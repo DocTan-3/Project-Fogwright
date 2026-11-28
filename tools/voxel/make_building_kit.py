@@ -154,7 +154,7 @@ PAL.update({
     'fst': (148, 145, 138), 'fst_d': (122, 121, 116), 'fst_l': (168, 164, 155), 'fst_g': (138, 142, 125),   # weathered, lichened
     'tar': (92, 78, 66), 'tar_d': (72, 62, 54), 'tar_l': (112, 96, 80),
     'drift': (158, 142, 122), 'drift_d': (130, 118, 100), 'drift_l': (178, 162, 140),
-    'heather': (128, 112, 92), 'heather_d': (105, 92, 78), 'heather_l': (145, 128, 102),
+    'heather': (150, 138, 114), 'heather_d': (124, 112, 94), 'heather_l': (164, 152, 126),   # weathered grey-brown
     'rope': (156, 138, 106), 'turf': (108, 115, 75), 'turf_d': (88, 92, 62),
     'daub': (182, 170, 145),   # clay and lime daub over the stones inside: one flat face, cheap to draw
 })
@@ -208,6 +208,13 @@ box('shutters', 0, 15, 0, 0, 0, WIN_H - 1, lambda x, y, z: None if 4 <= x <= 11 
 P['shutters'] = {k: v for k, v in P['shutters'].items() if v}
 # a door of salvaged hull planks, tarred, with an iron bar bracket
 box('door_leaf_dry', 0, DOOR_W - 1, 0, 1, 0, DOOR_H - 1, lambda x, y, z: 'iron' if (z in (5, DOOR_H - 6) and y == 0) or (x in (10, 11) and z in range(10, 13) and y == 1) else ('tar_d' if x % 4 == 3 else 'tar'))
+# the same door, painted in a house's faded colour (scripts/voxel/kit_dress.gd PAINTS has these too): planks in the
+# paint, two tarred ledges across and iron straps
+PAINTS = {'blue': (92, 116, 128), 'green': (96, 122, 104), 'red': (138, 88, 72), 'ochre': (164, 138, 86)}
+for pn, pc in PAINTS.items():
+    PAL['p_' + pn] = pc; PAL['p_' + pn + '_d'] = tuple(int(v * 0.85) for v in pc)
+    box('door_leaf_dry_' + pn, 0, DOOR_W - 1, 0, 1, 0, DOOR_H - 1, lambda x, y, z, pn=pn: 'iron' if (z in (5, DOOR_H - 6) and y == 0 and x < 10) else
+        ('tar' if (z in (4, 5, DOOR_H - 7, DOOR_H - 6) and y == 1) else ('p_%s_d' % pn if x % 3 == 2 else 'p_' + pn)))
 # heather thatch on a 45 degree slope, netted with ropes along it every 0.7 m (ropes along the slope stay cheap: they do
 # not break the long runs the mesher merges), held down at the eave by hanging stones (eave_weights)
 def heather_slope(name):
@@ -322,6 +329,69 @@ fbox('gull', 7, 8, 1, 2, 6, 7, 'gull'); fbox('gull', 9, 9, 1, 2, 6, 6, 'copper')
 fbox('bar_keel', 0, 39, 1, 11, 0, 20, lambda x, y, z: ('fst_d' if (x // 7 + z // 4) % 2 else 'fst') if y == 1 else 'tar_d')
 fbox('bar_keel', 0, 39, 0, 13, 21, 23, lambda x, y, z: 'tar_l' if z == 23 else 'tar')
 for x in (5, 14, 23, 32): fbox('bar_keel', x, x + 2, 4, 6, 24, 26, 'pewter')
+# ---------------------------------------------------------------- the yard (5 cm): what stands round a freehold house
+FPAL.update(withy=(128, 106, 78), withy_d=(100, 82, 62), withy_l=(146, 124, 92), ivy=(82, 108, 64), ivy_d=(62, 86, 52),
+            ivy_l=(104, 128, 76), log_end=(176, 148, 106), log_ring=(150, 122, 86), bark=(88, 70, 54), net=(112, 106, 90),
+            cork=(170, 120, 70), float_r=(150, 84, 68), sign=(120, 100, 76), sign_d=(84, 70, 56))
+def keep(name): F[name] = {k: v for k, v in F[name].items() if v}
+# a wattle hurdle 2 m long, 0.9 m high: hazel stakes every 0.3 m, withies woven in and out of them, row by row
+for x in range(40):
+    for z in range(2, 18):
+        stake = x % 6 == 0
+        y = 1 if stake else (0 if ((x // 6) + z) % 2 == 0 else 2)
+        if (x % 6) in (1, 5): y = 1
+        fput('wattle', x, y, z, 'withy_d' if z % 2 == 0 else ('withy_l' if (z // 2 + x // 6) % 5 == 0 else 'withy'))
+for x in range(0, 40, 6): fbox('wattle', x, x, 1, 1, 0, 19, 'bark')
+# a sign on a tall post: the post, an arm, two chains and a round board with a painted lantern on it
+fbox('sign_post', 0, 2, 0, 2, 0, 59, 'tar'); fbox('sign_post', 0, 27, 0, 2, 56, 58, 'tar'); fbox('sign_post', 2, 7, 0, 2, 50, 55, lambda x, y, z: 'tar' if x - 2 == 55 - z else None)
+for xc in (12, 22): fbox('sign_post', xc, xc, 1, 1, 46, 55, lambda x, y, z: 'iron' if z % 2 else None)
+for x in range(8, 27):
+    for z in range(27, 46):
+        d = (x - 17) ** 2 + (z - 36.5) ** 2
+        if d <= 81:
+            c = 'sign_d' if d > 64 else ('flame' if (15 <= x <= 19 and 33 <= z <= 39 and (x - 17) ** 2 + (z - 36) ** 2 < 6) else ('iron' if (x in (14, 20) and 31 <= z <= 41) or (z in (31, 41) and 14 <= x <= 20) else 'sign'))
+            fbox('sign_post', x, x, 0, 2, z, z, c)
+keep('sign_post')
+# a woodpile 1.2 m long against a wall: split logs, their ends out, under a few boards
+for x in range(24):
+    for z in range(18):
+        row = z // 4; xo = (x + (row % 2) * 2) % 4; zo = z % 4
+        c = 'log_end' if xo in (1, 2) and zo in (1, 2) else ('log_ring' if xo in (0, 3) and zo in (1, 2) or zo in (0, 3) and xo in (1, 2) else 'bark')
+        for y in range(10): fput('woodpile', x, y, z, c if y == 0 else 'bark')
+fbox('woodpile', 0, 23, 0, 11, 18, 18, lambda x, y, z: 'board_d' if x % 5 == 0 else 'board')
+# creels for lobster and crab, three stacked: withy domes over a board base, a netted mouth at the end
+def creel(name, x0, y0, z0):
+    for x in range(12):
+        for y in range(8):
+            for z in range(7):
+                if (y - 3.5) ** 2 / 16 + z ** 2 / 42 <= 1.0 and ((y - 3.5) ** 2 / 9 + z ** 2 / 25 > 1.0 or x in (0, 11)):
+                    fput(name, x0 + x, y0 + y, z0 + z, 'net' if x in (0, 11) else ('withy_d' if x % 3 == 0 else 'withy'))
+        fput(name, x0 + x, y0 + 3, z0, 'board_d'); fput(name, x0 + x, y0 + 4, z0, 'board_d')
+creel('creels', 0, 0, 0); creel('creels', 13, 1, 0); creel('creels', 6, 0, 7)
+# a net rack: two poles and a bar, a net hung over it to dry, cork floats along its head
+fbox('net_rack', 0, 1, 0, 1, 0, 37, 'tar'); fbox('net_rack', 38, 39, 0, 1, 0, 37, 'tar'); fbox('net_rack', 0, 39, 0, 1, 36, 37, 'tar_l')
+for x in range(2, 38):
+    for z in range(8 + (x * 7) % 5 // 2, 36):
+        if (x + z) % 3 == 0 or (x - z) % 3 == 0: fput('net_rack', x, 2, z, 'net')
+    if x % 4 == 2: fput('net_rack', x, 2, 35, 'cork' if x % 8 else 'float_r')
+# ivy hanging from the eave: thick at the top, thinning and fraying downward
+for x in range(18):
+    for z in range(36):
+        depth = 36 - z
+        dens = 0.95 - 0.028 * depth - abs(x - 8.5) * 0.04
+        if _h(x, z, 77) < dens:
+            r = _h(x // 2, z // 2, 78)
+            fput('ivy', x, 0, z, 'ivy_d' if r < 0.3 else ('ivy_l' if r > 0.75 else 'ivy'))
+            if _h(x, z, 79) < dens - 0.3: fput('ivy', x, 1, z, 'ivy')
+# a crate of salvage boards
+fbox('crate', 0, 11, 0, 11, 0, 11, lambda x, y, z: 'tar' if (x in (0, 11) and y in (0, 11)) or z in (0, 11) and (x in (0, 11) or y in (0, 11)) else ('board_d' if z % 4 == 3 else 'board'))
+# a few shore stones, as lie round a footing
+for (x0, y0, w, d, h) in ((0, 0, 7, 6, 4), (6, 2, 5, 5, 3), (2, 5, 4, 4, 2)):
+    for x in range(w):
+        for y in range(d):
+            for z in range(h):
+                if (x - w / 2 + 0.5) ** 2 / (w / 2) ** 2 + (y - d / 2 + 0.5) ** 2 / (d / 2) ** 2 + (z / h) ** 2 <= 1.05:
+                    fput('rocks', x0 + x, y0 + y, z, 'fst_g' if z == h - 1 and _h(x, y, 3) > 0.6 else ('fst_d' if _h(x0 + x, y, z) < 0.4 else 'fst'))
 mb.COL = FPAL; mb.NAMES = list(FPAL)
 mb.write(os.path.join(out, 'kit_fittings.vox'), {n: F[n] for n in sorted(F)})
 for name in sorted(F):
