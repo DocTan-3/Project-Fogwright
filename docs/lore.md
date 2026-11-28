@@ -10,7 +10,9 @@ The world's history in three ages, built from your ideas. Nothing here is final.
 
 *[Diagram: timeline · the three ages and their turning points. It lives in the online doc and does not export to Markdown.]*
 
-The split of Erde ends the first age; the 13th God's sacrifice ends the second and begins the third, when the game is set.
+The split of Erde ends the first age; the 13th God's sacrifice ends the second and begins the third, when the game is set. Years are counted from her sacrifice: the game begins in **312 TA** (the 312th year of the Third Age).
+
+**The Return** *(decided 2026-11-28)*: magic is like water. When someone uses magic, it flows back to the god who granted it, the way rain returns to the sea, and that return is what keeps a god alive. Magic with no god to return to does not vanish: it pools, sours and becomes the Fog. Almost every mystery of the world follows from this rule.
 
 ## The first age
 
@@ -20,6 +22,8 @@ The Gods blessed the empire with everything, on two conditions:
 
 1. Men must never fight among themselves.
 2. Men must never think themselves above the gods.
+
+In return the gods gave grace freely: everyone could touch magic a little, and every drop of it flowed back to the gods. The people were the gods' rivers, and the gods were the people's sea.
 
 ## The corruption and the split
 
@@ -37,16 +41,17 @@ The Gods were not perfect: some sought to be greater, and corrupted men into wag
 
 The second age is the age of conquest: peoples advanced their cultures and technology into a light steampunk era, all to fight one another.
 
-- **The ban on magic.** On the word of the head of the Gods, the gods made all the "good" races outlaw magic, to restore the old rules. Only a select few individuals may still use it, each claimed by their own god. These chosen tend to be important in history.
+- **The ban on magic.** On the word of the head of the Gods, the gods made all the "good" races outlaw magic, to restore the old rules. Only a select few individuals may still use it, each claimed by their own god. These chosen tend to be important in history. **What it really did:** with so little magic used, the Return became a trickle, and the gods began to fade slowly over centuries without understanding why.
 - **Endless war.** Wars kept being fought and the world grew bleak.
-- **The birth of the Fog.** Magic mixed with the smoke and fire of all that unrest and became the thick Fog that covered the world.
+- **The birth of the Fog.** Magic used outside the law, by hedge-witches, desperate soldiers, cults and the dying, had no god to return to. It mixed with the smoke and fire of all that unrest, pooled and soured, and became the thick Fog that covered the world. **The Fog remembers:** it does not think, but it takes the shapes of what it touched and copies them badly. That is why a Fog wolf has the wrong number of eyes, and why a Fog-touched neighbour still hums the song she was singing.
 
 ## The third age
 
 The third age, when the game is set, is the war against the Fog.
 
-- **The sacrifice.** The 13th God, kindest of all, sacrificed herself to weaken the Fog. Her sacrifice began the third age.
-- **The fading gods.** Twelve gods remain. Each sits at the heart of a major city, strong enough to keep the Fog out of their own domain, but not much else. They are slowly losing their magic.
+- **The sacrifice.** The 13th God, kindest of all, sacrificed herself to weaken the Fog: she poured her whole being into it and thinned it for three hundred years. Her sacrifice began the third age.
+- **Merrith is not wholly gone.** A god does not end like a candle. She is spread through the Fog like a thread through cloth: everywhere, and very thin. Her thread is the force that guides the chosen, lifts a fallen player in the prologue, and woke the Penitent.
+- **The fading gods.** Twelve gods remain. Each sits at the heart of a major city, strong enough to keep the Fog out of their own domain, but not much else. They are slowly losing their magic, because the Ban starved the Return and Aldrath's well drinks what is left (below).
 - **Her legacy.** The 13th left her own magic behind: a mysterious force that guides chosen individuals to find their gods and be claimed. The players are these chosen.
 - **The great evil.** The plot of the third age is the discovery that no gods remain in the evil lands, and that a single great evil has risen there. The fate of the third age hangs in the balance.
 
@@ -178,7 +183,8 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 - **Aldrath is the biggest city by far:** a crowded refuge and melting pot where every people has a quarter, the trading hub of the world, as Stormwind or Orgrimmar are in their worlds.
 - **Each people still keeps a hometown,** its capital and the seat of its god, but these are smaller, fortified and specialised. How each one fares depends on its people (below).
 - **Trade holds the world together:** grain and food flow outward from the fertile centre; ores, furs, timber, spices, beasts and relics flow inward. No people can live alone, which is why the crafts interlock.
-- **The hidden truth:** the protection is real, but it also keeps the peoples gathered and dependent on Aldrath, exactly where he wants them. Players learn this late.
+- **The hidden truth: Aldrath's city is a well** *(decided 2026-11-28)*. His sealed city does not radiate protection; it pulls magic in from the whole world. Near the centre that pull drags the Fog away, so the protection is real, but everything it pulls goes into him, and the farther a land lies from the centre, the more of its life has been drawn away over the centuries. It also keeps the peoples gathered and dependent on him, exactly where he wants them, where the well can drink them when the time comes. Players learn this late.
+- **The inner city is a larder** *(decided 2026-11-28)*. Over the centuries, gods too faded to hold their own circle were brought inside the sealed walls with great ceremony, "to rest in the Rule". None came out: Aldrath devours them.
 
 ### The hometowns
 
@@ -220,7 +226,7 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 | Violet, a god's self | The Veiled | Dreamlight | the Night Rose | the Shrouded Bell |
 | Broken | The Shard | (to be named) | the Broken Cup | the Wound |
 
-**Aldrath's city and where the journey begins.** The outer city is alive, the greatest city of the third age, reachable by ship and by warp. It is about 600 metres across, the trading hub and main town of the world, with a quarter for each people around a grand plaza where statues of the twelve face the sealed walls. Aldrath sealed the inner city himself, as a safe haven for the weaker gods, at least in theory. Every player arrives as one of the freefolk of their people, a survivor of Farhallow, not yet claimed by any god. Being claimed by a god later in the journey decides which magic a player can take; there are no classes.
+**Aldrath's city and where the journey begins.** The outer city is alive, the greatest city of the third age, reachable by ship and by warp. It is about 600 metres across, the trading hub and main town of the world, with a quarter for each people around a grand plaza where statues of the twelve face the sealed walls. Aldrath sealed the inner city himself, as a safe haven for the weaker gods, at least in theory; in truth it is where he devours them. Every player arrives as one of the freefolk of their people, a survivor of Farhallow, not yet claimed by any god. Being claimed by a god later in the journey decides which magic a player can take; there are no classes.
 
 **The Forsaken on the mainland.** The Forsaken have reached the mainlands, bringing portions of the Fog with them: lighter and manageable, unlike the Sundering. Some ports still stand in these lands. The wilds there are more untamed than corrupted, because magic may still linger.
 
@@ -245,9 +251,9 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 - [ ] Desert and forest people are both tamers: how their taming differs.
 - [ ] What the outer city of Aldrath is like: its districts, peoples and the walls around the sealed core.
 - [ ] Which magic each god grants, and does being claimed also change a player's home city?
-- [ ] Can players be claimed by the head of the Gods without knowing who he truly is?
+- [x] Can players be claimed by the head of the Gods without knowing who he truly is? **No** *(decided 2026-11-28)*.
 - [ ] Are there settlements outside any god's protection?
-- [ ] Why the twelve are losing their magic.
+- [x] Why the twelve are losing their magic: the Ban starved the Return, and Aldrath's well drinks what is left.
 - [ ] Which lands of the split Erde the game's island belongs to.
 - [ ] The evil lands: their name, and the peoples who remain there.
 - [ ] How the story reveals the 14th: the first signs, and who suspects the truth.

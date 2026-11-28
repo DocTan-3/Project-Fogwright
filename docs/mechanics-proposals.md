@@ -36,14 +36,14 @@ How a player gets a god, and what it gives.
 
 1. **Merrith's thread.** From the prologue on, every player feels the pull: a faint golden glint on the compass and a
    hum near shrines. It points at the nearest **claiming site** they have not visited.
-2. **Seek a god.** Every god has a claiming site: their seat in their hometown (Aldrath: the plaza of the twelve; Verdane:
+2. **Seek a god.** Every god has a claiming site: their seat in their hometown (Verdane:
    any of the great groves; Oriel: an Animari ruin; Vael: none that anyone knows, see below; Galeth: the Last Bastion,
    until he falls).
 3. **The trial.** A quest that shows what the god values. Examples: Hrothvar asks you to stand a night on the ice without
    a fire; Maelis asks you to settle a dispute between a lord and his tenants; Seraveth asks you to bring back one thing
    that was lost; Ostrak asks you to forge a blade and then try to break it; Khesra asks you to cross a stretch of the
    Sere carrying water for someone else; Brannoch asks you to win the trust of an animal; Hollin asks you to walk a road
-   end to end and be welcomed at the end of it; Aldrath asks you to pass judgment on a criminal.
+   end to end and be welcomed at the end of it.
 4. **Claimed.** The god's magic opens as a region of the skill tree; the Ordinal issues a **Writ of Grace**; the warps
    open to you; you get a **seat** in that god's city (a free warp bind and favour with that people).
 
@@ -58,10 +58,7 @@ which opens Warpwalker-style magic properly.
 drops slowly over weeks unless they join the Vigil's march, or change god. If Galeth is freed later (lore proposal),
 the Orphaned are the first to feel it.
 
-**Aldrath (the reveal).** Players claimed by Aldrath get the strongest early magic (the Rule is a powerful god). At the
-Act IV reveal they choose: **renounce** (magic locked, carried only by Merrith's thread until another god claims them,
-with a bonus for whoever claims them next) or **keep** (they stay his, his magic grows, and people who know the truth
-treat them as his hand).
+**Aldrath** claims no one (decided 2026-11-28), so his plaza is not a claiming site.
 
 ## Gods' magic
 
@@ -70,7 +67,6 @@ moves and modifiers. The moves are quiet and strange, never fireballs. They shap
 
 | God | Passive (always on) | Active moves (examples) | In crafting and the world |
 | --- | --- | --- | --- |
-| **Aldrath**, the Rule | Enemies you target deal a little less damage | **Judgment** (a marked enemy takes more from everyone), **Sentence** (root an enemy in place), **Edict** (nearby allies cannot be knocked down for a while) | Settle disputes, unlock sealed doors of the Ordinal, buy cheaper in Aldrath |
 | **Hrothvar**, Endurance | Cold drains warmth more slowly | **Unbowed** (cannot be staggered or knocked down for 6 s), **Frostbreath** (a short cone that slows), **Hold the Line** (take hits meant for a nearby ally) | Temper metal tougher; sail through storms safely |
 | **Maelis**, Stewardship | Food and potions last longer | **Oath** (bind an ally: you share damage taken), **Bounty** (heal over time in an area), **Keep** (a ward on a door or wall that holds) | Freehold fields yield more; buildings go up faster |
 | **Seraveth**, Remembrance | Read ruin inscriptions without the language skill | **Recall** (step back to where you stood 4 s ago), **Echo** (see a fallen enemy's last moves replayed), **Mend** (restore a broken item's durability) | See Echoes of the past at ruins (lore discovery), restore relics |
