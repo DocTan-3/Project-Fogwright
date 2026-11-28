@@ -15,5 +15,6 @@ func _ready() -> void:
 	var mat := StandardMaterial3D.new(); var c := Color("5f7a3a"); mat.albedo_color = c * c; mat.roughness = 1.0; gm.material_override = mat; g.add_child(gm)
 	building = BuildingKit.build(KitLayouts.TEST_ROOM if layout_name == "test_room" else KitLayouts.GULL_LANTERN); building.position = Vector3(-4, 0, 3); add_child(building)
 	print("KIT %s %d triangles, %d ms, %.1f m tall" % [layout_name, building.get_meta("triangles"), building.get_meta("build_ms"), building.get_meta("height")])
+	print("KIT parts %s" % [building.get_meta("parts")])
 	var pl := get_parent().get_node_or_null("Player") as Node3D
 	if pl: pl.global_position = building.position + (Vector3(3.1, 0.1, 5.0) if layout_name == "test_room" else Vector3(5.05, 0.1, 5.0))

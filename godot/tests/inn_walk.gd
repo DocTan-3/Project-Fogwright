@@ -43,7 +43,7 @@ func _ready() -> void:
 	print("DOORS opened on the way: %s" % [op])
 	print("ROOM player=%s (upper floor at 4.9 m)" % [_local(pl.global_position)])
 	rig.yaw = atan2(1.0, -1.0); rig.pitch = deg_to_rad(-14.0); rig.distance = 4.0; await _shot("guest_room")
-	await _spin("guest room", Rect2(8.3, -3.9, 3.4, 3.6), 7.9)
+	await _spin("guest room", Rect2(8.3, -3.9, 3.4, 3.6), 10.2)
 	get_tree().quit()
 
 func _local(p: Vector3) -> Vector3: return p - b.global_position

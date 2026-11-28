@@ -30,6 +30,8 @@ const OVERHANG := 3
 
 static var _pieces := {}  # name -> {Vector3i: Color}, the kit's voxels in each piece's own box
 static var _meshes := {}
+static var _dormers := []
+static var _leaf := ""      # the layout's door leaf, if it names one   # [bay origin, direction, face] of the dormers this build, set into the roof once it is laid
 static var _fittings := {}  # the 5 cm fittings (kit_fittings.vox): name -> {Vector3i: Color}
 const FITTINGS := "res://assets/voxel/buildings/kit_fittings.vox"
 const FV := 0.05
@@ -108,6 +110,7 @@ static func _g(p: Vector3) -> Vector3: return Vector3(p.x, p.z, -p.y) * V
 static func build(layout: Dictionary) -> Node3D:
 	var t0 := Time.get_ticks_msec()
 	pieces()
+	_dormers = []
 	var root := Node3D.new(); root.name = "Building"
 	var body := StaticBody3D.new(); body.name = "Body"; root.add_child(body)
 	var doors := Node3D.new(); doors.name = "Doors"; root.add_child(doors)
@@ -123,12 +126,13 @@ static func build(layout: Dictionary) -> Node3D:
 	var g0: Dictionary = sets[0]
 	for i in size.x:
 		for j in size.y: _stamp(g0, "plinth", Vector3i(i * BAY, j * BAY, 0), Vector2i(1, 0))
-	var flags: Dictionary = pieces()["floor_flags"]
+	var flags: Dictionary = pieces()["floor_" + layout.get("ground", "flags")]
+	_leaf = layout.get("door_leaf", "")
 	for i in size.x:
 		for j in size.y:
 			for k in flags: var q: Vector3i = k; g0[Vector3i(i * BAY + q.x, j * BAY + q.y, PLINTH - 1)] = flags[k]
 	boxes.append([Vector3(0, 0, 0), Vector3(W, D, PLINTH)])
-	var tris := 0
+	var tris := 0; var parts := {}
 	fittings()
 	for s in storeys.size():
 		var st: Dictionary = storeys[s]; var h: int = st.h; var vs: Dictionary = sets[s]
@@ -139,12 +143,12 @@ static func build(layout: Dictionary) -> Node3D:
 			var below: Dictionary = storeys[s - 1]
 			var wells := []
 			for sr in below.get("stairs", []): wells.append(_stair_well(sr, below.h))
-			_floor(vs, W, D, z - 3, wells, boxes)
+			_floor(vs, W, D, z - 3, wells, boxes, layout.get("floor", "boards"))
 		# walls: the inner partitions first, so the outer walls win where they meet
 		for iw in st.get("inner", []):
 			var at: Vector2i = iw.at; var dd := Vector2i(1, 0) if iw.dir == "x" else Vector2i(0, 1)
 			var o := Vector3i(at.x * BAY, at.y * BAY, z) - Vector3i(_left(dd).x, _left(dd).y, 0)   # centred on the line
-			_wall_run(vs, boxes, doors, o, dd, iw.bays, iw.get("face", face), h, true, iw.get("swing", 1))
+			_wall_run(vs, boxes, doors, o, dd, iw.bays, iw.get("face", face), iw.get("h", h), true, iw.get("swing", 1))
 		var runs := [["front", Vector3i(0, 0, z), Vector2i(1, 0)], ["right", Vector3i(W, 0, z), Vector2i(0, 1)],
 			["back", Vector3i(W, D, z), Vector2i(-1, 0)], ["left", Vector3i(0, D, z), Vector2i(0, -1)]]
 		for r in runs:
@@ -160,7 +164,7 @@ static func build(layout: Dictionary) -> Node3D:
 		for ft in st.get("fittings", []): _fitting(fs, boxes, ft, z)
 		if not fs.is_empty():
 			var fm := MeshInstance3D.new(); fm.name = "Fittings%d" % s; fm.mesh = Vox.mesh(fs, Vector3i.ZERO, Vector3.ZERO, FV)
-			fm.material_override = Vox.material(); root.add_child(fm); tris += fm.mesh.get_faces().size() / 3
+			fm.material_override = Vox.material(); root.add_child(fm); tris += fm.mesh.get_faces().size() / 3; parts[fm.name] = fm.mesh.get_faces().size() / 3
 		for lt in st.get("lights", []):
 			var l := OmniLight3D.new(); l.position = lt.at; l.light_energy = lt.get("energy", 1.2)
 			l.light_color = lt.get("color", Color(1.0, 0.78, 0.52)); l.omni_range = lt.get("range", 7.0); l.shadow_enabled = false
@@ -168,8 +172,24 @@ static func build(layout: Dictionary) -> Node3D:
 		z += h
 	# the roof: the attic floor, gables on the side walls and two 45 degree slopes, one set
 	var rf := {}
-	_floor(rf, W, D, z - 3, [], boxes)
-	_roof(rf, ramps, W, D, z, layout.get("roof", "thatch"))
+	var knee: bool = storeys[-1].h == 12   # the top floor up in the roof: open to the rafters, no attic floor
+	if not knee: _floor(rf, W, D, z - 3, [], boxes, layout.get("floor", "boards"))
+	else:   # partitions up there stop under the thatch, under a collar ceiling 3.0 m over the floor
+		var top: Dictionary = sets[storeys.size() - 1]
+		var cz := z - 12 + 27
+		_floor(top, W, D, cz, [], boxes, layout.get("floor", "boards"), cz - z + 3)
+		for k in top.keys():
+			var q: Vector3i = k
+			if q.y >= 0 and q.y < D and q.z >= z + mini(q.y, D - 1 - q.y): top.erase(k)
+	var top_face: String = storeys[-1].get("face", "frame")
+	_roof(rf, ramps, W, D, z, layout.get("roof", "thatch"), top_face)
+	for dm in _dormers: _dormer(rf, dm[0], dm[1], dm[2])
+	for gy in layout.get("gable_windows", []): _gable_window(rf, W, D, z, int(gy * 10.0), top_face)
+	if layout.get("rounded", false):   # corners rounded off, as drystone builders on a windy coast lay them
+		for vset in sets + [rf]:
+			for k in (vset as Dictionary).keys():
+				var q: Vector3i = k
+				if (q.x == 0 or q.x == W - 1) and (q.y == 0 or q.y == D - 1) and q.z < z: vset.erase(k)
 	for ch in layout.get("chimneys", []): _chimney(rf, boxes, ch.at, PLINTH + ch.get("from", 15), z + ch.get("above", 0))
 	sets.append(rf)
 	for s in sets.size():
@@ -177,7 +197,7 @@ static func build(layout: Dictionary) -> Node3D:
 		if vset.is_empty(): continue
 		var mi := MeshInstance3D.new(); mi.name = "Roof" if s == storeys.size() else "Storey%d" % s
 		mi.mesh = Vox.mesh(vset, Vector3i.ZERO, Vector3.ZERO, V); mi.material_override = Vox.material(); root.add_child(mi)
-		tris += mi.mesh.get_faces().size() / 3
+		tris += mi.mesh.get_faces().size() / 3; parts[mi.name] = mi.mesh.get_faces().size() / 3
 	for b in boxes:
 		var a: Vector3 = b[0]; var c: Vector3 = b[1]
 		if (c - a).x <= 0 or (c - a).y <= 0 or (c - a).z <= 0: continue
@@ -186,7 +206,7 @@ static func build(layout: Dictionary) -> Node3D:
 		body.add_child(cs)
 	for r in ramps: body.add_child(_ramp(_g(r[0]), _g(r[1]), r[2] * V))
 	for d in doors.get_children(): tris += (d as KitDoor).leaf_mesh.get_faces().size() / 3
-	root.set_meta("triangles", tris); root.set_meta("height", z * V)
+	root.set_meta("triangles", tris); root.set_meta("parts", parts); root.set_meta("height", z * V)
 	root.set_meta("build_ms", Time.get_ticks_msec() - t0)
 	return root
 
@@ -196,24 +216,33 @@ static func _wall_run(vs: Dictionary, boxes: Array, doors: Node3D, o: Vector3i, 
 		var c := bays[b]
 		var bo := o + Vector3i(d.x, d.y, 0) * (b * BAY)
 		if c == ".": continue
+		if h == 12:   # a knee wall under the roof: plain, or a dormer over it (D)
+			_stamp(vs, "wall_%s_12" % face, bo, d)
+			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(BAY, WALL, 12)))
+			if c == "D":
+				_dormers.append([bo, d, face]); boxes.append(_box(bo, d, Vector3i(0, 0, 12), Vector3i(BAY, WALL, 29)))
+			continue
 		var kind: String = {"p": "", "d": "_door", "w": "_window"}[c]
 		_stamp(vs, "wall_%s%s_%d" % [face, kind, h], bo, d)
 		if c == "d":
 			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(DOOR[0], WALL, h)))
 			boxes.append(_box(bo, d, Vector3i(DOOR[1] + 1, 0, 0), Vector3i(BAY, WALL, h)))
 			boxes.append(_box(bo, d, Vector3i(DOOR[0], 0, DOOR[3] + 1), Vector3i(DOOR[1] + 1, WALL, h)))
-			doors.add_child(_door(bo, d, swing))
+			doors.add_child(_door(bo, d, swing, _leaf if _leaf != "" else ("door_leaf_" + face if _meshes.has("door_leaf_" + face) else "door_leaf")))
 		else:
 			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(BAY, WALL, h)))
-			if c == "w": _stamp(vs, "window_leaded", bo + Vector3i(d.x, d.y, 0) * WIN[0] + Vector3i(_left(d).x, _left(d).y, WIN[2]), d)
-	if close and face == "frame":   # a partition's far end gets its post; outer runs are closed by the next run's
-		_stamp(vs, "post_%d" % h, o + Vector3i(d.x, d.y, 0) * (bays.length() * BAY - 2), d)
+			if c == "w":
+				_stamp(vs, "window_leaded", bo + Vector3i(d.x, d.y, 0) * WIN[0] + Vector3i(_left(d).x, _left(d).y, WIN[2]), d)
+				if face == "dry" and not close:   # shutters, open, on the outer face of the outer walls
+					_stamp(vs, "shutters", bo + Vector3i(d.x, d.y, 0) * (WIN[0] - 4) - Vector3i(_left(d).x, _left(d).y, -WIN[2]), d)
+	if close and face in ["frame", "board"]:   # a partition's far end gets its post; outer runs are closed by the next run's
+		_stamp(vs, ("post_%d" % h) if face == "frame" else ("post_%s_%d" % [face, h]), o + Vector3i(d.x, d.y, 0) * (bays.length() * BAY - 2), d)
 
 # a floor of boards inside the outer walls at height z (its top at z + 3), with wells left open; collision strips round them
-static func _floor(vs: Dictionary, W: int, D: int, z: int, wells: Array, boxes: Array) -> void:
-	var fb: Dictionary = pieces()["floor_boards"]
+static func _floor(vs: Dictionary, W: int, D: int, z: int, wells: Array, boxes: Array, kind := "boards", ym := WALL) -> void:
+	var fb: Dictionary = pieces()["floor_" + kind]
 	for x in range(WALL, W - WALL):
-		for y in range(WALL, D - WALL):
+		for y in range(ym, D - ym):
 			var hole := false
 			for w in wells:
 				if Rect2i(w[0], w[1]).has_point(Vector2i(x, y)): hole = true
@@ -221,7 +250,7 @@ static func _floor(vs: Dictionary, W: int, D: int, z: int, wells: Array, boxes: 
 			for lz in 3:
 				var k := Vector3i(x % BAY, y % BAY, lz)
 				if fb.has(k): vs[Vector3i(x, y, z + lz)] = fb[k]
-	var lo := Vector2i(WALL, WALL); var hi := Vector2i(W - WALL, D - WALL)
+	var lo := Vector2i(WALL, ym); var hi := Vector2i(W - WALL, D - ym)
 	if wells.is_empty():
 		boxes.append([Vector3(lo.x, lo.y, z), Vector3(hi.x, hi.y, z + 3)]); return
 	var w0: Vector2i = wells[0][0]; var w1: Vector2i = wells[0][0] + wells[0][1]   # one well per floor for now
@@ -290,7 +319,7 @@ static func _ramp(a: Vector3, b: Vector3, w: float) -> CollisionShape3D:
 	return cs
 
 # ---------------------------------------------------------------- the roof
-static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: String) -> void:
+static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: String, face := "frame") -> void:
 	var slope: Dictionary = pieces()["roof_" + mat]; var ridge: Dictionary = pieces()["ridge_" + mat] if pieces().has("ridge_" + mat) else pieces()["ridge_thatch"]
 	var run := D / 2 + OVERHANG; var L := W + 2 * OVERHANG
 	for x in L:
@@ -303,7 +332,11 @@ static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: Str
 			var q: Vector3i = k
 			if q.x == x % BAY: vs[Vector3i(x - OVERHANG, D / 2 - 2 + q.y, z - OVERHANG + run - 1 + q.z)] = ridge[k]
 	# gables over the side walls, cut from the 12 m gable to this span (its top is min(x, span - 1 - x) at any span)
-	var gb: Dictionary = pieces()["gable_120"]
+	var gb: Dictionary = pieces()["gable_%s_120" % face] if pieces().has("gable_%s_120" % face) else pieces()["gable_120"]
+	if pieces().has("eave_weights") and mat == "heather":   # the stones that hold the ropes down, along both eaves
+		for x0 in range(0, L - BAY + 1, BAY):
+			_stamp(vs, "eave_weights", Vector3i(x0 - OVERHANG, -OVERHANG, z - OVERHANG - 6), Vector2i(1, 0))
+			_stamp(vs, "eave_weights", Vector3i(W + OVERHANG - x0, D + OVERHANG, z - OVERHANG - 6), Vector2i(-1, 0))
 	for y in D:
 		var sx := y if y < D / 2 else 119 - (D - 1 - y)
 		for k in gb:
@@ -316,11 +349,34 @@ static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: Str
 	ramps.append([Vector3(W * 0.5, -OVERHANG, z), Vector3(W * 0.5, top, z + top + OVERHANG), L])
 	ramps.append([Vector3(W * 0.5, D + OVERHANG, z), Vector3(W * 0.5, top, z + top + OVERHANG), L])
 
+## a dormer over a knee-wall bay: the roof is cleared where it stands (with the eave in front of its window), then the
+## dormer, its glazing and its shutters are set in
+static func _dormer(rf: Dictionary, bo: Vector3i, d: Vector2i, face: String) -> void:
+	var n := _left(d)
+	for lx in range(1, BAY):
+		for ly in range(-OVERHANG - 1, 14):
+			for lz in range(8, 32): rf.erase(_cell(bo, d, lx, ly, lz))
+	_stamp(rf, "dormer_12", bo, d)
+	_stamp(rf, "window_leaded", bo + Vector3i(d.x, d.y, 0) * WIN[0] + Vector3i(n.x, n.y, WIN[2]), d)
+	if face == "dry": _stamp(rf, "shutters", bo + Vector3i(d.x, d.y, 0) * (WIN[0] - 4) - Vector3i(n.x, n.y, -WIN[2]), d)
+
+## a window in both gables at depth y (voxels from the front), 1.3 to 2.3 m over the top floor's knee wall
+static func _gable_window(rf: Dictionary, W: int, D: int, z: int, y: int, face: String) -> void:
+	for side in [[Vector3i(0, y + 4, z + 1), Vector2i(0, -1)], [Vector3i(W, y - 4, z + 1), Vector2i(0, 1)]]:
+		var o: Vector3i = side[0]; var d: Vector2i = side[1]
+		for lx in range(0, 8):
+			for ly in range(0, WALL):
+				for lz in range(0, 10): rf.erase(_cell(o, d, lx, ly, lz))
+		_stamp(rf, "window_leaded", o + Vector3i(_left(d).x, _left(d).y, 0), d)
+		for lx in range(-1, 9):
+			for ly in range(0, WALL):
+				rf[_cell(o, d, lx, ly, 10)] = Color8(52, 44, 38); rf[_cell(o, d, lx, ly, 11)] = Color8(70, 60, 50)   # a timber lintel
+
 # ---------------------------------------------------------------- doors
-static func _door(bo: Vector3i, d: Vector2i, swing := 1) -> Node3D:
+static func _door(bo: Vector3i, d: Vector2i, swing := 1, leaf := "door_leaf") -> Node3D:
 	var n := _left(d)
 	var hinge := Vector3(bo) + Vector3(d.x, d.y, 0) * DOOR[0] + Vector3(n.x, n.y, 0) * 1
 	var dg := Vector3(d.x, 0, -d.y); var ng := Vector3(n.x, 0, -n.y)
-	var door := KitDoor.new(); door.name = "Door"; door.leaf_mesh = _meshes["door_leaf"]; door.swing_sign = swing
+	var door := KitDoor.new(); door.name = "Door"; door.leaf_mesh = _meshes[leaf]; door.swing_sign = swing
 	door.transform = Transform3D(Basis(dg, Vector3.UP, -ng), _g(hinge))
 	return door
