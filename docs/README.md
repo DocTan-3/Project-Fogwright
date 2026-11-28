@@ -5,6 +5,8 @@ The written side of Fogwright, kept here so anyone with access to the repository
 | File | What it is |
 | --- | --- |
 | [lore.md](lore.md) | The world: the three ages, the gods, magic, the peoples, regions and cities, open questions |
+| [lore-proposals.md](lore-proposals.md) | Proposals to fill in the lore: the truth of the ages, why the gods fade, the Fog, factions, calendar, the story in acts |
+| [mechanics-proposals.md](mechanics-proposals.md) | Proposals for systems that follow the lore: claiming, gods' magic, Grace, the Fog, freeholds, trade, death |
 | [design.md](design.md) | The game design document: pillars, systems, progression and the roadmap |
 | [devlog.md](devlog.md) | The development log, newest entry first |
 | [references/](references/README.md) | The turnaround sheets and screenshots, and a list of the outside inspiration |
