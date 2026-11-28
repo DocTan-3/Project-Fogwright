@@ -862,7 +862,7 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
     'shortbow': ('back', 2, 'bow'), 'longbow': ('back', 2, 'bow'),
     'hand_crossbow': ('hip', 1, 'one_hand'), 'heavy_crossbow': ('back', 2, 'one_hand'),
     'shield': ('shield', 0, 'shield'), 'buckler': ('buckler', 0, 'shield'),
-    'wand': ('hip', 1, 'one_hand'), 'staff': ('back', 2, 'polearm'),
+    'wand': ('hip', 1, 'one_hand'), 'staff': ('back', 1, 'staff'),
 }
 def iron_shape(kind, floor):
     V = {}
@@ -876,10 +876,14 @@ def iron_shape(kind, floor):
         for dh in range(-3, 1):
             r = 2 if dh in (-3, 0) else 3
             b(-r + 1, r - 1, -r, r, h + dh, h + dh, 'iron_d')
-    def blade(h0, h1, hw, tip=6, fuller=True):     # a straight two-edged blade, its flat front to back
+    def blade(h0, h1, hw, tip=None, fuller=True):     # a straight two-edged blade, its flat front to back: thick down the
+        tip = tip or 3 * hw                             # middle, thinning to one-voxel edges, drawn out to a long point
         for h in range(h0, h1 + 1):
-            w_ = hw if h < h1 - tip else max(0, hw - (h - (h1 - tip)) * hw // tip)
-            b(-1, 1, -w_, w_, h, h, lambda u, w, hh: 'iron_d' if (fuller and w == 0 and hh < h1 - tip - 2 and u == 0) else ('iron_l' if abs(w) == w_ else 'iron'))
+            w_ = hw if h < h1 - tip else round(hw * (h1 - h) / tip)
+            for w in range(-w_, w_ + 1):
+                thick = abs(w) < max(1, w_ - 1) and h < h1 - 2
+                col = 'iron_d' if (fuller and w == 0 and h < h1 - tip - 2) else ('iron_l' if abs(w) == w_ else 'iron')
+                b(-1 if thick else 0, 1 if thick else 0, w, w, h, h, col)
     if kind in ('sword', 'dagger', 'greatsword'):
         g, bl, hw, gw = {'sword': (8, 80, 4, 10), 'dagger': (6, 34, 3, 6), 'greatsword': (16, 124, 5, 15)}[kind]
         b(-1, 1, -1, 1, -g, g, lambda u, w, h: 'leather_d' if h % 3 == 0 else 'leather')
@@ -888,17 +892,18 @@ def iron_shape(kind, floor):
         blade(g + 4, bl, hw)
     if kind == 'axe':
         haft(-12, 42)
-        for h in range(30, 44):         # a plain bearded bit
-            reach = 12 + max(0, 36 - h) // 2 if h < 36 else 12
-            b(-1, 1, -reach + 3, 3, h, h, lambda u, w, hh: 'iron_d' if w >= 2 else 'iron')
-            b(0, 0, -reach, -reach + 2, h, h, 'iron_l')
+        for h in range(28, 46):         # a bearded bit: thick at the eye, thinning to a flared one-voxel edge
+            reach = 11 + abs(h - 39) // 2 + (2 if h < 32 else 0)
+            b(-1, 1, -5, 3, h, h, lambda u, w, hh: 'iron_d' if w >= 2 else 'iron')
+            b(0, 0, -reach + 2, -6, h, h, 'iron'); b(0, 0, -reach, -reach + 1, h, h, 'iron_l')
         V[(2, 0, 37)] = V[(-2, 0, 37)] = 'iron_l'     # nail heads through the eye
     if kind == 'greataxe':
         haft(-60, 74, (-10, 10))
-        for h in range(54, 76):         # a double bit
-            reach = 16 + max(0, 6 - abs(h - 65)) // 2
-            b(-1, 1, -reach + 3, reach - 3, h, h, lambda u, w, hh: 'iron_d' if abs(w) <= 2 else 'iron')
-            b(0, 0, -reach, -reach + 2, h, h, 'iron_l'); b(0, 0, reach - 2, reach, h, h, 'iron_l')
+        for h in range(52, 78):         # a double bit, crescent edges flaring at the horns, one voxel thin
+            reach = 14 + abs(h - 65) // 2
+            b(-1, 1, -5, 5, h, h, lambda u, w, hh: 'iron_d' if abs(w) <= 2 else 'iron')
+            b(0, 0, -reach + 2, -6, h, h, 'iron'); b(0, 0, 6, reach - 2, h, h, 'iron')
+            b(0, 0, -reach, -reach + 1, h, h, 'iron_l'); b(0, 0, reach - 1, reach, h, h, 'iron_l')
         b(-2, 2, -2, 2, 75, 77, 'iron_d')
     if kind == 'mace':
         haft(-12, 34)
@@ -915,8 +920,8 @@ def iron_shape(kind, floor):
         for k in range(hl):              # the back spike, tapering
             r = max(0, 2 - k // 3)
             b(-r, r, 3 + k, 3 + k, top - r, top + r, 'iron')
-    if kind in ('spear', 'halberd', 'glaive', 'staff'):
-        haft(-70, 80 if kind != 'staff' else 84, (-8, 8))
+    if kind in ('spear', 'halberd', 'glaive'):
+        haft(-70, 80, (-8, 8))
     if kind == 'spear':                 # a leaf head and an iron socket
         b(-1, 1, -1, 1, 76, 82, 'iron_d')
         for h in range(83, 104):
@@ -933,12 +938,24 @@ def iron_shape(kind, floor):
         b(-1, 1, -1, 1, 76, 82, 'iron_d')
         for h in range(83, 118):
             bend = max(0, h - 104) // 3
-            b(-1, 1, -6 - bend, 1 - bend, h, h, lambda u, w, hh: 'iron_l' if w == -6 - bend else ('iron_d' if w == 1 - bend else 'iron'))
-    if kind == 'staff':                 # an ash staff with an iron-bound knot and a ring
-        b(-2, 2, -2, 2, 85, 92, lambda u, w, h: 'iron_d' if h in (85, 92) else 'ash_d')
-        for k in range(10):
-            u = round(5 * math.cos(k * math.pi / 5)); w = round(5 * math.sin(k * math.pi / 5)); V[(u, w, 89)] = 'iron_l'
-        b(-1, 1, -1, 1, -70, -66, 'iron_d')
+            b(-1, 1, -3 - bend, 1 - bend, h, h, lambda u, w, hh: 'iron_d' if w == 1 - bend else 'iron')     # the thick back
+            b(0, 0, -7 - bend, -4 - bend, h, h, lambda u, w, hh: 'iron_l' if w <= -6 - bend else 'iron')       # thinning to the edge
+    if kind == 'staff':                 # a walking staff, taller than its bearer: thick, knotted, an iron-shod foot
+        h0 = -min(floor, 60); h1 = h0 + 150
+        for h in range(h0, h1 + 1):
+            sway = round(math.sin(h / 23.0))                     # a gently crooked shaft
+            b(-2 + sway, 2 + sway, -2, 2, h, h, lambda u, w, hh: 'leather' if -8 <= hh <= 8 else ('ash_d' if hh % 17 == 0 else 'ash'))
+        for hn, du in ((h0 + 40, 3), (h0 + 95, -3), (h1 - 30, 3)):   # knots where twigs were cut
+            b(du, du + (1 if du > 0 else -1), -1, 1, hn, hn + 2, 'ash_d')
+        b(-2, 2, -2, 2, h0, h0 + 3, 'iron_d')                      # the iron-shod foot
+        top = h1; sw = round(math.sin(top / 23.0))
+        for h in range(top - 3, top + 9):                          # the gnarled head: a knot of root, leaning forward
+            r = 4 if h < top + 6 else 3
+            for u in range(-r, r + 1):
+                for w in range(-r - 2, r - 1):
+                    if u * u + (w + 1) ** 2 <= r * r + 1 and not (h > top + 5 and (u + w) % 3 == 0):
+                        V[(u + sw, w, h)] = 'wood_d' if h < top + 1 else 'wood'
+        b(-3 + sw, 3 + sw, -3, 3, top - 5, top - 4, 'iron')        # an iron band under the head
     if kind == 'wand':
         b(-1, 1, -1, 1, -6, 6, 'leather'); b(-1, 1, -1, 1, 7, 30, lambda u, w, h: 'ash_d' if h % 5 == 0 else 'ash')
         b(-1, 1, -1, 1, 31, 34, 'iron_l'); pommel(-7)
@@ -991,6 +1008,10 @@ def iron_item(kind):
             return P
         x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
         gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
+        if kind == 'staff':           # upright in the fist, its foot on the ground beside the bearer
+            V = iron_shape(kind, gz - 3)
+            P['weapon@hand_r#2'] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
+            return P
         V = iron_shape(kind, 52 if stance == 'polearm' else gz - 2)
         P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
         return P

@@ -27,6 +27,8 @@ const STANCES := {
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 	# the off hand: a shield or buckler held up on the forearm in front of the body; a bow held out level, upright
+	# a walking staff planted beside the bearer, the arm a little forward
+	"staff": {"arm_upper_r": Vector3(-8, 0, -4), "arm_lower_r": Vector3(-22, 0, 0)},
 	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
 	"bow": {"arm_upper_l": Vector3(-82, 0, -4), "arm_lower_l": Vector3(-4, 0, 0), "arm_upper_r": Vector3(-40, 0, 8), "arm_lower_r": Vector3(-60, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
@@ -63,6 +65,16 @@ static func _aim(root: Node3D) -> void:
 			var low := INF
 			for k in 8: low = minf(low, bb.get_endpoint(k).y)
 			if low >= POLE_CLEAR: break
+		hand.set_meta("rest", hand.rotation_degrees)
+
+## a walking staff stands upright whatever the arm does: the wrist turns the hand the least it must
+static func _upright(root: Node3D) -> void:
+	for node in root.find_children("weapon*", "Node3D", true, false):
+		if not String(node.get_meta("piece", "")).ends_with("@hand_r"): continue
+		var hand := node.get_parent() as Node3D
+		var arm := _to_root(hand.get_parent(), root)
+		var now: Basis = arm.basis * hand.basis
+		hand.basis = arm.basis.inverse() * (Basis(Quaternion((now * Vector3.UP).normalized(), Vector3.UP)) * now)
 		hand.set_meta("rest", hand.rotation_degrees)
 
 static func db() -> Dictionary:
@@ -112,6 +124,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 			if st.has(String(node.name)):
 				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
 		if "polearm" in kinds: _aim(root)
+		if "staff" in kinds: _upright(root)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue
 		var bare := String(node.get_meta("piece")).get_slice("@", 0)
