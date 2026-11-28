@@ -273,3 +273,18 @@ static func check(path: String, kind: String, size := CHAR) -> String:
 		var m: Dictionary = f.models[sh.model]; lo = minf(lo, sh.offset.z); hi = maxf(hi, sh.offset.z + m.size.z)
 	var h := (hi - lo) * size; var r: Array = REAL.get(kind, [0.0, INF])
 	return "" if h >= r[0] and h <= r[1] else "%.2f m tall, a %s should be %.2f to %.2f m" % [h, kind, r[0], r[1]]
+
+## a voxel model exported from MagicaVoxel as .glb (packs such as Medieval Voxel Assets), ready to place: its palette
+## texture read pixel-exact (no blending between neighbouring palette colours, which washes them out) and matte, as
+## our own voxels are
+static func prop(path: String) -> Node3D:
+	var n: Node3D = (load(path) as PackedScene).instantiate()
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		for s in m.mesh.get_surface_count():
+			var src := m.get_active_material(s)
+			if not (src is StandardMaterial3D): continue
+			var mat: StandardMaterial3D = src.duplicate()
+			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST; mat.roughness = 1.0; mat.metallic_specular = 0.2
+			m.set_surface_override_material(s, mat)
+	return n
