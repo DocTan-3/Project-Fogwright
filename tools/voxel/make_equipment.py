@@ -1488,87 +1488,96 @@ def crossbow_tier(V, b, t):
     return V
 
 def pistol_shape(t):
-    """the pistol at tiers 1-5 (docs/weapons.md, Guns): its own frame, h forward along the barrel from the fist, w up
-    (the barrel above the fist, the grip down through it), u across (+u the right side, where the lock sits).
-    T1 a scrap pipe pistol with a smouldering match, T2 a flintlock, T3 a pepperbox, T4 a Ferrin steam pistol,
-    T5 an arcane pistol with a crystal cylinder"""
+    """the pistol at tiers 1-5 (docs/weapons.md, Guns): its own frame, h forward along the barrel, w up (the barrel
+    above, the grip down from it), u across (+u the right side, where the lock sits). iron_shape turns it so the grip
+    runs through the fist. T1 a scrap pipe pistol with a smouldering match, T2 a flintlock, T3 a pepperbox,
+    T4 a Ferrin steam pistol, T5 an arcane pistol with a crystal cylinder"""
+    import math
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
         for u in range(u0, u1 + 1):
             for w in range(w0, w1 + 1):
                 for h in range(h0, h1 + 1): V[(u, w, h)] = c(u, w, h) if callable(c) else c
-    def barrel(h0, h1, c, cd, r=1, wc=4, bands=(), bc=None):          # a round-ish barrel, its bore dark at the muzzle
+    WC = 5                                                             # the barrel's axis
+    def barrel(h0, h1, c, cd, r=2, bands=(), bc=None):                 # a round barrel, its bore dark at the muzzle
         for h in range(h0, h1 + 1):
             for u in range(-r, r + 1):
-                for w in range(wc - r, wc + r + 1):
-                    if r > 1 and abs(u) == r and abs(w - wc) == r: continue
+                for w in range(WC - r, WC + r + 1):
+                    if abs(u) == r and abs(w - WC) == r: continue
                     V[(u, w, h)] = bc if h in bands else (cd if (u + w + h) % 5 == 0 else c)
-        V[(0, wc, h1)] = 'black_d'
-    def grip(c, cd, top=2, bot=-7, lean=3, cap=None):                   # down through the fist, its butt swept back
+        b(-1, 1, WC - 1, WC + 1, h1, h1, 'black_d') if r >= 2 else None
+        V[(0, WC, h1)] = 'black_d'
+    def grip(c, cd, top=2, bot=-12, lean=4, cap=None):                 # down from the barrel, its butt swept back
         for w in range(bot, top + 1):
-            dh = (top - w) * lean // 9
-            b(-1, 1, w, w, -4 - dh, 1 - dh, lambda u, ww, h: cd if (h + ww) % 4 == 0 else c)
-        if cap: b(-2, 2, bot - 1, bot, -5 - (top - bot) * lean // 9, 2 - (top - bot) * lean // 9, cap)
+            dh = (top - w) * lean // 12
+            b(-1, 1, w, w, -6 - dh, 1 - dh, lambda u, ww, h: cd if (h + ww) % 4 == 0 else c)
+        if cap: b(-2, 2, bot - 1, bot, -7 - (top - bot) * lean // 12, 2 - (top - bot) * lean // 12, cap)
     def guard(c):                                                      # the trigger and its guard
-        for h in range(2, 8): V[(0, -2, h)] = c
-        V[(0, -1, 7)] = V[(0, 0, 7)] = c; V[(0, 1, 4)] = V[(0, 0, 4)] = 'iron_d'
+        for h in range(2, 10): V[(0, -3, h)] = c
+        for w in (-2, -1, 0, 1): V[(0, w, 10)] = c
+        V[(0, 1, 5)] = V[(0, 0, 5)] = V[(0, -1, 6)] = 'iron_d'
     if t == 1:      # a scrap pipe pistol: a pipe on a rough block, wire wraps, a match cord smouldering in its clamp
-        barrel(-2, 24, 'iron_d', 'rust' if 'rust' in MAT else 'iron', r=1, bands=(6, 14, 20), bc='iron_l')
-        b(-1, 1, 1, 2, -6, 10, 'wood_d')                                # the block it is lashed to
-        for h in (3, 9): b(-2, 2, 1, 5, h, h, lambda u, w, hh: 'cord' if abs(u) == 2 or w in (1, 5) else V.get((u, w, hh), 'cord'))
-        grip('wood', 'wood_d', top=1, bot=-6, lean=2)
+        barrel(-3, 32, 'iron_d', 'iron', bands=(8, 18, 27), bc='iron_l')
+        b(-1, 1, 1, 2, -8, 14, 'wood_d')                                # the block it is lashed to
+        for h in (4, 12):
+            for u in range(-3, 4):
+                for w in range(1, 9):
+                    if abs(u) == 3 or w in (1, 8): V[(u, w, h)] = 'cord'
+        grip('wood', 'wood_d', top=1, bot=-11, lean=3)
         guard('iron_d')
-        b(2, 2, 4, 7, -4, -3, 'iron_d'); V[(2, 8, -3)] = 'cord'; V[(2, 8, -2)] = 'glow'   # the match clamp
+        b(3, 3, 5, 9, -5, -4, 'iron_d'); V[(3, 10, -4)] = 'cord'; V[(3, 10, -3)] = 'glow'; V[(3, 11, -3)] = 'glow'
     if t == 2:      # a flintlock: a walnut stock under a steel barrel, brass furniture, the lock on the right
-        barrel(-3, 30, 'steel', 'steel_d', r=1, bands=(29, 30), bc='brass')
-        b(-1, 1, 2, 3, -6, 26, lambda u, w, h: 'wood_d' if h % 9 == 0 else 'wood')   # the fore-stock
-        grip('wood', 'wood_d', top=2, bot=-7, lean=4, cap='brass')
+        barrel(-4, 40, 'steel', 'steel_d', bands=(38, 39, 40), bc='brass')
+        b(-1, 1, 1, 3, -8, 34, lambda u, w, h: 'wood_d' if h % 9 == 0 else 'wood')   # the fore-stock
+        grip('wood', 'wood_d', top=2, bot=-12, lean=5, cap='brass')
         guard('brass')
-        b(2, 2, 2, 5, -4, 3, 'steel_d')                                 # the lock plate
-        b(3, 3, 5, 7, -3, -2, 'steel_l'); V[(3, 8, -1)] = 'iron_d'      # the cock with its flint
-        b(3, 3, 5, 6, 1, 2, 'steel')                                    # the frizzen
-        V[(2, 1, 20)] = V[(-2, 1, 20)] = 'brass'                        # a ramrod pipe
-        for h in range(4, 27): V[(0, 1, h)] = 'iron_d'
+        b(2, 2, 1, 6, -6, 4, lambda u, w, h: 'brass' if (w, h) in ((1, -6), (6, 4)) else 'steel_d')   # the lock plate
+        b(3, 3, 6, 9, -4, -3, 'steel_l'); V[(3, 10, -2)] = V[(3, 10, -1)] = 'iron_d'     # the cock and its flint
+        b(3, 3, 6, 8, 1, 2, 'steel'); V[(3, 6, 0)] = 'steel_d'           # frizzen and pan
+        for h in range(4, 35): V[(0, 0, h)] = 'iron_d'                  # the ramrod
+        V[(-2, 2, 24)] = V[(2, 2, 24)] = 'brass'
+        for h in (16, 30): b(-2, 2, 1, 3, h, h, lambda u, w, hh: 'brass' if abs(u) == 2 or w == 1 else V.get((u, w, hh), 'brass'))
     if t == 3:      # a pepperbox: six barrels round a spindle, a brass frame, a bar hammer on top
         for k in range(6):
-            import math
             a = k * math.pi / 3
-            du, dw = round(2.2 * math.cos(a)), round(2.2 * math.sin(a))
-            for h in range(2, 22): V[(du, 4 + dw, h)] = 'steel' if h % 6 else 'steel_l'
-            V[(du, 4 + dw, 22)] = 'black_d'
-        b(-1, 1, 3, 5, 2, 21, 'steel_d')                                # the spindle core
-        b(-3, 3, 1, 7, 1, 2, 'brass'); b(-3, 3, 1, 7, 12, 12, 'brass')  # frame rings
-        b(-1, 1, 1, 4, -5, 1, 'brass')                                  # the frame behind the barrels
-        for h in range(-5, 8): V[(0, 8, h)] = 'steel_d'                 # the bar hammer
-        b(-1, 1, 7, 8, -6, -5, 'steel_l')
-        grip('wood_d', 'black_d', top=1, bot=-8, lean=3, cap='brass')
-        for w in (-2, -5): V[(2, w, -4 - (1 - w) * 3 // 9)] = V[(-2, w, -4 - (1 - w) * 3 // 9)] = 'brass'
+            du, dw = round(2.6 * math.cos(a)), round(2.6 * math.sin(a))
+            b(du - (1 if du > 0 else 0), du + (1 if du < 0 else 0), WC + dw, WC + dw, 2, 28, lambda u, w, h: 'steel_l' if h % 7 == 0 else 'steel')
+            V[(du, WC + dw, 28)] = 'black_d'
+        b(-1, 1, WC - 1, WC + 1, 2, 27, 'steel_d')                      # the spindle core
+        for h in (1, 2, 15): b(-4, 4, WC - 4, WC + 4, h, h, lambda u, w, hh: 'brass' if u * u + (w - WC) ** 2 <= 17 else None)
+        for k in list(V):
+            if V[k] is None: del V[k]
+        b(-2, 2, 1, 6, -7, 0, 'brass')                                  # the frame behind the barrels
+        for h in range(-8, 10): V[(0, 10, h)] = 'steel_d'               # the bar hammer
+        b(-1, 1, 9, 10, -9, -8, 'steel_l')
+        grip('wood_d', 'black_d', top=1, bot=-12, lean=4, cap='brass')
+        for w in (-3, -8): V[(2, w, -5 - (1 - w) * 4 // 12)] = V[(-2, w, -5 - (1 - w) * 4 // 12)] = 'brass'
         guard('brass')
     if t == 4:      # a Ferrin steam pistol: a finned black barrel, a copper pressure tank below it, a gauge and a valve
-        barrel(-3, 32, 'black', 'black_d', r=1, bands=tuple(range(10, 26, 3)), bc='steel_l')
-        for h in range(10, 26, 3): b(-2, 2, 2, 6, h, h, lambda u, w, hh: 'steel_l' if max(abs(u), abs(w - 4)) == 2 else V.get((u, w, hh), 'black'))
-        for h in range(-2, 18): b(-1, 1, 0, 2, h, h, 'copper' if h % 5 else 'copper_d')   # the tank
-        b(-1, 1, 0, 2, 18, 19, 'brass')
-        for dw in range(-2, 3):
-            for dh in range(-2, 3):
-                if dw * dw + dh * dh <= 5: V[(2, 4 + dw, -1 + dh)] = 'brass' if dw * dw + dh * dh > 2 else 'glass_l'
-        V[(3, 4, -1)] = 'red'
-        b(-1, 1, 6, 7, -4, -2, 'brass'); V[(0, 8, -3)] = 'red'          # the valve wheel
-        V[(-2, 1, 8)] = V[(-2, 1, 9)] = 'potion'; V[(-2, 1, 10)] = 'glass_l'
-        grip('rubber', 'black', top=2, bot=-8, lean=3, cap='steel_d')
+        barrel(-4, 42, 'black', 'black_d', bands=tuple(range(12, 34, 3)), bc='steel_l')
+        for h in range(12, 34, 3): b(-3, 3, 2, 8, h, h, lambda u, w, hh: 'steel_l' if max(abs(u), abs(w - WC)) == 3 else V.get((u, w, hh), 'black'))
+        for h in range(-2, 24): b(-2, 2, -1, 2, h, h, lambda u, w, hh: 'copper_d' if hh % 6 == 0 else ('copper' if abs(u) + abs(w - 0.5) < 4 else 'copper_d'))   # the tank
+        b(-2, 2, -1, 2, 24, 25, 'brass')
+        for dw in range(-3, 4):
+            for dh in range(-3, 4):
+                if dw * dw + dh * dh <= 10: V[(3, WC + dw, -1 + dh)] = 'brass' if dw * dw + dh * dh > 5 else 'glass_l'
+        V[(4, WC, -1)] = V[(4, WC + 1, 0)] = 'red'
+        b(-1, 1, 8, 9, -6, -3, 'brass'); V[(0, 10, -5)] = V[(0, 10, -4)] = 'red'   # the valve wheel
+        for dh in range(3): V[(-3, 0, 10 + dh)] = 'potion' if dh < 2 else 'glass_l'
+        grip('rubber', 'black', top=2, bot=-12, lean=4, cap='steel_d')
         guard('steel_l')
     if t == 5:      # an arcane pistol: a blued barrel with gilt bands and glowing runes, a crystal cylinder, a gilt grip
-        barrel(-3, 30, 'blued', 'blued_d', r=1, bands=(0, 12, 24, 30), bc='gilt')
-        for h in range(3, 29, 3): V[(0, 6, h)] = 'arc'
-        for h in range(-2, 4):
-            for u in range(-2, 3):
-                for w in range(2, 7):
-                    if (u * u + (w - 4) ** 2) <= 5: V[(u, w, h)] = 'arc' if (u + w + h) % 3 else 'arc_d'
-        b(-1, 1, 0, 2, -4, 26, lambda u, w, h: 'gilt' if h % 6 == 0 else 'blued_d')
-        grip('blued_d', 'gilt', top=2, bot=-8, lean=4, cap='gilt')
-        for k in range(3): r = 1 if k < 2 else 0; b(-r, r, -10 - k, -10 - k, -7 - r, -7 + r, 'arc' if k < 2 else 'arc_d')
+        barrel(-4, 40, 'blued', 'blued_d', bands=(0, 14, 28, 39, 40), bc='gilt')
+        for h in range(4, 38, 3): V[(0, WC + 2, h)] = 'arc'; V[(2, WC, h + 1)] = V[(-2, WC, h + 1)] = 'arc'
+        for h in range(-3, 6):
+            for u in range(-3, 4):
+                for w in range(WC - 3, WC + 4):
+                    if u * u + (w - WC) ** 2 <= 10: V[(u, w, h)] = 'arc' if (u + w + h) % 3 else 'arc_d'
+        b(-1, 1, 1, 2, -6, 34, lambda u, w, h: 'gilt' if h % 6 == 0 else 'blued_d')
+        grip('blued_d', 'gilt', top=2, bot=-12, lean=5, cap='gilt')
+        for k in range(4): r = 1 if k < 2 else 0; b(-r, r, -14 - k, -14 - k, -12 - r, -12 + r, 'arc' if k < 3 else 'arc_d')
         guard('gilt')
-        V[(0, 4, 31)] = V[(0, 4, 32)] = 'arc'
+        for dh in (41, 42): V[(0, WC, dh)] = 'arc'
     return V
 
 def iron_shape(kind, floor, tier=1):
@@ -1591,8 +1600,10 @@ def iron_shape(kind, floor, tier=1):
                 thick = abs(w) < max(1, w_ - 1) and h < h1 - 2
                 col = 'iron_d' if (fuller and w == 0 and h < h1 - tip - 2) else ('iron_l' if abs(w) == w_ else 'iron')
                 b(-1 if thick else 0, 1 if thick else 0, w, w, h, h, col)
-    if kind == 'pistol':
-        V.update(pistol_shape(tier)); return V
+    if kind == 'pistol':                # in the hand the grip runs through the fist (along h), the muzzle down (-w)
+        P_ = pistol_shape(tier)
+        if floor == 999: V.update(P_); return V
+        V.update({(u, -h, w + 6): c for (u, w, h), c in P_.items()}); return V
     if kind in BLADES and tier > 1:
         blade_tier(V, b, tier, kind)
     elif kind in AXES and tier > 1:

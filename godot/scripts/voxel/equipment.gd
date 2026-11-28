@@ -26,8 +26,8 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
-	# a pistol held low at the side, its muzzle forward and a little down
-	"pistol": {"arm_upper_r": Vector3(-4, 0, 4), "arm_lower_r": Vector3(-14, 0, 0), "leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
+	# a pistol held low at the side, the grip through the fist and the muzzle down at the ground
+	"pistol": {"arm_upper_r": Vector3(-6, 0, 4), "arm_lower_r": Vector3(-22, 0, 0), "leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 	# a crossbow at rest in both hands (Doc Tan's references): the right fist at the grip before the right hip, the
 	# stock level and pointing across toward the left, the left hand under the fore-stock (aimed in _hold_crossbow)
 	"crossbow": {"arm_upper_r": Vector3(-14, 0, 0), "arm_lower_r": Vector3(-48, 0, 0), "arm_upper_l": Vector3(-30, 0, -4), "arm_lower_l": Vector3(-18, 0, 0),
@@ -202,7 +202,6 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 		if "polearm" in kinds: _aim(root)
 		if "bow" in kinds: _rest_bow(root)
 		if "crossbow" in kinds: _hold_crossbow(root)
-		if "pistol" in kinds: _hold_crossbow(root, true)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue
 		var bare := String(node.get_meta("piece")).get_slice("@", 0)
