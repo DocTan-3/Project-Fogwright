@@ -342,6 +342,8 @@ The moons are lore and sky only: they do not change play *(decided 2026-11-28)*.
 
 - [x] What is playable: **the main continent at launch**; the other homelands open later by ship. Three godless frontier regions fill it: the Greying Coast, the Old Front and Ostrevan *(decided 2026-11-28)*. Gods whose homelands are not yet playable are reached through **shrines in their people's quarters of Aldrath**. A Sennari warp-hall valley (the Doorless Vale) waits for a later update.
 
+- [x] The main continent's places, waters, settlements, ruins, bandit holds (including **the Unlit**) and their history: adopted for now from lore-proposals.md, *The main continent: places and history*, with the map in `docs/references/main-continent-map.png` *(2026-11-28; working names, open to revision)*.
+
 - [x] Final names for the gods and peoples: keep the working names for now *(decided 2026-11-28)*; a naming pass comes later.
 - [x] The Hrimfolk name for the Shard: **the Godscar**. (Moon names among the Ruadhan, Ferrin and others are drafted in lore-proposals.md.)
 - [x] Which god each people belongs to: answered by the table of the twelve. (Naming styles per people are in characters.md.)

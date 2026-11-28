@@ -381,7 +381,7 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 
 lore.md's open questions were answered on 2026-11-28 and merged there.
 
-## The main continent: places and history (proposal, 2026-11-28)
+## The main continent: places and history (adopted for now, 2026-11-28)
 
 A Skyrim-style spread of named places for the playable main continent (about 20 km across), each with its history.
 All names are working names. Map: `docs/references/main-continent-map.png`.
