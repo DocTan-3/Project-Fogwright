@@ -33,6 +33,8 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
   a downed state anyone can revive.
 - **Freeholds (decided):** dropped for now as a player feature, with settlers and the base event director. Homes are
   the warp space. Freeholds remain in the lore as falling frontier villages.
+- **Ammunition slot (decided):** bows need a quiver, crossbows a bolt quiver, guns bullet pouches. Each takes an
+  ammunition slot at the back of the belt, so backpack items can still be worn.
 
 ## Core mechanics (decided 2026-11-28)
 

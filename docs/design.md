@@ -547,7 +547,8 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 | Waist | Belts, tool belts, belt stacks, sashes; each belt has sockets (hips and back) for pouches, tools, weapons and, later, relics | From the start; sockets unlock with progress |
 | Legs | Light (reinforced trousers, chaps) to heavy (greaves, plate legs, armoured skirts) | From the start |
 | Feet | Boots; they replace wardrobe shoes | From the start |
-| Back | Utility items: jetpack, boiler, glider frame, canister pack, Fog lantern, packs, quivers, cloaks, back arms | Skill-gated: what you can wear depends on your skills |
+| Ammunition *(decided 2026-11-28)* | Quivers for bows, bolt quivers for crossbows, bullet pouches for guns; worn at the **back of the belt**, so back items can still be worn | From the start |
+| Back | Utility items: jetpack, boiler, glider frame, canister pack, Fog lantern, packs, cloaks, back arms | Skill-gated: what you can wear depends on your skills |
 | Trinkets | Two rings and a necklace; not shown on the character for now | From the start |
 | Main and off hand | Weapons and tools, held or carried on the body | From the start |
 | Rig | A powered suit you climb into; it replaces the body rather than being worn | Arcane engine era |
