@@ -363,13 +363,15 @@ KINDS={'bench':{'front','square','yard','garden','grass','beach'},'barrel':{'fro
  'notice post':{'square','front'},'torch':{'wall'},'bell frame':{'front','grass','yard'},'anvil':{'workshop'},
  'quench trough':{'workshop'},'grindstone':{'workshop'},'charcoal':{'workshop','yard'},'candles':{'front'},
  'sacks':{'yard','front','beach','pier'},'chopping block':{'workshop','yard'},'manure heap':{'yard'},'drying rack':{'beach','grass'},'hen coop':{'yard','garden'},
- 'boat hull':{'workshop','beach','yard'}}
+ 'boat hull':{'workshop','beach','yard'},'smithy door':{'workshop','wall'},
+ 'bellows':{'workshop','indoor'},'bench vise':{'workshop','indoor'},'chest':{'workshop','indoor'},'coal bin':{'workshop','indoor'},'forge':{'workshop','indoor'},'keg':{'workshop','indoor'},'old blade':{'workshop','indoor'},'slack tub':{'workshop','indoor'},'smith goods':{'workshop','indoor'},'stock rack':{'workshop','indoor'},'swage block':{'workshop','indoor'},'tool rack':{'workshop','indoor'}}
 COL={'bench':(120,84,50),'barrel':(140,96,56),'crate':(176,140,90),'woodpile':(120,86,52),'washing line':(240,240,230),
  'well':(130,150,170),'fruit tree':(70,120,60),'flower bed':(214,120,150),'lamp':(250,210,120),'sign':(200,160,90),
  'trough':(100,130,150),'cart':(150,110,70),'net rack':(200,200,180),'lobster pots':(150,110,80),'gutting table':(170,150,120),
  'scarecrow':(150,110,60),'haystack':(214,190,110),'notice post':(160,120,80),'torch':(250,160,60),'bell frame':(90,80,70),
  'anvil':(60,60,64),'quench trough':(100,130,150),'grindstone':(170,166,158),'charcoal':(40,36,34),'candles':(250,230,170),
- 'sacks':(214,200,170),'chopping block':(110,80,50),'manure heap':(110,90,60),'drying rack':(190,180,150),'hen coop':(160,120,80),'boat hull':(130,92,56)}
+ 'sacks':(214,200,170),'chopping block':(110,80,50),'manure heap':(110,90,60),'drying rack':(190,180,150),'hen coop':(160,120,80),'boat hull':(130,92,56),'smithy door':(110,80,50),
+ 'bellows':(90,80,74),'bench vise':(90,80,74),'chest':(90,80,74),'coal bin':(90,80,74),'forge':(90,80,74),'keg':(90,80,74),'old blade':(90,80,74),'slack tub':(90,80,74),'smith goods':(90,80,74),'stock rack':(90,80,74),'swage block':(90,80,74),'tool rack':(90,80,74)}
 # Farhallow's own props (map coordinates)
 VILLAGE=[(64+7.4*math.cos(2.75),50+7.4*math.sin(2.75),1.05,0.4,0.0,'notice post',"the harbour master's notices: when the trader's ship is due"),
  (69.0,43.4,1.6,0.5,0.4,'bench','old folk sitting by the well'),
@@ -381,16 +383,20 @@ VILLAGE=[(64+7.4*math.cos(2.75),50+7.4*math.sin(2.75),1.05,0.4,0.0,'notice post'
  (87.5,92,1.2,1.2,0.0,'lobster pots','pots stacked on the pier'),(88.4,84,1.0,1.0,0.0,'barrel','barrels being rolled to the boats'),
  (100.5,99.0,1.6,1.2,0.0,'crate',"cargo waiting for the trader's ship (the last ship)")]
 DOODADS=[]   # (x, y, w, h, angle, kind, purpose, owner index or -1)
+SPIN={}      # doodad index -> its own turn (degrees) on top of its building's
 for k in range(len(placed)):
     ty=TYPES[PTYPE[k]]; a_=placed[k][4]
-    for u,v,w_,h_,kind,why in ty['doodads']:
+    for dd_ in ty['doodads']:
+        u,v,w_,h_,kind,why=dd_[:6]
         DOODADS.append(room_geo(k,(u,v,w_,h_))+(kind,why,k))
+        if len(dd_)>6: SPIN[len(DOODADS)-1]=dd_[6]   # faced by hand (degrees): its spot is already its footprint
     plot=[pl for pl in PLOTS if pl[0]==k]
     if plot and ty['plot']:
         dep=plot[0][5]; px=ty['plot'][0]
         for u,v,w_,h_,kind,why in ty['plot_doodads']:
             if v+h_<=dep-0.3: DOODADS.append(room_geo(k,(px+u,placed[k][3]+v,w_,h_))+(kind,why,k))
 DOODADS+=[t_+(-1,) for t_ in VILLAGE]
+AGAINST_WALL={'forge','bellows','coal bin','tool rack','bench vise','stock rack','smith goods','chest','keg','grindstone','woodpile','hen coop'}
 FACE_USERS={'notice post','bench'}   # read or sat on: turned to face where people stand
 for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     if k<0 and kind in FACE_USERS and math.hypot(x-64,y-50)<10:
@@ -402,10 +408,11 @@ import json as _json, os as _os
 _GD=_os.path.join(_os.path.dirname(_os.path.abspath(__file__)),'..','..','godot','data')
 MODELS=_json.load(open(_os.path.join(_GD,'doodad_models.json'))); SIZES=_json.load(open(_os.path.join(_GD,'model_sizes.json')))
 LOOSE={'fruit tree','flower bed'}   # canopies and flowers may spill over their spot
-MOUNTED={'lamp','sign','candles','torch'}   # hung on a wall or post: only where they hang matters, and they block nothing
+MOUNTED={'lamp','sign','candles','torch','old blade'}   # hung on a wall or post: only where they hang matters, and they block nothing
 TURN={}
 for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     m=MODELS[kind]; sz=SIZES[m['model']]; mw,mh=sz[0]*m['scale'],sz[1]*m['scale']
+    if i in SPIN: TURN[i]=False; continue   # faced by hand; its spot already is its footprint
     turn=(mw>=mh)!=(w_>=h_) and kind not in MOUNTED   # hung things keep their own facing (a lamp's arm points out from its wall)
     if turn: mw,mh=mh,mw
     TURN[i]=turn
@@ -447,7 +454,6 @@ def ground(p):   # what a point stands on
         if any(segd(p,p0,p1)<cl for p0,p1 in zip(lp,lp[1:])): return 'wall'   # within the wall's own width
     if inside(p,beach+[(140,110),(52,110)]): return 'beach'
     return 'grass'
-MOUNTED={'lamp','sign','candles','torch'}   # hung on a wall or post: only where they hang matters, and they block nothing
 dproblems=[]
 alldoors=[(k,dp) for k in range(len(placed)) for dp in street_doors(k)]
 for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
@@ -457,6 +463,7 @@ for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
     gs={ground(q) for q in ([(x,y)] if kind in MOUNTED else pts)}
     if kind in MOUNTED: gs-={'path'}   # hung up high on a wall or post: a path may run beneath it
     bad=gs-KINDS[kind]
+    # (a wall runs 31 cm into its room from its line: anything against it stands 36 cm in, outside the 35 cm wall zone)
     if 'path' in bad: dproblems.append('%s at (%.0f,%.0f) blocks a path'%(nm,x,y)); bad-= {'path'}        # 3. blocks a path?
     if bad: dproblems.append('%s at (%.0f,%.0f) stands on %s'%(nm,x,y,'/'.join(sorted(bad))))              # 2. ground that makes sense?
     if kind not in MOUNTED and any(math.hypot(q[0]-64,q[1]-50)<8.2-1.5 for q in pts):                       # 3. in the square's walkway?
@@ -465,6 +472,7 @@ for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS):
         if kind not in MOUNTED and (any(math.hypot(q[0]-dp[0],q[1]-dp[1])<1.0 for q in pts) or math.hypot(x-dp[0],y-dp[1])<1.8): dproblems.append('%s at (%.0f,%.0f) blocks a door'%(nm,x,y))
     for j in range(i+1,len(DOODADS)):
         o=DOODADS[j]
+        if (kind in MOUNTED)!=(o[5] in MOUNTED): continue   # one hangs high on a wall, the other stands on the floor below
         if overlap(corners(x,y,w_,h_,a_),corners(*o[:5]),0.1): dproblems.append('%s overlaps %s'%(nm,o[5]))
 print('\n'.join(dproblems) or 'doodads: %d placed, each with a purpose, on fitting ground, blocking nothing'%len(DOODADS))
 for k,dp,q,ln in SPURS:
@@ -588,7 +596,7 @@ data={'buildings':[dict(type=PTYPE[k],mirror=PMIR[k],x=b_[0],y=b_[1],w=b_[2],h=b
       'lanes':[dict(name=nm,pts=[list(q) for q in pts],width=w) for pts,w,nm in LANES],
       'spurs':[dict(owner=k,door=list(dp),to=list(q),street=ln) for k,dp,q,ln in SPURS],
       'trails':[dict(pts=[list(q) for q in lp],width=w,purpose=why) for lp,w,why in TRAILS],
-      'doodads':[dict(kind=kind,x=x,y=y,w=w_,h=h_,a=a_,turn=TURN[i],purpose=why,owner=k,mounted=kind in MOUNTED) for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS)],
+      'doodads':[dict(kind=kind,x=x,y=y,w=w_,h=h_,a=a_,turn=TURN[i],spin=SPIN.get(i,0),purpose=why,owner=k,mounted=kind in MOUNTED) for i,(x,y,w_,h_,a_,kind,why,k) in enumerate(DOODADS)],
       'waystone':dict(x=WAYSTONE[0],y=WAYSTONE[1],a=WAYSTONE[4]),'square':dict(x=64,y=50,r=8.2),
       'rects':[dict(name=rn,x0=r[0],y0=r[1],x1=r[2],y1=r[3]) for r,rn in RECTS],
       'walls':[dict(name=ln,pts=[list(q) for q in lp]) for lp,cl,ln in LINES],

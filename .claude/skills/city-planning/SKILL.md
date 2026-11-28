@@ -143,9 +143,27 @@ its spot. Props keep 35 cm inside any room, yard or garden edge (the wall or fen
 open boat has bottom boards (a plank floor) just above its waterline and floats at that waterline; check a close look
 down into each boat before committing.
 
+**Everything built is collision-checked, not just props:** fences, yard and garden walls and gates too (against
+buildings and props; fence pieces may overlap each other at their joins). Where a fence meets a building it stops short
+of the wall's thickness and its corner post (0.5 m). Prove a new check by running it on the old, broken placement first
+and seeing it fail.
+
 **Collision check in 3D:** the game's checker asks the physics world, for every prop, whether its real box reaches into
 any wall, fence, roof or other prop (`CLIP` problems). It catches what a plan cannot see: a model that hangs below its
 base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the plan or the model, never the check.
+
+## How Skyrim does it (docs/research/skyrim-scenes.md)
+
+- **Fix the human metrics first**: person 1.8 m, door 1.2 x 2.4 m, narrowest path 1.6 m, walkable slope 30 degrees,
+  storey 3.1 m, 2 m kit module. Every building type and path is checked against them.
+- **Buildings at real size**, each a space you could walk into even if it stays closed; few large buildings rather than
+  many small ones.
+- **A building's lot** is its walls plus foundation, porch or deck, steps and roof overhang; lots stay 4 m apart; every
+  building rests on its ground (floor above the highest point, foundation down to the lowest, steps at raised doors).
+- **Repetition is hidden by dressing, light and mixing**, not new architecture: players notice repeated clutter first.
+  Dress each house for its owner; vary it by the culture's rules; one quirk per building type.
+- **Test a building kit before dressing it**: proof in blocks, loop and stack tests, no patch-up pieces; finish one
+  piece fully before its variants.
 
 ## Lessons from play (standing rules)
 
@@ -157,12 +175,24 @@ base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the p
   never passes under a wall.
 - **One door, one piece:** each wall line is cut round its openings, so every door gets one wall piece centred on it
   with its frame; gates, archways and open fronts are gaps exactly their width. Never two door leaves for one door.
+- **Every door must be needed.** A floorplan door is redundant if, without it, its two spaces are still joined by a
+  walk at most 8 m longer; `wayfolk_plans.py` checks every type and must report none. No room has two doors to the
+  same place side by side, and an "open front" is really an opening with doors (a smithy's big double doors, standing
+  open by day), not a missing wall.
 - **Buildings are whole:** partition walls between rooms (with the floorplan's inner doors), floors in every room (boards,
   flags, packed earth in yards), floors between storeys. The roof check sends a ray down through every roofed room and
   it must meet a roof piece; know which kit pieces are not whole roofs (the kit's 6x4 is a single slope).
 - **Props for people face the people and keep out of their way:** in a square or any open ground people cross, props
   stand within 1.5 m of its rim; notice boards and benches face where people stand. Hung things (lamps, signs) keep
   their own facing, arms out from the wall.
+- **Interiors only where the game needs them.** Most buildings are closed shells with shut doors, as in any MMO: no
+  partitions, floors or furniture inside (unneeded work and frame rate). A building type gets `interior=True` only when
+  the story or play opens it (Farhallow: the smithy for beat B, the open-fronted boat shed).
+- **Research an interior before building it.** Find out what the real place has and how it is laid out, with sources,
+  in `docs/research/<place>.md` (see `smithy.md`): every piece of equipment, where it stands and why (the smith's forge
+  against a wall with its hood and chimney, bellows beside it, anvil a step from the fire, slack tub between, racks and
+  benches round the walls, an earth floor against sparks, few windows). Model what the kit lacks, place each piece by
+  that reasoning (against-wall pieces may touch a wall, never pass it), and light it as the real place is lit.
 - **Real sizes against a real person:** check props against the 1.8 m villager (a well's roof is above head height, a
   bench is knee-high); fences, walls and gates sit on the drawn ground under them.
 - **Every edge is dressed:** palisades textured with sharpened stakes, trees 3 m back from them, haze from 30 m out so

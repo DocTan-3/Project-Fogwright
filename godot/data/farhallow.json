@@ -1137,6 +1137,7 @@
    "h": 0.3204,
    "a": 1.4288992721907328,
    "turn": false,
+   "spin": 0,
    "purpose": "drinkers sitting out front",
    "owner": 0,
    "mounted": false
@@ -1149,6 +1150,7 @@
    "h": 0.3,
    "a": 1.4288992721907328,
    "turn": false,
+   "spin": 0,
    "purpose": "the Gull & Lantern sign on its bracket",
    "owner": 0,
    "mounted": true
@@ -1161,6 +1163,7 @@
    "h": 0.4,
    "a": 1.4288992721907328,
    "turn": false,
+   "spin": 0,
    "purpose": "the lantern by the inn door",
    "owner": 0,
    "mounted": true
@@ -1173,6 +1176,7 @@
    "h": 0.8,
    "a": 1.4288992721907328,
    "turn": false,
+   "spin": 0,
    "purpose": "water for horses in the coach yard",
    "owner": 0,
    "mounted": false
@@ -1185,6 +1189,7 @@
    "h": 0.698,
    "a": 1.4288992721907328,
    "turn": false,
+   "spin": 0,
    "purpose": "ale barrels by the cellar",
    "owner": 0,
    "mounted": false
@@ -1197,6 +1202,7 @@
    "h": 0.4,
    "a": 2.543173760111256,
    "turn": false,
+   "spin": 0,
    "purpose": "a brass lamp by the front door",
    "owner": 1,
    "mounted": true
@@ -1209,6 +1215,7 @@
    "h": 1.7985,
    "a": 2.543173760111256,
    "turn": false,
+   "spin": 0,
    "purpose": "their own well",
    "owner": 1,
    "mounted": false
@@ -1221,6 +1228,7 @@
    "h": 1.2,
    "a": 2.543173760111256,
    "turn": false,
+   "spin": 0,
    "purpose": "a garden for show",
    "owner": 1,
    "mounted": false
@@ -1233,6 +1241,7 @@
    "h": 2.2,
    "a": 2.543173760111256,
    "turn": false,
+   "spin": 0,
    "purpose": "pears",
    "owner": 1,
    "mounted": false
@@ -1245,6 +1254,7 @@
    "h": 0.3204,
    "a": 2.543173760111256,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting in the garden",
    "owner": 1,
    "mounted": false
@@ -1257,6 +1267,7 @@
    "h": 0.4,
    "a": 2.7069224384405484,
    "turn": false,
+   "spin": 0,
    "purpose": "a brass lamp by the front door: the well-off light their doors",
    "owner": 2,
    "mounted": true
@@ -1269,6 +1280,7 @@
    "h": 1.7985,
    "a": 2.7069224384405484,
    "turn": false,
+   "spin": 0,
    "purpose": "their own well",
    "owner": 2,
    "mounted": false
@@ -1281,6 +1293,7 @@
    "h": 1.2,
    "a": 2.7069224384405484,
    "turn": false,
+   "spin": 0,
    "purpose": "a garden for show",
    "owner": 2,
    "mounted": false
@@ -1293,6 +1306,7 @@
    "h": 2.2,
    "a": 2.7069224384405484,
    "turn": false,
+   "spin": 0,
    "purpose": "apples",
    "owner": 2,
    "mounted": false
@@ -1305,6 +1319,7 @@
    "h": 0.3204,
    "a": 2.7069224384405484,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting in the garden",
    "owner": 2,
    "mounted": false
@@ -1317,43 +1332,216 @@
    "h": 0.5,
    "a": -2.58,
    "turn": false,
+   "spin": 0,
    "purpose": "candles and offerings at the door",
    "owner": 3,
    "mounted": true
   },
   {
-   "kind": "anvil",
-   "x": 84.02045814642447,
-   "y": 62.10086219713516,
-   "w": 1.082,
-   "h": 0.402,
+   "kind": "forge",
+   "x": 85.5018468530103,
+   "y": 63.99944390462104,
+   "w": 1.5,
+   "h": 1.65,
    "a": 3.9269908169872414,
    "turn": false,
-   "purpose": "the smith works here",
+   "spin": 90,
+   "purpose": "the forge: hearth against the side wall, hood and chimney up through the roof",
    "owner": 4,
    "mounted": false
   },
   {
-   "kind": "quench trough",
-   "x": 84.16187950266179,
-   "y": 59.6966991411009,
-   "w": 1.4,
-   "h": 0.64,
+   "kind": "bellows",
+   "x": 86.89131167804187,
+   "y": 62.885750724252226,
+   "w": 1.11,
+   "h": 1.61,
    "a": 3.9269908169872414,
    "turn": false,
-   "purpose": "quenching hot iron",
+   "spin": 180,
+   "purpose": "the great bellows behind the forge, their nozzle in its fire",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "coal bin",
+   "x": 84.97151676712039,
+   "y": 65.16617009357884,
+   "w": 0.6,
+   "h": 0.55,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 90,
+   "purpose": "charcoal for the forge, at its front end",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "slack tub",
+   "x": 85.20839753881789,
+   "y": 62.42613131648097,
+   "w": 0.86,
+   "h": 0.82,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 0,
+   "purpose": "water for quenching, by the forge and the anvil",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "anvil",
+   "x": 84.37401153701776,
+   "y": 62.8079689783217,
+   "w": 0.75,
+   "h": 0.65,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 90,
+   "purpose": "the anvil on its stump, a step from the fire",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "tool rack",
+   "x": 86.67210857587405,
+   "y": 61.52810570437405,
+   "w": 0.9,
+   "h": 0.12,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 180,
+   "purpose": "tongs and hammers, racked by the forge",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "swage block",
+   "x": 84.37401153701776,
+   "y": 61.11091270347399,
+   "w": 0.84,
+   "h": 0.55,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 0,
+   "purpose": "the swage block and mandrel",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "bench vise",
+   "x": 84.57553696965593,
+   "y": 60.0325748621645,
+   "w": 1.9,
+   "h": 0.97,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 180,
+   "purpose": "the bench and leg vise for filing and bending",
    "owner": 4,
    "mounted": false
   },
   {
    "kind": "grindstone",
-   "x": 86.99030662740797,
-   "y": 62.666547622084394,
-   "w": 1.5974,
-   "h": 1.2628,
+   "x": 82.01227488785469,
+   "y": 61.95944084089785,
+   "w": 1.14,
+   "h": 0.9,
    "a": 3.9269908169872414,
    "turn": false,
-   "purpose": "sharpening",
+   "spin": 0,
+   "purpose": "the grindstone by the open front, for the light",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "stock rack",
+   "x": 90.7061527625433,
+   "y": 58.66785877447447,
+   "w": 1.2,
+   "h": 0.37,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 180,
+   "purpose": "bar and rod iron, stood in its rack",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "smith goods",
+   "x": 89.04445182675491,
+   "y": 56.93544716056743,
+   "w": 1.6,
+   "h": 0.27,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 180,
+   "purpose": "finished work: chain, boat hooks, rings and a small anchor",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "chest",
+   "x": 87.90247437513864,
+   "y": 56.02681494674271,
+   "w": 0.9,
+   "h": 0.6,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 180,
+   "purpose": "the locked chest for his best tools",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "keg",
+   "x": 88.5035151391472,
+   "y": 61.704882399670694,
+   "w": 0.5,
+   "h": 0.5,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 0,
+   "purpose": "a keg of nails",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "old blade",
+   "x": 85.96853732859343,
+   "y": 60.859889796152764,
+   "w": 1.01,
+   "h": 0.11,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 180,
+   "purpose": "his father's blade, hung above the store door where the street can see it, never sold (beat B)",
+   "owner": 4,
+   "mounted": true
+  },
+  {
+   "kind": "smithy door",
+   "x": 84.28562318936945,
+   "y": 65.08838834764832,
+   "w": 1.2,
+   "h": 0.09,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 0,
+   "purpose": "the left door leaf, open flat against the front wall",
+   "owner": 4,
+   "mounted": false
+  },
+  {
+   "kind": "smithy door",
+   "x": 81.74003877709788,
+   "y": 62.542803935376746,
+   "w": 1.2,
+   "h": 0.09,
+   "a": 3.9269908169872414,
+   "turn": false,
+   "spin": 0,
+   "purpose": "the right door leaf, open flat against the front wall",
    "owner": 4,
    "mounted": false
   },
@@ -1365,6 +1553,7 @@
    "h": 1.447,
    "a": 3.9269908169872414,
    "turn": true,
+   "spin": 0,
    "purpose": "fuel for the forge",
    "owner": 4,
    "mounted": false
@@ -1377,6 +1566,7 @@
    "h": 0.934,
    "a": 3.9269908169872414,
    "turn": true,
+   "spin": 0,
    "purpose": "firewood for the forge",
    "owner": 4,
    "mounted": false
@@ -1389,6 +1579,7 @@
    "h": 0.571,
    "a": 3.9269908169872414,
    "turn": true,
+   "spin": 0,
    "purpose": "the hatchet in the block: the first weapon (beat B)",
    "owner": 4,
    "mounted": false
@@ -1401,6 +1592,7 @@
    "h": 0.9,
    "a": -2.21,
    "turn": false,
+   "spin": 0,
    "purpose": "oak and alder for the smoke",
    "owner": 5,
    "mounted": false
@@ -1413,6 +1605,7 @@
    "h": 0.698,
    "a": 1.1071487177940904,
    "turn": false,
+   "spin": 0,
    "purpose": "salt fish barrels waiting for the ship",
    "owner": 6,
    "mounted": false
@@ -1425,6 +1618,7 @@
    "h": 0.698,
    "a": 1.1071487177940904,
    "turn": false,
+   "spin": 0,
    "purpose": "salt fish barrels",
    "owner": 6,
    "mounted": false
@@ -1437,6 +1631,7 @@
    "h": 1.5232,
    "a": -0.58,
    "turn": true,
+   "spin": 0,
    "purpose": "a hull on trestles, half built",
    "owner": 7,
    "mounted": false
@@ -1449,6 +1644,7 @@
    "h": 0.9,
    "a": -0.64,
    "turn": false,
+   "spin": 0,
    "purpose": "driftwood for the pans",
    "owner": 8,
    "mounted": false
@@ -1461,6 +1657,7 @@
    "h": 0.6528,
    "a": -0.64,
    "turn": false,
+   "spin": 0,
    "purpose": "salt in sacks",
    "owner": 8,
    "mounted": false
@@ -1473,6 +1670,7 @@
    "h": 0.3204,
    "a": 2.5829933382462307,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting out by the door, mending",
    "owner": 9,
    "mounted": false
@@ -1485,6 +1683,7 @@
    "h": 0.3204,
    "a": 2.498091544796509,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting out by the door, mending",
    "owner": 10,
    "mounted": false
@@ -1497,6 +1696,7 @@
    "h": 0.934,
    "a": 2.498091544796509,
    "turn": true,
+   "spin": 0,
    "purpose": "fuel for the hearth",
    "owner": 10,
    "mounted": false
@@ -1509,6 +1709,7 @@
    "h": 0.1,
    "a": 2.498091544796509,
    "turn": false,
+   "spin": 0,
    "purpose": "drying the wash",
    "owner": 10,
    "mounted": false
@@ -1521,6 +1722,7 @@
    "h": 0.3204,
    "a": 2.6387494426619322,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting out by the door, mending",
    "owner": 11,
    "mounted": false
@@ -1533,6 +1735,7 @@
    "h": 0.3204,
    "a": 5.780342096251726,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting out by the door, mending",
    "owner": 12,
    "mounted": false
@@ -1545,6 +1748,7 @@
    "h": 0.6528,
    "a": 1.7681918866447774,
    "turn": false,
+   "spin": 0,
    "purpose": "grain going in at harvest",
    "owner": 13,
    "mounted": false
@@ -1557,6 +1761,7 @@
    "h": 0.698,
    "a": 1.7681918866447774,
    "turn": false,
+   "spin": 0,
    "purpose": "water barrel in case of fire",
    "owner": 13,
    "mounted": false
@@ -1569,6 +1774,7 @@
    "h": 1.7,
    "a": 4.90978454023457,
    "turn": true,
+   "spin": 0,
    "purpose": "the alarm bell (rung in beat 2), clear of the eaves",
    "owner": 14,
    "mounted": false
@@ -1581,6 +1787,7 @@
    "h": 2.692,
    "a": 2.761086276477428,
    "turn": false,
+   "spin": 0,
    "purpose": "the farm cart, out of the gateway",
    "owner": 15,
    "mounted": false
@@ -1593,6 +1800,7 @@
    "h": 1.261,
    "a": 2.761086276477428,
    "turn": false,
+   "spin": 0,
    "purpose": "for the fields",
    "owner": 15,
    "mounted": false
@@ -1605,6 +1813,7 @@
    "h": 2.2,
    "a": 2.761086276477428,
    "turn": true,
+   "spin": 0,
    "purpose": "water for the beasts, along the yard side",
    "owner": 15,
    "mounted": false
@@ -1617,6 +1826,7 @@
    "h": 0.3204,
    "a": 5.902678930067221,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting out by the door, mending",
    "owner": 16,
    "mounted": false
@@ -1629,6 +1839,7 @@
    "h": 0.934,
    "a": 5.902678930067221,
    "turn": true,
+   "spin": 0,
    "purpose": "fuel for the hearth",
    "owner": 16,
    "mounted": false
@@ -1641,6 +1852,7 @@
    "h": 0.1,
    "a": 5.902678930067221,
    "turn": false,
+   "spin": 0,
    "purpose": "drying the wash",
    "owner": 16,
    "mounted": false
@@ -1653,6 +1865,7 @@
    "h": 0.8,
    "a": 3.14,
    "turn": false,
+   "spin": 0,
    "purpose": "water for the goats",
    "owner": 17,
    "mounted": false
@@ -1665,6 +1878,7 @@
    "h": 0.3204,
    "a": -3.058451421701352,
    "turn": false,
+   "spin": 0,
    "purpose": "sitting out by the shop in the evening",
    "owner": 18,
    "mounted": false
@@ -1677,6 +1891,7 @@
    "h": 0.3,
    "a": -3.058451421701352,
    "turn": false,
+   "spin": 0,
    "purpose": "the shop sign on its bracket",
    "owner": 18,
    "mounted": true
@@ -1689,6 +1904,7 @@
    "h": 0.934,
    "a": -3.058451421701352,
    "turn": true,
+   "spin": 0,
    "purpose": "fuel for the kitchen hearth",
    "owner": 18,
    "mounted": false
@@ -1701,6 +1917,7 @@
    "h": 0.1,
    "a": -3.058451421701352,
    "turn": false,
+   "spin": 0,
    "purpose": "drying the wash",
    "owner": 18,
    "mounted": false
@@ -1713,6 +1930,7 @@
    "h": 1.3,
    "a": -3.058451421701352,
    "turn": true,
+   "spin": 0,
    "purpose": "eggs",
    "owner": 18,
    "mounted": false
@@ -1725,6 +1943,7 @@
    "h": 0.389,
    "a": -1.9623889803846897,
    "turn": false,
+   "spin": 0,
    "purpose": "the harbour master's notices: when the trader's ship is due",
    "owner": -1,
    "mounted": false
@@ -1737,6 +1956,7 @@
    "h": 0.3204,
    "a": 0.6483319890872608,
    "turn": false,
+   "spin": 0,
    "purpose": "old folk sitting by the well",
    "owner": -1,
    "mounted": false
@@ -1749,6 +1969,7 @@
    "h": 0.4,
    "a": 0.0,
    "turn": false,
+   "spin": 0,
    "purpose": "gate torch on the gate post, lit at dusk",
    "owner": -1,
    "mounted": true
@@ -1761,6 +1982,7 @@
    "h": 0.4,
    "a": 0.0,
    "turn": false,
+   "spin": 0,
    "purpose": "gate torch on the gate post, lit at dusk",
    "owner": -1,
    "mounted": true
@@ -1773,6 +1995,7 @@
    "h": 0.64,
    "a": 0.0,
    "turn": false,
+   "spin": 0,
    "purpose": "keeping crows off the infield",
    "owner": -1,
    "mounted": false
@@ -1785,6 +2008,7 @@
    "h": 0.7592,
    "a": 0.0,
    "turn": false,
+   "spin": 0,
    "purpose": "winter hay for the goats",
    "owner": -1,
    "mounted": false
@@ -1797,6 +2021,7 @@
    "h": 0.371,
    "a": -0.32,
    "turn": false,
+   "spin": 0,
    "purpose": "fishers drying their nets by the boats",
    "owner": -1,
    "mounted": false
@@ -1809,6 +2034,7 @@
    "h": 0.371,
    "a": -0.58,
    "turn": false,
+   "spin": 0,
    "purpose": "fishers drying their nets",
    "owner": -1,
    "mounted": false
@@ -1821,6 +2047,7 @@
    "h": 1.146,
    "a": 0.9,
    "turn": false,
+   "spin": 0,
    "purpose": "fish drying in the wind before smoking",
    "owner": -1,
    "mounted": false
@@ -1833,6 +2060,7 @@
    "h": 1.125,
    "a": 1.5708,
    "turn": false,
+   "spin": 0,
    "purpose": "gutting the catch where it lands, along the pier edge",
    "owner": -1,
    "mounted": false
@@ -1845,6 +2073,7 @@
    "h": 0.56,
    "a": 0.0,
    "turn": false,
+   "spin": 0,
    "purpose": "pots stacked on the pier",
    "owner": -1,
    "mounted": false
@@ -1857,6 +2086,7 @@
    "h": 0.698,
    "a": 0.0,
    "turn": false,
+   "spin": 0,
    "purpose": "barrels being rolled to the boats",
    "owner": -1,
    "mounted": false
@@ -1869,6 +2099,7 @@
    "h": 0.842,
    "a": 0.0,
    "turn": true,
+   "spin": 0,
    "purpose": "cargo waiting for the trader's ship (the last ship)",
    "owner": -1,
    "mounted": false

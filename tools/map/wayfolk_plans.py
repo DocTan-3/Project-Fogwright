@@ -1,7 +1,7 @@
 # Building types, ground-floor plans, drawn from building_types.py (docs/peoples/wayfolk.md): street at the top.
 # Every room must be reachable from outside through doors; the script checks it and prints any problem.
 #   python3 wayfolk_plans.py out.png
-import sys
+import sys,math
 from PIL import Image,ImageDraw,ImageFont
 F=lambda s,b=False: ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans%s.ttf'%('-Bold' if b else ''),s)
 S=20; PW=470
@@ -44,7 +44,35 @@ for t in T:   # stairs and ladders must leave a way past them and keep clear of 
             problems.append('%s: stairs at (%s,%s) block the %s'%(t['name'],x,y,(r[4] or 'passage').replace('\n',' ')))
         for dx,dy,o,dw,k in t['doors']:
             if x-0.7<dx<x+w+0.7 and y-0.7<dy<y+h+0.7: problems.append('%s: stairs at (%s,%s) crowd the door at (%s,%s)'%(t['name'],x,y,dx,dy))
-print('\n'.join(problems) or 'every room reachable, no stairs in the way')
+# a door that is not needed: without it, its two spaces are still joined by a walk at most 8 m longer than through it
+import heapq
+for t in T:
+    rooms=t['rooms']; W_=max(r[0]+r[2] for r in rooms); H_=max(r[1]+r[3] for r in rooms)
+    ends=[]
+    for x,y,o,w,k in t['doors']:
+        hit=[i for i,r in enumerate(rooms) if on_edge(r,x,y,o)]
+        if len(hit)==1:
+            hit+=[i for i,r in enumerate(rooms) if i not in hit and r[0]+0.05<x<r[0]+r[2]-0.05 and r[1]+0.05<y<r[1]+r[3]-0.05]
+        outer=(o=='h' and (abs(y)<0.05 or abs(y-H_)<0.05)) or (o=='v' and (abs(x)<0.05 or abs(x-W_)<0.05))
+        e=hit+(['out'] if outer and len(hit)==1 else [])
+        if len(e)==2: ends.append(((x,y),e[0],e[1],k))
+    def walk(skip,a,b,start):   # shortest walk from a point in space a to space b through the doors, without door `skip`
+        best={(a,start):0}; q=[(0,str(a),a,start)]
+        while q:
+            d,_,sp,pt=heapq.heappop(q)
+            if sp==b: return d
+            for j,(dp,s1,s2,k) in enumerate(ends):
+                if j==skip or sp not in (s1,s2): continue
+                nxt=s2 if sp==s1 else s1; nd=d+math.hypot(dp[0]-pt[0],dp[1]-pt[1])
+                if nd<best.get((nxt,dp),1e9): best[(nxt,dp)]=nd; heapq.heappush(q,(nd,str(nxt),nxt,dp))
+        return None
+    for j,(dp,s1,s2,k) in enumerate(ends):
+        if k=='o': continue
+        alt=walk(j,s1,s2,dp)
+        if alt is not None and alt<=8.0:
+            nm=lambda i: 'outside' if i=='out' else (rooms[i][4] or 'room').replace('\n',' ')
+            problems.append('%s: the door at %s between %s and %s is not needed (a %.0f m walk round)'%(t['name'],dp,nm(s1),nm(s2),alt))
+print('\n'.join(problems) or 'every room reachable, no stairs in the way, no door that is not needed')
 ROWS=[]; y=0
 for r in range(0,len(T),4):
     ROWS.append(y); y+=int(max(max(q[1]+q[3] for q in t['rooms']) for t in T[r:r+4])*S)+190
