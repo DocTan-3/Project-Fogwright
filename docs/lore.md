@@ -107,6 +107,8 @@ Four of the twelve stand apart. Oriel and Vael lost their peoples before the thi
 
 **The Fog-pusher lamps** *(decided 2026-11-28)*: the street lamps that push the Fog back burn copper coils made by the Ferrin and wound and blessed in the Vigil's chapter houses, humming at a pitch the Fog shies from. On the night Galeth falls, every one of them flickers at once.
 
+**The lantern roads** *(decided 2026-11-28)*: the great roads out of Aldrath's circle are lined with pusher lamps, tended by the Vigil. They are safe corridors through the frontier; step off them and the Fog thickens. A lamp that goes dark is news, and relighting a dark stretch is a common task.
+
 ### How the truth comes out *(decided 2026-11-28)*
 
 Slowly, as a trail of clues across the story, so players can suspect before they know:
