@@ -90,6 +90,44 @@ docs, the Farhallow plan and the Skyrim research. `characters` and `builds` hold
    - moving combat onto voxel characters;
    - real animation for voxel parts.
 
+## Update from the PC session (2026-11-28, on the user's RTX 4060)
+
+Done since the cloud handoff, all pushed to `voxel` (and the build to `builds`):
+
+- **Windows test build** of voxel Farhallow: it is `run/main_scene` on `voxel`; `tools/build/export_list.py` now packs
+  the Felix voxel pack and the `.vox` files (as plain files) and writes forward slashes on Windows. It runs at about
+  160 fps at 1600 x 900.
+- **Seams fixed:** 2,151 T-junction cracks went to 0. `tests/ground_cracks.tscn` counts them.
+- **Paths are painted, not cut:** the ground's kind is baked into a 25 cm texture and the surface shader paints paths and
+  the beach over the turf with a soft, ragged edge (the user found the 25 cm squares jagged). Cells are no longer
+  subdivided. The 10 cm speckle fades out with distance. SSAO is tighter (radius 0.3, intensity 1.0), since at 1 m it
+  drew dotted lines along creases.
+- **Steep rock pieces** (the user allowed Valheim-style 67 degree slopes): three to five steps across a cell (56 to 68
+  degrees) are bare rock faces; only drops over 2.5 m are cliffs. That closed the holes in Farhallow's cliffs.
+- **Door size chosen:** 2.2 x 1.4 m is the standard voxel door (some doors are larger). The user also said sizes may be
+  adjusted so building stays modular: the tall storey is 4.4 m (22 even 0.2 m risers), not 4.5 m.
+- **Interiors and sizes written into `docs/design.md`** ("Voxel buildings and interiors"): committed on the PC's local
+  `main` as 2da6954 and ad70d7e, **not pushed** (the user has not yet said "push main"). If the cloud needs them,
+  re-apply that section from the plan doc below, on `main` only with the user's OK.
+- **Building kit, step 1:** `tools/voxel/make_building_kit.py` writes `godot/assets/voxel/buildings/kit_farhallow.vox`
+  (27 pieces: timber and stone wall bays, plain, door and window, at 3.0 and 4.4 m; posts; glazing; a door leaf; plinth;
+  floors; stairs for both storeys; thatch and slate 45 degree slopes; ridge; the inn's 12 m gable; chimney; hearth).
+  About 7,300 triangles in all. `Vox.pieces()` loads it; `tests/building_kit_sheet.tscn` shows it with the Hrimfolk.
+  Openings are centred between a bay's post (x 0-1) and the next bay's, so doors are symmetrical (the user caught that).
+
+The plan: [Fogwright voxel building kit: plan (inn first)](https://claude.ai/artifact/SCRmEZaBvNDowucFbip9Rt).
+
+### Next, in order
+
+1. **Builder (step 2):** `godot/scripts/voxel/building_kit.gd` places pieces from a layout on the 2 m grid (rooms,
+   doors, stairs, roof), merges them into one mesh per floor, adds box collision. A test room with a door you walk
+   through and the camera staying inside.
+2. **The inn (step 3):** the Gull & Lantern, 16 x 12 m, from the plan's floor-by-floor table; `tests/inn_walk.tscn`.
+3. **Into Farhallow (step 4):** replace the inn's stand-in, run the checker, new Windows build.
+4. **Known issues:** limewash and skin blow out to near white in the kit sheet's light (tune the palette under the
+   village's light when pieces go in); stand-ins are too big for the 1.6 m people; grass parting is subtle; fog washes
+   out distant views; stairs are 4.5 m and 6.6 m long, not module multiples (fine inside a stair well with a landing).
+
 ## How to work here
 
 - **Tests:** they render PNGs.
