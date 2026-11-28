@@ -8,6 +8,7 @@ const W := 1.4
 const H := 2.2
 const SWING := 100.0
 var leaf_mesh: Mesh
+var swing_sign := 1   # 1 swings toward the leaf's inner side (-Z), -1 the other way
 var open := false
 var _swing: Node3D
 var _angle := 0.0
@@ -22,15 +23,15 @@ func _ready() -> void:
 	var cam := StaticBody3D.new(); cam.collision_layer = 4; cam.collision_mask = 0; add_child(cam)
 	var cc := CollisionShape3D.new(); var csh := BoxShape3D.new(); csh.size = Vector3(W, H, 0.3); cc.shape = csh
 	cc.position = Vector3(W * 0.5, H * 0.5, -0.05); cam.add_child(cc)
-	# who comes near: 1.5 m either side of the opening
+	# who comes up to it: 0.8 m either side of the opening, so walking past along a corridor leaves it shut
 	var area := Area3D.new(); area.monitorable = false; add_child(area)
-	var ac := CollisionShape3D.new(); var ash := BoxShape3D.new(); ash.size = Vector3(W, H, 3.0); ac.shape = ash
+	var ac := CollisionShape3D.new(); var ash := BoxShape3D.new(); ash.size = Vector3(W, H, 1.6); ac.shape = ash
 	ac.position = Vector3(W * 0.5, H * 0.5, -0.1); area.add_child(ac)
 	area.body_entered.connect(func(b: Node) -> void: if b is CharacterBody3D: open = true)
-	_angle = SWING if open else 0.0; _swing.rotation_degrees.y = _angle
+	_angle = SWING * swing_sign if open else 0.0; _swing.rotation_degrees.y = _angle
 
 func _physics_process(delta: float) -> void:
-	var want := SWING if open else 0.0
+	var want := SWING * swing_sign if open else 0.0
 	if absf(want - _angle) < 0.01: return
 	_angle = move_toward(_angle, want, 160.0 * delta)
 	_swing.rotation_degrees.y = _angle

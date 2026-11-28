@@ -4,7 +4,8 @@
 ##    "storeys": [{"h": 44,                         # floor to floor in voxels: 44 (4.4 m, inns and halls) or 30 (3.0 m)
 ##                 "face": "stone" | "frame",       # fieldstone or timber frame over limewash
 ##                 "walls": {"front": "pwdwp...", "right": "...", "back": "...", "left": "..."},
-##                 "inner": [{"at": Vector2i(4, 0), "dir": "y", "bays": "ppdp"}],   # partitions from a grid point
+##                 "inner": [{"at": Vector2i(4, 0), "dir": "y", "bays": "ppdp"}],   # partitions from a grid point; their
+##                                                  # doors swing to the wall's left ("swing": -1 for its right)
 ##                 "stairs": [{"at": Vector2i(4, 43), "run": "+x"}],                # voxel corner of its first step
 ##                 "lights": [{"at": Vector3(2, 3.2, -2), "energy": 1.4}]}, ...],   # metres, from the front-left corner
 ##    "roof": "thatch" | "slate"}                   # a 45 degree gable roof, ridge along x, 0.3 m overhang
@@ -28,7 +29,12 @@ const WIN := [7, 14, 9, 18]
 const OVERHANG := 3
 
 static var _pieces := {}  # name -> {Vector3i: Color}, the kit's voxels in each piece's own box
-static var _meshes := {}  # name -> ArrayMesh, for the pieces that move (the door leaf)
+static var _meshes := {}
+static var _fittings := {}  # the 5 cm fittings (kit_fittings.vox): name -> {Vector3i: Color}
+const FITTINGS := "res://assets/voxel/buildings/kit_fittings.vox"
+const FV := 0.05
+# fittings people bump into: their box is collision (a lantern or a chest underfoot is not)
+const SOLID_FITTINGS := ["table", "bar_counter", "bed", "shelf", "barrel", "desk", "bench"]  # name -> ArrayMesh, for the pieces that move (the door leaf)
 
 static func pieces() -> Dictionary:
 	if _pieces.is_empty():
@@ -39,6 +45,38 @@ static func pieces() -> Dictionary:
 			_pieces[sh.name] = d
 		_meshes = Vox.pieces(KIT)
 	return _pieces
+
+static func fittings() -> Dictionary:
+	if _fittings.is_empty():
+		var f := Vox.read(FITTINGS)
+		for sh in f.shapes:
+			var m: Dictionary = f.models[sh.model]; var v: PackedByteArray = m.voxels; var d := {}
+			for i in v.size() / 4: d[Vector3i(v[i * 4], v[i * 4 + 1], v[i * 4 + 2])] = f.palette[v[i * 4 + 3] - 1]
+			_fittings[sh.name] = d
+	return _fittings
+
+## a fitting at 5 cm: {"p": "table", "at": Vector2 (metres: x, and depth from the front), "dir": "+x", "z": metres up}
+static func _fitting(fs: Dictionary, boxes: Array, ft: Dictionary, z: int) -> void:
+	var p: Dictionary = fittings()[ft.p]; var d := _run_dir(ft.get("dir", "+x"))
+	var at: Vector2 = ft.at; var o := Vector3i(roundi(at.x * 20), roundi(at.y * 20), z * 2 + roundi(ft.get("z", 0.0) * 20))
+	var lo := Vector3i(1 << 20, 1 << 20, 1 << 20); var hi := -lo
+	for k in p:
+		var q: Vector3i = k; var c := _cell(o, d, q.x, q.y, q.z); fs[c] = p[k]
+		lo = lo.min(c); hi = hi.max(c + Vector3i.ONE)
+	if ft.p in SOLID_FITTINGS: boxes.append([Vector3(lo) * 0.5, Vector3(hi) * 0.5])
+
+## a chimney stack of coursed stone, 0.8 m square, from z0 to z1 (voxels) at its corner at (x, y), its flue open at the top
+static func _chimney(vs: Dictionary, boxes: Array, at: Vector2i, z0: int, z1: int) -> void:
+	var p: Dictionary = pieces()["chimney"]
+	for z in range(z0, z1):
+		var from_top := z1 - 1 - z
+		var lz := 39 - from_top if from_top < 3 else (z - z0) % 36
+		for x in 8:
+			for y in 8:
+				var k := Vector3i(x, y, lz)
+				if p.has(k): vs[Vector3i(at.x + x, at.y + y, z)] = p[k]
+				elif from_top >= 3: vs.erase(Vector3i(at.x + x, at.y + y, z))
+	boxes.append([Vector3(at.x, at.y, z0), Vector3(at.x + 8, at.y + 8, z1)])
 
 # ---------------------------------------------------------------- placing on the grid
 # A piece is placed by the corner its box starts at, O (file space voxels: x, y front to back, z up), running along d
@@ -91,6 +129,7 @@ static func build(layout: Dictionary) -> Node3D:
 			for k in flags: var q: Vector3i = k; g0[Vector3i(i * BAY + q.x, j * BAY + q.y, PLINTH - 1)] = flags[k]
 	boxes.append([Vector3(0, 0, 0), Vector3(W, D, PLINTH)])
 	var tris := 0
+	fittings()
 	for s in storeys.size():
 		var st: Dictionary = storeys[s]; var h: int = st.h; var vs: Dictionary = sets[s]
 		var face: String = st.get("face", "frame")
@@ -105,7 +144,7 @@ static func build(layout: Dictionary) -> Node3D:
 		for iw in st.get("inner", []):
 			var at: Vector2i = iw.at; var dd := Vector2i(1, 0) if iw.dir == "x" else Vector2i(0, 1)
 			var o := Vector3i(at.x * BAY, at.y * BAY, z) - Vector3i(_left(dd).x, _left(dd).y, 0)   # centred on the line
-			_wall_run(vs, boxes, doors, o, dd, iw.bays, face, h, true)
+			_wall_run(vs, boxes, doors, o, dd, iw.bays, iw.get("face", face), h, true, iw.get("swing", 1))
 		var runs := [["front", Vector3i(0, 0, z), Vector2i(1, 0)], ["right", Vector3i(W, 0, z), Vector2i(0, 1)],
 			["back", Vector3i(W, D, z), Vector2i(-1, 0)], ["left", Vector3i(0, D, z), Vector2i(0, -1)]]
 		for r in runs:
@@ -115,6 +154,13 @@ static func build(layout: Dictionary) -> Node3D:
 				for b in bays.length():
 					if bays[b] == "d": _door_steps(vs, ramps, r[1] - Vector3i(0, 0, z), r[2], b)
 		for sr in st.get("stairs", []): _stair(vs, ramps, sr, z, h)
+		for pc in st.get("pieces", []):   # kit pieces inside (a hearth): at is the piece's corner in voxels, z from the floor
+			var at3: Vector3i = pc.at; _stamp(vs, pc.p, Vector3i(at3.x, at3.y, z + at3.z), _run_dir(pc.get("dir", "+x")))
+		var fs := {}
+		for ft in st.get("fittings", []): _fitting(fs, boxes, ft, z)
+		if not fs.is_empty():
+			var fm := MeshInstance3D.new(); fm.name = "Fittings%d" % s; fm.mesh = Vox.mesh(fs, Vector3i.ZERO, Vector3.ZERO, FV)
+			fm.material_override = Vox.material(); root.add_child(fm); tris += fm.mesh.get_faces().size() / 3
 		for lt in st.get("lights", []):
 			var l := OmniLight3D.new(); l.position = lt.at; l.light_energy = lt.get("energy", 1.2)
 			l.light_color = lt.get("color", Color(1.0, 0.78, 0.52)); l.omni_range = lt.get("range", 7.0); l.shadow_enabled = false
@@ -124,6 +170,7 @@ static func build(layout: Dictionary) -> Node3D:
 	var rf := {}
 	_floor(rf, W, D, z - 3, [], boxes)
 	_roof(rf, ramps, W, D, z, layout.get("roof", "thatch"))
+	for ch in layout.get("chimneys", []): _chimney(rf, boxes, ch.at, PLINTH + ch.get("from", 15), z + ch.get("above", 0))
 	sets.append(rf)
 	for s in sets.size():
 		var vset: Dictionary = sets[s]
@@ -144,7 +191,7 @@ static func build(layout: Dictionary) -> Node3D:
 	return root
 
 # one run of wall bays from o along d: the bay pieces, their collision and the door leaves
-static func _wall_run(vs: Dictionary, boxes: Array, doors: Node3D, o: Vector3i, d: Vector2i, bays: String, face: String, h: int, close: bool) -> void:
+static func _wall_run(vs: Dictionary, boxes: Array, doors: Node3D, o: Vector3i, d: Vector2i, bays: String, face: String, h: int, close: bool, swing := 1) -> void:
 	for b in bays.length():
 		var c := bays[b]
 		var bo := o + Vector3i(d.x, d.y, 0) * (b * BAY)
@@ -155,7 +202,7 @@ static func _wall_run(vs: Dictionary, boxes: Array, doors: Node3D, o: Vector3i, 
 			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(DOOR[0], WALL, h)))
 			boxes.append(_box(bo, d, Vector3i(DOOR[1] + 1, 0, 0), Vector3i(BAY, WALL, h)))
 			boxes.append(_box(bo, d, Vector3i(DOOR[0], 0, DOOR[3] + 1), Vector3i(DOOR[1] + 1, WALL, h)))
-			doors.add_child(_door(bo, d))
+			doors.add_child(_door(bo, d, swing))
 		else:
 			boxes.append(_box(bo, d, Vector3i(0, 0, 0), Vector3i(BAY, WALL, h)))
 			if c == "w": _stamp(vs, "window_leaded", bo + Vector3i(d.x, d.y, 0) * WIN[0] + Vector3i(_left(d).x, _left(d).y, WIN[2]), d)
@@ -270,10 +317,10 @@ static func _roof(vs: Dictionary, ramps: Array, W: int, D: int, z: int, mat: Str
 	ramps.append([Vector3(W * 0.5, D + OVERHANG, z), Vector3(W * 0.5, top, z + top + OVERHANG), L])
 
 # ---------------------------------------------------------------- doors
-static func _door(bo: Vector3i, d: Vector2i) -> Node3D:
+static func _door(bo: Vector3i, d: Vector2i, swing := 1) -> Node3D:
 	var n := _left(d)
 	var hinge := Vector3(bo) + Vector3(d.x, d.y, 0) * DOOR[0] + Vector3(n.x, n.y, 0) * 1
 	var dg := Vector3(d.x, 0, -d.y); var ng := Vector3(n.x, 0, -n.y)
-	var door := KitDoor.new(); door.name = "Door"; door.leaf_mesh = _meshes["door_leaf"]
+	var door := KitDoor.new(); door.name = "Door"; door.leaf_mesh = _meshes["door_leaf"]; door.swing_sign = swing
 	door.transform = Transform3D(Basis(dg, Vector3.UP, -ng), _g(hinge))
 	return door

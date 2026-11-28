@@ -154,3 +154,59 @@ mb.write(os.path.join(out, 'kit_farhallow.vox'), placed)
 for name in sorted(P):
     v = P[name]; s = [max(p[i] for p in v) + 1 for i in range(3)]
     print('  %-22s %3d x %3d x %3d voxels (%.1f x %.1f x %.1f m)' % (name, s[0], s[1], s[2], s[0] / 10, s[1] / 10, s[2] / 10))
+
+# ---------------------------------------------------------------- fittings, at 5 cm (props: Vox.CHAR), kit_fittings.vox
+# The inn's furniture, as the plan lists it, placed by the builder like the pieces (x along, y inward from the wall or
+# the front, z up) but meshed at 5 cm. Sizes in 5 cm voxels.
+F = {}
+FPAL = dict(PAL, straw=(196, 168, 104), wool=(120, 46, 40), wool_d=(96, 36, 32), linen=(200, 192, 170), ale=(150, 104, 52),
+            pewter=(128, 130, 132), flame=(255, 196, 92), hoop=(70, 68, 66))
+def fput(part, x, y, z, c): F.setdefault(part, {})[(x, y, z)] = c
+def fbox(part, x0, x1, y0, y1, z0, z1, c):
+    for x in range(x0, x1 + 1):
+        for y in range(y0, y1 + 1):
+            for z in range(z0, z1 + 1): fput(part, x, y, z, c(x, y, z) if callable(c) else c)
+def plank(x, y, z, run=5): return 'board_d' if x % run == 0 else ('board_l' if _h(x // run, 9, 1) > 0.7 else 'board')
+# a trestle table 1.6 x 0.8 m, 0.8 m high: a plank top on two trestles with a stretcher
+fbox('table', 0, 31, 0, 15, 14, 15, lambda x, y, z: 'board_d' if y % 5 == 4 and z == 15 else 'board')
+for x0 in (3, 27): fbox('table', x0, x0 + 1, 2, 13, 0, 13, lambda x, y, z: 'oak' if z > 1 else 'oak_d')
+fbox('table', 5, 26, 7, 8, 5, 6, 'oak')
+# a bench to go with it, 1.6 m long, 0.45 m high
+fbox('bench', 0, 31, 0, 5, 8, 8, 'board'); fbox('bench', 0, 31, 0, 5, 7, 7, 'board_d')
+for x0 in (2, 28): fbox('bench', x0, x0 + 1, 1, 4, 0, 6, 'oak')
+# the bar counter, one 2 m length: boarded front, an oak top that overhangs, a shelf behind
+fbox('bar_counter', 0, 39, 1, 11, 0, 20, lambda x, y, z: plank(x, y, z, 4) if y == 1 else 'board_d')
+fbox('bar_counter', 0, 39, 0, 13, 21, 22, lambda x, y, z: 'oak_l' if z == 22 else 'oak')
+fbox('bar_counter', 0, 39, 0, 0, 0, 1, 'oak_d')
+for x in (5, 14, 23, 32): fbox('bar_counter', x, x + 2, 4, 6, 23, 25, lambda x, y, z: 'pewter' if z < 25 or x == x else 'ale')
+# a bed 1 x 2 m: oak frame and posts, a straw tick, a wool blanket, a linen bolster at the head (y high)
+fbox('bed', 0, 19, 0, 39, 3, 5, 'oak'); fbox('bed', 1, 18, 1, 38, 6, 8, 'straw')
+fbox('bed', 1, 18, 1, 28, 9, 9, lambda x, y, z: 'wool_d' if y % 6 == 0 else 'wool'); fbox('bed', 3, 16, 32, 37, 9, 10, 'linen')
+for x0, y0 in ((0, 0), (18, 0), (0, 38), (18, 38)): fbox('bed', x0, x0 + 1, y0, y0 + 1, 0, 11 if y0 else 7, 'oak_d')
+fbox('bed', 0, 19, 38, 39, 8, 14, 'oak')
+# a chest 0.7 x 0.45 m with iron bands
+fbox('chest', 0, 13, 0, 8, 0, 9, lambda x, y, z: 'iron' if x in (2, 11) else ('oak_d' if z == 6 else 'oak'))
+# an ale barrel 0.6 m across, 0.8 m tall, standing; hoops near the ends and the middle
+for z in range(16):
+    r = 5.6 + 0.6 * (1 - abs(z - 7.5) / 7.5)
+    for x in range(12):
+        for y in range(12):
+            if (x - 5.5) ** 2 + (y - 5.5) ** 2 <= r * r: fput('barrel', x, y, z, 'hoop' if z in (1, 7, 8, 14) else ('board_d' if (x + y) % 4 == 0 else 'board'))
+# shelves 1.6 m long and 1.8 m high against a wall, with jugs and sacks
+fbox('shelf', 0, 31, 0, 6, 0, 35, lambda x, y, z: 'oak' if x in (0, 1, 30, 31) else None)
+for z0 in (0, 12, 24, 34): fbox('shelf', 0, 31, 0, 6, z0, z0 + 1, 'board')
+F['shelf'] = {k: v for k, v in F['shelf'].items() if v}
+for x0, z0, c in ((4, 14, 'pewter'), (9, 14, 'ale'), (20, 26, 'pewter'), (25, 2, 'straw'), (5, 2, 'straw'), (14, 26, 'linen')):
+    fbox('shelf', x0, x0 + 3, 1, 4, z0, z0 + 4, c)
+# a lantern on a hook, 0.3 m: an iron cage round a flame
+fbox('lantern', 0, 5, 0, 5, 0, 7, lambda x, y, z: 'flame' if 1 <= x <= 4 and 1 <= y <= 4 and 1 <= z <= 5 else ('iron' if x in (0, 5) and y in (0, 5) or z in (0, 7) else None))
+fbox('lantern', 2, 3, 2, 3, 8, 11, 'iron')
+F['lantern'] = {k: v for k, v in F['lantern'].items() if v}
+# the keeper's counter for rooms: a short desk with a ledger
+fbox('desk', 0, 23, 0, 11, 0, 17, lambda x, y, z: plank(x, y, z, 4) if y == 0 else 'board_d')
+fbox('desk', 0, 23, 0, 11, 18, 19, 'oak'); fbox('desk', 8, 15, 3, 8, 20, 20, 'linen')
+mb.COL = FPAL; mb.NAMES = list(FPAL)
+mb.write(os.path.join(out, 'kit_fittings.vox'), {n: F[n] for n in sorted(F)})
+for name in sorted(F):
+    v = F[name]; s = [max(p[i] for p in v) + 1 for i in range(3)]
+    print('  %-22s %3d x %3d x %3d voxels (%.2f x %.2f x %.2f m)' % (name, s[0], s[1], s[2], s[0] / 20, s[1] / 20, s[2] / 20))

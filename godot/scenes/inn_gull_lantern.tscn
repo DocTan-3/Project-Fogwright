@@ -1,0 +1,83 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/input_setup.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/kit_room.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/camera_rig.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/voxel/voxel_model.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/voxel/voxel_walk.gd" id="7"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.36, 0.55, 0.82, 1)
+sky_horizon_color = Color(0.72, 0.78, 0.86, 1)
+ground_horizon_color = Color(0.72, 0.78, 0.86, 1)
+ground_bottom_color = Color(0.3, 0.3, 0.32, 1)
+sun_angle_max = 20.0
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_energy = 0.55
+ambient_light_sky_contribution = 0.6
+ambient_light_color = Color(0.86, 0.84, 0.8, 1)
+tonemap_mode = 3
+tonemap_exposure = 1.0
+ssao_enabled = true
+ssao_radius = 0.3
+ssao_intensity = 1.0
+fog_enabled = false
+fog_light_color = Color(0.72, 0.78, 0.86, 1)
+fog_density = 0.004
+
+[sub_resource type="CapsuleShape3D" id="capsule"]
+radius = 0.3
+height = 1.6
+
+[node name="Main" type="Node3D"]
+
+[node name="InputSetup" type="Node" parent="."]
+script = ExtResource("2")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 20, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.15
+shadow_enabled = true
+directional_shadow_max_distance = 60.0
+
+[node name="Level" type="Node3D" parent="."]
+script = ExtResource("3")
+layout_name = "gull_lantern"
+
+[node name="Player" type="CharacterBody3D" parent="." node_paths=PackedStringArray("camera_rig")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+script = ExtResource("4")
+camera_rig = NodePath("../CameraRig")
+
+[node name="Collision" type="CollisionShape3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("capsule")
+
+[node name="Model" type="Node3D" parent="Player"]
+script = ExtResource("6")
+
+[node name="Walk" type="Node" parent="Player"]
+script = ExtResource("7")
+
+[node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("target")]
+script = ExtResource("5")
+target = NodePath("../Player")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraRig"]
+spring_length = 5.0
+margin = 0.15
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig/SpringArm3D"]
+fov = 65.0
