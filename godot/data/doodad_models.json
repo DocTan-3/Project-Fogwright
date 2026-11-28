@@ -31,7 +31,7 @@
  },
  "well": {
   "model": "res://assets/props/village2/Prop_Well_1.glb",
-  "scale": 1.3,
+  "scale": 1.65,
   "lift": 0.0,
   "solid": true
  },
@@ -180,7 +180,7 @@
   "solid": true
  },
  "chopping block": {
-  "model": "res://assets/props/quaternius/Anvil_Log.gltf",
+  "model": "res://assets/props/fogwright/Chopping_Block.glb",
   "scale": 1.0,
   "lift": 0.0,
   "solid": true
