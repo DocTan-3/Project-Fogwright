@@ -86,3 +86,118 @@ const GULL_LANTERN := {
 	"gable_windows": [5.0],
 	"chimneys": [{"at": Vector2i(3, 32), "from": 15, "above": 50}, {"at": Vector2i(136, 109), "from": 15, "above": 22}],
 }
+
+# ---------------------------------------------------------------- the rest of Farhallow, laid out from the plan
+## A layout for one of the plan's buildings (data/farhallow.json), built the freehold's way (lore.md): Farhallow is home
+## to freefolk of every people, so each house is built a little in its owners' own way on the same stone-and-salvage
+## kit. Wayfolk and the farm: drystone under heather thatch. Hrimfolk fishers: drystone under turf, as at home. The Ferrin
+## smith: a tall stone forge under slate. The merchants and the harbour master: two floors, the upper in the roof with
+## dormers, under bought slate. Sheds, stores and smokehouses: plank walls on a stone footing. The Merrith shrine: a
+## small stone cell lit by candles.
+## w, h: the plot in metres (w along the door face); doors: the plot's doors in its own frame (x across, z from the
+## centre, the door face at z = -h/2 being the front); key: a number to vary houses of one type by.
+const STYLES := {
+	"cottage": {"face": "dry", "roof": ["heather", "turf"], "hearth": true, "fit": "home"},
+	"street_house": {"face": "dry", "roof": ["heather"], "hearth": true, "fit": "home"},
+	"farmstead": {"face": "dry", "roof": ["heather"], "hearth": true, "fit": "farm"},
+	"merchant_house": {"face": "dry", "roof": ["slate"], "hearth": true, "fit": "hall", "upper": true},
+	"merchant_house_small": {"face": "dry", "roof": ["slate"], "hearth": true, "fit": "hall", "upper": true},
+	"workshop": {"face": "dry", "h": 44, "roof": ["slate"], "hearth": true, "fit": "forge"},
+	"guard_post": {"face": "dry", "roof": ["slate"], "fit": "post"},
+	"merrith_shrine": {"face": "dry", "roof": ["heather"], "fit": "shrine"},
+	"smokehouse": {"face": "board", "roof": ["heather"], "hearth": true, "fit": "store", "shut": true},
+	"salt_works": {"face": "board", "roof": ["heather"], "hearth": true, "fit": "store", "shut": true},
+	"store": {"face": "board", "roof": ["heather"], "fit": "store", "shut": true},
+	"granary": {"face": "board", "roof": ["heather"], "fit": "store", "shut": true},
+	"boat_shed": {"face": "board", "roof": ["heather"], "fit": "shed", "shut": true},
+	"hen_house": {"face": "board", "roof": ["turf"], "fit": "none", "shut": true},
+}
+
+static func for_plot(type: String, w: float, h: float, doors: Array, key: int) -> Dictionary:
+	var st: Dictionary = STYLES.get(type, STYLES.cottage)
+	var nx := maxi(2, roundi(w / 2.0)); var ny := maxi(2, roundi(h / 2.0))
+	var W := nx * 20; var D := ny * 20
+	var sides := {"front": [], "right": [], "back": [], "left": []}   # door bays per side
+	for dp in doors:
+		var p: Vector2 = dp
+		var xk := float(nx) - p.x; var yk := p.y + float(ny)   # the kit's x (along the front) and depth, in metres
+		var dist := {"front": absf(yk), "back": absf(yk - 2 * ny), "left": absf(xk), "right": absf(xk - 2 * nx)}
+		var side := "front"
+		for k in dist: if dist[k] < dist[side]: side = k
+		var along: float = {"front": xk, "back": 2 * nx - xk, "right": yk, "left": 2 * ny - yk}[side]
+		var n: int = nx if side in ["front", "back"] else ny
+		sides[side].append(clampi(int(along / 2.0), 0, n - 1))
+	if doors.is_empty(): sides.front.append(nx / 2)
+	# the hearth goes on a side wall with no door, in its middle bay
+	var hearth_side := ""
+	if st.get("hearth", false): hearth_side = "left" if sides.left.is_empty() else ("right" if sides.right.is_empty() else "")
+	var hb := ny / 2
+	var walls := {}
+	for side in sides:
+		var n: int = nx if side in ["front", "back"] else ny
+		var s := ""
+		for i in n:
+			if i in sides[side]: s += "d"
+			elif side == hearth_side and i == hb: s += "p"
+			elif st.get("shut", false): s += "w" if (side == "front" and i == n - 1 and n > 2) else "p"   # sheds: one small window
+			else: s += "w" if (i % 2 == (1 if n > 2 else 0)) else "p"
+		walls[side] = s
+	var roofs: Array = st.roof; var roof: String = roofs[key % roofs.size()]
+	var h0: int = st.get("h", 30)
+	var g := {"h": h0, "face": st.face, "walls": walls, "pieces": [], "fittings": [], "lights": []}
+	var layout := {"size": Vector2i(nx, ny), "storeys": [g], "roof": roof, "rounded": st.face == "dry", "floor": "salvage",
+		"ground": "slabs", "door_leaf": "door_leaf_dry", "chimneys": []}
+	if st.get("upper", false):   # a floor up in the roof, with dormers on the front and back, and a stair to it
+		var fr := ""; var bk := ""
+		for i in nx: fr += "D" if i % 2 == 1 else "p"; bk += "D" if i % 2 == 0 and i > 0 else "p"
+		layout.storeys.append({"h": 12, "face": "dry", "walls": {"front": fr, "back": bk, "left": "p".repeat(ny), "right": "p".repeat(ny)}})
+		g.stairs = [{"at": Vector2i(10 if hearth_side != "left" else W - 10 - 45, D - 18), "run": "+x"}]
+	# the hearth and its chimney
+	var top := PLINTH_V + h0 + (12 if st.get("upper", false) else 0)
+	if hearth_side == "left":
+		g.pieces.append({"p": "hearth", "at": Vector3i(3, D - 20 * hb, 0), "dir": "-y"})
+		var yc := D - 20 * hb - 10
+		layout.chimneys.append({"at": Vector2i(3, yc - 4), "from": 15, "above": mini(yc, D - yc) + 10})
+		g.lights.append({"at": Vector3(1.3, 0.9, -yc / 10.0), "energy": 1.6, "range": 5.0, "color": Color(1.0, 0.62, 0.32)})
+	elif hearth_side == "right":
+		g.pieces.append({"p": "hearth", "at": Vector3i(W - 3, 20 * hb, 0), "dir": "+y"})
+		var yc := 20 * hb + 10
+		layout.chimneys.append({"at": Vector2i(W - 11, yc - 4), "from": 15, "above": mini(yc, D - yc) + 10})
+		g.lights.append({"at": Vector3(W / 10.0 - 1.3, 0.9, -yc / 10.0), "energy": 1.6, "range": 5.0, "color": Color(1.0, 0.62, 0.32)})
+	_fit(g, st.fit, W / 10.0, D / 10.0, hearth_side, sides)
+	return layout
+
+const PLINTH_V := 5
+
+# the furniture of a house, along its back wall, kept clear of a back door and of the hearth's side
+static func _fit(g: Dictionary, kind: String, Wm: float, Dm: float, hearth: String, sides: Dictionary) -> void:
+	var f: Array = g.fittings
+	var back_free_r: bool = not (0 in sides.back)                 # the back's first bay is at the right
+	var back_free_l: bool = not ((int(Wm / 2.0) - 1) in sides.back)
+	var corner_x := Wm - 1.45 if back_free_r and hearth != "right" else 0.45   # x of a corner by the back wall, away from the hearth
+	match kind:
+		"home", "farm":
+			f.append({"p": "bed", "at": Vector2(corner_x, Dm - 2.45)})
+			f.append({"p": "chest", "at": Vector2(corner_x + (-0.8 if corner_x > 1.0 else 1.1), Dm - 0.8)})
+			f.append({"p": "table", "at": Vector2(Wm * 0.5 - 0.8, Dm * 0.5 - 0.4)})
+			f.append({"p": "bench", "at": Vector2(Wm * 0.5 - 0.8, Dm * 0.5 - 0.85)})
+			f.append({"p": "barrel", "at": Vector2(Wm - corner_x - 0.6 if corner_x > 1.0 else Wm - 1.0, Dm - 0.95)})
+			if kind == "farm": f.append({"p": "shelf", "at": Vector2(Wm * 0.5 - 0.8, Dm - 0.3), "dir": "-x"})
+		"hall":
+			f.append({"p": "table", "at": Vector2(Wm * 0.5 - 0.8, Dm * 0.4)}); f.append({"p": "table", "at": Vector2(Wm * 0.5 - 0.8, Dm * 0.4 + 1.0)})
+			f.append({"p": "desk", "at": Vector2(0.5 if hearth != "left" else Wm - 1.7, Dm * 0.5 - 0.3), "dir": "+x"})   # the stair has the back wall
+			f.append({"p": "chest", "at": Vector2(0.5 if hearth != "left" else Wm - 1.2, Dm * 0.5 + 0.6)})
+		"forge":
+			f.append({"p": "table", "at": Vector2(Wm * 0.5 - 0.8, Dm * 0.5)})
+			f.append({"p": "barrel", "at": Vector2(Wm - 1.0, Dm - 1.0)}); f.append({"p": "barrel", "at": Vector2(Wm - 1.7, Dm - 1.0)})
+			f.append({"p": "shelf", "at": Vector2(Wm * 0.5 + 0.8, Dm - 0.3), "dir": "-x"})
+		"store", "shed":
+			for i in 3: f.append({"p": "barrel", "at": Vector2(0.5 + i * 0.7, Dm - 1.0)})
+			if Wm >= 4.0 and hearth != "right": f.append({"p": "shelf", "at": Vector2(Wm - 0.3, Dm - 2.0), "dir": "+y"})
+			if kind == "shed": f.append({"p": "table", "at": Vector2(Wm * 0.5 - 0.8, Dm * 0.5)})
+		"shrine":
+			f.append({"p": "table", "at": Vector2(Wm * 0.5 - 0.8, Dm - 1.4)})
+			for i in 3: f.append({"p": "lantern", "at": Vector2(Wm * 0.5 - 0.6 + i * 0.45, Dm - 1.2), "z": 0.8})
+			g.lights.append({"at": Vector3(Wm * 0.5, 1.3, -(Dm - 1.1)), "energy": 1.2, "range": 4.0, "color": Color(1.0, 0.8, 0.55)})
+		"post":
+			f.append({"p": "bench", "at": Vector2(0.4, Dm - 0.7)}); f.append({"p": "lantern", "at": Vector2(Wm * 0.5, Dm * 0.5), "z": 2.2})

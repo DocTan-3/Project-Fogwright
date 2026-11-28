@@ -8,8 +8,8 @@ func _ready() -> void:
 		if a.begins_with("out="): out = a.split("=")[1]
 	var sc: Node = (load("res://scenes/farhallow_voxel.tscn") as PackedScene).instantiate(); add_child(sc)
 	var rig = sc.get_node("CameraRig"); var pl: CharacterBody3D = sc.get_node("Player")
-	var bk: Node3D = null
-	for n in sc.get_node("Level").find_children("Building", "Node3D", true, false): bk = n
+	var bk: Node3D = null   # the inn: the plan's first building
+	for n in sc.get_node("Level/Building0").get_children(): if n.name == "Building": bk = n
 	for k in 30: await get_tree().physics_frame
 	var door := bk.to_global(Vector3(5.05, 0.5, 0.0)); var into := -(bk.global_basis * Vector3(0, 0, 1)).normalized()
 	var yaw := atan2(-into.x, -into.z)
@@ -31,6 +31,12 @@ func _ready() -> void:
 	print("INN walked in: %s from the door, inside=%s, %.1f fps" % [(pl.global_position - door).length(), (pl.global_position - door).dot(into) > 0.5, frames / t])
 	rig.distance = 4.0; rig.pitch = deg_to_rad(-12.0)
 	await _shot(out, "inside")
+	# the village from above the square, and from the shore
+	var free := Camera3D.new(); sc.add_child(free); free.current = true; free.fov = 55
+	for sh in [["village", bk.global_position + Vector3(30, 26, 34), bk.global_position + Vector3(14, 0, 14)],
+			["shore", bk.global_position + Vector3(10, 9, 50), bk.global_position + Vector3(22, 2, 30)]]:
+		free.position = sh[1]; free.look_at(sh[2])
+		await _shot(out, sh[0])
 	get_tree().quit()
 
 func _shot(out: String, name: String) -> void:

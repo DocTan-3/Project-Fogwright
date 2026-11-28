@@ -38,7 +38,7 @@ func _ready() -> void:
 	add_child(ground)
 	print("FARHALLOW ground %d ms, %d grass tufts, pieces %s" % [Time.get_ticks_msec() - t0, ground.get_node("Grass").get_meta("tufts"), ground.get_meta("pieces")])
 	_sea()
-	_buildings()
+	_buildings(); _ready_kit_report()
 	player = get_parent().get_node_or_null("Player")
 	if player:
 		var sp: Vector2 = fh.WELL + Vector2(2.5, 2.5)
@@ -87,18 +87,27 @@ func _sea() -> void:
 	m.material_override = mat; m.position = Vector3(250, 0.0, 250); add_child(m)
 
 ## each plan building as the stand-in nearest its shape, scaled to its footprint, on its terrace, turned to its angle
+var kit_tris := 0
 func _buildings() -> void:
 	var o: Vector2 = fh.ORIGIN
 	for i in fh.BUILDINGS.size():
 		var b: Dictionary = fh.BUILDINGS[i]
-		if KITS.has(b.type):   # built from the voxel building kit: true size, with its rooms inside
+		if KITS.has(b.type) or KitLayouts.STYLES.has(b.type):   # from the voxel building kit: true size, rooms inside
 			var kit_holder := Node3D.new(); kit_holder.name = "Building%d" % i; add_child(kit_holder)
-			var bk := BuildingKit.build(KITS[b.type]); kit_holder.add_child(bk)
-			var sz: Vector2i = KITS[b.type].size
+			var lay: Dictionary
+			if KITS.has(b.type): lay = KITS[b.type]
+			else:   # laid out from the plan: its size and doors, in the plot's own frame
+				var ca := cos(float(b.a)); var sa := sin(float(b.a)); var dl := []
+				for dd in b.doors:
+					var v := Vector2(dd[0] - b.x, dd[1] - b.y); dl.append(Vector2(v.x * ca + v.y * sa, -v.x * sa + v.y * ca))
+				lay = KitLayouts.for_plot(b.type, float(b.w), float(b.h), dl, i)
+			var bk := BuildingKit.build(lay); kit_holder.add_child(bk)
+			var sz: Vector2i = lay.size
 			# the kit's front (+Z) turned to face the plot's door side (its local -Z), centred on the plot
 			bk.rotation.y = PI; bk.position = Vector3(sz.x, 0, -sz.y)
 			kit_holder.position = Vector3(b.x - o.x, fh.pads[i][3], b.y - o.y); kit_holder.rotation.y = -float(b.a)
-			print("FARHALLOW %s from the kit: %d triangles" % [b.name, bk.get_meta("triangles")])
+			kit_tris += bk.get_meta("triangles")
+			print("FARHALLOW %s (%s) from the kit: %d triangles, %d ms" % [b.name, b.type, bk.get_meta("triangles"), bk.get_meta("build_ms")])
 			continue
 		var w := float(b.w); var d := float(b.h)
 		var best: Array = STANDINS[0]; var err := INF
@@ -114,6 +123,9 @@ func _buildings() -> void:
 		holder.position = Vector3(b.x - o.x, fh.pads[i][3], b.y - o.y); holder.rotation.y = -float(b.a)
 		var body := StaticBody3D.new(); var cs := CollisionShape3D.new(); var bs := BoxShape3D.new()
 		bs.size = box.size; cs.shape = bs; cs.position = Vector3(0, box.size.y * 0.5, 0); body.add_child(cs); holder.add_child(body)
+
+func _ready_kit_report() -> void:
+	print("FARHALLOW kit buildings: %d triangles in all" % kit_tris)
 
 func _aabb(n: Node3D) -> AABB:
 	var box := AABB(); var first := true

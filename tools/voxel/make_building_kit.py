@@ -171,7 +171,7 @@ def dry_wall(name, h, opening=None, knee=False):
         if z1 + 2 <= h - 1: box(name, x0 - 2, x1 + 2, 0, WALL - 1, z1 + 1, z1 + 2, lambda x, y, z: 'tar' if z == z1 + 1 else 'tar_l')  # a ship-timber lintel
         if z0 > 0: box(name, x0 - 1, x1 + 1, 0, WALL - 1, z0 - 1, z0 - 1, 'fst_l')                                                    # a flat sill stone
     return name
-for h in (44,):
+for h in (30, 44):
     dry_wall('wall_dry_%d' % h, h); dry_wall('wall_dry_door_%d' % h, h, DOOR); dry_wall('wall_dry_window_%d' % h, h, WIN)
 dry_wall('wall_dry_12', 12)   # the knee wall of a floor up in the roof
 # a dormer over a knee-wall bay: its face carries on from the knee wall up to 2.6 m with the window in it, cheeks run back
@@ -199,7 +199,7 @@ def board_wall(name, h, opening=None):
         cut(name, x0, x1, 0, WALL - 1, z0, z1); box(name, x0 - 1, x1 + 1, 0, WALL - 1, z1 + 1, z1 + 2, 'tar')
         box(name, x0 - 1, x0 - 1, 0, WALL - 1, 0, z1, 'tar'); box(name, x1 + 1, x1 + 1, 0, WALL - 1, 0, z1, 'tar')
 for h in (30, 44):
-    board_wall('wall_board_%d' % h, h); board_wall('wall_board_door_%d' % h, h, DOOR)
+    board_wall('wall_board_%d' % h, h); board_wall('wall_board_door_%d' % h, h, DOOR); board_wall('wall_board_window_%d' % h, h, WIN)
     box('post_board_%d' % h, 0, 1, 0, WALL - 1, 0, h - 1, 'tar')
 # a floor of big shore slabs, laid without mortar: few faces to draw
 box('floor_slabs', 0, BAY - 1, 0, BAY - 1, 0, 0, lambda x, y, z: (lambda r: 'fst_d' if r < 0.3 else ('fst_l' if r > 0.7 else 'fst'))(_h(x // 10 + (y // 7) % 2 * 5, y // 7, 5)))
@@ -218,6 +218,17 @@ def heather_slope(name):
                 put(name, x, y, y + t, c)
 heather_slope('roof_heather')
 box('ridge_heather', 0, BAY - 1, 0, 3, 0, 2, lambda x, y, z: 'turf_d' if z == 0 else 'turf')       # a turf ridge
+# a turf roof, the way the Hrimfolk roof at home: sods over birch bark, green with a few bare and flowering patches
+def turf_slope(name):
+    for y in range(BAY):
+        for t in range(3):
+            for x in range(BAY):
+                r = _h(x // 5, y // 4, 21)
+                c = 'tar_d' if t == 0 else ('turf_d' if t == 1 else ('turf_d' if r < 0.25 else ('heather_l' if r > 0.9 else 'turf')))
+                put(name, x, y, y + t, c)
+turf_slope('roof_turf')
+box('ridge_turf', 0, BAY - 1, 0, 3, 0, 2, lambda x, y, z: 'turf_d' if z == 0 else 'turf')
+box('ridge_slate', 0, BAY - 1, 0, 3, 0, 1, lambda x, y, z: 'slate_d' if z == 0 else 'lead')
 # the stones that weigh the ropes down at the eave: one under each rope
 for x in range(0, BAY, 20):
     box('eave_weights', x, x, 0, 0, 3, 5, 'rope'); box('eave_weights', x, x + 1, 0, 1, 0, 2, 'fst_d')
