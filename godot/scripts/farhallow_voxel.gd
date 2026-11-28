@@ -46,6 +46,7 @@ func _ready() -> void:
 	_buildings(); _ready_kit_report()
 	print("FARHALLOW buildings ready in %d ms" % (Time.get_ticks_msec() - tb))
 	if baking: get_tree().quit()
+	add_child(VillageDress.build(self))                     # the palisade, gate, harbour, well, plots, field, props, woods
 	player = get_parent().get_node_or_null("Player")
 	if player:
 		var sp: Vector2 = fh.WELL + Vector2(2.5, 2.5)
