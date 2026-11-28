@@ -35,6 +35,9 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
   the warp space. Freeholds remain in the lore as falling frontier villages.
 - **Ammunition slot (decided):** bows need a quiver, crossbows a bolt quiver, guns bullet pouches. Each takes an
   ammunition slot at the back of the belt, so backpack items can still be worn.
+- **Weapons and magic (decided):** halberds, glaives and staves removed; short and long bows are one bow with its own
+  damage-to-speed ratio. Mages are very rare: accessible magic lives in runes, consumables, tools and relics. God
+  magic stays quiet and only for the chosen.
 
 ## Core mechanics (decided 2026-11-28)
 

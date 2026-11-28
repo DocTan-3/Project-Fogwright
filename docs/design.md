@@ -146,8 +146,8 @@ Decided with the user; items marked *(proposal)* are still open.
 - **Energy:** one energy pool for everyone and a cooldown on each skill, plus one quirk per weapon family:
   - **Guns** hold one shot or a few and must reload (and the tree can make a reload part of a dash).
   - **Heavy melee** builds momentum while it keeps hitting, and loses it when it stops.
-  - **Bows** reward a longer draw.
-  - **Caster foci** spend Fog shards, which raises Fog pressure, as the lore says magic does.
+  - **Bows** reward a longer draw. There is **one bow** item: each bow sets its own damage-to-speed ratio, so there is no separate shortbow and longbow *(decided 2026-11-28)*.
+  - **No caster weapons** *(decided 2026-11-28)*: staves and wands are removed, and halberds and glaives too. Mages are very rare. The magic most players can touch is in **runes, consumables, tools and relics**, never common fireballs; using it spends Fog shards and raises Fog pressure, as the lore says magic does. A god's chosen gain quiet god magic through the Magic wedge.
 
 - **Defence: telegraphs, and the build decides.** Enemy attacks are telegraphed on the ground, coloured by kind, and each kind has a natural counter: dodge the unblockable, parry the undodgeable, step out of what is too wide for either. The kinds come from the animations we have (the Quaternius libraries; tools/assets/INVENTORY.md):
 
