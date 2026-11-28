@@ -27,6 +27,12 @@ func _ready() -> void:
 			elif TIERS[t] != "wardrobe": worn = Equipment.set_items(TIERS[t])
 			var m := Equipment.dress(BODIES[b][0], BODIES[b][1], worn, true, TIERS[t] != "tools_carried")
 			add_child(m); m.position = Vector3(b * 1.5 + t * 12.0, 0, 0)
+			var low := INF      # the ground check: nothing may dip below the ground
+			for mi in m.find_children("*", "MeshInstance3D", true, false):
+				if not (mi as MeshInstance3D).is_visible_in_tree(): continue
+				var bb: AABB = (mi as MeshInstance3D).global_transform * (mi as MeshInstance3D).get_aabb()
+				for k in 8: low = minf(low, bb.get_endpoint(k).y)
+			if low < -0.01: print("GROUND FAIL %s on %s_%s: %.3f m below the ground" % [TIERS[t], BODIES[b][0], BODIES[b][1], -low])
 			var tris := 0
 			for mi in m.find_children("*", "MeshInstance3D", true, false): if (mi as MeshInstance3D).visible: tris += (mi as MeshInstance3D).mesh.get_faces().size() / 3
 			print("EQUIP %s on %s_%s: %d triangles" % [TIERS[t], BODIES[b][0], BODIES[b][1], tris])

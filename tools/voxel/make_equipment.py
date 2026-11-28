@@ -818,10 +818,12 @@ def tool_item(kind, carry):
     def fn(F, Pb, Pc):
         P = {}; x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
         gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0        # the fist's centre, in fine voxels
-        V = tool_shape(kind, gz - 2)
-        if carry == 'back':     # long tools stand upright beside the body, the butt near the ground, like a staff
-            P['weapon@hand_r#2'] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
-        else:                   # one-handers point forward from the fist, the edge or face down
+        if carry == 'back':     # polearm stance: the forearm forward, the haft upright in the fist (the tilt undoes the
+            # arm's bend), the butt clear of the ground; the fist sits near elbow height
+            V = tool_shape(kind, 2 * au0 - (au0 - h0) - 10)
+            P['weapon@hand_r#2~x%d' % POLE_TILT] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
+        else:                   # one-handers point forward from the fist, the edge or face down (raised by the stance)
+            V = tool_shape(kind, gz - 2)
             P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
         return P
     def fn_carried(F, Pb, Pc):
@@ -842,6 +844,7 @@ def tool_item(kind, carry):
             P['weapon@torso#2~z35'] = {(2 * cx + u, 2 * TD + 8 + w, 2 * (hip + 4) + h): c for (u, w, h), c in V.items()}
         return P
     return fn, fn_carried
+POLE_TILT = 85      # the polearm stance bends the arm about 85 degrees forward in all (equipment.gd, STANCES)
 TOOLS = {'hatchet': 'hip', 'spear': 'back', 'hammer': 'hip', 'blade': 'hip', 'boathook': 'back', 'cleaver': 'hip', 'pitchfork': 'back'}
 
 # ---------------------------------------------------------------- the catalogue
@@ -918,6 +921,7 @@ if __name__ == '__main__':
         os.makedirs(os.path.join(ROOT, 'assets', 'voxel', 'gear', name), exist_ok=True)
         if carried:
             db['items'][name]['carried'] = 'res://assets/voxel/gear/%s_carried/%%s_%%s.vox' % name
+            db['items'][name]['stance'] = 'polearm' if TOOLS.get(name) == 'back' else 'one_hand'
             os.makedirs(os.path.join(ROOT, 'assets', 'voxel', 'gear', name + '_carried'), exist_ok=True)
     tall = {}
     for people in mc.PEOPLES:
