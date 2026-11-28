@@ -1,12 +1,12 @@
 # Fogwright — Game Design Document
 
-2026-11-22 · @Dev Tan
+2026-11-22 · @Dev Tan · aligned with the lore and core mechanics on 2026-11-28
 
 ## Overview
 
-Fogwright is a lightweight, cross-platform co-op survival game where a small group of friends resettles a fantasy world broken by its own magic, using inventions instead of spells.
+Fogwright is a lightweight, cross-platform co-op RPG where a small group of friends, chosen by fading gods, push back a magical Fog with inventions first and grace as a rare gift.
 
-**Pitch:** Three centuries after the arcane empire fell, the land is wild, the ruins are full of relics, and a magical Fog creeps over everything. You and your friends build a settlement, rediscover lost crafts, and engineer your way back to the shattered capital. Every spell you cast feeds the Fog.
+**Pitch:** In the year 312 of the Third Age, the gods are fading and a Fog made of godless magic creeps over the world. You escape the fall of your village, are claimed by a god, and with your friends retake the frontier, rediscover lost crafts and slowly uncover who is really draining the world. Every spell you cast feeds the Fog.
 
 **Design pillars**
 
@@ -24,35 +24,35 @@ Fogwright is a lightweight, cross-platform co-op survival game where a small gro
 |-----------------|---------------------------------------------------------------------|
 | Valheim         | Co-op survival, biomes that get harder with distance, base building |
 | RimWorld        | Settlers with needs and moods, events that create stories           |
-| Project Zomboid | Detailed wounds and sickness, scavenging, creeping dread            |
-| Ragnarok Online | Job classes, a persistent shared world, social progression          |
+| Albion Online   | Tab-target combat, the build is the gear, randomized dungeons      |
+| Ragnarok Online | A persistent shared world, social progression                       |
 | Skyrim          | Open exploration, a landmark on the horizon to aim for              |
 
 **Players:** 2 to 16 friends on one persistent server, which keeps running between sessions. Built for groups that play a few evenings a week, not for thousands of strangers. Co-op only for now; PvP is planned for later, and the server already decides all game state, so it can be added without a rewrite.
 
 ## Setting
 
-The world is a fantasy realm 300 years after a magical collapse, being resettled by people who build machines because magic is dangerous.
+The world is the broken continent of Erde in **312 TA**, the 312th year of the Third Age. The full history is in lore.md; in short:
 
-- **The fall.** An arcane empire ran everything on magic until a great working went wrong. Its cities fell in a single night, and the magic that was left curdled into the Fog.
+- **Three ages.** The first-age empire, the Concord, ruled all of Erde under many gods until the gods' war broke it and Aldrath, head of the Gods, split the land apart. In the second age the gods banned magic for all but a few chosen, and endless wars bred the Fog. The Third Age began when Merrith, the kindest god, gave herself to the Fog to thin it.
 
-- **The land now.** Forests, marshes and mountains have reclaimed the empire. Its ruins (towers, aqueducts, vaults) are scattered everywhere, half-buried and full of relics.
+- **The Fog.** Godless magic that pools, sours and remembers what it touches. It is thinnest near Aldrath's sealed city at the centre and thickest at the Sundering, the world's broken edge. It is the main threat and the reason the world is dangerous.
 
-- **The survivors.** Scattered villages that rejected magic and kept the old mechanical trades alive. The players are the first generation to push out and resettle.
+- **The land now.** Twelve fading gods each keep a small circle clear round their cities. Outside them, frontier villages called freeholds are falling one by one, and ruins of three ages are everywhere, full of relics.
 
-- **The Fog.** Leftover magic that spreads, twists living things, and is drawn to spellcasting. It is the main threat and the reason the world is dangerous.
+- **The players.** Freefolk who survive the fall of Farhallow, guided by Merrith's thread to be claimed by a god. Everyone can fight and craft without magic; grace is a mysterious bonus.
 
-- **The goal on the horizon.** The shattered capital of the first age lies somewhere in the Sundering, the thickest Fog at the world's edge (exactly where is still open). Reaching it and finding out what happened is the long-term goal.
+- **The goal on the horizon.** Aumenor, the Concord's shattered capital, sunk in the Sundering. What happens there is still open.
 
-**Tone:** high fantasy on the surface, grimdark underneath. The world first looks like a medieval high-tech high fantasy: grand cities around their gods, proud peoples, steam and brass progress, and chosen heroes guided by a kind goddess. The story then peels it back layer by layer to reveal a grimdark reality: a betrayer at the head of the Gods, gods fading and hiding, protectors devoured by the Fog. Visually the game starts bright and grand, and darkness creeps in as the story goes on. The land itself shows the gods' power: areas near the gods and their cities are colourful, tended and alive; toward the Fog at the world's boundaries, colour drains away and the land turns bleak, untamed and overgrown, more relic and ruin than civilization. As a god fades during the story, colour retreats from their lands. The world was once peaceful and is now forgotten: players piece its history together slowly from ruins, inscriptions, relics, the writings of lost peoples, and the warps nobody understands. The full history is in the lore document. The sky is a single procedural dome rather than image skyboxes: a moving sun, clouds, stars and moons, clear and blue near the gods and washed grey toward the Fog, ready for weather later (the number of moons is a lore decision still open). Mounts, from horses to larger beasts, are planned, so roads and city streets are built wide for riders. Prototypes use placeholder buildings and props; each people's architectural style is important and will be designed in a later art pass, once the systems settle.
+**Tone:** high fantasy on the surface, grimdark underneath. The world first looks like a medieval high-tech high fantasy: grand cities around their gods, proud peoples, steam and brass progress, and chosen heroes guided by a kind goddess. The story then peels it back layer by layer to reveal a grimdark reality: a betrayer at the head of the Gods, gods fading and hiding, protectors devoured by the Fog. Visually the game starts bright and grand, and darkness creeps in as the story goes on. The land itself shows the gods' power: areas near the gods and their cities are colourful, tended and alive; toward the Fog at the world's boundaries, colour drains away and the land turns bleak, untamed and overgrown, more relic and ruin than civilization. As a god fades during the story, colour retreats from their lands. The world was once peaceful and is now forgotten: players piece its history together slowly from ruins, inscriptions, relics, the writings of lost peoples, and the warps nobody understands. The full history is in the lore document. The sky is a single procedural dome rather than image skyboxes: a moving sun, clouds, stars and moons, clear and blue near the gods and washed grey toward the Fog, ready for weather later (three moons, which are lore and sky only). Mounts, from horses to larger beasts, are planned, so roads and city streets are built wide for riders. Prototypes use placeholder buildings and props; each people's architectural style is important and will be designed in a later art pass, once the systems settle.
 
 ## Core loop
 
-Each session, players head out from the settlement, bring back resources and knowledge, and turn them into inventions that let them reach farther.
+Each session, players head out from a city or their group's freehold, bring back resources and knowledge, and turn them into gear and inventions that let them reach farther.
 
 **Session loop (30 to 90 minutes)**
 
-1.  **Check in.** See what happened while you were away: settler moods, Fog movement, events.
+1.  **Check in.** See what happened while you were away: the freehold's settlers, Fog movement, events, the gods' Grace.
 
 2.  **Plan.** Decide as a group what to build or where to go.
 
@@ -60,7 +60,7 @@ Each session, players head out from the settlement, bring back resources and kno
 
 4.  **Return.** Carry loot home before night or a storm rolls in.
 
-5.  **Build and invent.** Combine parts into new machines, upgrade the settlement, and treat wounds.
+5.  **Build and invent.** Combine parts into new machines, upgrade the freehold, and spend new skill points.
 
 6.  **Defend.** Hold off Fog surges at night with walls, turrets and traps.
 
@@ -72,9 +72,9 @@ Each session, players head out from the settlement, bring back resources and kno
 
 - Rediscover all six crafts and recruit settlers.
 
-- Reach the shattered capital and learn what caused the fall.
+- Follow the story's trail of clues toward the truth about Aldrath, and toward Aumenor.
 
-The loop runs on distance: the farther from the settlement, the richer the loot and the thicker the Fog.
+The loop runs on distance: the farther from Aldrath's centre, the richer the loot and the thicker the Fog. One in-game day lasts **one hour** of real time, so a session usually sees one venture out and one night.
 
 ## The opening: the fall of Farhallow
 
@@ -82,15 +82,15 @@ The tutorial is the story. Players begin as freefolk in Farhallow, a village on 
 
 ## Crafts
 
-Players each choose a primary craft and can learn a secondary one later, so a group of four covers most needs but still has to trade.
+Crafts are regions of the one skill tree. Each player grows into one or two, so a group of four covers most needs but still has to trade. Basic items (bandages, torches, a campfire) can be made anywhere; everything else needs a station (forge, workbench, loom).
 
 | Craft       | Role                   | Signature abilities and inventions                                        | Depends on                                          |
 |-------------|------------------------|---------------------------------------------------------------------------|-----------------------------------------------------|
 | Tinkerer    | Engineer               | Crossbow turrets, traps, gliders, grappling hooks, clockwork scout drones | Smith for parts, Millwright for power               |
 | Millwright  | Builder and automation | Waterwheels, windmills, bellows, conveyors, automatic sawmills            | Smith for gears, Warden for timber from far forests |
 | Smith       | Gear and parts         | Weapons, armor, tools, gears, springs, pipes                              | Millwright to power the forge                       |
-| Runecrafter | Magic                  | Spells, enchantments, relic cores for arcane engines (feeds the Fog)      | Herbalist for corruption cures                      |
-| Herbalist   | Support and medicine   | Bandages, splints, antidotes, food, Fog-corruption remedies               | Warden for rare plants                              |
+| Relicwright | Relics                 | Warp bags, relic cores for arcane engines (feeds the Fog), lantern coils, gear enchantments | Smith for metal parts                    |
+| Herbalist   | Support and medicine   | Bandages, potions, antidotes, food buffs                                  | Warden for rare plants                              |
 | Warden      | Scout and fighter      | Tracking, beast-taming, pushing back the Fog edge, escort duty            | Tinkerer for gear, Herbalist for healing            |
 
 **Progression:** crafts level up by doing the work. New techniques are unlocked by finding schematic fragments in ruins, so exploring and crafting feed each other.
@@ -127,11 +127,11 @@ Decided with the user; items marked *(proposal)* are still open.
 
 - **Block and parry share one button.** Held, it blocks: damage is reduced (35% gets through). Pressed just before a hit lands (a fifth of a second), it parries: only 5% gets through and the attacker reels, but a parry drains three times the stamina of a block. Only melee weapons can parry; with any other weapon a timed press is a block. Blocking without the stamina for it breaks the guard and staggers. *(Numbers from the first playable, to tune.)*
 
-- **Stamina and energy.** Stamina pays for defence (dodge, block, parry) and recovers quickly once no defence is used; energy pays for skills. *(The user asked for parries to drain stamina; keeping it a pool apart from energy is our reading, to confirm.)*
+- **Stamina and energy.** Stamina pays for defence (dodge, block, parry) and recovers quickly once no defence is used; energy pays for skills. *(decided 2026-11-28: two pools)*
 
 - **Paths and gods' magic** add their own moves: a path's utility (Lanternbearers push back the Fog, Ironclads become cover) and, once claimed, the god's magic.
 
-- **The bar:** six skills, and a button that swaps to a second page of six. The second page is free: the same gear, six more slots for any moves the character has. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. *(proposal: the defensive move has its own button, outside the pages.)*
+- **The bar:** six skills, and a button that swaps to a second page of six. The second page is free: the same gear, six more slots for any moves the character has. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. Dodge and block/parry have their own buttons beside Attack, outside the pages *(decided 2026-11-28)*.
 
 - **Energy:** one energy pool for everyone and a cooldown on each skill, plus one quirk per weapon family:
   - **Guns** hold one shot or a few and must reload (and the tree can make a reload part of a dash).
@@ -159,7 +159,9 @@ Decided with the user; items marked *(proposal)* are still open.
 
 ### Skill tree, paths and gods
 
-There are no classes. Every character can fight and craft completely without the Gods; who you are comes from where you grow in the skill tree. Players start as freefolk in Aldrath's outer city at the centre of the world.
+There are no classes. Every character can fight and craft completely without the Gods; who you are comes from where you grow in the skill tree. Players start as freefolk in Farhallow and arrive at Hollin's Cross after its fall.
+
+**Levels** *(decided 2026-11-28)*: characters have levels, and each level gives **node points** for the one large skill tree; that is the progression. Horizontal progression (breadth of the tree, gear, gods' magic) stays worthwhile. **Mobility:** everyone has the basic moves (move, sprint, jump, swim, the dodge); advanced mobility (dash, leap, slide, climbing) comes from tree nodes.
 
 | Layer       | What it gives                                                             | Where it comes from                 |
 |-------------|---------------------------------------------------------------------------|-------------------------------------|
@@ -170,7 +172,7 @@ There are no classes. Every character can fight and craft completely without the
 
 **Paths.** Every character can enter every path, but progress is slow and limited: in the base game a character has enough skill points to finish one path and maybe half of another. Working names: Tinker, Technomancer, Ironclad, Fogstalker, Sapper, Lanternbearer, Beastbinder, Warpwalker. Proposed utility examples: Tinkers deploy inventions anywhere; Technomancers move their mind into a machine; Ironclads become cover; Fogstalkers endure thick Fog; Sappers blast open shortcuts; Lanternbearers push back the Fog around their group; Beastbinders bond with a creature; Warpwalkers set warp anchors.
 
-**Gods.** Being claimed by a god does not decide your role; it decides which magic you can take. Magic is mysterious and a bonus, not a tool for everyday use.
+**Gods.** Being claimed by a god does not decide your role. It grants a **starting node** in that god's region of the skill tree, placed far from the other gods' regions; every player can eventually walk the tree to other gods' magic too *(decided 2026-11-28)*. Claiming also gives a seat in that god's city (a warp bind and favour), not a new home. Aldrath claims no one. Magic is mysterious and a bonus, not a tool for everyday use.
 
 **Entering a path.** Each path begins with a starter quest. Paths carry no vows.
 
@@ -227,7 +229,7 @@ Examples: a wall mount, spring and bolt launcher make a crossbow turret. A cart,
 
 3.  **Steam:** boilers, steam hammers, rail carts to outposts, diving suits for flooded ruins.
 
-4.  **Arcane engine:** relic cores power the strongest machines, and every one draws the Fog toward the settlement.
+4.  **Arcane engine:** relic cores power the strongest machines, and every one draws the Fog toward the freehold.
 
 ## The Fog
 
@@ -239,13 +241,13 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 - Night and storms: surges roll in and press against walls.
 
-- Magic: each spell and running arcane engine adds to a settlement-wide Fog pressure value, which raises surge strength and frequency.
+- Magic: each spell and running arcane engine adds to a Fog pressure value for the region and any freehold in it, which raises surge strength and frequency.
 
 **What it does**
 
 - Corrupts animals into Fog-touched creatures, stronger and stranger the deeper you go.
 
-- Corrupts people slowly. Long exposure gives a corruption meter that needs an Herbalist's remedy, and untreated it becomes a lasting affliction.
+- Takes people over years: the Greyed are NPCs and settlers, never players. Players have **no Fog exposure meter** *(decided 2026-11-28)*; instead, from density 3 up, a lantern of high enough tier is needed to enter at all, so better lanterns open the deeper Fog.
 
 - Hides the map and blocks travel until cleared.
 
@@ -257,7 +259,7 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 - Clearing a ruin's heart removes Fog from that region permanently, which is the main milestone of territory progress.
 
-**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Open: lantern fuel, and lantern upgrades.
+**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Open: lantern fuel, and lantern upgrades (see mechanics-proposals.md).
 
 **The choice it creates:** magic is a shortcut with a cost. A group can rush with runes and arcane engines, but its home will face much harder nights.
 
@@ -387,7 +389,7 @@ The overworld stays persistent and shared. Breaches are private instances for th
 
 | Feature  | How it works                                                                                                                                                |
 |----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Spawning | Breaches open near Fog-heavy areas and stay open for a few hours of real time or until cleared. The settlement's lookout tower reveals them on the map.     |
+| Spawning | Breaches open near Fog-heavy areas and stay open for a few hours of real time or until cleared. A freehold's lookout tower reveals them on the map.     |
 | Tiers    | The Fog glow shows the tier: grey, green, violet, gold. Higher tiers mean tougher Fog-touched enemies and better relics.                                    |
 | Layout   | Hand-made room templates of the old empire (archive, forge hall, flooded cistern, rune chamber, vault) stitched together by rules, ending in a boss chamber |
 | Size     | Small Breaches for 1 to 2 players, large ones for 3 to 6                                                                                                    |
@@ -410,23 +412,27 @@ The overworld stays persistent and shared. Breaches are private instances for th
 
 Survival is detailed enough to create stories but simple enough to read at a glance on a phone.
 
-**Player needs:** hunger, warmth, rest and Fog corruption. Each has a clear meter and slows you down before it harms you.
+**Player needs** *(decided 2026-11-28)*: none to maintain. There are no hunger, warmth or rest meters; **food gives timed buffs** (more health, stamina, regen).
 
-**Wounds:** injuries are tracked per body area (head, torso, arms, legs). Each wound has a type (cut, bruise, fracture, bite, burn) with its own treatment: bandage, splint, stitches or antidote. An untreated wound can turn infected. A broken leg slows you, and a hurt arm weakens attacks and crafting.
+**Health:** one health bar, no wounds per body part. Bleeds, burns and stuns are short combat effects. Health comes back by slow natural regen, which food speeds up a lot.
 
-**Death:** you drop your carried items where you fall and wake at the settlement. Your gear stays in the world for friends to recover. A hardcore server option makes death permanent for that character.
+**Death:** you keep everything you carry and wake at your god's seat or the last waystone you prayed at. Your **equipped gear loses durability**, repaired by Smiths. A hardcore server option makes death permanent for that character.
+
+**Inventory:** a grid of stacking slots with a weight limit, held in the warp bag; upgrades add slots and weight. **Gathering** spots (trees, ore, herbs) are shared by everyone and respawn on a timer. **Loot** is free for all: whoever picks a drop up first keeps it.
+
+**Freeholds and homes:** each player's home and storage live in their warp space, which nothing can reach. The group's shared frontier base is a **freehold**: a fallen or new frontier village they hold against the Fog, with settlers, walls, workshops and night surges. Farhallow itself stays lost.
 
 **Settlers**
 
 - Recruited from survivor camps or rescued in ruins.
 
-- Each has 2 or 3 traits (brave, greedy, night owl, ex-runecrafter) plus needs and a mood.
+- Each has 2 or 3 traits (brave, greedy, night owl, ex-cogwitch) plus needs and a mood.
 
 - They work assigned jobs such as farming, hauling or guard duty, and can fill a missing craft at a low level.
 
 - They form relationships and grudges with each other and with players, which shape their mood and loyalty.
 
-**Events** fire from a director that watches the settlement's wealth, defenses and Fog pressure:
+**Events** fire from a director that watches a freehold's wealth, defenses and Fog pressure:
 
 - Threats: Fog surges, raider bands, Fog-touched beasts, a sick settler starting an outbreak.
 
@@ -454,7 +460,7 @@ The look is simple low-poly 3D, built mostly in code, so buildings feel grand an
 
 - Muted natural colors. The Fog is real distance fog that thickens and turns violet farther from camp, and is the main source of atmosphere.
 
-- Day and night lighting with warm lantern and forge light, which helps sell the settlement as a safe place.
+- Day and night lighting with warm lantern and forge light, which helps sell the freehold as a safe place.
 
 ### Architecture
 
@@ -548,7 +554,7 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 | Tinkerer | Waistcoat, rolled sleeves, tool belt | Brass fittings, goggles, small gauges, coloured glass | Canister gauntlet or canister pack |
 | Millwright | Sturdy work clothes, apron, heavy gloves | Canvas, rope, wooden toggles, cogs as buttons | Rope coil on the shoulder, toolbox on the back |
 | Smith | Leather apron, a short sleeve, heavy boots | Scorched leather, rivets, chain | One big gauntlet, a hammer on the belt |
-| Runecrafter | Long coat or robe, high collar | Dark wool, etched symbols, glowing relic cores | Vial-pauldrons with tubes to the back |
+| Relicwright | Long coat or robe, high collar | Dark wool, etched symbols, glowing relic cores | Vial-pauldrons with tubes to the back |
 | Herbalist | Layered skirt or wrap, satchels, rolled sleeves | Linen, dried herbs, glass phials, cork | A belt stack of pouches and jars |
 | Warden | Trench or hooded coat, cape | Waxed leather, fur trim, buckled straps | A lantern on the belt, a cowl mantle |
 
@@ -717,7 +723,7 @@ Each milestone ends with a gate the group plays, and the next one only starts on
 
 - Write the world lore: regions, cities, factions and history, which the authored places are built from.
 
-- Which PvP comes first once co-op is solid: rival groups in a Breach, or raiding other settlements?
+- Which PvP comes first once co-op is solid: rival groups in a Breach, or raiding other freeholds?
 
 - When do firearms arrive: with steam, or only with arcane engines?
 
