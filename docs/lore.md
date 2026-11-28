@@ -277,7 +277,7 @@ The Fog remembers what it touches and copies it badly. Five kinds of thing live 
 - **Twelve months** of 30 days, one named for each of the twelve, and **the Mourning**: five days at the year's end that belong to Merrith, when nobody works or fights, even raiders.
 - **Weeks** of six days, five to a month.
 - **Festivals** in each god's month: the Feast of Roads (Hollin), the Long Night (Hrothvar), the Charter Days (Maelis), Ashwake (Ostrak), the Wellnight (Khesra), the Beast Fair (Brannoch), the Lamplighting (Galeth).
-- **Money:** one coin everywhere, struck by Aldrath's mint (its name is still open).
+- **Money:** one coin everywhere, the **mark**, struck by Aldrath's mint.
 
 | Month | God | Season (main continent) |
 | --- | --- | --- |
@@ -330,7 +330,6 @@ The moons are lore and sky only: they do not change play *(decided 2026-11-28)*.
 ## Open questions
 
 - [ ] The endgame at Aumenor.
-- [ ] The name of the one coin.
 
 - [ ] The Penitent's town: its name and where it stands.
 

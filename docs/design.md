@@ -161,7 +161,7 @@ Decided with the user; items marked *(proposal)* are still open.
 
 There are no classes. Every character can fight and craft completely without the Gods; who you are comes from where you grow in the skill tree. Players start as freefolk in Farhallow and arrive at Hollin's Cross after its fall.
 
-**Levels** *(decided 2026-11-28)*: characters have levels, and each level gives **node points** for the one large skill tree; that is the progression. Horizontal progression (breadth of the tree, gear, gods' magic) stays worthwhile. **Mobility:** everyone has the basic moves (move, sprint, jump, swim, the dodge); advanced mobility (dash, leap, slide, climbing) comes from tree nodes.
+**Levels** *(decided 2026-11-28)*: characters have levels with **no cap** (each comes slower), earned by **experience from everything you do** (fighting, gathering, crafting, quests, discovery), and each level gives **node points** for the one large skill tree; that is the progression. Horizontal progression (breadth of the tree, gear, gods' magic) stays worthwhile. **Mobility:** everyone has the basic moves (move, sprint, jump, swim, the dodge); advanced mobility (dash, leap, slide, climbing) comes from tree nodes.
 
 | Layer       | What it gives                                                             | Where it comes from                 |
 |-------------|---------------------------------------------------------------------------|-------------------------------------|
@@ -259,7 +259,7 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 - Clearing a ruin's heart removes Fog from that region permanently, which is the main milestone of territory progress.
 
-**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Lanterns burn lamp oil, which is easy to craft: a relic-made **rendering still** turns organic materials (fish, fat, meat, hide) into oil, so a hunt can refuel you in the wilds *(decided 2026-11-28)*. Open: lantern upgrades (see mechanics-proposals.md).
+**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Lanterns burn lamp oil, which is easy to craft: a relic-made **rendering still** turns organic materials (fish, fat, meat, hide) into oil, so a hunt can refuel you in the wilds *(decided 2026-11-28)*. Lanterns upgrade by **tier only**: each tier is a new lantern you craft *(decided 2026-11-28)*.
 
 **The compass** *(decided 2026-11-28)*: a Skyrim-style compass strip across the top of the screen shows directions, quest and place markers, and Merrith's thread as a gold mark toward the next claiming site.
 

@@ -22,7 +22,7 @@ The basics, settled first:
 
 | System | Decision |
 | --- | --- |
-| **Levels** | Characters have levels. Each level gives **node points** for the one large skill tree, which is the progression. Horizontal progression (breadth of the tree, gear, gods' magic) stays worthwhile. Level cap and where experience comes from are open |
+| **Levels** | Characters have levels with **no cap**: each level comes slower, and each gives **node points** for the one large skill tree, which is the progression. **Experience comes from everything you do**: fighting, gathering, crafting, quests, and discovering places and lore. Horizontal progression (breadth of the tree, gear, gods' magic) stays worthwhile |
 | **Mobility** | Basic moves for everyone (move, sprint, jump, swim, the dodge). Advanced mobility (dash, leap, slide, climbing and the like) comes from skill-tree nodes |
 | **Health** | One health bar, no wounds per body part. Bleeds, burns and stuns are short combat effects. Health comes back by **slow natural regen**, which food speeds up a lot |
 | **Survival needs** | None to maintain: no hunger, warmth or rest meters. **Food gives timed buffs** (more health, stamina, regen) |
@@ -164,8 +164,7 @@ Every adventurer carries a lantern (design.md). Proposals for the open parts:
   relic-made device, turns organic materials into oil: fish, fat, meat, hide, seeds, wood resin. So if you run out in
   the wilds, hunt an animal and render its meat and hide into oil. Oil is also sold cheaply everywhere. (Proposals still:
   Vigil wicks that burn longer, Fog-shard cells from Relicwrights.)
-- **Upgrades:** lens (wider light), cowl (no light seen by enemies: stealth), coil (pushes Fog harder), cage (survives
-  falls and swimming). Made by Tinkerers and Smiths.
+- **Upgrades (decided): tiers only.** Each tier is a new lantern you craft; there are no add-on parts.
 - **Tiers:** the lantern's tier sets the deepest Fog density you can enter (see Gating).
 
 ### Clearing the Fog
@@ -299,7 +298,7 @@ So ruins look different and teach the history (design.md asks for hand-made room
 - **Proficiency** rises by doing (design.md: crafts level by doing the work; weapons train by use).
 - **Gear** brings item power and moves (weapons.md).
 - **Grace** is a shared, world-level progression: the server's gods and colours are the group's history.
-- Open: the level cap, where experience comes from, and whether quests and discovery (the Codex) also give points.
+- **No level cap**; experience from everything you do (decided).
 
 ## Build order (proposal)
 
