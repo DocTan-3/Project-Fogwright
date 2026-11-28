@@ -147,6 +147,7 @@ Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyri
 - **Maces** are done too (`blunt_tier`, `BLUNT`): flanges grow by tier (6, then 8 with a top spike, black round a potion core, gilt round an arc core with a crystal).
 - **Hammers and warhammers** follow Doc Tan's T4 reference at every tier (`hammer_line`): a long double-faced head with vented ends, a strap round the middle and a bracket below. T1 iron, T2 steel with a brass strap and langets, T3 vents and an iron diamond bracket, T4 ivory with black vents, a copper strap inlaid teal, a gilt filigree bracket and a tasselled pommel, T5 gilt-edged with glowing vents, an outer wing and crystals.
 - **Spears** (`spear_tier`): T2 steel leaf and brass socket, T3 longer leaf with a fuller, parrying wings and a butt spike, T4 black leaf, vial socket, pipe and gauge, T5 blued leaf with arc runes, gilt wings and a crystal butt.
+- **Bows** (`bow_tier`): T2 a brass-fitted ash recurve, T3 a horn-bellied composite with ivory tips and an arrow shelf, T4 a compound bow on a black riser with brass cams, cables, a sight pin and a stabiliser, T5 a blued recurve with gilt inlay, arc runes, crystal tips and a glowing string.
 - **Swords, greatswords and daggers** are done (`blade_tier`, one design scaled to each blade by `BLADES`):
   - T2: bright steel with a brass guard whose tips sweep down, a brass-wired grip and a brass pommel.
   - T3: a broader blade with a wide fuller, a riveted guard with langets, a tooled grip and a wheel pommel.

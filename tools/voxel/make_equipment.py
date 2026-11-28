@@ -1335,6 +1335,77 @@ def hammer_line(V, b, t, kind, floor=999):
             b(-r, r, -r, r, hc + hh + 1 + dh, hc + hh + 1 + dh, 'arc' if dh < 4 else 'arc_d')
     return V
 
+def bow_tier(V, b, t):
+    """the bow at tiers 2-5, in the iron one's frame: limbs along h bending back toward the archer (+w), the string
+    behind at +w, u the limbs' width. T2 a brass-fitted recurve, T3 a horn-and-sinew composite with ivory tips,
+    T4 a compound bow with cams and cables on a black riser, T5 a blued recurve with gilt inlay and an arc string"""
+    L = {2: 56, 3: 58, 4: 46, 5: 60}[t]
+    sg = lambda h: 1 if h > 0 else -1
+    R = {2: 7, 3: 8, 4: 18, 5: 10}[t]                                  # the riser's half-length
+    curl = t != 4                                                      # recurve tips curling forward (-w)
+    knee = L - 10
+    Wk = 10 if t != 4 else 8
+    def bend(h):                                                       # back toward the archer, then a forward flick
+        a = abs(h)
+        if a <= R: return 0
+        if a <= knee: return round(Wk * ((a - R) / (knee - R)) ** 1.7)
+        return Wk - ((a - knee) ** 2 // 25 if curl else -((a - knee) // 4))
+    lim = {2: ('ash', 'ash_d'), 3: ('wood', 'wood_d'), 4: ('steel_d', 'steel'), 5: ('blued', 'blued_d')}[t]
+    for h in range(-L, L + 1):
+        a = abs(h); w = bend(h)
+        if a <= R:                                                     # the riser: deeper, bellied toward -w
+            depth = 4 if t == 4 else 3
+            for ww in range(w - depth, w + 1):
+                for u in range(-1, 2):
+                    if a <= 5: c = {2: 'brass' if h % 4 == 0 else 'leather_d', 3: 'leather_l' if h % 3 == 0 else 'leather',
+                                    4: 'rubber' if h % 2 else 'black', 5: 'gilt' if h % 3 == 0 else 'blued_d'}[t]
+                    else: c = {2: 'ash_d', 3: 'wood_d' if ww > w - depth else 'iron_d', 4: 'black', 5: 'gilt' if ww == w - depth else 'blued_d'}[t]
+                    V[(u, ww, h)] = c
+            continue
+        th = 2 if a < L * 0.7 else 1
+        wp = bend(h - sg(h))                                           # fill the step from the voxel row before
+        for ww in range(min(w - th + 1, wp + 1), max(w, wp - 1) + 1):
+            for u in range(-1, 2):
+                c = lim[0]
+                if t == 3 and th == 2 and ww == w: c = 'black_d'       # the horn belly
+                if t == 5 and u == 0 and ww == w - th + 1 and a % 4 == 0: c = 'arc'
+                if t == 5 and abs(u) == 1 and a % 8 == 2: c = 'gilt'
+                if t == 2 and a in (R + 1, R + 2): c = 'brass'
+                if t == 3 and a in (R + 1, R + 2, knee - 1): c = 'iron_d'
+                V[(u, ww, h)] = c
+    sg = lambda h: 1 if h > 0 else -1
+    tips = [L, -L]
+    for h in tips:                                                     # the tips
+        w = bend(h)
+        if t == 2: b(-1, 1, w - 1, w, h - sg(h), h + sg(h), 'brass')
+        if t == 3: b(-1, 1, w - 1, w + 1, h - sg(h) * 2, h + sg(h), 'ivory')
+        if t == 5:
+            for k in range(4): r = 1 if k < 2 else 0; b(-r, r, w - r, w + r, h + sg(h) * (1 + k), h + sg(h) * (1 + k), 'arc' if k < 3 else 'arc_d')
+    if t == 4:                                                         # cams, cables, a sight and a short stabiliser
+        for h in tips:
+            w = bend(h)
+            for dw in range(-3, 4):
+                for dh in range(-3, 4):
+                    if dw * dw + dh * dh <= 10: V[(0, w + 2 + dw, h + dh)] = 'brass' if dw * dw + dh * dh > 3 else 'steel_l'
+            V[(1, w + 2, h)] = V[(-1, w + 2, h)] = 'steel_l'
+        ws = bend(L) + 4
+        for h in range(-L, L + 1): V[(0, ws, h)] = 'cord'; V[(1, ws - 2, h)] = 'black_d'
+        b(0, 0, -4, -4, 8, 13, 'brass'); V[(0, -5, 12)] = 'red'         # the sight pin
+        for k in range(1, 6): V[(0, -4 - k, -7)] = 'steel'
+        b(-1, 1, -11, -10, -8, -6, 'black_d')
+        V[(-2, -2, 9)] = V[(-2, -2, 10)] = 'potion'; V[(-2, -2, 11)] = 'glass_l'
+        return V
+    ws = Wk + 1
+    for h in range(-L + 4, L - 3): V[(0, ws, h)] = 'arc' if t == 5 else 'cord'
+    if t == 2: V[(-2, 0, 5)] = V[(2, 0, 5)] = 'brass_l'
+    if t == 3:
+        for h in (-R, R): V[(-2, -1, h)] = V[(2, -1, h)] = 'brass'
+        b(0, 0, -4, -4, 5, 6, 'leather_l')                             # an arrow shelf
+    if t == 5:
+        for dh in range(-1, 2): b(-2, 2, -4, -2, dh * 8, dh * 8, 'gilt')
+        b(-1, 1, -5, -5, -1, 1, 'arc')
+    return V
+
 def iron_shape(kind, floor, tier=1):
     V = {}
     def b(u0, u1, w0, w1, h0, h1, c):
@@ -1363,6 +1434,8 @@ def iron_shape(kind, floor, tier=1):
         hammer_line(V, b, tier, kind, floor)
     elif kind in BLUNT and tier > 1:
         blunt_tier(V, b, tier, kind, floor)
+    elif kind == 'bow' and tier > 1:
+        bow_tier(V, b, tier)
     elif kind == 'spear' and tier > 1:
         spear_tier(V, b, tier, floor)
     elif kind in ('sword', 'dagger', 'greatsword'):
@@ -1408,7 +1481,7 @@ def iron_shape(kind, floor, tier=1):
         for h in range(83, 104):
             hw = min(3, (h - 82) // 2) if h < 94 else max(0, 3 - (h - 94) // 3)
             b(0, 0, -hw, hw, h, h, lambda u, w, hh: 'iron_l' if abs(w) == hw else 'iron'); b(-1, 1, 0, 0, h, h, 'iron_d')
-    if kind == 'bow':     # limbs along h, curving back toward the archer (+w), the string behind
+    if kind == 'bow' and tier == 1:     # limbs along h, curving back toward the archer (+w), the string behind
         L = 54
         for h in range(-L, L + 1):
             bend = round(10 * (h / L) ** 2)
@@ -1566,7 +1639,7 @@ for _k, (_c, _n, _st) in IRON.items():
     _slots = {0: ['off_hand'], 1: ['main_hand'], 2: ['main_hand', 'off_hand']}[_n]
     ITEMS['iron_' + _k] = (_h, 'common', _slots, 11, [], _cr)
 STANCE = {'iron_' + k: st for k, (_, _, st) in IRON.items()}
-TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear']        # types built at tiers 2-5 so far (the item list)
+TIERED = ['sword', 'greatsword', 'dagger', 'axe', 'greataxe', 'mace', 'hammer', 'warhammer', 'spear', 'bow']        # types built at tiers 2-5 so far (the item list)
 for _k in TIERED:
     for _t, _r in TIERS.items():
         _h, _cr = iron_item(_k, _t)
