@@ -71,6 +71,16 @@ static func _aim(root: Node3D) -> void:
 ## the fist about its grip; the hand stays as the stance left it.
 const BOW_RISE := 20.0     # degrees the upper limb rises above level
 const BOW_OUT := 12.0      # degrees the bow turns forward, away from the body
+## other rest holds to choose from (tests/bow_poses.tscn): the arms' degrees on top of the bow stance, the upper limb's
+## direction and the string's side in root (the character faces +Z, its left is +X). "" keeps the hold above.
+const BOW_POSES := {
+	"A": {"arms": {"arm_upper_l": Vector3(-4, 0, 4), "arm_lower_l": Vector3(-8, 0, 0)}, "D": Vector3(0.12, 1, 0.18), "S": Vector3(-1, 0, 0)},
+	"B": {"arms": {"arm_upper_l": Vector3(-14, 0, 4), "arm_lower_l": Vector3(-22, 0, 0)}, "D": Vector3(0.05, 1, -0.55), "S": Vector3(-1, 0, 0.3)},
+	"C": {"arms": {"arm_upper_l": Vector3(-12, 0, 2), "arm_lower_l": Vector3(-78, 0, 0)}, "D": Vector3(-0.05, 1, -0.6), "S": Vector3(-1, 0, 0)},
+	"D": {"arms": {"arm_upper_l": Vector3(-22, 0, -4), "arm_lower_l": Vector3(-38, 0, 0), "arm_upper_r": Vector3(-18, 0, 4), "arm_lower_r": Vector3(-40, 0, 0)},
+		"D": Vector3(1, 0.12, 0.1), "S": Vector3(0, 0.4, -1)},
+}
+static var bow_pose := ""
 static func _rest_bow(root: Node3D) -> void:
 	for node in root.find_children("weapon*", "Node3D", true, false):
 		if not String(node.get_meta("piece", "")).ends_with("@hand_l"): continue
@@ -86,7 +96,9 @@ static func _rest_bow(root: Node3D) -> void:
 		var pivot := box.get_center(); pivot[ax[1]] = box.position[ax[1]] if sv[ax[1]] > 0.0 else box.end[ax[1]]   # the grip
 		var r := deg_to_rad(BOW_RISE); var o := deg_to_rad(BOW_OUT)
 		var D := Vector3(-cos(r) * cos(o), sin(r), sin(o)).normalized()     # the upper limb: across to the far side
-		var S0 := Vector3(0, 1, -0.5); var S := (S0 - D * D.dot(S0)).normalized()
+		var S0 := Vector3(0, 1, -0.5)
+		if bow_pose != "": D = (BOW_POSES[bow_pose].D as Vector3).normalized(); S0 = BOW_POSES[bow_pose].S
+		var S := (S0 - D * D.dot(S0)).normalized()
 		var target := Basis(D, S, D.cross(S)) * Basis(l, sv, l.cross(sv)).inverse()   # the bow's new frame in root
 		var p: Vector3 = mi.transform * pivot
 		mi.basis = (B.inverse() * target).scaled(mi.basis.get_scale())
@@ -135,6 +147,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 			if items[n].has("stance"): kinds.append(items[n].stance)
 		kinds.sort_custom(func(a, b): return not (a in OFF_STANCES) and (b in OFF_STANCES))   # off-hand stances last
 		for k in kinds: st.merge(STANCES[k], true)
+		if "bow" in kinds and bow_pose != "": st.merge(BOW_POSES[bow_pose].arms, true)
 		for node in root.find_children("*", "Node3D", true, false):
 			if st.has(String(node.name)):
 				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
