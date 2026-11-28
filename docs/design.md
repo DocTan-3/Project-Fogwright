@@ -476,21 +476,27 @@ Technology level shows on the buildings: frontier villages are mostly timber and
 
 ### Character pipeline
 
-Every character, player or NPC, is one of two base bodies (a man and a woman), shaped by code into each people and dressed by the equipment system below, so any item fits any character and nothing clips or floats.
+Characters are voxel models in the approved stylized look: a big head, a short broad body with no neck, thick arms
+with big fists, short sturdy legs, flat colours with a darker and a lighter tone. Every character, player or NPC, is
+generated from its people, its sex and its sliders, so any item fits any character and nothing clips or floats.
+The handoff details are in `docs/voxel-characters.md` on the voxel branches.
 
-- **Base bodies:** built from MakeHuman's base mesh, shapes, joints and skin weights (CC0) by a Blender Python script, then brought down to about 6,000 triangles with most of them in the face. A 1,500-triangle version is used past about 22 m.
-
-- **Peoples as shapes:** each people is a set of MakeHuman shape changes on the same mesh (Ferrin short and broad, Ilvari tall and slender, and so on), stored as morph targets. The skeleton moves to that people's joints at runtime.
-
-- **Sliders, limited per people:** height and build (slim to heavy) are sliders, each limited to a range that keeps the people recognisable.
-
-- **One rig for everyone:** a single 19-bone skeleton. All bodies, gear and animations are built for it.
-
-- **Painted by code:** skin, faces, underclothes, tattoos and ink are drawn by a shader from each point's place on a fixed template, so the paint lands on every people's anatomy. Hair, beards and moustaches are their own meshes, riding on the head.
-
-- **Animations:** one shared set (idle, walk, run, jump, gather, build, swing, aim, shoot, hurt, die, emotes), later blended so you can walk while aiming.
-
-- **Budget:** about 3,000 to 6,000 triangles per fully equipped character and about three draw calls (body, outfit, hair). Distant characters use simpler versions.
+- **Voxels:** 2.5 cm for the body and gear; the head is a finer part at 1.25 cm, the same size with four times the
+  detail on the face. Each body part is its own named model (head, torso, upper and lower arms, hands, upper and lower
+  legs, feet), pivoting at its joint; animation adds to a relaxed rest pose.
+- **Generated, not modelled:** `tools/voxel/make_character.py` builds every people and both sexes from a few numbers
+  (leg, torso and arm lengths, torso width and depth, limb thickness), so builds differ in bulk as well as height. All
+  of them fit the standard door (about 2.2 x 1.4 m): the Hrimfolk tallest at 1.6 m, the Ferrin short and the broadest.
+- **Women:** narrower shoulders, full hips, a defined waist, a bust, slimmer arms, smaller hands and feet, narrower
+  heads with a softer jaw and lashes, and legs as long as the men's.
+- **Faces carved and painted:** eyes with lid, iris, pupil and catch-light set in sockets under the brow; a shaped nose
+  with nostrils; lips and mouth corners. Expressions (stern, grim, calm, a smile) come from the brows' tilt and the
+  mouth's corners. Marks are voxels too: Hrimfolk knotwork, Ilvari ink, Ferrin soot and burns, Penitent scars.
+- **Colours:** within real reflectance (pale skin no brighter than about 60%), so nothing flares under the sun.
+- **Base body in underwear:** the base body wears undyed wool drawers (and a breast band for women) with bare feet,
+  as the creator shows it, every mark visible. The starting clothes are a layer, like any equipment.
+- **Budget:** about 2,600 to 4,200 triangles for a dressed character and 4,000 to 7,000 in full armour, after merging
+  same-coloured faces; one material for everything (vertex colours).
 
 ### Equipment
 
@@ -524,7 +530,7 @@ Equipment works like World of Warcraft's: every piece shows on the character, so
 - **Heavy armour and plate** are split like WoW's: a chest piece and a legs piece. The chest piece fills chest and coat; plate covers the wardrobe completely. Heavy chests come in versions with a built-in tabard or coat skirt, since nothing goes over them. Plate skirts and tassets come from the legs piece or from a belt (a war belt with tassets), as WoW's belts and leggings carry the hip plates.
 - **Robes** sit in the coat slot and hide the legs; the legs slot still counts for stats.
 - **Full helms** fill head, eyes and mouth and are the strongest (as in Ragnarok Online); others fill head and eyes, or head alone.
-- **Mechanical arms** always come as a pair: they fill the shoulders, arms, wrists and hands on both sides and replace the gloves. Whether one arm or both look mechanical is a cosmetic choice of the item.
+- **Mechanical arms** always come as a pair: they fill the shoulders, arms, wrists and hands on both sides and replace the gloves. Whether one arm or both look mechanical is a cosmetic choice of the item. The heaviest, the colossus arms, go over any chest piece (see *How it's made*).
 - **The canister gauntlet** fills hands and wrists. **A cowl mantle** fills head and shoulders.
 
 **Covering and layering.** Each gear item either *replaces* what is under it (reinforced trousers take the wardrobe lower's place, boots take the shoes, heavy armour takes the shirt) or *overlays* it (chaps, greaves and tassets go over trousers or a skirt; waistcoats and corsets over the shirt). The order from the inside out is fixed: skin, wardrobe, chest, coat, belt, shoulders, back. A slot blocked by another item shows greyed out, linked to the item that blocks it. Robes and long coats drop the boot tops beneath them, and headgear removes the hair it covers.
@@ -550,16 +556,39 @@ Crafted items show who made them: a small stamped sigil in a fixed place on each
 
 **Later:** dyes as items, restyling gear to look like other gear (transmog), and Fog wear on clothing.
 
-**How it's made**
+**How it's made (voxels)**
 
-- **Painted gear is baked, as in WoW.** Each character's paint layers are drawn once into a single texture whenever their clothes change, so the game only reads a texture: a crowd costs about the same as one person. The layers can be rich: linen, wool and leather; studs, mail rings, scale and plate edges; seams, trims and rivets; three dye channels and wear. Most of the wardrobe is paint.
-- **Cloth is draped once, offline.** Coat skirts, robes, skirts, hoods and puffed sleeves are hung on each body in Blender with its cloth simulation, then frozen: real folds and a real fit, with no cloth simulation in the game. Where the cloth lies on the body it moves with the body; where it hangs free it follows the hips, thighs and, for long hems, the shins, as WoW skins its robes. The body draws in slightly beneath tight cloth so it never shows through.
-- **Fitted and rigid pieces.** Fitted pieces (lapels, corsets, plates, bracers, boot tops) are shells laid onto the body; rigid pieces (buckles, pouches, helmets, pauldrons, back items, weapons) ride a bone. Every point follows every people, both sexes and the build slider through the body's own shapes. A character's built pieces merge into one mesh.
-- **Items are recipes, not models.** An item is a material, a cut, trims, dyes and a few built parts, so a small kit gives a large range of looks, the way WoW repaints shared models.
+- **Items are recipes, not models.** Each item is a short program (`tools/voxel/make_equipment.py`) that reads a
+  body's measurements (shoulders, waist, hips, limb boxes, the head's box) and builds itself to fit it. One item fits
+  every people and both sexes, the Ferrin's short limbs and the Ilvari's long ones alike. It is written per body as a
+  layer file.
+- **Covering pieces replace the body part under them**, the way WoW swaps body sections for armour-shaped ones
+  (its geosets): a breastplate replaces the torso, boots the feet and shins, gauntlets the hands. Nothing is left
+  underneath to poke through.
+- **Rigid pieces ride a part:** pauldrons on the upper arms, a helm or goggles on the head, a boiler or a lantern on
+  the torso. They move with it.
+- **A fixed order from the inside out** decides which layer wins where two would take the same part: the body, the
+  wardrobe, legs and feet, chest, coat, arms, belt, shoulders, back, head, eyes and mouth, then a rig.
+- **Items hide what they cover:** a full helm hides the hair and the hanging beard and braid; a hood tucks the hair in.
+- **Slots are checked:** two items may not take the same slot. `godot/scripts/voxel/equipment.gd` dresses a character
+  from `data/equipment.json` (each item's slots, order and what it hides) and refuses a clash.
 
-**No clipping, the WoW way.** WoW avoids clipping by swapping body sections for armour-shaped ones (its "geosets"), giving each area one owner, and hiding hair under helmets. We do the same: the body under a built piece is removed or drawn in for that character (shoes take the feet, a long robe the upper legs); built pieces stack from the inside out, each sitting outside what is already there; and headgear removes the hair it covers.
+**The armour tiers as built** (`godot/tests/voxel_equipment.tscn` shows each on five very different bodies):
 
-**Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are built; rivets, engraving and wear are paint. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each armour tier gets a clearly different silhouette, from a slim coat to a full plate shell.
+| Tier | Set | Pieces |
+| --- | --- | --- |
+| Light | Warden's leathers | A hood and capelet, a laced jerkin with a fur collar, bracers, tall boots, a belt with a pouch and a lantern |
+| Medium | Tinkerer's brigandine | Goggles, a riveted brigandine, one mechanical pauldron with a cog (asymmetric), the canister gauntlet, a tool belt |
+| Heavy | Steamwright's brass | A respirator, a brass cuirass with a pressure gauge, pauldrons on fur with a gauge and a pipe, a boiler with a glowing firebox and a chimney, greaves with glowing knee cores, work gloves |
+| Plate | Ironclad | A full helm with an eye slit and a crest, a ridged breastplate with a fauld, plate arms with exposed pistons, gauntlets, plate legs with tassets, sabatons |
+| Rig | Arcane engine rig | An exosuit you climb into: it replaces the body with its frame and lifts the pilot 25 cm; a glowing arcane core, an engine with exhaust stacks, a roll cage, clamp hands; still inside the door (at most 2.0 x 1.25 m) |
+
+**Mechanical arms over any tier.** The heaviest cybernetics are arms, not suits: the colossus arms (huge bronze arms
+with domed shoulders, a round port, red hoses, corrugated cables to the neck and brass-capped fists hanging low) fill
+the shoulder, arm, wrist and hand slots and go over anything, even light leathers or a uniform coat. The contrast of a
+light outfit with the heaviest arms is a look we want.
+
+**Visual language:** big forms (helmets, shoulder plates, tanks, boilers) are built; rivets, seams and wear are voxels of a darker or lighter tone. Glowing accents (furnace cores, gauges, lenses) mark powered gear and read clearly at a distance. Each armour tier gets a clearly different silhouette, from a slim coat to a full plate shell.
 
 **NPCs.** Not every NPC needs full detail, but every one needs personality.
 
@@ -580,7 +609,7 @@ Clothes carry personality: wealth shows in fabric, trim and jewellery; tidiness 
 - **A signature item:** a hat (sometimes feathered), a scarf, an earring or a walking stick, so faces in a crowd stay memorable.
 - **Temperament:** cheerful, gruff, nervous, proud, weary, curious, stern or dreamy. It sets their posture, how often and how far they glance about, the tilt of their head, how they sway and how fast they walk, and the lines they say.
 
-**Textures.** Clothing and armour stay low-poly and get their surface from one shared texture sheet: sixteen CC0 surfaces (linen, wool, herringbone, leathers, suede, fur, hessian, velvet, jacquards, knit, brushed steel, rust, mail, plaid) as greyscale detail that the dyes colour. Built pieces are cut from the 1,500-triangle distance body: a typical townsperson's outfit is 500 to 1,600 triangles, a full suit of armour about 3,000.
+**Colours, not textures.** Every voxel carries one colour from a small palette, baked into the mesh: there is no texture sheet. Rarity, dyes and wear are palette swaps and patterns of voxels; recolouring a tunic is swapping one entry.
 
 **References:** the armour reference set covers all five tiers. Designs are original, inspired by the references, never copies of another artist's work.
 
