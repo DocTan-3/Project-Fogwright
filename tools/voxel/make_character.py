@@ -74,8 +74,9 @@ def build(people, sex, dressed=True):
     # ---- boots and legs
     x0r = (TW - 2 * LW - 2) // 2; x0l = TW - 1 - x0r - LW + 1
     hip = 6 + 2 + p['LL'] + p['UL']
+    FR = {'people': people, 'sex': sex, 'TW': TW, 'TD': TD, 'LW': LW, 'AW': AW, 'hip': hip, 'LL': p['LL'], 'UL': p['UL'], 'legs': {}, 'arms': {}}
     for side, x0 in (('l', x0l), ('r', x0r)):
-        x1 = x0 + LW - 1; yc = (TD - 8) // 2
+        x1 = x0 + LW - 1; yc = (TD - 8) // 2; FR['legs'][side] = (x0, x1, yc)
         if dressed:     # boots with a turned cuff, trousers
             rbox('foot_' + side, x0, x1, yc - (1 if sex == 'f' else 2), yc + 7, 0, 3, lambda x, y, z: 'boots_d' if z == 0 else 'boots')
             rbox('foot_' + side, x0, x1, yc, yc + 7, 4, 6, 'boots')
@@ -134,6 +135,7 @@ def build(people, sex, dressed=True):
     ay0 = (TD - AW) // 2
     for side, (x0, x1) in (('l', (TW - SH, TW - SH + AW - 1)), ('r', (SH - AW, SH - 1))):
         au0 = top - p['AU'] + 1; al0 = au0 - p['AL']; h0 = al0 - (5 if sex == 'f' else 6)
+        FR['arms'][side] = (x0, x1, ay0, au0, al0, h0)
         sleeve = top - p['AU'] * 2 // 3
         rbox('arm_upper_' + side, x0, x1, ay0, ay0 + AW - 1, au0, top, lambda x, y, z: 'tunic' if z >= sleeve and dressed else ('tattoo' if people == 'hrimfolk' and not dressed and (z in (top - 6, top - 3) or (z in (top - 5, top - 4) and (x + y + z) % 2 == 0)) else 'skin'), top_bev=True)
         rbox('arm_lower_' + side, x0, x1, ay0, ay0 + AW - 1, al0, au0 - 1, 'skin')
@@ -169,6 +171,7 @@ def build(people, sex, dressed=True):
     def Z(v): return Z0 + H - 1 - v
     def hput(part, c, d, v, col): put(part, X(c), Y0 + d, Z(v), col)
     mid = W // 2; gap = 2 * (W // 8) + 2
+    FR.update(top=top, cx=cx, SH=SH, head=(X0, Y0, Z0, W, D, H), mid=mid, hair=hs, beard=beard)
     EYES = (mid - gap // 2 - 6, mid + gap // 2)          # first column of each eye
     MW = 4 if sex == 'm' else 3                         # half the mouth's width
     def inset(v):                                       # the jaw narrowing toward the chin
@@ -329,6 +332,7 @@ def build(people, sex, dressed=True):
             for c in (mid - 1, mid):
                 col = 'iron' if k in (1, 11) else ('bead' if k in (4, 8) else ('hair_l' if (c + k) % 2 else 'hair_d'))
                 for d in (-1, 0, 1): hput('braid@head#2~x-10z4', c, d, H + 6 + k, col)
+    build.frame = FR      # the body's measurements, for equipment fitted to it (make_equipment.py)
     return P, PAL
 
 OUT = os.path.join(HERE, '..', '..', 'godot', 'assets', 'voxel', 'characters', 'peoples')

@@ -1,0 +1,303 @@
+{
+ "items": {
+  "warden_hood": {
+   "tier": "light",
+   "slots": [
+    "head"
+   ],
+   "order": 8,
+   "hides": [
+    "hair",
+    "bun",
+    "crown",
+    "braids"
+   ],
+   "file": "res://assets/voxel/gear/warden_hood/%s_%s.vox"
+  },
+  "warden_jerkin": {
+   "tier": "light",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_jerkin/%s_%s.vox"
+  },
+  "warden_bracers": {
+   "tier": "light",
+   "slots": [
+    "wrists"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_bracers/%s_%s.vox"
+  },
+  "warden_boots": {
+   "tier": "light",
+   "slots": [
+    "feet"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_boots/%s_%s.vox"
+  },
+  "warden_belt": {
+   "tier": "light",
+   "slots": [
+    "waist"
+   ],
+   "order": 5,
+   "hides": [],
+   "file": "res://assets/voxel/gear/warden_belt/%s_%s.vox"
+  },
+  "tinker_goggles": {
+   "tier": "medium",
+   "slots": [
+    "eyes"
+   ],
+   "order": 9,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_goggles/%s_%s.vox"
+  },
+  "tinker_brigandine": {
+   "tier": "medium",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_brigandine/%s_%s.vox"
+  },
+  "tinker_pauldron": {
+   "tier": "medium",
+   "slots": [
+    "shoulder_l"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_pauldron/%s_%s.vox"
+  },
+  "canister_gauntlet": {
+   "tier": "medium",
+   "slots": [
+    "hand_r",
+    "wrist_r"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/canister_gauntlet/%s_%s.vox"
+  },
+  "tinker_belt": {
+   "tier": "medium",
+   "slots": [
+    "waist"
+   ],
+   "order": 5,
+   "hides": [],
+   "file": "res://assets/voxel/gear/tinker_belt/%s_%s.vox"
+  },
+  "steam_respirator": {
+   "tier": "heavy",
+   "slots": [
+    "mouth"
+   ],
+   "order": 9,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_respirator/%s_%s.vox"
+  },
+  "steam_cuirass": {
+   "tier": "heavy",
+   "slots": [
+    "chest"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_cuirass/%s_%s.vox"
+  },
+  "steam_pauldrons": {
+   "tier": "heavy",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_pauldrons/%s_%s.vox"
+  },
+  "steam_boiler": {
+   "tier": "heavy",
+   "slots": [
+    "back"
+   ],
+   "order": 7,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_boiler/%s_%s.vox"
+  },
+  "steam_greaves": {
+   "tier": "heavy",
+   "slots": [
+    "legs"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_greaves/%s_%s.vox"
+  },
+  "steam_gloves": {
+   "tier": "heavy",
+   "slots": [
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/steam_gloves/%s_%s.vox"
+  },
+  "iron_helm": {
+   "tier": "plate",
+   "slots": [
+    "head",
+    "eyes",
+    "mouth"
+   ],
+   "order": 8,
+   "hides": [
+    "hair",
+    "bun",
+    "crown",
+    "braids",
+    "beard",
+    "braid"
+   ],
+   "file": "res://assets/voxel/gear/iron_helm/%s_%s.vox"
+  },
+  "iron_breastplate": {
+   "tier": "plate",
+   "slots": [
+    "chest",
+    "coat"
+   ],
+   "order": 2,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_breastplate/%s_%s.vox"
+  },
+  "iron_arms": {
+   "tier": "plate",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r",
+    "arms"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_arms/%s_%s.vox"
+  },
+  "iron_gauntlets": {
+   "tier": "plate",
+   "slots": [
+    "hands"
+   ],
+   "order": 4,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_gauntlets/%s_%s.vox"
+  },
+  "iron_legs": {
+   "tier": "plate",
+   "slots": [
+    "legs"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_legs/%s_%s.vox"
+  },
+  "iron_sabatons": {
+   "tier": "plate",
+   "slots": [
+    "feet"
+   ],
+   "order": 1,
+   "hides": [],
+   "file": "res://assets/voxel/gear/iron_sabatons/%s_%s.vox"
+  },
+  "arcane_rig": {
+   "tier": "rig",
+   "slots": [
+    "rig"
+   ],
+   "order": 10,
+   "hides": [],
+   "file": "res://assets/voxel/gear/arcane_rig/%s_%s.vox"
+  },
+  "colossus_arms": {
+   "tier": "heavy",
+   "slots": [
+    "shoulder_l",
+    "shoulder_r",
+    "arms",
+    "wrists",
+    "hands"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/colossus_arms/%s_%s.vox"
+  }
+ },
+ "sets": {
+  "light": {
+   "name": "Warden's leathers",
+   "items": [
+    "warden_hood",
+    "warden_jerkin",
+    "warden_bracers",
+    "warden_boots",
+    "warden_belt"
+   ]
+  },
+  "medium": {
+   "name": "Tinkerer's brigandine",
+   "items": [
+    "tinker_goggles",
+    "tinker_brigandine",
+    "tinker_pauldron",
+    "canister_gauntlet",
+    "tinker_belt"
+   ]
+  },
+  "heavy": {
+   "name": "Steamwright's brass",
+   "items": [
+    "steam_respirator",
+    "steam_cuirass",
+    "steam_pauldrons",
+    "steam_boiler",
+    "steam_greaves",
+    "steam_gloves"
+   ]
+  },
+  "plate": {
+   "name": "Ironclad plate",
+   "items": [
+    "iron_helm",
+    "iron_breastplate",
+    "iron_arms",
+    "iron_gauntlets",
+    "iron_legs",
+    "iron_sabatons"
+   ]
+  },
+  "rig": {
+   "name": "Arcane engine rig",
+   "items": [
+    "tinker_goggles",
+    "arcane_rig"
+   ]
+  },
+  "colossus": {
+   "name": "Colossus arms over light leathers",
+   "items": [
+    "warden_jerkin",
+    "warden_boots",
+    "warden_belt",
+    "colossus_arms"
+   ]
+  }
+ }
+}
