@@ -407,6 +407,33 @@
    "hides": [],
    "file": "res://assets/voxel/gear/knapsack/%s_%s.vox"
   },
+  "quiver": {
+   "tier": "common",
+   "slots": [
+    "ammo"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/quiver/%s_%s.vox"
+  },
+  "bolt_case": {
+   "tier": "common",
+   "slots": [
+    "ammo"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/bolt_case/%s_%s.vox"
+  },
+  "bullet_pouch": {
+   "tier": "common",
+   "slots": [
+    "ammo"
+   ],
+   "order": 6,
+   "hides": [],
+   "file": "res://assets/voxel/gear/bullet_pouch/%s_%s.vox"
+  },
   "hatchet": {
    "tier": "common",
    "slots": [

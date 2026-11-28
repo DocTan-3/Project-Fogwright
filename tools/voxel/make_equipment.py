@@ -764,6 +764,87 @@ def knapsack(F, Pb, Pc):
     box(P, part, cx - 1, cx + 1, TD + 5, TD + 6, top - 9, top - 7, 'iron_l')
     return P
 
+# ---------------------------------------------------------------- ammunition (the ammunition slot, back of the belt)
+# Worn behind the belt so a knapsack or anything on the back can still be worn. Finer voxels (#2): the torso's back face
+# is at y = 2 * TD, the belt at z = 2 * hip + 2 .. 2 * hip + 5; low x is the wearer's right, so the quiver's mouth sits
+# behind the right hip, where the drawing hand finds it.
+def _rod(P, part, a, b, c, r=0.0):
+    """voxels along the line a -> b (r: a thicker rod)"""
+    n = max(abs(b[i] - a[i]) for i in range(3)) or 1
+    for t in range(n + 1):
+        q = tuple(round(a[i] + (b[i] - a[i]) * t / n) for i in range(3))
+        P[part][q] = c
+def quiver(F, Pb, Pc):
+    """a hip quiver for bows, slung behind the belt: a leather tube slanting from the right hip down toward the left,
+    banded where the belt holds it and at its foot; arrows with red and grey fletching stand out of its mouth"""
+    P = {}; TW, TD, hip = F['TW'], F['TD'], F['hip']; part = 'ammo@torso#2'; P[part] = {}
+    yb = 2 * TD + 5                                    # the tube's axis, behind the belt
+    m = (6, yb, 2 * hip + 12); L = 40
+    a = (math.sin(math.radians(28)), 0.0, -math.cos(math.radians(28)))       # down and toward the left hip
+    R = 3.6
+    for x in range(m[0] - 6, m[0] + 26):
+        for y in range(yb - 5, yb + 6):
+            for z in range(m[2] - L - 4, m[2] + 4):
+                d = (x - m[0], y - m[1], z - m[2]); t = d[0] * a[0] + d[2] * a[2]
+                if not (0 <= t <= L): continue
+                e = (d[0] - t * a[0], d[1], d[2] - t * a[2]); rr = math.sqrt(e[0] ** 2 + e[1] ** 2 + e[2] ** 2)
+                if rr > R: continue
+                if rr < R - 1.6 and t > 1.5: continue      # hollow; only the shell and the foot are drawn
+                if t < 2 or 14 <= t < 17: c = 'leather_d'  # the rim and the band the belt goes through
+                elif t > L - 3: c = 'iron'                 # the foot cap
+                elif 30 <= t < 32: c = 'leather_d'
+                else: c = 'leather_l' if (round(t) % 6 == 0 and e[1] > 2.5) else 'leather'   # stitching on the outside
+                P[part][(x, y, z)] = c
+    for i, (dx, dy) in enumerate(((0, -1), (1, 1), (-1, 1), (0, 2), (1, -2))):     # the arrows, standing out of the mouth
+        base = (m[0] + dx, yb + dy, m[2]); top_ = (base[0] - round(a[0] * (12 + i % 2 * 3)), base[1], base[2] + round(-a[2] * (17 + i % 2 * 4)))
+        _rod(P, part, base, top_, 'ash')
+        fl = 'red' if i % 2 == 0 else 'wool'
+        for k in range(1, 6):
+            q = (top_[0] + round(a[0] * k), top_[1], top_[2] + round(a[2] * k))
+            for o in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0)): P[part].setdefault((q[0] + o[0], q[1] + o[1], q[2] + o[2]), fl)
+        P[part][top_] = 'cord'                         # the nock
+    return P
+def bolt_case(F, Pb, Pc):
+    """a bolt case for crossbows at the back of the belt, right side: a stiff box, iron-cornered, its lid hinged back,
+    the bolts' short fletching standing in a row"""
+    P = {}; TD, hip = F['TD'], F['hip']; part = 'ammo@torso#2'
+    x0, x1, y0, y1, z0, z1 = 3, 14, 2 * TD + 1, 2 * TD + 8, 2 * hip - 12, 2 * hip + 6
+    box(P, part, x0, x1, y0, y1, z0, z1, lambda x, y, z: 'iron' if (x in (x0, x1) and z in (z0, z0 + 1, z1)) else ('leather_d' if x in (x0, x1) or z == z0 else 'leather'))
+    for x in range(x0 + 1, x1):                        # hollow at the top, so the bolts sit in it
+        for y in range(y0 + 1, y1):
+            for z in (z1,): P[part].pop((x, y, z), None)
+    box(P, part, x0, x1, y1 + 1, y1 + 1, z1 - 2, z1 + 5, 'leather_d')     # the lid, hinged back and hanging open
+    for i, x in enumerate(range(x0 + 2, x1 - 1, 3)):
+        for y in (y0 + 2, y0 + 5):
+            for z in range(z1 - 4, z1 + 5): P[part][(x, y, z)] = 'ash'
+            for z in range(z1 + 1, z1 + 5): P[part][(x + 1, y, z)] = 'wood' if (i + y) % 2 else 'leather_l'   # vanes
+    P[part][(x0 + 6, y1 + 2, z1 + 1)] = 'brass'                           # the lid's catch
+    return P
+def bullet_pouch(F, Pb, Pc):
+    """bullet pouches for guns at the back of the belt: a stiff cartridge box with a flap and a brass badge, a round
+    shot bag on a drawstring beside it, and a small brass powder flask"""
+    P = {}; TD, hip, cx = F['TD'], F['hip'], F['cx']; part = 'ammo@torso#2'
+    X0 = 2 * cx - 7; y0, y1 = 2 * TD + 1, 2 * TD + 6; z0, z1 = 2 * hip - 6, 2 * hip + 5
+    box(P, part, X0, X0 + 13, y0, y1, z0, z1, lambda x, y, z: 'leather_d' if z in (z0, z1) else 'leather')
+    box(P, part, X0 - 1, X0 + 14, y1 + 1, y1 + 1, z0 + 3, z1 + 1, 'leather_d')     # the flap
+    for x in range(X0 + 4, X0 + 10):
+        for z in range(z0 + 5, z0 + 9):
+            if (x - X0 - 6.5) ** 2 / 9 + (z - z0 - 6.5) ** 2 / 4 <= 1: P[part][(x, y1 + 2, z)] = 'brass_l' if z == z0 + 7 else 'brass'
+    sx, sz = 6, 2 * hip - 4                               # the shot bag, on the right
+    for x in range(sx - 4, sx + 5):
+        for y in range(y0, y0 + 8):
+            for z in range(sz - 5, sz + 6):
+                r = ((x - sx) / 4.2) ** 2 + ((y - y0 - 4) / 3.6) ** 2 + ((z - sz) / 5.2) ** 2
+                if r <= 1: P[part][(x, y, z)] = 'canvas' if z < sz + 3 else 'leather_d'
+    for z in range(sz + 5, 2 * hip + 4): P[part][(sx, y0 + 4, z)] = 'cord'
+    fx = X0 + 18                                          # the powder flask, on the left
+    for z in range(2 * hip - 9, 2 * hip + 2):
+        w = 2 if z < 2 * hip - 1 else 1
+        for x in range(fx - w, fx + w + 1):
+            for y in range(y0 + 1, y0 + 2 * w + 2): P[part][(x, y, z)] = 'brass_d' if z == 2 * hip - 9 else 'brass'
+    P[part][(fx, y0 + 2, 2 * hip + 2)] = 'iron'
+    return P
+
 # ---------------------------------------------------------------- the Farhallow tools (the prologue's weapons)
 # Chunky and about 1.3x real size (weapons.md), at the head's finer voxels (1.25 cm). Each is drawn in its own frame -
 # u across, w forward (negative) and back, h up the haft from the grip - then placed in the right fist (head up) or
@@ -1110,6 +1191,9 @@ ITEMS.update({
     'work_trousers':  (work_trousers, 'common', ['legs'], 1, []),
     'shoes':          (shoes, 'common', ['feet'], 1, []),
     'knapsack':       (knapsack, 'common', ['back'], 7, []),
+    'quiver':         (quiver, 'common', ['ammo'], 6, []),
+    'bolt_case':      (bolt_case, 'common', ['ammo'], 6, []),
+    'bullet_pouch':   (bullet_pouch, 'common', ['ammo'], 6, []),
 })
 for _k, _c in TOOLS.items():
     _h, _cr = tool_item(_k, _c)

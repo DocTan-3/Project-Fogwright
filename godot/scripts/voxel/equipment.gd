@@ -26,12 +26,12 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
-	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow at rest hangs
-	# upright in the lowered hand at the side
+	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow at rest is
+	# held low across the body (_rest_bow)
 	# a walking staff planted beside the bearer, the arm a little forward
 	"staff": {"arm_upper_r": Vector3(-10, 0, -4), "arm_lower_r": Vector3(-70, 0, 0)},
 	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
-	"bow": {"arm_upper_l": Vector3(-4, 0, 6), "arm_lower_l": Vector3(-8, 0, 0), "arm_lower_r": Vector3(-10, 0, 0),
+	"bow": {"arm_upper_l": Vector3(-12, 0, 0), "arm_lower_l": Vector3(-30, 0, 0), "arm_lower_r": Vector3(-8, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 }
 ## stances that hold the off hand win over the main hand's for the left arm (a sword's stance with a shield's)
@@ -84,22 +84,31 @@ static func _upright(root: Node3D) -> void:
 		for k in 8: low = minf(low, bb.get_endpoint(k).y)
 		(node as Node3D).position += to_root.basis.inverse() * Vector3(0, -low, 0)
 
-## a bow at rest: a long bow leans its lower limb forward, a step at a time, until its tip clears the ground
+## a bow at rest, held low across the body (the user's reference): the grip in the lowered off hand before the hip,
+## the bow nearly level, its upper limb rising toward the far side, the string up and toward the body. The bow turns in
+## the fist about its grip; the hand stays as the stance left it.
+const BOW_RISE := 20.0     # degrees the upper limb rises above level
+const BOW_OUT := 12.0      # degrees the bow turns forward, away from the body
 static func _rest_bow(root: Node3D) -> void:
 	for node in root.find_children("weapon*", "Node3D", true, false):
 		if not String(node.get_meta("piece", "")).ends_with("@hand_l"): continue
+		var mi := node as MeshInstance3D; var box: AABB = mi.get_aabb()
 		var hand := node.get_parent() as Node3D
-		var arm := _to_root(hand.get_parent(), root)
-		var now: Basis = arm.basis * hand.basis          # upright first, whatever the arm does
-		hand.basis = arm.basis.inverse() * (Basis(Quaternion((now * Vector3.UP).normalized(), Vector3.UP)) * now)
-		for step in 30:
-			var bb: AABB = (arm * hand.transform * (node as Node3D).transform) * (node as MeshInstance3D).get_aabb()
-			var low := INF
-			for k in 8: low = minf(low, bb.get_endpoint(k).y)
-			if low >= 0.0: break                  # the lower tip may rest on the ground
-			# tip the hand about the body's side-to-side axis: the lower limb swings forward (+Z)
-			hand.basis = arm.basis.inverse() * (Basis(Vector3.RIGHT, deg_to_rad(-3)) * (arm.basis * hand.basis))
-		hand.set_meta("rest", hand.rotation_degrees)
+		var B: Basis = (_to_root(hand.get_parent(), root) * hand.transform).basis.orthonormalized()
+		var N: Basis = B * mi.basis.orthonormalized()
+		# the limb runs along the box's longest axis, the string along the next (make_equipment.py draws it so)
+		var ax := [0, 1, 2]; ax.sort_custom(func(i, j): return box.size[i] > box.size[j])
+		var l := Vector3.ZERO; l[ax[0]] = 1.0
+		var sv := Vector3.ZERO; sv[ax[1]] = 1.0
+		if (N * sv).x > 0.0: sv = -sv                   # the string faces the body (inward from the left hand)
+		var pivot := box.get_center(); pivot[ax[1]] = box.position[ax[1]] if sv[ax[1]] > 0.0 else box.end[ax[1]]   # the grip
+		var r := deg_to_rad(BOW_RISE); var o := deg_to_rad(BOW_OUT)
+		var D := Vector3(-cos(r) * cos(o), sin(r), sin(o)).normalized()     # the upper limb: across to the far side
+		var S0 := Vector3(0, 1, -0.5); var S := (S0 - D * D.dot(S0)).normalized()
+		var target := Basis(D, S, D.cross(S)) * Basis(l, sv, l.cross(sv)).inverse()   # the bow's new frame in root
+		var p: Vector3 = mi.transform * pivot
+		mi.basis = (B.inverse() * target).scaled(mi.basis.get_scale())
+		mi.position = p - mi.basis * pivot
 
 static func db() -> Dictionary:
 	if _db.is_empty(): _db = JSON.parse_string(FileAccess.get_file_as_string(DATA))

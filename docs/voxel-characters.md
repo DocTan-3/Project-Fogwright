@@ -130,3 +130,11 @@ Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyri
 5. Later: trim triangles (the basics outfit is about 8,000; over budget, accepted for now); animate back arms (the
    importer needs pieces chained off other pieces); the design doc's slot table should say colossus pieces fill the
    hands (weapons.md already does).
+
+### Bow at rest and ammunition (2026-11-28)
+
+- A drawn bow at rest is held low across the body, as in Doc Tan's reference: the grip is in the lowered left hand in front of the hip, and the bow is nearly level with its upper limb rising about 20 degrees toward the right side. The string faces up and toward the body. `Equipment._rest_bow` turns the bow in the fist about its grip.
+- **Ammunition slot** (`ammo`) at the back of the belt, so a knapsack or anything else on the back can still be worn:
+  - `quiver` (bows): a leather tube slanting from behind the right hip, with arrows standing out of it.
+  - `bolt_case` (crossbows): a stiff iron-cornered box with its lid open and the bolts standing in a row.
+  - `bullet_pouch` (guns): a cartridge box with a brass badge, a shot bag and a powder flask.

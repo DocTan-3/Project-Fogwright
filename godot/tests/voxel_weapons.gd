@@ -25,7 +25,11 @@ func _ready() -> void:
 	var rows := [[], []]
 	for k in KINDS: rows[0].append([["iron_" + k], true])
 	rows[0].append([["iron_sword", "iron_shield"], true]); rows[0].append([["iron_mace", "iron_tower_shield"], true])
+	rows[0].append([["iron_shortbow", "quiver"], true]); rows[0].append([["iron_heavy_crossbow", "bolt_case"], true])
 	for k in KINDS: rows[1].append([["iron_" + k], false])
+	# the ammunition at the back of the belt, with a knapsack on the back to show both are worn
+	rows[1].append([["iron_longbow", "quiver", "knapsack"], false]); rows[1].append([["iron_heavy_crossbow", "bolt_case", "knapsack"], false])
+	rows[1].append([["quiver", "knapsack"], false]); rows[1].append([["bullet_pouch", "knapsack", "plain_belt"], false])
 	for r in 2:
 		for i in rows[r].size():
 			var worn: Array = rows[r][i][0]
@@ -47,7 +51,7 @@ func _ready() -> void:
 	var n0: int = rows[0].size()
 	var shots := []
 	for a in range(0, n0, 6): shots.append(["drawn_%d" % (a / 6), 0, a, mini(a + 6, n0)])
-	for a in range(0, KINDS.size(), 7): shots.append(["carried_%d" % (a / 7), 1, a, mini(a + 7, KINDS.size())])
+	for a in range(0, rows[1].size(), 7): shots.append(["carried_%d" % (a / 7), 1, a, mini(a + 7, rows[1].size())])
 	for sh in shots:
 		var cx: float = (sh[2] + sh[3] - 1) * 0.8; var z: float = sh[1] * 40.0
 		cam.position = Vector3(cx + 0.8, 1.5, z + 6.2); cam.look_at(Vector3(cx, 0.95, z)); cam.fov = 40.0
