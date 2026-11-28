@@ -381,65 +381,99 @@ Ends at Hollin's Cross at dawn. The player is one of the freefolk, unclaimed, wi
 
 lore.md's open questions were answered on 2026-11-28 and merged there.
 
-## The main continent: places (proposal, 2026-11-28)
+## The main continent: places and history (proposal, 2026-11-28)
 
-A Skyrim-style spread of named places for the playable main continent (about 20 km across). All names are working
-names. Distances are rough, from Aldrath at the centre.
+A Skyrim-style spread of named places for the playable main continent (about 20 km across), each with its history.
+All names are working names. Map: `docs/references/main-continent-map.png`.
 
-### Land
+### A history of the land
 
-| Feature | Where | What it is |
+| When | What happened here |
+| --- | --- |
+| **First age** | The Concord rules from Aumenor. On this land it builds **Ostrevan**, a great city on the north-east coast, and the **Concord road** that runs from the river meeting (where Aldrath now stands) to Ostrevan in one direction and to the south-west coast in the other. Concord governors are buried in the **Kingsbarrows**. The empire holds **Crownmere**, the Aldwater's source, sacred as the first gift of the gods. |
+| **The split of Erde** | The head of the gods tears the continent apart. The tear runs through Ostrevan: the **Scar** leaves half the city on the clifftop and drops half into the chasm. The Brack starts to pour over the new cliff as the **Long Fall**. |
+| **Second age, early** | Aldrath's city rises at the meeting of the Aldwater and the Stillwater. The Ban on magic is proclaimed; outlaw hedge-witches are hanged on **Hangman's Rise** within sight of the city. The Ruadhan fight their legends' first battles over horses at **Brannoch's Leap**. |
+| **Second age, the Ford Wars** | The Ruadhan of the Redwold and the heartland's lords fight for a century over the fords of the Rede. The **Old Front** is dug: trenches, gun forts (Gunhill, Fort Cinder), the **Trenchworks** tunnels. A war dam is blown to drown an army, making **the Sunken Field** and the Spill. The **Beacon Line** of signal towers is built along the east to warn of raids by sea. Unhallowed magic used in these wars feeds the young Fog. |
+| **0 TA** | Merrith's sacrifice ends the second age. That night **Stillmere** turns mirror-still, and no Fog has settled on it since. |
+| **4 TA** | Hollin grants the first farm of the new age, **Hearthstead**, to Wayfolk settlers; the Downs are farmed from it. |
+| **12 TA** | Pilgrims who saw Stillmere refuse the Fog found **Mere's End** on its north shore. |
+| **About 40 TA** | The **Mourning Abbey** is built on the south-east coast to keep Merrith's memory; the Mourning days are first kept there. |
+| **About 100 TA** | The Lantern Vigil lays the **lantern roads**, mostly along the old Concord road; **Lampwatch** is founded to wind coils for the east road. **Vespers** grows round the Ordinal's seminary. |
+| **About 180 TA** | Freefolk settle the far coast because the land is free: Farhallow, Greyford, Morrow, Coldwell and others. |
+| **About 250 TA** | Deserters burn Fort Cinder rather than give it up and become **the Unlit**, who live by robbing the lantern roads. |
+| **287 TA** | The Fog takes the Mourning Abbey. Its bells still ring at dusk with no one to ring them. |
+| **309 TA** | **Greyford** falls; its people are seen walking the Greyrun's banks, grey-veined. |
+| **312 TA** | The game begins: **Farhallow** falls in the prologue. Coldwell is now the last freehold standing on the coast. |
+
+### Land and water
+
+| Feature | Where | History and what it is |
 | --- | --- | --- |
-| **The Kingsteeth** | The north, east to west | The main mountain range, 500 to 800 m, snow on the peaks; passes, cliff paths, mines. Highest peak: **Old Crown** |
+| **The Kingsteeth** | The north | The main range, 500 to 800 m. Named in the first age for the Concord's kings, who were crowned facing them. Highest peak **Old Crown** |
 | **The Redwold hills** | The west | Forested hills of the Ruadhan, sickening at their outer edge |
-| **The Downs** | South of Aldrath, toward Hollin's Cross | Rolling farm hills, the safest country in the world |
-| **The Aldwater** | From Crownmere, south through Aldrath, to the sea at Hollin's Cross | The great river; mills and waterwheels along it, barges to the port. Aldrath's city was raised where it meets the Stillwater |
-| **The Rede** | From the Redwold hills east into the Aldwater | A fast forest river, rapids and fords |
-| **The Stillwater** | From Stillmere west into the Aldwater at Aldrath | A slow, clear stream; Aldrath's fountains draw on it |
-| **The Greyrun** | From Stillmere south-east past Lampwatch into the Weeping Fen | It runs clear near the lake and turns grey toward the coast, as the Fog follows water; the lantern road to Farhallow runs beside it |
-| **The Brack** | From the eastern Kingsteeth to the Scar | It pours over the cliff as **the Long Fall** into the chasm, misting Ostrevan's fallen half |
-| **Thornwater** | From the Redwold south past Thornby to the south coast | A dark forest river; the Ruadhan float timber down it |
-| **The Spill** | From the Sunken Field down into the Rede | Born when the war dam broke; still runs with rust |
-| **Crownmere** | A glacial tarn below Old Crown | The source of the Aldwater. Concord carvings ring its shore: the empire held the river sacred as the first gift of the gods |
-| **Stillmere** | East of Aldrath, inside his circle's edge | A mirror-still lake where Merrith's thread runs thickest. The Fog never settles on its water, Greyed people standing in it remember their names for a moment, and pilgrims come during the Mourning. A clue on the trail: Aldrath's well draws from everywhere but here |
-| **The Sunken Field** | The Old Front | A lake made in the second age when a war dam was blown to drown an army. Gun towers and war machines stand under the water; on still days Echoes march across it |
-| **The Weeping Fen** | The Greying Coast | A grey salt marsh where the Fog pools, around Farhallow's bay |
-| **The Scar** | The north-east coast | The cliff and chasm where Erde was split; Ostrevan hangs over it |
+| **The Downs** | South of Aldrath | Rolling farm hills, farmed since Hearthstead (4 TA); the safest country in the world |
+| **The Scar** | The north-east coast | The cliff and chasm left by the split of Erde, running through Ostrevan |
+| **The Weeping Fen** | The Greying Coast | A grey salt marsh where the Fog pools round Farhallow's bay |
+| **Crownmere** | Below Old Crown | A glacial tarn, source of the Aldwater, ringed by Concord carvings |
+| **Stillmere** | East of Aldrath | Where Merrith's thread runs thickest since 0 TA. The Fog never settles on it; Greyed people standing in it remember their names for a moment; pilgrims come during the Mourning. A clue on the story trail: Aldrath's well draws from everywhere but here |
+| **The Sunken Field** | The Old Front | The lake made when a war dam was blown in the Ford Wars. Gun towers and war machines stand under the water; on still days Echoes march across it |
+| **The Aldwater** | Crownmere to the sea at Hollin's Cross | The great river; mills, waterwheels, barges. Aldrath stands where it meets the Stillwater |
+| **The Stillwater** | Stillmere west into the Aldwater | A slow, clear stream; Aldrath's fountains draw on it |
+| **The Rede** | The Redwold east into the Aldwater | Its fords were fought over for a century |
+| **The Greyrun** | Stillmere south-east to the Weeping Fen | Clear near the lake, grey toward the coast: the Fog follows water. The east lantern road runs beside it |
+| **The Brack** | Eastern Kingsteeth to the Scar | Falls into the chasm as **the Long Fall**, misting Ostrevan's lower half |
+| **Thornwater** | The Redwold south to the coast | The Ruadhan float timber down it |
+| **The Spill** | The Sunken Field into the Rede | Born when the dam broke; still runs with rust |
 
-### Settlements (beyond the three cities)
+### Settlements
 
-| Place | Where | What it is |
+| Place | Where | History and what it is |
 | --- | --- | --- |
-| **Tollford** | On the Aldwater, north of Aldrath | A mill town at the river ford; grain, barges, the last inn before the mountains |
-| **Copperhythe** | Kingsteeth foothills | A mining village of Ferrin and Wayfolk; ore, coal, a smithy town |
-| **Brinewick** | The south coast, east of Hollin's Cross | A fishing village; boats, smokehouses, smugglers' coves |
-| **Lampwatch** | On the east lantern road | A Vigil waypost town where the coils are wound for the road; the last safe bed before the Greying Coast |
+| **Tollford** | Aldwater ford, north of Aldrath | A toll on the Concord road's river crossing since the first age; now a mill town and the last inn before the mountains |
+| **Copperhythe** | Kingsteeth foothills | Ferrin miners came in the second age to arm the Ford Wars; ore, coal, smithies |
+| **Vespers** | East of Aldrath | Grew round the Ordinal's seminary about 100 TA; Ordinants are trained here |
+| **Hearthstead** | South-west of Aldrath | The first farm of the third age (4 TA) |
+| **Brinewick** | South coast, east of the bay | A fishing village; smokehouses and smugglers' coves |
+| **Pennick** | South-east coast | Salt pans worked since the Concord; salt for Aldrath's larders |
+| **Gullhaven** | South-west coast, end of the Concord road | Founded by second-age navy deserters who lured ships onto the rocks; still a rough harbour of wreckers and salvagers |
+| **Lampwatch** | East lantern road | A Vigil waypost founded about 100 TA; coils wound for the road; the last safe bed before the Greying Coast |
+| **Mere's End** | Stillmere's north shore | Founded 12 TA by pilgrims of Merrith; a quiet village of shrines |
 | **Thornby** | The Redwold's edge | A logging village holding on as the forest sickens |
-| **Gunhill** | The Old Front | A scavengers' camp inside a half-buried gun fort; salvage traders and relic hunters |
-| **Lastrope** | The clifftop above Ostrevan | An explorers' camp of ropes, winches and lifts down into the chasm |
+| **Gunhill** | The Old Front | Scavengers living inside a half-buried Ford Wars gun fort; salvage and relic traders |
+| **Lastrope** | Above Ostrevan | Explorers' camp of ropes, winches and lifts into the chasm |
+| **Coldwell** | The north-east frontier | Freefolk settlers about 180 TA; now the last freehold standing on that coast, about forty souls |
 
-### Caves and dungeons
+### Ruins, caves and dungeons
 
-| Place | Where | What it is |
+| Place | Where | History and what it is |
 | --- | --- | --- |
-| **Echo Mine** | Above Copperhythe | An abandoned mine where miners' Echoes still swing their picks |
-| **Wolfden** | The Redwold | A cave system of Fog-touched wolves |
-| **The Drowned Grotto** | The Greying Coast | A sea cave reached at low tide; smugglers once, now something else |
-| **The Trenchworks** | The Old Front | Tunnels and bunkers under the battlefield, with sleeping war machines |
+| **Ostrevan** | On the Scar | The Concord's great northern city, torn in two at the split; its fallen half lies in the chasm. The continent's great exploration zone |
 | **The Undervault** | Under Ostrevan | Persistent dungeon levels down the chasm face |
+| **Kingsbarrows** | South-west, by the Concord road | Burial mounds of Concord governors, with the oldest relics |
+| **Hangman's Rise** | West of Aldrath | Where the Ban's hangings were done in the second age; Echoes of the hanged |
+| **Brannoch's Leap** | North-west coast | A sea cliff where, the Ruadhan say, Brannoch tamed the first horse; a shrine to him |
+| **The Beacon Line** | The east coast | Second-age signal towers that warned of raids by sea; most are dark |
+| **Mourning Abbey** | South-east coast | Built about 40 TA for Merrith; taken by the Fog in 287 TA; bells at dusk |
+| **Echo Mine** | Above Copperhythe | A mine that collapsed in the Ford Wars; the miners' Echoes still swing their picks |
+| **The Trenchworks** | The Old Front | Tunnels and bunkers under the battlefield, with sleeping war machines |
+| **Pilgrim Caves** | Near Mere's End | Where Merrith's pilgrims hid from the Fog in the first years of the third age |
+| **Wolfden** | The Redwold | A cave system of Fog-touched wolves |
+| **Bonepit** | The north Redwold | A sinkhole the Briarkin throw their dead into |
+| **The Drowned Grotto** | The Greying Coast | A sea cave reached at low tide; smugglers once, now something else |
+| **Fallen freeholds** | The Greying Coast | **Farhallow** (312 TA, the prologue), **Greyford** (309 TA), **Morrow** |
 
 ### Bandit forts and enemy holds
 
-Two kinds of enemies hold forts:
-
 - **Briarkin** (lore.md: the wild men, like Skyrim's Forsworn) in the hills and forests.
-- **The Unlit** *(new, proposal)*: deserters and outlaws who rob caravans on the lantern roads and smash the lamps to
-  hide in the Fog.
+- **The Unlit** *(new, proposal)*: deserters who burned Fort Cinder about 250 TA rather than surrender it, and since then
+  rob caravans on the lantern roads and smash the lamps to hide in the Fog.
 
-| Place | Who | What it is |
+| Place | Who | History and what it is |
 | --- | --- | --- |
-| **Fort Cinder** | The Unlit | A burned-out second-age fort on the Old Front, their biggest hold |
-| **Redhook Keep** | The Unlit | A ruined hill keep over the Rede, raiding barges and the west road |
+| **Fort Cinder** | The Unlit | The burned Ford Wars fort where the Unlit began; their biggest hold |
+| **Redhook Keep** | The Unlit | A ruined keep over the Rede, raiding barges and the west road |
+| **Saltreach Tower** | The Unlit | A Beacon Line tower on the Greying Coast, its light put out |
+| **Gull Rock** | The Unlit | A sea stack in the bay; they prey on ships out of Hollin's Cross |
 | **Briar Hollow** | Briarkin | A thorn-walled camp deep in the Redwold |
-| **The Antler Stones** | Briarkin | A standing-stone hill camp in the Kingsteeth foothills |
-| **Saltreach Tower** | The Unlit | A lighthouse on the Greying Coast, its light put out |
+| **The Antler Stones** | Briarkin | A standing-stone camp in the Kingsteeth foothills |
+| **Marrow Hill** | Briarkin | A hill camp in the south-west, above the Concord tombs |
