@@ -138,3 +138,15 @@ Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyri
   - `quiver` (bows): a side quiver (Doc Tan's references). It hangs on two straps from the belt at the right hip, just outside the hanging arm, and slants from a wide studded mouth in front down to a narrow foot behind, with the arrows standing forward and up.
   - `bolt_case` (crossbows): a stiff iron-cornered box with its lid open and the bolts standing in a row.
   - `bullet_pouch` (guns): a cartridge box with a brass badge, a shot bag and a powder flask.
+
+### Tiers (2026-11-28)
+
+- **One version per tier first** (Doc Tan): five tiers, one per rarity step. T1 common is the Wayfolk iron set. T2 uncommon adds contrast trim and brass fittings. T3 rare adds tooled leather, rivets and small brass fittings. T4 epic adds working parts such as gauges, pipes and a glowing vial. T5 legendary glows; motion comes later. The item list doc tracks what exists.
+- `TIERS` and `TIERED` in `make_equipment.py` set which types get tiers. Items are named `<type>_t2` .. `<type>_t5`, and `iron_<type>` stays as T1.
+- **Swords** are done:
+  - T2: bright steel with a brass guard whose tips sweep down, a brass-wired grip and a brass pommel.
+  - T3: a broader blade with a wide fuller, a riveted guard with langets, a tooled grip and a wheel pommel.
+  - T4: a blackened blade with a copper pipe up the fuller, fed by a glowing vial in the guard, plus a gauge and a valve pommel.
+  - T5: blued steel with glowing runes down the fuller, gilt wings round an arcane crystal and a crystal pommel.
+- `godot/tests/voxel_tiers.tscn -- type=sword` renders one type at every tier: drawn, close up, carried, and the weapons alone on a rack. It also runs the ground check.
+- Glow is only colour so far. There is no emissive material yet.
