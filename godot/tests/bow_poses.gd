@@ -21,7 +21,7 @@ func _ready() -> void:
 	sun.shadow_enabled = true; sun.shadow_bias = 0.25; sun.shadow_normal_bias = 3.0; add_child(sun)
 	var g := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = Vector2(200, 200); g.mesh = pm
 	var gm := StandardMaterial3D.new(); gm.albedo_color = Color(0.36, 0.42, 0.26); g.material_override = gm; add_child(g)
-	var poses := ["A", "B", "C", "D"]
+	var poses := ["E", "F", "G", "H"]
 	for r in 2:
 		for i in poses.size():
 			Equipment.bow_pose = poses[i]

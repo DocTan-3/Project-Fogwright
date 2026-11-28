@@ -80,7 +80,15 @@ const BOW_POSES := {
 	"D": {"arms": {"arm_upper_l": Vector3(-22, 0, -4), "arm_lower_l": Vector3(-38, 0, 0), "arm_upper_r": Vector3(-18, 0, 4), "arm_lower_r": Vector3(-40, 0, 0)},
 		"D": Vector3(1, 0.12, 0.1), "S": Vector3(0, 0.4, -1)},
 }
+const BOW_REF := {
+	"E": {"arms": {"arm_upper_l": Vector3(-6, 0, 2), "arm_lower_l": Vector3(-12, 0, 0)}, "D": Vector3(0.9, 0.3, -0.3), "S": Vector3(0, 1, -0.7)},
+	"F": {"arms": {"arm_upper_l": Vector3(-6, 0, 2), "arm_lower_l": Vector3(-24, 0, 0)}, "D": Vector3(-0.15, 0.85, -0.5), "S": Vector3(-1, 0.2, -0.3)},
+	"G": {"arms": {"arm_upper_l": Vector3(-10, 0, 0), "arm_lower_l": Vector3(-28, 0, 0)}, "D": Vector3(0.95, 0.15, -0.2), "S": Vector3(0, 1, -0.4)},
+	"H": {"arms": {"arm_upper_l": Vector3(-4, 0, 4), "arm_lower_l": Vector3(-14, 0, 0)}, "D": Vector3(0.7, 0.6, -0.35), "S": Vector3(-0.2, 0.7, -1)},
+}
 static var bow_pose := ""
+static func _bp() -> Dictionary: return BOW_POSES[bow_pose] if BOW_POSES.has(bow_pose) else BOW_REF[bow_pose]
+
 static func _rest_bow(root: Node3D) -> void:
 	for node in root.find_children("weapon*", "Node3D", true, false):
 		if not String(node.get_meta("piece", "")).ends_with("@hand_l"): continue
@@ -97,7 +105,7 @@ static func _rest_bow(root: Node3D) -> void:
 		var r := deg_to_rad(BOW_RISE); var o := deg_to_rad(BOW_OUT)
 		var D := Vector3(-cos(r) * cos(o), sin(r), sin(o)).normalized()     # the upper limb: across to the far side
 		var S0 := Vector3(0, 1, -0.5)
-		if bow_pose != "": D = (BOW_POSES[bow_pose].D as Vector3).normalized(); S0 = BOW_POSES[bow_pose].S
+		if bow_pose != "": D = (_bp().D as Vector3).normalized(); S0 = _bp().S
 		var S := (S0 - D * D.dot(S0)).normalized()
 		var target := Basis(D, S, D.cross(S)) * Basis(l, sv, l.cross(sv)).inverse()   # the bow's new frame in root
 		var p: Vector3 = mi.transform * pivot
@@ -147,7 +155,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 			if items[n].has("stance"): kinds.append(items[n].stance)
 		kinds.sort_custom(func(a, b): return not (a in OFF_STANCES) and (b in OFF_STANCES))   # off-hand stances last
 		for k in kinds: st.merge(STANCES[k], true)
-		if "bow" in kinds and bow_pose != "": st.merge(BOW_POSES[bow_pose].arms, true)
+		if "bow" in kinds and bow_pose != "": st.merge(_bp().arms, true)
 		for node in root.find_children("*", "Node3D", true, false):
 			if st.has(String(node.name)):
 				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
