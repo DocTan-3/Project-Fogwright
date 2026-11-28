@@ -6,10 +6,12 @@ Ready-to-run builds of the game, replaced with each new version. The code is on 
   `Fogwright.console.exe` instead: a text window opens showing what went wrong.
   Windows may warn that the file is from an unknown publisher: choose "More info", then "Run anyway".
 
-**This build: voxel Farhallow** (from the `voxel` branch). The voxel Hrimfolk in Farhallow, built from the ground kit
-on the village's real land, with the paths from the plan, grass that sways and parts round you, and stand-in houses
-from the Felix Strefter voxel pack (they are solid boxes for now: you cannot go inside yet). No combat in this build;
-the earlier combat build is in this branch's history.
+**This build: detailed voxel Farhallow** (from the `voxel` branch). Every building is now built from Fogwright's own
+voxel kit in the freehold's way: drystone with sunk joints and corner stones, thick roped heather or turf roofs with
+ship-rib bargeboards, raised porches, side wings, painted doors and shutters, and yards with woodpiles, creels, nets,
+wattle fences and ivy. Doors open as you walk up. Walk into the Gull & Lantern on the square: its taproom is open to
+the roof, with a gallery, carved posts, a fire pit and the hearth on the gable. The village is heavy for now (about a
+million triangles: detail first, cost later), and loading takes a little longer while the houses are built.
 
 Controls: WASD or the arrows to move (you run by default), Shift to sprint, Space to jump, Ctrl to switch between walking
 and running, move the mouse to turn the camera (Esc frees the cursor, a click takes it back), the mouse wheel to zoom
