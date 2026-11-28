@@ -26,11 +26,12 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
-	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow held out level, upright
+	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow at rest hangs
+	# upright in the lowered hand at the side
 	# a walking staff planted beside the bearer, the arm a little forward
 	"staff": {"arm_upper_r": Vector3(-10, 0, -4), "arm_lower_r": Vector3(-70, 0, 0)},
 	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
-	"bow": {"arm_upper_l": Vector3(-82, 0, -4), "arm_lower_l": Vector3(-4, 0, 0), "arm_upper_r": Vector3(-40, 0, 8), "arm_lower_r": Vector3(-60, 0, 0),
+	"bow": {"arm_upper_l": Vector3(-4, 0, 6), "arm_lower_l": Vector3(-8, 0, 0), "arm_lower_r": Vector3(-10, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 }
 ## stances that hold the off hand win over the main hand's for the left arm (a sword's stance with a shield's)
@@ -83,6 +84,21 @@ static func _upright(root: Node3D) -> void:
 		for k in 8: low = minf(low, bb.get_endpoint(k).y)
 		(node as Node3D).position += to_root.basis.inverse() * Vector3(0, -low, 0)
 
+## a bow at rest: a long bow leans its lower limb forward, a step at a time, until its tip clears the ground
+static func _rest_bow(root: Node3D) -> void:
+	for node in root.find_children("weapon*", "Node3D", true, false):
+		if not String(node.get_meta("piece", "")).ends_with("@hand_l"): continue
+		var hand := node.get_parent() as Node3D
+		var arm := _to_root(hand.get_parent(), root)
+		for step in 16:
+			var bb: AABB = (arm * hand.transform * (node as Node3D).transform) * (node as MeshInstance3D).get_aabb()
+			var low := INF
+			for k in 8: low = minf(low, bb.get_endpoint(k).y)
+			if low >= POLE_CLEAR: break
+			# tip the hand about the body's side-to-side axis: the lower limb swings forward (+Z)
+			hand.basis = arm.basis.inverse() * (Basis(Vector3.RIGHT, deg_to_rad(-5)) * (arm.basis * hand.basis))
+		hand.set_meta("rest", hand.rotation_degrees)
+
 static func db() -> Dictionary:
 	if _db.is_empty(): _db = JSON.parse_string(FileAccess.get_file_as_string(DATA))
 	return _db
@@ -131,6 +147,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 				node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
 		if "polearm" in kinds: _aim(root)
 		if "staff" in kinds: _upright(root)
+		if "bow" in kinds: _rest_bow(root)
 	for node in root.find_children("*", "Node3D", true, false):
 		if not node.has_meta("piece"): continue
 		var bare := String(node.get_meta("piece")).get_slice("@", 0)

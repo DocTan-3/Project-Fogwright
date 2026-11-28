@@ -1017,8 +1017,8 @@ def iron_item(kind):
             x0, x1, ay0, au0, al0, h0 = F['arms']['l']; AW = F['AW']
             gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
             V = iron_shape(kind, 999)
-            if stance == 'bow':       # the bow along the hand's forward axis: upright once the arm is raised level
-                P['weapon_off@hand_l#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
+            if stance == 'bow':       # idle: the bow hangs upright in the lowered hand at the side, string toward the body
+                P['weapon_off@hand_l#2'] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
             else:                     # the shield on the forearm's front, facing forward once the forearm is raised
                 P['weapon_off@hand_l#2'] = {(gx + u, gy - h, gz - AW - 2 + w): c for (u, w, h), c in V.items()}
             return P
