@@ -1,7 +1,8 @@
 ## Fogwright's ground (docs/design.md, Voxel art: the ground kit). Not Minecraft cubes: the land is a grid of 1 m cells whose
 ## corners snap to 0.5 m height steps, so every cell is one of a small kit of "snapping pieces" - flat, a 27 degree slope
-## (one step across a cell), a 45 degree bank (two steps), their corners and saddles - and where the ground drops more
-## than that across a cell, a cliff of rock built from 25 cm voxel columns with ledges. The surfaces are flat-shaded facets
+## (one step across a cell), a 45 degree bank (two steps), a steep rock face of three to five steps (56 to 68 degrees,
+## Valheim's 67), their corners and saddles - and where the ground drops more than that across a cell, a cliff of rock
+## built from 25 cm voxel columns with ledges. The surfaces are flat-shaded facets
 ## coloured from the palette; a 10 cm speckle in the shader gives them the voxel grain of everything else, without steps.
 ## Grass is not voxels: low-poly tufts of blades that sway in the wind and bend away from whoever walks through them.
 ##   var g := GroundKit.build(height_fn, Rect2(x0, z0, w, d), kind_fn)   # height_fn(Vector2 xz) -> float metres
@@ -12,6 +13,8 @@ extends RefCounted
 const CELL := 1.0          # the kit's cell: half the 2 m building module
 const STEP := 0.5          # a height step: one across a cell is a 27 degree slope, two a 45 degree bank
 const ROCK := 0.25         # a cliff's rock columns
+const STEEP := 5           # the most steps across a cell that is still a surface piece (68 degrees); more is a cliff
+const BARE := 50.0         # faces steeper than this are bare rock: no turf, no grass
 const COLS := {"grass": Color("5f7a3a"), "grass_d": Color("4e6a30"), "dirt": Color("7a6448"), "path": Color("9a7d58"),
 	"sand": Color("c2ad80"), "rock": Color("77736b"), "rock_d": Color("5e5b55"), "moss": Color("5d6b3a")}
 const MAX_PUSH := 8
@@ -39,7 +42,7 @@ static func build(height_fn: Callable, rect: Rect2, kind_fn: Callable, grass_per
 		for i in nx:
 			var p0 := rect.position + Vector2(i, j) * CELL
 			var h := [H[j * (nx + 1) + i], H[j * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i]]
-			if h.max() - h.min() > 2.0 * STEP + 0.001: cliff[j * nx + i] = 1; continue
+			if h.max() - h.min() > STEEP * STEP + 0.001: cliff[j * nx + i] = 1; continue
 			var k0: String = kind_fn.call(p0 + Vector2(0.5, 0.5) * CELL, 0.0)
 			for q in [Vector2(0.1, 0.1), Vector2(0.9, 0.1), Vector2(0.9, 0.9), Vector2(0.1, 0.9)]:
 				if kind_fn.call(p0 + q * CELL, 0.0) != k0: mixed[j * nx + i] = 1; break
@@ -86,6 +89,7 @@ static func build(height_fn: Callable, rect: Rect2, kind_fn: Callable, grass_per
 					var slope := rad_to_deg(acos(clampf(n.y, -1.0, 1.0)))
 					var mid: Vector3 = (t[0] + t[1] + t[2]) / 3.0
 					var kind: String = kind_fn.call(Vector2(mid.x, mid.z), slope)
+					if slope > BARE: kind = "rock"   # a steep face: too steep for turf to hold
 					var col: Color = COLS[kind]
 					if kind == "grass":   # a darker turf on steep banks, patchy tones on the level
 						col = col.lerp(COLS.grass_d, 0.35 * _hash2(floori(mid.x * 0.5), floori(mid.z * 0.5), seed) + clampf((slope - 20.0) / 40.0, 0.0, 0.65))
@@ -120,7 +124,7 @@ static func _piece_name(h: Array) -> String:
 	var hi := 0; for v in s: hi = maxi(hi, v)
 	if hi == 0: return "flat"
 	var up := 0; for v in s: up += 1 if v > 0 else 0
-	var kind := "slope" if hi == 1 else "bank"
+	var kind := "slope" if hi == 1 else ("bank" if hi == 2 else "steep")
 	if up == 2: return kind + (" (saddle)" if s[0] == s[2] else "")
 	return kind + (" outer corner" if up == 1 else " inner corner") if up != 4 else kind + " mixed"
 
