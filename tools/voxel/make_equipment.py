@@ -1577,7 +1577,11 @@ def iron_shape(kind, floor, tier=1):
         for u in range(-pw, pw + 1):                         # the prod, bowed forward
             hh = n - 4 + round(4 * (1 - (u / pw) ** 2))
             b(u, u, -1, 1, hh, hh + 1, 'iron' if abs(u) > 2 else 'iron_d')
-        for u in range(-pw + 1, pw): V[(u, 0, n - 12 + round(-4 * (1 - abs(u) / pw)))] = 'cord'
+        draw = n - 14                                        # spanned: straight from each prod tip back to the nut
+        for u in range(-pw, pw + 1):
+            for dw in (0, 1): V[(u, dw, draw + round((n - 4 - draw) * abs(u) / pw))] = 'cord'
+        b(-1, 1, -3, -3, draw - 2, draw, 'iron_d')           # the nut
+        for u in (-pw, pw): b(u - 1 if u > 0 else u, u if u > 0 else u + 1, -1, 1, n - 5, n - 3, 'iron_d')   # string loops at the tips
         if kind == 'heavy_crossbow':                         # the crank at the back
             b(-3, 3, -3, 3, -back - 3, -back - 1, 'iron_d'); b(4, 6, -1, 1, -back - 2, -back - 2, 'iron')
     if kind == 'tower_shield':          # a tall shield of planks, curved round its bearer, rounded at the top; iron rim,
