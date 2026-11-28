@@ -103,17 +103,59 @@ Combat is tab-target, like Albion Online and World of Warcraft, with mobile cont
 
 - **Targeting:** tap an enemy or press Attack to select the nearest. The character walks into range and auto-attacks while standing still; moving with the joystick pauses attacks but keeps the target.
 
-- **Skills:** skill buttons arc around a large Attack button. In Classic, skills are skillshots: on touch screens press and drag to aim with a ground indicator and release to cast (a quick tap casts at the current target); on PC the keys cast toward the mouse cursor. In Action, skills cast at the crosshair. Skills themselves are unlocked through the skill tree; the five in the prototype are placeholders for testing the controls, not designed skills. Skills cost energy and have cooldowns shown on the buttons. Gear and the skill tree decide which skills a player has.
+- **Skills:** skill buttons arc around a large Attack button. In Classic, skills are skillshots: on touch screens press and drag to aim with a ground indicator and release to cast (a quick tap casts at the current target); on PC the keys cast toward the mouse cursor. In Action, skills cast at the crosshair. Skills cost energy and have cooldowns shown on the buttons. Where skills come from is set out under *Moves, the bar and defence* below; the five in the prototype are placeholders for testing the controls, not designed skills.
 
 - **Enemies:** levels rise with distance from camp, more spawn at night, and elites use telegraphed attacks marked on the ground.
 
-- **Loot:** creatures drop Fog shards and gear in four rarities (common, uncommon, rare, epic), with item power and stats. Gear can be equipped or salvaged into shards.
+- **Loot:** creatures drop Fog shards and gear by rarity (common, uncommon, rare, epic, and the one-of-a-kind legendaries in weapons.md), with item power and stats. Gear can be equipped or salvaged into shards.
 
 - **Quests:** quest givers at settlements offer chains that lead outward, ending in dungeons and elites.
 
 - **Layout:** landscape only on phones and tablets. Building has its own mode with its own controls.
 
-- **Two control styles on PC:** Classic (tab-target, auto-attack, skills on the target) or Action (WASD, mouse aim with a crosshair, left click attacks, right click blocks, 1 to 5 cast at the crosshair, Space jumps). Both use the same skills and balance; phones and tablets use Classic.
+- **Two control styles on PC:** Classic (tab-target, auto-attack, skills on the target) or Action (WASD, mouse aim with a crosshair, left click attacks, right click blocks, 1 to 6 cast at the crosshair, Space jumps). Both use the same skills and balance; phones and tablets use Classic.
+
+#### Moves, the bar and defence
+
+Decided with the user; items marked *(proposal)* are still open.
+
+- **Weapons give the special moves.** A weapon's moves depend on its rarity (weapons.md): a common weapon only attacks, and rarer ones add traits and active moves that suit their type, such as a gun with a dash-reload or a sword with a magic slash. Later, trinkets, relics and magic rings add more special moves. Armour gives none: it gives protection, stats and passives. Because the build is the gear, gear is what players trade (the player economy, later).
+
+- **The skill tree gives movement and changes how moves work.** Movement modifiers and the moves that come with them (dashing instead of a dodge roll, a leap, a slide) are skill-tree nodes. Most other nodes are modifiers rather than new buttons: reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
+
+- **Every character has the basic verbs:** move, auto-attack, a dodge, a block and a parry. The dodge is a roll by default; skill-tree nodes can turn it into a dash or a blink.
+
+- **Block and parry share one button.** Held, it blocks: damage is reduced (35% gets through). Pressed just before a hit lands (a fifth of a second), it parries: only 5% gets through and the attacker reels, but a parry drains three times the stamina of a block. Only melee weapons can parry; with any other weapon a timed press is a block. Blocking without the stamina for it breaks the guard and staggers. *(Numbers from the first playable, to tune.)*
+
+- **Stamina and energy.** Stamina pays for defence (dodge, block, parry) and recovers quickly once no defence is used; energy pays for skills. *(The user asked for parries to drain stamina; keeping it a pool apart from energy is our reading, to confirm.)*
+
+- **Paths and gods' magic** add their own moves: a path's utility (Lanternbearers push back the Fog, Ironclads become cover) and, once claimed, the god's magic.
+
+- **The bar:** six skills, and a button that swaps to a second page of six. The second page is free: the same gear, six more slots for any moves the character has. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. *(proposal: the defensive move has its own button, outside the pages.)*
+
+- **Energy:** one energy pool for everyone and a cooldown on each skill, plus one quirk per weapon family:
+  - **Guns** hold one shot or a few and must reload (and the tree can make a reload part of a dash).
+  - **Heavy melee** builds momentum while it keeps hitting, and loses it when it stops.
+  - **Bows** reward a longer draw.
+  - **Caster foci** spend Fog shards, which raises Fog pressure, as the lore says magic does.
+
+- **Defence: telegraphs, and the build decides.** Enemy attacks are telegraphed on the ground, coloured by kind, and each kind has a natural counter: dodge the unblockable, parry the undodgeable, step out of what is too wide for either. The kinds come from the animations we have (the Quaternius libraries; tools/assets/INVENTORY.md):
+
+  | Kind | Animations | Natural counter |
+  | --- | --- | --- |
+  | Strike | jab, a single sword cut, the zombie scratch | anything: block, parry, dodge |
+  | Combo | the sword combo, jab and cross | block or parry (it cannot be dodged) |
+  | Heavy blow | the heavy combo, the hook | dodge (unblockable; it knocks you down) |
+  | Charge | the sword dash, the shield dash | dodge or step aside (unblockable; it knocks you down) |
+  | Shield bash | the shield strike | parry (it cannot be dodged; it stuns) |
+  | Projectile | the overhand throw, a spell, a pistol shot | dodge, step aside or block (no parry) |
+ Every defence works, but only for a character who builds toward it: perks change the rules, so with the right node an unblockable attack becomes blockable, or a dodge goes through what it normally cannot. Without those perks, a character answers each attack with its natural counter.
+
+- **Perks that change the rules** (first set): iron guard (heavy blows and charges can be blocked), slip (a dodge also slips through combos and bashes), deflect (a melee parry also turns projectiles), steady guard (blocks cost less stamina), dash (the dodge becomes a dash), dash reload (a dodge reloads a gun).
+
+- **PC keys in the first playable** *(placeholders; touch controls later)*: Tab targets, R attacks, 1 to 6 cast, X swaps the page, F blocks (a tap parries), C dodges.
+
+- **Open:** the numbers; how many moves each rarity gives; clips still missing (a bow draw, two-handed weapons, a parry of its own).
 
 ### Skill tree, paths and gods
 
@@ -142,7 +184,7 @@ There are no classes. Every character can fight and craft completely without the
 
 **Open:** none for now.
 
-- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, new abilities and armor proficiencies.
+- **One big tree.** Paths and crafts are regions of the tree. Nodes grant stats, armour proficiencies, movement moves, path moves and modifiers to the moves weapons give (see *Moves, the bar and defence*).
 
 - **Hybrid builds.** Walking the tree toward a neighbouring craft unlocks its abilities and armor, so a Tinkerer can path into plate, or a Smith into gadgets.
 
