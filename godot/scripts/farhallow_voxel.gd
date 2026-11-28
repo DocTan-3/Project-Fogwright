@@ -72,6 +72,14 @@ func _kind(p: Vector2, _slope: float) -> String:
 ## every road, lane, door path and trail stamped into a 25 cm mask, worn a little wider and narrower along its length
 func _paths_mask() -> void:
 	mw = int(230 / MR); mh = int(200 / MR); mask.resize(mw * mh); mask.fill(0)
+	# the square round the well (the plan's square): worn bare by everyone crossing it to the well, a ragged round edge
+	var sq: Dictionary = fh.PLAN.square
+	var sc := Vector2(sq.x, sq.y)
+	for j in mh:
+		for i in mw:
+			var q := m0 + Vector2(i + 0.5, j + 0.5) * MR
+			var rr: float = float(sq.r) * (0.92 + 0.08 * fh.noise.get_noise_2d(q.x * 3.0, q.y * 3.0))
+			if q.distance_to(sc) < rr: mask[j * mw + i] = 1
 	for path in fh.PATHS:
 		var pts: Array = path[0]; var hw: float = float(path[1]) * 0.5
 		for k in pts.size() - 1:

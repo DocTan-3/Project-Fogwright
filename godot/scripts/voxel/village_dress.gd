@@ -31,7 +31,13 @@ static func build(level: Node3D) -> Node3D:
 	return d.root
 
 func W(p: Vector2, y: float) -> Vector3: return Vector3(p.x - o.x, y, p.y - o.y)
-func H(p: Vector2) -> float: return fh.height(p)
+## the ground as the ground kit draws it (scripts/voxel/ground_kit.gd): 1 m cells on whole world metres, their corners
+## snapped to 0.5 m steps, each cell split along its flatter diagonal; props stand on this, not on the smooth plan height
+func H(p: Vector2) -> float:
+	var w := p - o; var i := floorf(w.x); var j := floorf(w.y); var u := w.x - i; var v := w.y - j
+	var cs := func(x: float, z: float) -> float: return snappedf(fh.height(Vector2(x, z) + o), GroundKit.STEP)
+	var h := [cs.call(i, j), cs.call(i + 1, j), cs.call(i + 1, j + 1), cs.call(i, j + 1)]
+	return GroundKit._surf(h, absf(h[0] - h[2]) <= absf(h[1] - h[3]), u, v)
 
 func _add(n: Node3D, at: Vector3, yaw := 0.0) -> Node3D:
 	root.add_child(n); n.position = at; n.rotation.y = yaw; return n
@@ -230,37 +236,86 @@ func _lighthouse(p: Vector2) -> void:
 	VBox.collider(root, W(p, 0.8 + top * 0.5), Vector3(3.4, top, 3.4))
 	placed.append(["lighthouse", p, 2.0, "the harbour master's lighthouse"])
 
-## the pier: a T of planks on posts (the plan's rectangles), its deck at 1 m above the sea, bollards, a ladder, a lamp at
-## the head, the planks of drift and tarred timber with gaps between
+## the pier, built as a timber pier is (the plan's two rectangles, a T): bents of paired piles every 2.4 m driven into the
+## seabed, X-braced below the deck and topped by a cap beam; four stringers along the caps; deck planks laid across them
+## edge to edge (a dark seam between, never a gap), each plank its own weathered tone and length, nailed at each stringer;
+## a curb along both edges; a stone abutment where it leaves the beach. At the head: mooring piles standing proud along
+## the ship's side with rope fenders, bollards with coiled rope, mooring lines to the ship, a ladder down to the boats on
+## the north side, the lamp post. 5 cm voxels throughout.
+const DECK := 1.0
 func _pier() -> void:
-	var v := VBox.new(0.1); var C := VoxelProps.C; var deck := 1.0
-	var runs := [[Vector2(87.5, 79.5), Vector2(87.5, 100.6), 2.2], [Vector2(78, 100.6), Vector2(104, 100.6), 2.2]]
-	for run in runs:
-		var a: Vector2 = run[0]; var b: Vector2 = run[1]; var w: float = run[2]
-		var d := (b - a).normalized(); var n := Vector2(-d.y, d.x); var L := a.distance_to(b)
-		for k in int(L / 0.1):
-			var p := a + d * k * 0.1
-			var plank := int(k / 2)
-			var short := (hash(plank * 13) % 9) == 0
-			for s in range(-int(w / 0.2), int(w / 0.2)):
-				var q := p + n * (s + 0.5) * 0.1
-				if short and s > 3: continue
-				var g := W(q, deck); var gi := Vector3i(floori(g.x / 0.1), floori(deck / 0.1) - 1, floori(g.z / 0.1))
-				if k % 2 == 1 and hash(plank) % 3 == 0: continue   # gaps between some planks
-				v.put(gi, C.drift if hash(plank * 7) % 3 else (C.drift_d if hash(plank) % 2 else C.tar_l), 0.04, plank)
-			if k % 20 == 0:   # posts each 2 m, both sides, down into the sea; bollards on some
-				for s_ in [-1, 1]:
-					var q2: Vector2 = p + n * s_ * (w * 0.5 + 0.1)
-					var g2 := W(q2, 0)
-					var top_y := 13 if (k / 20) % 3 == 0 else 9
-					for y in range(-25, top_y):
-						for dx in 2: for dz in 2: v.put(Vector3i(floori(g2.x / 0.1) + dx, y, floori(g2.z / 0.1) + dz), C.tar_d if y > 2 else C.tar, 0.05)
-		VBox.collider(root, W((a + b) * 0.5, deck - 0.15), Vector3(L, 0.3, w + 0.2), -atan2(d.y, d.x))
-	# a ladder down to the boats at the head's west end, the lamp at the head
+	_pier_run(Vector2(87.5, 79.0), Vector2(87.5, 99.5), 2.2, 41, false)
+	_pier_run(Vector2(78.0, 100.6), Vector2(104.0, 100.6), 2.2, 42, true)
 	var lamp := MeshInstance3D.new(); lamp.mesh = VoxelProps.mesh("lamp", 0.4, 0.4); lamp.material_override = Vox.grain_material(0.05)
-	_add(lamp, W(Vector2(88.9, 99.6), deck), PI)
+	_add(lamp, W(Vector2(88.7, 99.2), DECK), PI)
 	var fl := VoxelProps.flame(0.08); fl.name = "PierLamp"; lamp.add_child(fl); fl.position = Vector3(0.35, 1.8, 0)
-	root.add_child(v.node(Vector3.ZERO, "Pier"))
+
+func _pier_run(a: Vector2, b: Vector2, w: float, seed_: int, head: bool) -> void:
+	var v := VBox.new(0.05); var C := VoxelProps.C; var L := a.distance_to(b); var d := (b - a).normalized()
+	var yaw := -atan2(d.y, d.x)
+	var at := func(x: float, z: float) -> Vector2: return a + d * x + Vector2(-d.y, d.x) * z   # local (along, across) -> plan
+	var tones := [C.drift, C.drift_l, C.drift_d, Color8(150, 132, 108), C.tar_l]
+	var hw := w * 0.5
+	# deck planks across the run, 25 cm wide, butted: the first voxel of each plank darker on top (the seam)
+	var plank := 0; var x := 0.0
+	while x < L:
+		var r := RandomNumberGenerator.new(); r.seed = seed_ * 1000 + plank
+		var tone: Color = tones[r.randi() % tones.size()]
+		var over_l := r.randi_range(0, 2) * 0.05; var over_r := r.randi_range(0, 2) * 0.05   # ragged ends
+		v.box(Vector3(x, DECK - 0.1, -hw - over_l), Vector3(x + 0.25, DECK, hw + over_r), tone, 0.03, plank)
+		v.box(Vector3(x, DECK - 0.05, -hw - over_l), Vector3(x + 0.05, DECK, hw + over_r), tone.darkened(0.35), 0.0)
+		for sz in [-0.85, -0.3, 0.3, 0.85]:   # nail heads over the stringers, flush, rusted into the wood
+			if plank % 2 == 0: v.put(Vector3i(int((x + 0.15) / 0.05), int(DECK / 0.05) - 1, int(floor(sz / 0.05))), tone.darkened(0.25).lerp(C.rust, 0.3), 0.0)
+		if r.randf() < 0.12: v.box(Vector3(x + 0.1, DECK - 0.05, -0.4), Vector3(x + 0.2, DECK, 0.1), tone.darkened(0.2), 0.0)   # a worn knot
+		x += 0.25; plank += 1
+	# curbs along both edges (open at the ladder and the gangplank on the head)
+	for s in [-1, 1]:
+		var cx := 0.0
+		while cx < L:
+			var seg := minf(2.4, L - cx)
+			var skip: bool = head and ((s < 0 and absf(cx - 9.6) < 0.1) or (s > 0 and absf(cx - 12.0) < 0.1))
+			if not skip: v.box(Vector3(cx, DECK, s * hw - 0.075), Vector3(cx + seg - 0.05, DECK + 0.15, s * hw + 0.075), C.tar, 0.04)
+			cx += 2.4
+	# stringers under the planks
+	for sz in [-0.85, -0.3, 0.3, 0.85]: v.box(Vector3(0, DECK - 0.3, sz - 0.075), Vector3(L, DECK - 0.1, sz + 0.075), C.tar_d, 0.03)
+	# bents: pile pairs, a cap beam, X braces; mooring piles proud of the deck along the head's ship side
+	var bx := 0.3
+	var bent := 0
+	while bx < L:
+		var ground: float = H(at.call(bx, 0.0))
+		var foot := ground - 1.2
+		v.box(Vector3(bx - 0.1, DECK - 0.5, -hw - 0.1), Vector3(bx + 0.15, DECK - 0.3, hw + 0.1), C.tar_d, 0.03)   # the cap
+		for s in [-1, 1]:
+			var pz: float = s * (hw - 0.2)
+			v.blob(Vector3(bx + 0.025, (foot + DECK - 0.5) * 0.5, pz), Vector3(0.15, (DECK - 0.5 - foot) * 0.5, 0.15), C.tar if bent % 2 else C.tar_d, 0.05, bent)
+			v.box(Vector3(bx - 0.1, -0.15, pz - 0.15), Vector3(bx + 0.15, 0.25, pz + 0.15), Color8(84, 92, 70), 0.08)   # weed at the tide line
+		if DECK - 0.5 - ground > 0.6:
+			v.beam(Vector3(bx, DECK - 0.55, -hw + 0.2), Vector3(bx, maxf(ground, -0.6), hw - 0.2), 0.1, C.tar_d)
+			v.beam(Vector3(bx, DECK - 0.55, hw - 0.2), Vector3(bx, maxf(ground, -0.6), -hw + 0.2), 0.1, C.tar_d)
+		if head and bent % 2 == 0 and bx > 8.0:   # mooring piles on the ship's side (+z: south), rope fenders on them
+			v.blob(Vector3(bx, (foot + DECK + 0.9) * 0.5, hw + 0.2), Vector3(0.17, (DECK + 0.9 - foot) * 0.5, 0.17), C.tar, 0.05, bent)
+			v.blob(Vector3(bx, DECK - 0.2, hw + 0.4), Vector3(0.22, 0.25, 0.12), C.rope, 0.08)
+		bent += 1; bx += 2.4
+	if head:   # bollards with coiled rope, the ladder down on the north side
+		for bxp in [10.8, 15.6, 20.4]:
+			v.blob(Vector3(bxp, DECK + 0.25, hw - 0.35), Vector3(0.14, 0.25, 0.14), C.iron, 0.04)
+			v.box(Vector3(bxp - 0.18, DECK + 0.45, hw - 0.53), Vector3(bxp + 0.18, DECK + 0.52, hw - 0.17), C.iron, 0.0)
+			for k in 18:
+				var t := k * TAU / 18.0
+				v.put(Vector3i(int((bxp + 0.55 + cos(t) * 0.22) / 0.05), int(DECK / 0.05), int(floor((hw - 0.5 + sin(t) * 0.22) / 0.05))), C.rope, 0.05)
+		for y in 9:   # the ladder at 9.6 m on the north side (-z), down to the water
+			var ly := DECK - 0.25 - y * 0.3
+			v.box(Vector3(9.55, ly, -hw - 0.25), Vector3(10.15, ly + 0.05, -hw - 0.15), C.drift_d)
+		for lx in [9.5, 10.15]: v.box(Vector3(lx, -0.6, -hw - 0.25), Vector3(lx + 0.06, DECK + 0.6, -hw - 0.15), C.drift_d)
+	else:   # the abutment: big shore stones under the first 2.5 m, up to the deck
+		for k in 14:
+			var r := RandomNumberGenerator.new(); r.seed = seed_ + k * 17
+			var c := Vector3(r.randf_range(0.0, 2.5), 0, r.randf_range(-hw, hw))
+			var gy := H(at.call(c.x, c.z))
+			c.y = (gy + DECK - 0.1) * 0.5
+			v.blob(c, Vector3(r.randf_range(0.4, 0.6), maxf(0.2, (DECK - 0.1 - gy) * 0.5 + 0.2), r.randf_range(0.35, 0.55)), C.stone if k % 3 else C.stone_d, 0.06, k)
+	var mi := v.node(Vector3.ZERO, "Pier"); root.add_child(mi); mi.position = W(a, 0.0); mi.rotation.y = yaw
+	VBox.collider(root, W((a + b) * 0.5, DECK - 0.15), Vector3(L, 0.3, w + 0.1), yaw)
 	_count("pier voxels", v.cells.size())
 
 ## a hull's half-breadth at a point along it (t 0 stern .. 1 bow) and height up from the keel (0..1)
@@ -374,9 +429,23 @@ func _ship(c: Vector2, a: float) -> void:
 
 # ---------------------------------------------------------------- the square's well
 func _well() -> void:
-	var p: Vector2 = fh.WELL
-	var mi := _mesh_node(VoxelProps.mesh("well", 2.25, 1.8), 0.05, W(p, H(p)), 0.3, "Well")
-	VBox.collider(root, W(p, H(p) + 0.4), Vector3(1.6, 0.8, 1.6), 0.3)
+	var p: Vector2 = fh.WELL; var y0 := H(p)
+	var mi := _mesh_node(VoxelProps.mesh("well", 2.25, 1.8), 0.05, W(p, y0), 0.3, "Well")
+	VBox.collider(root, W(p, y0 + 0.4), Vector3(1.6, 0.8, 1.6), 0.3)
+	# the square is worn bare round the well (the paths mask paints it); round the well head itself an apron of flat
+	# stones, laid flush, where people stand to draw water and spill it
+	var v := VBox.new(0.05); var C := VoxelProps.C
+	for i in range(-50, 51):
+		for k in range(-50, 51):
+			var d := Vector2(i + 0.5, k + 0.5).length() * 0.05
+			if d < 0.8 or d > 2.4 + 0.15 * sin(atan2(k, i) * 5.0): continue
+			var stone := Vector2i(int(floor((d - 0.8) / 0.4)), int(floor(atan2(k, i) * (3.0 + d * 2.0))))
+			var r := float(hash(stone) % 100) / 100.0
+			var seam := fmod(d - 0.8, 0.4) < 0.05 or fmod(atan2(k, i) * (3.0 + d * 2.0) + 10.0, 1.0) < 0.06
+			var c: Color = C.stone_d if r < 0.3 else (C.stone_l if r > 0.75 else (C.lichen if r > 0.68 else C.stone))
+			var gy := roundi((H(p + Vector2(i + 0.5, k + 0.5) * 0.05) - y0) / 0.05)   # laid on the ground as it falls
+			v.put(Vector3i(i, gy, k), c.darkened(0.3) if seam else c, 0.03, stone.x); v.put(Vector3i(i, gy - 1, k), c.darkened(0.2), 0.0)
+	var ap := v.node(Vector3.ZERO, "WellApron"); root.add_child(ap); ap.position = W(p, y0 + 0.03)
 	placed.append(["well", p, 1.0, "the village well, the old spring"])
 
 # ---------------------------------------------------------------- plots: walled gardens and fenced yards
