@@ -120,8 +120,8 @@
   "solid": true
  },
  "anvil": {
-  "model": "res://assets/props/quaternius/Anvil.gltf",
-  "scale": 1.0,
+  "model": "res://assets/props/quaternius/Anvil_Log.gltf",
+  "scale": 0.75,
   "lift": 0.0,
   "solid": true
  },
@@ -133,9 +133,9 @@
  },
  "grindstone": {
   "model": "res://assets/props/quaternius/Whetstone.gltf",
-  "scale": 1.4,
+  "scale": 1.0,
   "lift": 0.0,
-  "solid": false
+  "solid": true
  },
  "charcoal": {
   "model": "res://assets/props/fogwright/Charcoal_Heap.glb",
@@ -184,5 +184,77 @@
   "scale": 1.0,
   "lift": 0.0,
   "solid": true
+ },
+ "forge": {
+  "model": "res://assets/props/fogwright/Forge.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "bellows": {
+  "model": "res://assets/props/fogwright/Great_Bellows.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "coal bin": {
+  "model": "res://assets/props/fogwright/Coal_Bin.glb",
+  "scale": 0.7,
+  "lift": 0.0,
+  "solid": true
+ },
+ "slack tub": {
+  "model": "res://assets/props/fogwright/Slack_Tub.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "tool rack": {
+  "model": "res://assets/props/fogwright/Tool_Rack.glb",
+  "scale": 0.64,
+  "lift": 0.0,
+  "solid": false
+ },
+ "swage block": {
+  "model": "res://assets/props/fogwright/Swage_Block.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "bench vise": {
+  "model": "res://assets/props/fogwright/Bench_Vise.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "stock rack": {
+  "model": "res://assets/props/fogwright/Stock_Rack.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "smith goods": {
+  "model": "res://assets/props/fogwright/Smith_Goods.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": false
+ },
+ "chest": {
+  "model": "res://assets/props/quaternius/Chest_Wood.gltf",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
+ },
+ "keg": {
+  "model": "res://assets/props/quaternius/Barrel.gltf",
+  "scale": 0.65,
+  "lift": 0.0,
+  "solid": true
+ },
+ "old blade": {
+  "model": "res://assets/props/fogwright/Old_Blade.glb",
+  "scale": 1.0,
+  "lift": 2.3,
+  "solid": false
  }
 }

@@ -163,6 +163,14 @@ base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the p
 - **Props for people face the people and keep out of their way:** in a square or any open ground people cross, props
   stand within 1.5 m of its rim; notice boards and benches face where people stand. Hung things (lamps, signs) keep
   their own facing, arms out from the wall.
+- **Interiors only where the game needs them.** Most buildings are closed shells with shut doors, as in any MMO: no
+  partitions, floors or furniture inside (unneeded work and frame rate). A building type gets `interior=True` only when
+  the story or play opens it (Farhallow: the smithy for beat B, the open-fronted boat shed).
+- **Research an interior before building it.** Find out what the real place has and how it is laid out, with sources,
+  in `docs/research/<place>.md` (see `smithy.md`): every piece of equipment, where it stands and why (the smith's forge
+  against a wall with its hood and chimney, bellows beside it, anvil a step from the fire, slack tub between, racks and
+  benches round the walls, an earth floor against sparks, few windows). Model what the kit lacks, place each piece by
+  that reasoning (against-wall pieces may touch a wall, never pass it), and light it as the real place is lit.
 - **Real sizes against a real person:** check props against the 1.8 m villager (a well's roof is above head height, a
   bench is knee-high); fences, walls and gates sit on the drawn ground under them.
 - **Every edge is dressed:** palisades textured with sharpened stakes, trees 3 m back from them, haze from 30 m out so

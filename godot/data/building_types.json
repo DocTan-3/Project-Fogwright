@@ -225,7 +225,8 @@
    ]
   ],
   "note": "street door into the side passage to the yard; the shop and kitchen open off it; stairs in the kitchen to the hall over the shop (jettied) and bedrooms behind; back-to-back hearth",
-  "people": "wayfolk"
+  "people": "wayfolk",
+  "interior": false
  },
  "cottage": {
   "name": "Cottage",
@@ -363,7 +364,8 @@
    ]
   ],
   "note": "ladder to the loft over the back half; the lean-to opens to the yard; bench by the front door",
-  "people": "wayfolk"
+  "people": "wayfolk",
+  "interior": false
  },
  "merchant_house": {
   "name": "Merchant's house",
@@ -591,7 +593,8 @@
   ],
   "note": "front door into the stair hall between counting room and shop; hall and parlour upstairs, bedrooms above; coach gate to the yard; own well in the garden",
   "plot_doors": [],
-  "people": "wayfolk"
+  "people": "wayfolk",
+  "interior": false
  },
  "merchant_house_small": {
   "name": "Well-off house",
@@ -786,7 +789,8 @@
   ],
   "note": "the merchant's house without the coach yard: for the well-off who trade by ship or office, not by cart; a side door to the lane",
   "plot_doors": [],
-  "people": "wayfolk"
+  "people": "wayfolk",
+  "interior": false
  },
  "inn": {
   "name": "Inn",
@@ -999,6 +1003,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "people": "wayfolk",
+  "interior": false,
   "plot_doodads": []
  },
  "waylodge": {
@@ -1115,6 +1120,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "people": "wayfolk",
+  "interior": false,
   "doodads": [],
   "plot_doodads": []
  },
@@ -1148,6 +1154,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "people": "wayfolk",
+  "interior": false,
   "doodads": [],
   "plot_doodads": []
  },
@@ -1181,6 +1188,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "people": "wayfolk",
+  "interior": false,
   "doodads": [],
   "plot_doodads": []
  },
@@ -1264,30 +1272,133 @@
     1.2
    ]
   ],
+  "interior": true,
   "doodads": [
    [
-    3.0,
-    2.0,
-    1.0,
+    0.36,
+    1.18,
+    1.5,
+    1.65,
+    "forge",
+    "the forge: hearth against the side wall, hood and chimney up through the roof",
+    90
+   ],
+   [
+    0.36,
+    2.97,
+    1.11,
+    1.61,
+    "bellows",
+    "the great bellows behind the forge, their nozzle in its fire",
+    180
+   ],
+   [
+    0.36,
+    0.36,
     0.6,
+    0.67,
+    "coal bin",
+    "charcoal for the forge, at its front end",
+    90
+   ],
+   [
+    2,
+    2.5,
+    0.86,
+    0.82,
+    "slack tub",
+    "water for quenching, by the forge and the anvil",
+    0
+   ],
+   [
+    2.375,
+    1.725,
+    0.75,
+    0.65,
     "anvil",
-    "the smith works here"
+    "the anvil on its stump, a step from the fire",
+    90
    ],
    [
-    4.3,
-    3.8,
-    1.6,
-    0.6,
-    "quench trough",
-    "quenching hot iron"
+    1.58,
+    4.52,
+    0.9,
+    0.12,
+    "tool rack",
+    "tongs and hammers, racked by the forge",
+    180
    ],
    [
-    0.6,
-    3.6,
-    0.8,
-    0.8,
+    3.53,
+    2.975,
+    0.84,
+    0.55,
+    "swage block",
+    "the swage block and mandrel",
+    0
+   ],
+   [
+    3.62,
+    3.67,
+    1.9,
+    0.97,
+    "bench vise",
+    "the bench and leg vise for filing and bending",
+    180
+   ],
+   [
+    4.45,
+    0.35,
+    1.14,
+    0.9,
     "grindstone",
-    "sharpening"
+    "the grindstone by the open front, for the light",
+    0
+   ],
+   [
+    0.6,
+    9.27,
+    1.2,
+    0.37,
+    "stock rack",
+    "bar and rod iron, stood in its rack",
+    180
+   ],
+   [
+    2.8,
+    9.37,
+    1.6,
+    0.27,
+    "smith goods",
+    "finished work: chain, boat hooks, rings and a small anchor",
+    180
+   ],
+   [
+    4.6,
+    9.04,
+    0.9,
+    0.6,
+    "chest",
+    "the locked chest for his best tools",
+    180
+   ],
+   [
+    0.36,
+    5.5,
+    0.5,
+    0.5,
+    "keg",
+    "a keg of nails",
+    0
+   ],
+   [
+    5.58,
+    2.0,
+    0.11,
+    1.01,
+    "old blade",
+    "his father's blade, hung above the yard door, never sold (beat B)",
+    -90
    ],
    [
     6.6,
@@ -1449,6 +1560,7 @@
   "plot_rooms": [],
   "plot_doors": [],
   "people": "wayfolk",
+  "interior": false,
   "plot_doodads": []
  },
  "store": {
@@ -1506,6 +1618,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  },
  "smokehouse": {
@@ -1568,10 +1681,12 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  },
  "boat_shed": {
   "people": "any",
+  "interior": true,
   "name": "Boatwright's shed",
   "size": "8 \u00d7 6 m, open to the shore",
   "rooms": [
@@ -1680,6 +1795,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  },
  "granary": {
@@ -1730,6 +1846,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  },
  "guard_post": {
@@ -1784,6 +1901,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  },
  "hen_house": {
@@ -1841,6 +1959,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  },
  "merrith_shrine": {
@@ -1896,6 +2015,7 @@
   "plot": null,
   "plot_rooms": [],
   "plot_doors": [],
+  "interior": false,
   "plot_doodads": []
  }
 }

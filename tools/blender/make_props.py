@@ -34,11 +34,15 @@ def part(kind,m,loc=(0,0,0),rot=(0,0,0),**k):
     bmesh.ops.transform(bm,matrix=Matrix.Translation(Vector(loc))@R,verts=bm.verts)
     me=bpy.data.meshes.new('p'); bm.to_mesh(me); bm.free(); me.materials.append(mat(m))
     o=bpy.data.objects.new('p',me); bpy.context.scene.collection.objects.link(o); PARTS.append(o); return o
-def done(name):
+def done(name,center=False):
     global PARTS
     bpy.ops.object.select_all(action='DESELECT')
     for o in PARTS: o.select_set(True)
     bpy.context.view_layer.objects.active=PARTS[0]; bpy.ops.object.join(); o=bpy.context.view_layer.objects.active; o.name=name
+    if center:   # its footprint centred on the origin, so a planned spot is where it stands
+        bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
+        xs=[v.co.x for v in o.data.vertices]; ys=[v.co.y for v in o.data.vertices]; cx,cy=(min(xs)+max(xs))/2,(min(ys)+max(ys))/2
+        for v in o.data.vertices: v.co.x-=cx; v.co.y-=cy
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.uv.cube_project(cube_size=1.0)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.export_scene.gltf(filepath=os.path.join(OUT,name+'.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=True)
@@ -215,4 +219,72 @@ part('sphere','Glow',(0,0,10.4),r=0.55,n=8)                                     
 part('cyl','Iron_Dark',(0,0,11.3),r=1.3,r2=0.1,h=1.3,n=8)                               # the cap
 part('cyl','Iron',(0,0,12.6),r=0.06,h=0.6,n=4)
 done('Lighthouse')
+# ---- the smithy (docs/research/smithy.md): what a working village smithy has
+# forge: a waist-high stone hearth, brick rim, glowing coals in the fire pot, a stone hood narrowing into a chimney
+# that rises through the roof; its back (local +y) goes against the wall
+part('box','RockTrim_Dark',(0,0,0),size=(1.6,1.3,0.78))
+part('box','RedBrick',(0,0,0.78),size=(1.6,1.3,0.12))
+part('box','Iron_Dark',(0,-0.1,0.86),size=(0.7,0.6,0.06)); part('box','Glow',(0,-0.1,0.9),size=(0.55,0.45,0.05))
+part('box','Iron_Dark',(0,0.55,0.9),size=(0.24,0.2,0.18))                                 # the tuyere, where the bellows blow in
+part('cyl','RockTrim',(0,0.2,1.6),r=1.0,r2=0.45,h=1.1,n=4).rotation_euler.z=math.pi/4     # the hood
+part('box','RockTrim',(0,0.3,2.7),size=(0.7,0.7,2.3))                                     # the chimney, up through the roof
+part('box','RockTrim_Light',(0,0.3,5.0),size=(0.85,0.85,0.15))
+done('Forge',True)
+# great bellows: two wedge boards with leather between, a nozzle to the forge, on a frame, worked by a rocker pole
+part('box','WoodTrim',(0,0,0),size=(0.12,0.12,0.9)); part('box','WoodTrim',(0,1.0,0),size=(0.12,0.12,0.9))
+part('box','WoodTrim_Dark',(0,0.5,0.85),size=(0.1,1.2,0.1))
+for z,sh in ((0.95,'WoodTrim'),(1.35,'WoodTrim')):
+    part('cyl',sh,(0,0.5,z),r=0.55,r2=0.12,h=0.06,n=3).rotation_euler.z=-math.pi/2
+part('cyl','Cloth_Dark',(0,0.5,1.0),r=0.5,r2=0.11,h=0.35,n=3).rotation_euler.z=-math.pi/2   # the leather
+part('cyl','Iron_Dark',(0,-0.25,1.15),(math.pi/2,0,0),r=0.06,h=0.5,n=6)                  # the nozzle
+part('box','WoodTrim_Dark',(0,0.5,1.8),size=(0.08,0.08,0.9)); part('box','WoodTrim_Wear',(0,1.0,2.25),(math.pi/2-0.35,0,0),size=(0.07,0.07,1.6))   # the rocker pole
+done('Great_Bellows',True)
+# slack tub: a half barrel of water, iron hoops
+part('cyl','WoodTrim_Wear',(0,0,0),r=0.38,r2=0.42,h=0.55,n=10)
+for z in (0.08,0.45): part('cyl','Iron_Dark',(0,0,z),r=0.405+0.03*z/0.55,h=0.05,n=10)
+part('cyl','sea_Dark',(0,0,0.48),r=0.38,h=0.02,n=10)
+done('Slack_Tub',True)
+# coal bin: a plank box of charcoal
+for (x,y,w,d) in ((0,-0.4,0.9,0.06),(0,0.4,0.9,0.06),(-0.45,0,0.06,0.8),(0.45,0,0.06,0.8)): part('box','WoodTrim_Dark',(x,y,0),size=(w,d,0.5))
+part('sphere','Iron_Dark',(0,0,0.25),r=0.42,n=7,sz=0.5)
+done('Coal_Bin',True)
+# tool rack: a board on two posts with tongs and hammers hanging from pegs
+for x in (-0.65,0.65): part('box','WoodTrim_Dark',(x,0,0),size=(0.08,0.08,1.6))
+part('box','WoodTrim',(0,0,1.3),size=(1.4,0.05,0.18))
+for k in range(6):   # tongs: two long jaws each
+    x=-0.55+k*0.14; part('box','Iron_Dark',(x,-0.05,0.75),(0,0.06,0),size=(0.025,0.025,0.6)); part('box','Iron_Dark',(x+0.03,-0.05,0.75),(0,-0.06,0),size=(0.025,0.025,0.6))
+for k in range(3):   # hammers
+    x=0.3+k*0.14; part('box','WoodTrim_Light',(x,-0.05,0.95),size=(0.03,0.03,0.38)); part('box','Iron',(x,-0.05,0.9),size=(0.12,0.05,0.06))
+done('Tool_Rack',True)
+# swage block on its stand, and the mandrel cone beside it
+part('box','WoodTrim_Dark',(0,0,0),size=(0.55,0.55,0.5)); part('box','Iron_Dark',(0,0,0.5),size=(0.42,0.42,0.14))
+for (x,y) in ((-0.1,-0.1),(0.1,-0.1),(-0.1,0.1),(0.1,0.1)): part('box','Iron',(x,y,0.62),size=(0.06,0.06,0.025))
+part('cyl','Iron_Dark',(0.45,0.1,0),r=0.12,r2=0.03,h=0.75,n=7)
+done('Swage_Block',True)
+# workbench with a leg vise
+part('box','WoodTrim',(0,0,0.82),size=(1.9,0.65,0.08))
+for (x,y) in ((-0.85,-0.25),(0.85,-0.25),(-0.85,0.25),(0.85,0.25)): part('box','WoodTrim_Dark',(x,y,0),size=(0.08,0.08,0.82))
+part('box','WoodTrim_Dark',(0,0.2,0.2),size=(1.8,0.25,0.04))                               # shelf
+part('box','Iron_Dark',(-0.6,-0.38,0),size=(0.08,0.08,0.95)); part('box','Iron_Dark',(-0.6,-0.4,0.86),size=(0.16,0.12,0.12))   # the leg vise
+part('cyl','Iron',(-0.6,-0.5,0.9),(math.pi/2,0,0),r=0.015,h=0.3,n=4)
+for k in range(3): part('box','Iron',(0.2+k*0.2,0.05,0.9),size=(0.03,0.25,0.015))          # files
+done('Bench_Vise',True)
+# iron stock rack: a frame with bars and rods leaning in it
+part('box','WoodTrim_Dark',(0,0,0),size=(1.2,0.25,0.08)); part('box','WoodTrim_Dark',(0,0.08,1.1),size=(1.2,0.08,0.08))
+for x in (-0.55,0.55): part('box','WoodTrim_Dark',(x,0.08,0),size=(0.08,0.08,1.2))
+for k in range(9): part('box','Iron_Dark' if k%2 else 'Iron',(-0.45+k*0.11,0.02,0.04),(-0.12,0,0),size=(0.035,0.035,1.7))
+done('Stock_Rack',True)
+# finished work hung on the wall: a beam of hooks with chain, boat hooks and rings; and a small anchor leaning below
+part('box','WoodTrim_Dark',(0,0,1.7),size=(1.6,0.08,0.12))
+for k in range(5):
+    x=-0.6+k*0.3
+    for c in range(4): part('cyl','Iron_Dark',(x,0.0,1.6-c*0.12),(0,math.pi/2*(c%2),0),r=0.05,h=0.02,n=6,caps=False)
+part('cyl','Iron_Dark',(0.2,0.12,0),(0.15,0,0),r=0.03,h=1.0,n=5); part('box','Iron_Dark',(0.2,0.12,0.05),size=(0.6,0.05,0.05))
+part('box','Iron_Dark',(-0.08,0.12,0.05),(0,0.7,0),size=(0.05,0.05,0.3)); part('box','Iron_Dark',(0.48,0.12,0.05),(0,-0.7,0),size=(0.05,0.05,0.3))
+done('Smith_Goods',True)
+# the old blade: his father's arming sword on two pegs (hung above a door, beat B)
+part('box','WoodTrim_Dark',(-0.3,0,0),size=(0.05,0.1,0.1)); part('box','WoodTrim_Dark',(0.3,0,0),size=(0.05,0.1,0.1))
+part('box','Iron_Light',(0.05,-0.04,0.09),size=(0.75,0.02,0.05)); part('box','Iron_Dark',(-0.34,-0.04,0.09),size=(0.04,0.02,0.18))
+part('box','Cloth_Dark',(-0.45,-0.04,0.09),size=(0.18,0.03,0.035)); part('sphere','Iron',(-0.56,-0.04,0.09),r=0.035,n=5)
+done('Old_Blade',True)
 print('done')

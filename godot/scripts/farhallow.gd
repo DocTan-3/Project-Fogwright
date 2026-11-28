@@ -235,17 +235,21 @@ func _build(i: int) -> void:
 	for r in roofs:
 		for e in _edges(r, roofs):
 			_wall_run(e, r, ty, storeys, low, kinds, L, mir)
-	for e in _inner_edges(roofs):                            # partitions between rooms, with the floorplan's inner doors
-		_wall_run(e, [], ty, 1, low, kinds, L, mir, true)
-	for r in rooms:                                          # floors: boards in rooms, flags in shops and sheds, earth in yards
-		if r[5] == "garden": continue
+	# most buildings are closed shells, as in any MMO: only the ones the story opens (smithy, boat shed) get an inside
+	var inside: bool = ty.get("interior", false)
+	if inside:
+		for e in _inner_edges(roofs):                        # partitions between rooms, with the floorplan's inner doors
+			_wall_run(e, [], ty, 1, low, kinds, L, mir, true)
+	for r in rooms:                                          # floors: inside only where there is an inside; earth in yards
+		if r[5] == "garden" or (not inside and r[5] != "yard"): continue
 		var fl := MeshInstance3D.new(); var bm := BoxMesh.new(); bm.size = Vector3(r[2], 0.1, r[3]); fl.mesh = bm
 		var key: String = {"room": "WoodTrim", "shop": "RockTrim", "out": "RockTrim", "stone": "RockTrim", "yard": "path"}.get(r[5], "WoodTrim")
+		if b.type == "workshop": key = "path"                # a smithy's floor is earth, against sparks (docs/research/smithy.md)
 		var fm := StandardMaterial3D.new(); fm.albedo_color = Palette.col(key) / (0.78 if key != "path" else 0.8)
 		fm.albedo_texture = load("res://assets/library/%s_detail.png" % ({"WoodTrim": "WoodTrim", "RockTrim": "RockTrim", "path": "Path"}[key]))
 		fm.uv1_triplanar = true; fm.uv1_scale = Vector3(0.5, 0.5, 0.5); fl.material_override = fm
 		fl.position = L.call(r[0] + r[2] * 0.5, r[1] + r[3] * 0.5, -0.03 if r[5] == "yard" else -0.02); root.add_child(fl)
-		if _is_roofed(r) and r in roofs:                     # the floors of the storeys above
+		if inside and _is_roofed(r) and r in roofs:          # the floors of the storeys above
 			for st in range(1, storeys):
 				var up := MeshInstance3D.new(); var um := BoxMesh.new(); um.size = Vector3(r[2], 0.12, r[3]); up.mesh = um
 				var wm := StandardMaterial3D.new(); wm.albedo_texture = load("res://assets/library/WoodTrim_detail.png"); wm.albedo_color = Palette.col("WoodTrim") / 0.78
@@ -804,12 +808,15 @@ func _doodads() -> void:
 		var role := "fixture" if dd.mounted or (owner >= 0 and _in_roofed(p, -0.1)) else "clutter"
 		var y: float = (1.12 if _on_pier(p) else height(p)) + float(m[2])   # on the pier's planks, or on the ground
 
-		var yaw := -float(dd.a) + (PI / 2.0 if dd.get("turn", false) else 0.0)   # turned so its long side lies along its spot
+		var yaw := -float(dd.a) + (PI / 2.0 if dd.get("turn", false) else 0.0) + deg_to_rad(float(dd.get("spin", 0)))   # turned to fit its spot, or faced by hand
 		var n := put(m[0], W(p, y), yaw, m[1], m[3], role, dd.purpose)
 		if n == null: continue
 		if not dd.mounted and not dd.kind in ["fruit tree", "flower bed"]: doodad_nodes.append([n, dd.kind, dd.purpose])
 		if dd.kind == "boat hull":   # a hull, half built, on its trestles
 			put(DOCK % "Boat_B_1", W(p, y + 0.45), yaw, 0.7, false, "fixture", "the hull on its trestles")
+		if dd.kind == "forge":   # the fire: the smithy's main light (few windows, so the smith can judge the iron's colour)
+			var fire := OmniLight3D.new(); fire.light_color = Color(1.0, 0.55, 0.25); fire.light_energy = 1.6; fire.omni_range = 6.0
+			fire.position = W(p, y + 1.1); add_child(fire)
 		if dd.kind == "chopping block":   # beat B: the first weapon waits here
 			put(PROPS % "Axe_Bronze", W(p, y + 0.62), yaw + 0.6, 1.0, false, "fixture", "the hatchet in the chopping block: the first weapon")
 
@@ -1184,6 +1191,7 @@ func check_clip() -> Array:
 		q.transform = Transform3D(gt.basis.orthonormalized(), gt * (box.get_center() + Vector3(0, 0.05, 0)))   # lifted off the ground a hair
 		for hit in space.intersect_shape(q, 4):
 			var other: Node = hit.collider
+			if d[1] == "forge" and _under_roof_piece(other): continue     # a chimney passes through its roof
 			var what := str(other.get_parent().get_parent().name) if other.get_parent() and other.get_parent().get_parent() else str(other.name)
 			var p := Vector2(gt.origin.x, gt.origin.z) + ORIGIN
 			var where := ""
@@ -1207,3 +1215,9 @@ func check_roofs() -> Array:
 			if not roof:
 				issues.append("ROOF   no roof over the room at %s (the ray met %s)" % [p.round(), hit.collider.get_parent().name if not hit.is_empty() and hit.collider.get_parent() else "nothing"]); break
 	return issues
+
+func _under_roof_piece(n: Node) -> bool:   # is this collider part of a roof piece
+	while n and n != self:
+		if str(n.name).begins_with("Roof_"): return true
+		n = n.get_parent()
+	return false

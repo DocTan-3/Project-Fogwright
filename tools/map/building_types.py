@@ -14,7 +14,7 @@
 T={}
 def t(key,**k):
     k.setdefault('hearths',[]); k.setdefault('stairs',[]); k.setdefault('windows',[]); k.setdefault('plot',None)
-    k.setdefault('plot_rooms',[]); k.setdefault('plot_doors',[]); k.setdefault('people','wayfolk'); k.setdefault('doodads',[]); k.setdefault('plot_doodads',[]); T[key]=k
+    k.setdefault('plot_rooms',[]); k.setdefault('plot_doors',[]); k.setdefault('people','wayfolk'); k.setdefault('interior',False); k.setdefault('doodads',[]); k.setdefault('plot_doodads',[]); T[key]=k
 
 t('street_house',name="Street house",size="6 × 10 m, 2-3 storeys, plot behind 4-16 m",
   rooms=[(0,0,4.6,5,'shop /\nworkshop','shop'),(4.6,0,1.4,10,'','room'),(0,5,4.6,5,'kitchen','room')],
@@ -76,8 +76,23 @@ t('workshop',name="Workshop with yard",size="10 × 10 m (smithy, cooper, carpent
   rooms=[(0,0,6,5,'open work bay:\nforge or bench','shop'),(0,5,6,5,'store','room'),(6,0,4,10,'yard: fuel,\nmaterials','yard')],
   doors=[(3,0,'h',4.4,'s'),(6,2.5,'v',1,'d'),(3,5,'h',1,'d'),(6,7.5,'v',1,'d'),(8,0,'h',2.4,'g')],
   hearths=[(0,1.2)],windows=[(0,7.5,'v',1.2)],
-  doodads=[(3.0,2.0,1.0,0.6,'anvil','the smith works here'),(4.3,3.8,1.6,0.6,'quench trough','quenching hot iron'),(0.6,3.6,0.8,0.8,'grindstone','sharpening'),
-              (6.6,1.0,1.8,1.8,'charcoal','fuel for the forge'),(8.2,5.0,1.3,3.4,'woodpile','firewood for the forge'),(6.6,8.6,0.6,0.6,'chopping block','the hatchet in the block: the first weapon (beat B)')],
+  interior=True,   # the smithy is opened in the prologue (beat B); its inside follows docs/research/smithy.md
+  doodads=[(0.36,1.18,1.5,1.65,'forge','the forge: hearth against the side wall, hood and chimney up through the roof',90),
+           (0.36,2.97,1.11,1.61,'bellows','the great bellows behind the forge, their nozzle in its fire',180),
+           (0.36,0.36,0.6,0.67,'coal bin','charcoal for the forge, at its front end',90),
+           (2,2.5,0.86,0.82,'slack tub','water for quenching, by the forge and the anvil',0),
+           (2.375,1.725,0.75,0.65,'anvil','the anvil on its stump, a step from the fire',90),
+           (1.58,4.52,0.9,0.12,'tool rack','tongs and hammers, racked by the forge',180),
+           (3.53,2.975,0.84,0.55,'swage block','the swage block and mandrel',0),
+           (3.62,3.67,1.9,0.97,'bench vise','the bench and leg vise for filing and bending',180),
+           (4.45,0.35,1.14,0.9,'grindstone','the grindstone by the open front, for the light',0),
+           (0.6,9.27,1.2,0.37,'stock rack','bar and rod iron, stood in its rack',180),
+           (2.8,9.37,1.6,0.27,'smith goods','finished work: chain, boat hooks, rings and a small anchor',180),
+           (4.6,9.04,0.9,0.6,'chest','the locked chest for his best tools',180),
+           (0.36,5.5,0.5,0.5,'keg','a keg of nails',0),
+           (5.58,2.0,0.11,1.01,'old blade','his father\'s blade, hung above the yard door, never sold (beat B)',-90),
+           (6.6,1.0,1.8,1.8,'charcoal','fuel for the forge'),(8.2,5.0,1.3,3.4,'woodpile','firewood for the forge'),
+           (6.6,8.6,0.6,0.6,'chopping block','the hatchet in the block: the first weapon (beat B)')],
   note="the whole front of the work bay opens to the street by day, shuttered at night; smoky trades at the downwind end of town")
 t('farmstead',name="Farmstead",size="12 × 12 m: house, byre and barn round a yard",
   rooms=[(0,0,4,8,'house','room'),(4,0,4,8,'yard','yard'),(8,0,4,8,'byre','out'),(0,8,12,4,'barn','out')],
@@ -94,7 +109,7 @@ t('smokehouse',people='any',name="Smokehouse",size="6 × 6 m",
   rooms=[(0,0,6,4,'smoke room\n(racks)','out'),(0,4,6,2,'fire pit','out')],doors=[(3,0,'h',1,'d'),(3,4,'h',1.2,'o')],
   hearths=[(3,5)],doodads=[(0.2,-0.9,1.6,0.6,'woodpile','oak and alder for the smoke')],
   note="the fire is fed from below; fish hang on racks up into the roof; louvres under the ridge")
-t('boat_shed',people='any',name="Boatwright's shed",size="8 × 6 m, open to the shore",
+t('boat_shed',people='any',interior=True,name="Boatwright's shed",size="8 × 6 m, open to the shore",
   rooms=[(0,0,8,6,'slipway\nand bench','out')],doors=[(4,0,'h',6,'s')],
   doodads=[(2.2,2.8,3.7,1.6,'boat hull','a hull on trestles, half built')],
   note="open along the front for hulls; tools along the back wall; a slipway down to the water")
