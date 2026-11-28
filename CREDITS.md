@@ -44,3 +44,8 @@ scaled to 1024 px): https://quaternius.itch.io/universal-base-characters
 Third-party packs are listed with their licences in tools/assets/packs.json and downloaded by tools/assets/fetch.py; only
 CC0 packs may be committed here. Packs that forbid redistribution ship only inside the game. Credit required for any use:
 Post-Apocalyptic World by Atomic Realm, https://atomicrealm.itch.io/
+
+CC0 photo textures from Poly Haven (https://polyhaven.com), public domain, 1K colour, normal (OpenGL) and roughness maps, for
+the Ferrin buildings (godot/assets/buildings/ferrin/tex; the stone colour maps desaturated): rock_wall_05, medieval_blocks_03,
+castle_brick_07, metal_plate_02, rusty_metal_02, dark_wooden_planks. The models are our own, built in Blender by
+tools/blender/ferrin_forge.py and tools/blender/ferrin_kit.py (BUILDING=shop|smelter|shrine|narrow|toolmaker|stair|foundry).

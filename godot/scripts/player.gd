@@ -16,6 +16,12 @@ const GRAVITY := 14.0
 @export var camera_rig: Node3D
 
 var walking := false
+# combat hooks (scripts/combat/player_combat.gd): a roll or a knockdown takes over the movement for a moment, the character
+# walks itself into range of its target, and blocking slows it down
+var control_lock := 0.0
+var forced := Vector3.ZERO
+var auto_dir := Vector3.ZERO
+var speed_scale := 1.0
 var _anim: AnimationPlayer
 var _model: Node3D
 var _air_time := 0.0
@@ -40,18 +46,23 @@ func _physics_process(delta: float) -> void:
 	var dir := (right * input.x - forward * input.y)
 	if dir.length() > 1.0:
 		dir = dir.normalized()
+	if dir.length() < 0.05 and auto_dir != Vector3.ZERO:
+		dir = auto_dir
 
 	var speed := RUN_SPEED
 	if walking:
 		speed = WALK_SPEED
 	if Input.is_action_pressed("sprint") and not walking:
 		speed = SPRINT_SPEED
-	var target := dir * speed
+	var target := dir * speed * speed_scale
+	if control_lock > 0.0:
+		control_lock -= delta; target = forced; dir = Vector3.ZERO
+		forced = forced.lerp(Vector3.ZERO, 1.0 - exp(-2.5 * delta))
 	velocity.x = lerp(velocity.x, target.x, 1.0 - exp(-ACCEL * delta))
 	velocity.z = lerp(velocity.z, target.z, 1.0 - exp(-ACCEL * delta))
 
 	if is_on_floor():
-		if Input.is_action_just_pressed("jump"):
+		if Input.is_action_just_pressed("jump") and control_lock <= 0.0:
 			velocity.y = JUMP_VELOCITY
 			if _tree: (_tree.get("parameters/playback") as AnimationNodeStateMachinePlayback).travel("takeoff")   # at once, not when airborne
 	else:

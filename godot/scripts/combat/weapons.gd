@@ -1,0 +1,43 @@
+## The test weapons, one per family (docs/weapons.md), each with its family's quirk (docs/design.md):
+##   guns reload, heavy melee builds momentum, bows reward the draw, caster foci spend Fog shards.
+## Moves are what the weapon's rarity gives (a common weapon only attacks); these are first test moves, not designed skills.
+## Clips are from the Quaternius animation libraries ("ual" = UAL1, "ual2" = UAL2); the bow and the heavy weapon have no
+## clips of their own yet and borrow the pistol's aim and the sword's heavy combo.
+class_name Weapons
+extends RefCounted
+
+const LIST := ["sword", "warhammer", "pistol", "shortbow", "wand"]
+
+const DEFS := {
+	"sword": {"name": "Wayfolk iron sword", "family": "melee", "melee": true, "range": 2.4, "dmg": 14.0, "interval": 0.75,
+		"clips": ["ual2/Sword_Regular_A", "ual2/Sword_Regular_B", "ual2/Sword_Regular_C"], "hit_at": 0.32, "model": "res://assets/props/quaternius/Sword_Bronze.gltf",
+		"moves": ["arc_slash"]},
+	"warhammer": {"name": "Smith's warhammer", "family": "heavy", "melee": true, "range": 2.7, "dmg": 26.0, "interval": 1.45,
+		"clips": ["ual2/Melee_Hook"], "hit_at": 0.55, "model": "res://assets/props/quaternius/Axe_Bronze.gltf", "model_scale": 1.5,
+		"moves": ["ground_slam"]},
+	"pistol": {"name": "Flintlock pistol", "family": "gun", "melee": false, "range": 14.0, "dmg": 22.0, "interval": 0.7,
+		"clips": ["ual/Pistol_Shoot"], "hit_at": 0.1, "ammo": 2, "reload": 1.6, "moves": ["scatter_shot"]},
+	"shortbow": {"name": "Ash shortbow", "family": "bow", "melee": false, "range": 18.0, "dmg": 10.0, "interval": 0.35,
+		"clips": ["ual/Pistol_Shoot"], "hit_at": 0.1, "draw": 1.2, "moves": ["volley"]},
+	"wand": {"name": "Brass wand", "family": "focus", "melee": false, "range": 12.0, "dmg": 9.0, "interval": 0.9,
+		"clips": ["ual/Spell_Simple_Shoot"], "hit_at": 0.25, "moves": ["fog_bolt"]},
+}
+
+## skills: energy, cooldown, what it does; "shards": Fog shards spent (caster foci), raising Fog pressure
+const MOVES := {
+	"arc_slash": {"name": "Arc slash", "energy": 25.0, "cd": 6.0, "clip": "ual2/Sword_Regular_C", "kind": "line", "len": 9.0, "dmg": 32.0,
+		"text": "a magic slash that runs along the ground"},
+	"ground_slam": {"name": "Ground slam", "energy": 30.0, "cd": 9.0, "clip": "ual2/Sword_Heavy_Combo", "kind": "circle", "r": 3.6, "dmg": 40.0,
+		"text": "hits everything round you; momentum makes it stronger"},
+	"scatter_shot": {"name": "Scatter shot", "energy": 20.0, "cd": 8.0, "clip": "ual/Pistol_Shoot", "kind": "cone", "len": 7.0, "dmg": 34.0, "ammo": 1,
+		"text": "a cone of shot; uses a load"},
+	"volley": {"name": "Volley", "energy": 25.0, "cd": 10.0, "clip": "ual/Pistol_Shoot", "kind": "target", "dmg": 14.0, "count": 3,
+		"text": "three arrows at once"},
+	"fog_bolt": {"name": "Fog bolt", "energy": 15.0, "cd": 5.0, "clip": "ual/Spell_Simple_Shoot", "kind": "target", "dmg": 38.0, "shards": 1,
+		"text": "spends a Fog shard and feeds the Fog"},
+}
+
+## momentum (heavy melee): each hit in a row adds this much damage, up to the cap; it fades after a pause
+const MOMENTUM_STEP := 0.12
+const MOMENTUM_MAX := 0.6
+const MOMENTUM_KEEP := 2.5

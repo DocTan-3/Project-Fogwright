@@ -3,6 +3,7 @@
 extends Node3D
 
 const ANIMS := "res://assets/animations/quaternius/UAL1_Standard.glb"
+var _act_clip: AnimationNodeAnimation
 
 func _ready() -> void:
 	var sun: DirectionalLight3D = $Sun   # the palette's light
@@ -19,7 +20,14 @@ func _ready() -> void:
 	var lib: AnimationLibrary = src.get_animation_library("").duplicate()
 	ap.add_animation_library("ual", lib)
 	lib_scene.free()
-	$Player.setup_animation(ap, _build_tree(model, ap))
+	ap.add_animation_library("ual2", CombatRig.library("ual2"))   # the second library: sword combos, block, knockback (combat)
+	var tree := _build_tree(model, ap)
+	$Player.setup_animation(ap, tree)
+	# combat (scripts/combat): the player's side and its HUD
+	var pc := PlayerCombat.new(); pc.name = "Combat"; $Player.add_child(pc)
+	pc.setup_animation(tree, _act_clip)
+	var hud := CombatHud.new(); hud.pc = pc; add_child(hud)
+	if "enemies" in OS.get_cmdline_user_args(): pc.spawn_test_enemies.call_deferred()
 
 ## Movement is blended, not switched: idle, walk, run and sprint are mixed by the player's speed in one blend space (kept in
 ## step, so the feet never restart), and a small state machine adds the jump - take-off, falling, landing - with crossfades.
@@ -34,7 +42,17 @@ func _build_tree(model: Node3D, ap: AnimationPlayer) -> AnimationTree:
 	loco.add_blend_point(clip.call("Sprint"), $Player.SPRINT_SPEED)
 	var ground := AnimationNodeBlendTree.new()
 	ground.add_node("loco", loco); ground.add_node("rate", AnimationNodeTimeScale.new())
-	ground.connect_node("rate", 0, "loco"); ground.connect_node("output", 0, "rate")
+	ground.connect_node("rate", 0, "loco")
+	# combat: attacks, skills, rolls and hit reactions play once over the movement ("act", its clip set when fired), and a
+	# held guard pose mixes in while blocking ("guard")
+	_act_clip = clip.call("Idle")
+	var act := AnimationNodeOneShot.new(); act.fadein_time = 0.08; act.fadeout_time = 0.18
+	ground.add_node("actclip", _act_clip); ground.add_node("actrate", AnimationNodeTimeScale.new()); ground.connect_node("actrate", 0, "actclip")
+	ground.add_node("act", act); ground.connect_node("act", 0, "rate"); ground.connect_node("act", 1, "actrate")
+	var guard_clip := AnimationNodeAnimation.new(); guard_clip.animation = "ual2/Idle_Shield"
+	ground.add_node("guardclip", guard_clip); ground.add_node("guard", AnimationNodeBlend2.new())
+	ground.connect_node("guard", 0, "act"); ground.connect_node("guard", 1, "guardclip")
+	ground.connect_node("output", 0, "guard")
 	# the library's falling loop throws both arms straight out (it reads as a T-pose at the top of a jump): mixed about half
 	# with the idle pose, the arms stay lower and the body still reads as airborne
 	var fall := AnimationNodeBlendTree.new()
