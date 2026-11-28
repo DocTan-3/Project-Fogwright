@@ -199,7 +199,7 @@
  },
  "coal bin": {
   "model": "res://assets/props/fogwright/Coal_Bin.glb",
-  "scale": 0.7,
+  "scale": 0.57,
   "lift": 0.0,
   "solid": true
  },
@@ -256,5 +256,11 @@
   "scale": 1.0,
   "lift": 2.3,
   "solid": false
+ },
+ "smithy door": {
+  "model": "res://assets/props/fogwright/Smithy_Door.glb",
+  "scale": 1.0,
+  "lift": 0.0,
+  "solid": true
  }
 }

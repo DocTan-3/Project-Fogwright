@@ -157,6 +157,10 @@ base, a roof's overhang over a tall prop, a hull longer than its shed. Fix the p
   never passes under a wall.
 - **One door, one piece:** each wall line is cut round its openings, so every door gets one wall piece centred on it
   with its frame; gates, archways and open fronts are gaps exactly their width. Never two door leaves for one door.
+- **Every door must be needed.** A floorplan door is redundant if, without it, its two spaces are still joined by a
+  walk at most 8 m longer; `wayfolk_plans.py` checks every type and must report none. No room has two doors to the
+  same place side by side, and an "open front" is really an opening with doors (a smithy's big double doors, standing
+  open by day), not a missing wall.
 - **Buildings are whole:** partition walls between rooms (with the floorplan's inner doors), floors in every room (boards,
   flags, packed earth in yards), floors between storeys. The roof check sends a ray down through every roofed room and
   it must meet a roof piece; know which kit pieces are not whole roofs (the kit's 6x4 is a single slope).

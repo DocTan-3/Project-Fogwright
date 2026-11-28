@@ -56,13 +56,6 @@
     "h",
     1,
     "d"
-   ],
-   [
-    2.4,
-    10,
-    "h",
-    1,
-    "d"
    ]
   ],
   "hearths": [
@@ -896,17 +889,10 @@
     "d"
    ],
    [
-    6,
+    8,
     12,
     "h",
-    1.6,
-    "d"
-   ],
-   [
-    10,
-    12,
-    "h",
-    1.6,
+    2.0,
     "d"
    ]
   ],
@@ -1226,15 +1212,8 @@
     3,
     0,
     "h",
-    4.4,
+    2.4,
     "s"
-   ],
-   [
-    6,
-    2.5,
-    "v",
-    1,
-    "d"
    ],
    [
     3,
@@ -1294,9 +1273,9 @@
    ],
    [
     0.36,
-    0.36,
+    0.53,
     0.6,
-    0.67,
+    0.55,
     "coal bin",
     "charcoal for the forge, at its front end",
     90
@@ -1348,7 +1327,7 @@
    ],
    [
     4.45,
-    0.35,
+    0.53,
     1.14,
     0.9,
     "grindstone",
@@ -1392,13 +1371,31 @@
     0
    ],
    [
-    5.58,
-    2.0,
-    0.11,
+    2.495,
+    4.5,
     1.01,
+    0.11,
     "old blade",
-    "his father's blade, hung above the yard door, never sold (beat B)",
-    -90
+    "his father's blade, hung above the store door where the street can see it, never sold (beat B)",
+    180
+   ],
+   [
+    0.6,
+    0.33,
+    1.2,
+    0.09,
+    "smithy door",
+    "the left door leaf, open flat against the front wall",
+    0
+   ],
+   [
+    4.2,
+    0.33,
+    1.2,
+    0.09,
+    "smithy door",
+    "the right door leaf, open flat against the front wall",
+    0
    ],
    [
     6.6,
@@ -1425,7 +1422,7 @@
     "the hatchet in the block: the first weapon (beat B)"
    ]
   ],
-  "note": "the whole front of the work bay opens to the street by day, shuttered at night; smoky trades at the downwind end of town",
+  "note": "big double doors to the street, open by day (horses and carts come in); one door back to the store, the store's door to the yard; smoky trades at the downwind end of town",
   "stairs": [],
   "plot": null,
   "plot_rooms": [],
