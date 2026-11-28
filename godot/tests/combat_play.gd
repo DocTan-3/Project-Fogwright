@@ -1,6 +1,7 @@
 extends Node
-## plays a fight in the real game with a bot that answers each telegraph with its natural counter (parry what can be parried,
-## dodge the unblockable), attacking with each weapon in turn; prints what happened and saves screenshots:
+## plays a fight in the real game with a bot that plays like a person at a PC: it turns the camera onto the nearest enemy,
+## walks into reach, attacks with the left click (guns and bows aimed with the right), and answers each telegraph with its
+## natural counter (parry what can be parried, dodge the unblockable), with each weapon in turn; prints what happened and saves screenshots:
 ##   godot --path . --rendering-driver opengl3 res://tests/combat_play.tscn -- out=<png prefix>
 var out := "/tmp/combat"
 var counts := {}
@@ -22,20 +23,31 @@ func _ready() -> void:
 		for e in get_tree().get_nodes_in_group("enemies"): e.queue_free()
 		await _wait(0.2)
 		var kinds := ["husk"] if w == "sword" else (["brute"] if w == "warhammer" else (["thrower"] if w == "pistol" else ["husk", "thrower"]))
+		pc.target = null
 		var f := Vector3(sin(main.get_node("Player/Model").rotation.y), 0, cos(main.get_node("Player/Model").rotation.y))
 		for i in kinds.size():
 			var e := FogEnemy.new(kinds[i]); e.target = pc.player; main.add_child(e)
 			e.global_position = pc.player.global_position + f * (6.0 + 5.0 * i) + f.cross(Vector3.UP) * (2.0 * i) + Vector3(0, 0.6, 0)
 			e.fighter.hit_taken.connect(func(r, _a): dealt[w] = dealt.get(w, 0.0) + r.taken)
 		await _wait(0.3)
-		pc.target = pc._nearest(); pc.engaged = true
-		var t := 0.0; var used := false
-		while t < 16.0 and not get_tree().get_nodes_in_group("enemies").is_empty() and not pc.fighter.dead:
+		var t := 0.0; var used := false; var draw_t := 0.0
+		while t < 20.0 and not get_tree().get_nodes_in_group("enemies").is_empty() and not pc.fighter.dead:
 			_bot()
-			if not used and t > 2.0 and pc.target: pc.cast(pc.pages[0][0]); used = true
+			var e: Node3D = pc._nearest()
+			if e:
+				var to: Vector3 = e.global_position - pc.player.global_position; to.y = 0.0
+				rig.yaw = atan2(-to.x, -to.z); rig.pitch = deg_to_rad(-8.0 if to.length() > 5.0 else -14.0)   # the camera onto it
+				pc.player.auto_dir = to.normalized() if to.length() > pc.W.range * (0.85 if pc.W.melee else 0.7) else Vector3.ZERO
+				if pc.player.auto_dir == Vector3.ZERO:
+					if not pc.W.get("block", true): Input.action_press("block")   # aim
+					if pc.W.family == "bow":
+						if pc.drawing < 0.0 and pc._aa <= 0.0 and pc._act <= 0.0: pc.drawing = 0.0
+						elif pc.drawing >= 0.9: pc.loose()
+					else: pc.attack()
+					if not used and t > 2.0: pc.cast(pc.pages[0][0]); used = true
 			if t > 2.0 and shots < 12 and fmod(t, 3.0) < get_process_delta_time(): await _shot(w)
 			await get_tree().process_frame; t += get_process_delta_time()
-			if not pc._target_ok(): pc.target = pc._nearest(); pc.engaged = pc.target != null
+		pc.player.auto_dir = Vector3.ZERO; Input.action_release("block")
 		var left := get_tree().get_nodes_in_group("enemies").size()
 		print("COMBAT-PLAY %s: %.1fs, enemies left %d, hp %d, stamina %d, energy %d, ammo %d, momentum %d%%, shards %d" % [w, t, left, pc.fighter.hp, pc.fighter.stamina, pc.fighter.energy, pc.ammo, roundi(pc.momentum * 100), pc.shards])
 	print("COMBAT-PLAY outcomes ", counts)
@@ -54,12 +66,15 @@ func _bot() -> void:
 		var left: float = fe._atk.windup - fe._t
 		if left < 0.14 and left > 0.0:
 			if k.parry and pc.fighter.melee: pc.fighter.press_block()
-			elif k.block: hold = true
+			elif k.block and pc.W.get("block", true): hold = true
 			elif k.dodge and pc.player.control_lock <= 0.0: pc.dodge()
 	for c in main.get_children():
 		if c is FogProjectile and c._target_group == "player":
 			var tti: float = (c.global_position - (pc.player.global_position + Vector3(0, 1, 0))).length() / maxf(c._v.length(), 0.1)
-			if tti < 0.22: hold = true
+			if tti < 0.22:
+				if pc.W.get("block", true): hold = true
+				elif tti < 0.12 and pc.player.control_lock <= 0.0: pc.dodge()
+	if not pc.W.get("block", true): return   # for a shooter the right button aims; the loop holds it
 	if hold: Input.action_press("block")
 	else: Input.action_release("block")
 

@@ -4,6 +4,7 @@ extends Node3D
 
 const ANIMS := "res://assets/animations/quaternius/UAL1_Standard.glb"
 var _act_clip: AnimationNodeAnimation
+var _guard_clip: AnimationNodeAnimation
 
 func _ready() -> void:
 	var sun: DirectionalLight3D = $Sun   # the palette's light
@@ -25,7 +26,7 @@ func _ready() -> void:
 	$Player.setup_animation(ap, tree)
 	# combat (scripts/combat): the player's side and its HUD
 	var pc := PlayerCombat.new(); pc.name = "Combat"; $Player.add_child(pc)
-	pc.setup_animation(tree, _act_clip)
+	pc.setup_animation(tree, _act_clip, _guard_clip)
 	var hud := CombatHud.new(); hud.pc = pc; add_child(hud)
 	if "enemies" in OS.get_cmdline_user_args(): pc.spawn_test_enemies.call_deferred()
 
@@ -49,8 +50,18 @@ func _build_tree(model: Node3D, ap: AnimationPlayer) -> AnimationTree:
 	var act := AnimationNodeOneShot.new(); act.fadein_time = 0.08; act.fadeout_time = 0.18
 	ground.add_node("actclip", _act_clip); ground.add_node("actrate", AnimationNodeTimeScale.new()); ground.connect_node("actrate", 0, "actclip")
 	ground.add_node("act", act); ground.connect_node("act", 0, "rate"); ground.connect_node("act", 1, "actrate")
-	var guard_clip := AnimationNodeAnimation.new(); guard_clip.animation = "ual2/Idle_Shield"
-	ground.add_node("guardclip", guard_clip); ground.add_node("guard", AnimationNodeBlend2.new())
+	# the weapon's pose on the upper body only ("guard"): the block for melee, the ready and aimed poses for guns and bows,
+	# the casting stance for foci; the legs keep walking underneath
+	var guard_clip := AnimationNodeAnimation.new(); guard_clip.animation = "ual2/Idle_Shield"; _guard_clip = guard_clip
+	var guard := AnimationNodeBlend2.new(); guard.filter_enabled = true
+	var skel := model.find_children("*", "Skeleton3D", true, false)
+	if not skel.is_empty():
+		var sk := skel[0] as Skeleton3D; var sp := str(model.get_path_to(sk))
+		for i in sk.get_bone_count():
+			var bn := sk.get_bone_name(i)
+			if not (bn.begins_with("thigh") or bn.begins_with("calf") or bn.begins_with("foot") or bn.begins_with("ball") or bn == "pelvis" or bn == "root"):
+				guard.set_filter_path(NodePath(sp + ":" + bn), true)
+	ground.add_node("guardclip", guard_clip); ground.add_node("guard", guard)
 	ground.connect_node("guard", 0, "act"); ground.connect_node("guard", 1, "guardclip")
 	ground.connect_node("output", 0, "guard")
 	# the library's falling loop throws both arms straight out (it reads as a T-pose at the top of a jump): mixed about half

@@ -8,7 +8,6 @@ var _bars := {}
 var _target: Label
 var _tbar: ProgressBar
 var _slots := []
-var _page: Label
 var _quirk: Label
 var _perks: Label
 
@@ -32,16 +31,19 @@ func _ready() -> void:
 	_quirk = _label(bars, 16); _perks = _label(bars, 14); _perks.modulate = Color(0.75, 1, 0.8)
 	var tbox := VBoxContainer.new(); tbox.set_anchors_preset(Control.PRESET_CENTER_TOP); tbox.position = Vector2(-160, 20); root.add_child(tbox)
 	_target = _label(tbox, 20); _tbar = _bar(tbox, Color(0.75, 0.15, 0.12), 320.0)
-	var bar := HBoxContainer.new(); bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM); bar.position = Vector2(-330, -96); bar.add_theme_constant_override("separation", 8); root.add_child(bar)
-	_page = _label(bar, 18)
-	for i in 6:
-		var p := PanelContainer.new(); p.custom_minimum_size = Vector2(92, 64)
-		var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.08, 0.08, 0.1, 0.72); sb.border_color = Color(0.7, 0.6, 0.4); sb.set_border_width_all(2); sb.set_corner_radius_all(6)
-		p.add_theme_stylebox_override("panel", sb); bar.add_child(p)
-		var l := _label(p, 13); l.autowrap_mode = TextServer.AUTOWRAP_WORD; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		_slots.append(l)
+	var ch := Crosshair.new(); ch.pc = pc; root.add_child(ch)
+	# on PC both pages show at once: two rows of six (1-6, then Q E R T Z V)
+	var rows := VBoxContainer.new(); rows.set_anchors_preset(Control.PRESET_CENTER_BOTTOM); rows.position = Vector2(-300, -150); rows.add_theme_constant_override("separation", 6); root.add_child(rows)
+	for r in 2:
+		var bar := HBoxContainer.new(); bar.add_theme_constant_override("separation", 8); rows.add_child(bar)
+		for i in 6:
+			var p := PanelContainer.new(); p.custom_minimum_size = Vector2(92, 56)
+			var sb := StyleBoxFlat.new(); sb.bg_color = Color(0.08, 0.08, 0.1, 0.72); sb.border_color = Color(0.7, 0.6, 0.4); sb.set_border_width_all(2); sb.set_corner_radius_all(6)
+			p.add_theme_stylebox_override("panel", sb); bar.add_child(p)
+			var l := _label(p, 13); l.autowrap_mode = TextServer.AUTOWRAP_WORD; l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			_slots.append(l)
 	var keys := _label(root, 13); keys.set_anchors_preset(Control.PRESET_BOTTOM_LEFT); keys.position = Vector2(24, -64); keys.modulate = Color(1, 1, 1, 0.75)
-	keys.text = "Tab target  R attack  1-6 skills  X page  F block (tap: parry)  C dodge\ntesting: G weapon  F9 enemies  F5 iron guard  F6 slip  F7 deflect  F8 dash  F10 dash reload  F11 steady guard"
+	keys.text = "left click attack  right click block (just before a hit: parry) - guns and bows: aim  Alt dodge  Tab lock target  1-6, Q E R T Z V skills  Esc frees the mouse\ntesting: G weapon  F9 enemies  F5 iron guard  F6 slip  F7 deflect  F8 dash  F10 dash reload  F11 steady guard"
 
 func _process(_d: float) -> void:
 	if pc == null or pc.fighter == null: return
@@ -56,7 +58,7 @@ func _process(_d: float) -> void:
 		"heavy": q += "   momentum +%d%%" % roundi(pc.momentum * 100.0)
 		"bow": q += "   draw %d%%" % roundi(clampf(pc.drawing / float(W.draw), 0.0, 1.0) * 100.0) if pc.drawing >= 0.0 else "   draw -"
 		"focus": q += "   Fog shards %d   Fog pressure %d" % [pc.shards, pc.fog_pressure]
-	q += "   (can parry)" if W.melee else "   (cannot parry)"
+	q += "   (block, parry)" if W.melee else ("   (block, no parry)" if W.get("block", true) else "   (no block: right click aims)")
 	_quirk.text = q
 	_perks.text = "perks: " + (", ".join(f.perks.keys()) if not f.perks.is_empty() else "none") + ("" if not f.dead else "   - you have fallen")
 	if pc._target_ok():
@@ -64,10 +66,10 @@ func _process(_d: float) -> void:
 		_target.text = pc.target.display_name() + ("  (attacking)" if pc.engaged else ""); _tbar.max_value = tf.max_hp; _tbar.value = tf.hp; _target.visible = true; _tbar.visible = true
 	else:
 		_target.visible = false; _tbar.visible = false
-	_page.text = "page %d" % (pc.page + 1)
-	for i in 6:
-		var id: String = pc.pages[pc.page][i]
-		if id == "": _slots[i].text = "%d\n-" % (i + 1); _slots[i].modulate = Color(1, 1, 1, 0.45); continue
+	const KEYS := ["1", "2", "3", "4", "5", "6", "Q", "E", "R", "T", "Z", "V"]
+	for i in 12:
+		var id: String = pc.pages[i / 6][i % 6]
+		if id == "": _slots[i].text = "%s\n-" % KEYS[i]; _slots[i].modulate = Color(1, 1, 1, 0.4); continue
 		var M: Dictionary = Weapons.MOVES[id]; var cd: float = pc.cds.get(id, 0.0)
-		_slots[i].text = "%d  %s\n%s" % [i + 1, M.name, ("%.1fs" % cd) if cd > 0.0 else "%d energy" % roundi(M.energy)]
+		_slots[i].text = "%s  %s\n%s" % [KEYS[i], M.name, ("%.1fs" % cd) if cd > 0.0 else "%d energy" % roundi(M.energy)]
 		_slots[i].modulate = Color(1, 1, 1, 0.55 if cd > 0.0 or f.energy < M.energy else 1.0)

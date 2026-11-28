@@ -1,8 +1,9 @@
-## The player's side of combat (docs/design.md, Combat): tab-target, auto-attack, two pages of six skills, and the defences.
-##   Tab: the nearest enemy (or click one)   R: attack (targets the nearest if none)   1-6: skills   X: the other page
-##   F: block (hold) / parry (press just before a hit; melee weapons only)   C: dodge
+## The player's side of combat (docs/design.md, Combat), PC controls:
+##   the mouse turns the camera (Esc frees the cursor, a click takes it back); left click attacks toward where you look, or
+##   at the locked target (the bow: hold to draw, release to loose); right click held blocks, and a block started in the
+##   last moment before an enemy's hit lands is a parry (melee weapons only); Alt dodges; Tab locks the nearest enemy
+##   (Tab again or Esc clears it); 1-6 and Q E R T Z V cast the twelve skills (both pages show at once on PC)
 ##   testing: G next weapon, F9 spawn enemies, F5-F8 and F10-F11 toggle skill-tree perks
-## Moving pauses attacks but keeps the target; out of range, the character walks into range.
 class_name PlayerCombat
 extends Node
 
@@ -22,12 +23,15 @@ var reloading := 0.0
 var momentum := 0.0
 var momentum_keep := 0.0
 var drawing := -1.0
+var aiming := false             # right click held with a gun or bow: the crosshair narrows
+var spread := 6.0               # the crosshair's half-angle now (degrees): shots land anywhere inside it
+var _bloom := 0.0
 var shards := 12
 var fog_pressure := 0
 var _aa := 0.0
 var _act := 0.0                 # busy with an attack or a skill
 var _pending := []              # [seconds, callable]: hits that land partway through a clip
-var _held: Node3D
+var _held: Array = []
 var _tree: AnimationTree
 var _clip_node: AnimationNodeAnimation
 const PERK_KEYS := {KEY_F5: "iron_guard", KEY_F6: "slip", KEY_F7: "deflect", KEY_F8: "dash", KEY_F10: "dash_reload", KEY_F11: "steady_guard"}
@@ -40,44 +44,44 @@ func _ready() -> void:
 	fighter.hit_taken.connect(_on_hit); fighter.died.connect(_on_died)
 	equip(weapon)
 
-func setup_animation(tree: AnimationTree, clip_node: AnimationNodeAnimation) -> void:
-	_tree = tree; _clip_node = clip_node
+var _guard_node: AnimationNodeAnimation
+func setup_animation(tree: AnimationTree, clip_node: AnimationNodeAnimation, guard_node: AnimationNodeAnimation = null) -> void:
+	_tree = tree; _clip_node = clip_node; _guard_node = guard_node
 
 func equip(id: String) -> void:
 	weapon = id; W = Weapons.DEFS[id]; fighter.melee = W.melee
 	ammo = int(W.get("ammo", 0)); reloading = 0.0; momentum = 0.0; drawing = -1.0
 	pages[0] = ["", "", "", "", "", ""]
 	for i in W.moves.size(): pages[0][i] = W.moves[i]
-	if _held: _held.get_parent().queue_free(); _held = null
-	var model: Node3D = player.get_node("Model")
-	if W.has("model"): _held = CombatRig.hold(model, "hand_r", W.model, float(W.get("model_scale", 1.0)), Vector3(0, 0, 90))
+	for h in _held: if is_instance_valid(h): h.get_parent().queue_free()
+	_held = CombatRig.hold_weapon(player.get_node("Model"), W)   # the grip measured for this weapon (tests/hold_sheet.tscn)
 	changed.emit()
 
 func is_dead() -> bool: return fighter.dead
 
 func _unhandled_input(event: InputEvent) -> void:
 	if fighter.dead: return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		var e := _pick(event.position)
-		if e: target = e; engaged = true; changed.emit()
 	if event is InputEventKey and event.pressed and not event.echo and PERK_KEYS.has(event.physical_keycode):
 		var p: String = PERK_KEYS[event.physical_keycode]
 		if fighter.perks.has(p): fighter.perks.erase(p)
 		else: fighter.perks[p] = true
 		changed.emit()
-	if event.is_action_pressed("target_nearest"): target = _nearest(); engaged = target != null; changed.emit()
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED: return   # the click that takes the cursor back does not attack
+	if event.is_action_pressed("target_nearest"):
+		target = null if _target_ok() else _nearest(); changed.emit()
 	elif event.is_action_pressed("attack"):
-		if target == null or not is_instance_valid(target): target = _nearest()
-		engaged = target != null; changed.emit()
-	elif event.is_action_pressed("page_swap"): page = 1 - page; changed.emit()
+		if W.family == "bow": drawing = 0.0 if _act <= 0.0 and _aa <= 0.0 else -1.0
+		else: attack()
+	elif event.is_action_released("attack") and W.family == "bow" and drawing >= 0.0:
+		loose()
 	elif event.is_action_pressed("dodge"): dodge()
-	elif event.is_action_pressed("block"): fighter.press_block()
+	elif event.is_action_pressed("block") and W.get("block", true): fighter.press_block()
 	elif event.is_action_pressed("weapon_next"): equip(Weapons.LIST[(Weapons.LIST.find(weapon) + 1) % Weapons.LIST.size()])
 	elif event.is_action_pressed("spawn_enemies"): spawn_test_enemies()
-	for i in 6:
-		if event.is_action_pressed("skill_%d" % (i + 1)): cast(pages[page][i])
+	for i in 12:
+		if event.is_action_pressed("skill_%d" % (i + 1)): cast(pages[i / 6][i % 6])
 
-func _pick(screen: Vector2) -> Node3D:
+func _pick(screen: Vector2, tol := 0.9) -> Node3D:
 	var cam := player.get_viewport().get_camera_3d()
 	if cam == null: return null
 	var from := cam.project_ray_origin(screen); var dir := cam.project_ray_normal(screen)
@@ -86,7 +90,7 @@ func _pick(screen: Vector2) -> Node3D:
 		var c: Vector3 = (e as Node3D).global_position + Vector3(0, 1.0, 0)
 		var t := (c - from).dot(dir); if t < 0.0: continue
 		var miss := (from + dir * t).distance_to(c)
-		if miss < 0.9 and t < bd: bd = t; best = e
+		if miss < tol and t < bd: bd = t; best = e
 	return best
 
 func _nearest() -> Node3D:
@@ -125,46 +129,107 @@ func _physics_process(delta: float) -> void:
 		reloading -= delta
 		if reloading <= 0.0: ammo = int(W.ammo); changed.emit()
 	if fighter.dodging >= 0.0 and player.control_lock <= 0.0: fighter.dodging = -1.0
-	fighter.blocking = Input.is_action_pressed("block") and fighter.dodging < 0.0 and fighter.stun <= 0.0 and not fighter.dead
-	player.speed_scale = 0.4 if fighter.blocking else 1.0
-	if _tree: _tree.set("parameters/ground/guard/blend_amount", lerpf(float(_tree.get("parameters/ground/guard/blend_amount")), 1.0 if fighter.blocking else 0.0, 1.0 - exp(-14.0 * delta)))
-	if fighter.dead or fighter.stun > 0.0: player.auto_dir = Vector3.ZERO; return
-	if not _target_ok():
-		target = null; engaged = false; player.auto_dir = Vector3.ZERO; return
-	if not engaged or _moving() or fighter.blocking:
-		player.auto_dir = Vector3.ZERO; drawing = -1.0; return
-	var to := target.global_position - player.global_position; to.y = 0.0
-	if to.length() > W.range:
-		player.auto_dir = to.normalized(); drawing = -1.0; return   # walk into range
-	player.auto_dir = Vector3.ZERO
-	_face_target()
-	if _act > 0.0: return
+	var can_block: bool = W.get("block", true)
+	var right: bool = Input.is_action_pressed("block") and fighter.dodging < 0.0 and fighter.stun <= 0.0 and not fighter.dead
+	fighter.blocking = right and can_block
+	aiming = right and not can_block
+	player.speed_scale = 0.4 if fighter.blocking else (0.55 if aiming else 1.0)
+	# the crosshair: wide from the hip, narrow when aimed; each shot blooms it, moving widens it
+	_bloom = maxf(0.0, _bloom - delta * 9.0)
+	var sp: Array = W.get("spread", [3.0, 3.0, 0.0])
+	var want: float = (float(sp[1]) if aiming else float(sp[0])) + _bloom + (2.5 if _moving() else 0.0) * (0.5 if aiming else 1.0)
+	spread = lerpf(spread, want, 1.0 - exp(-10.0 * delta))
+	if player.camera_rig: player.camera_rig.aiming = aiming; player.camera_rig.shoulder = 0.0 if W.melee else 0.55
+	if _tree:   # the upper body: the guard while blocking; a shooter's or caster's weapon always held ready, raised to aim
+		var pose := "ual2/Idle_Shield"; var held := 1.0 if fighter.blocking else 0.0
+		if W.family == "gun" or W.family == "bow": pose = "ual/Pistol_Aim_Neutral" if aiming or drawing >= 0.0 else "ual/Pistol_Idle"; held = 1.0
+		elif W.family == "focus": pose = "ual2/Idle_Shield" if fighter.blocking else "ual/Spell_Simple_Idle"; held = 1.0
+		if _guard_node and _guard_node.animation != pose: _guard_node.animation = pose
+		_tree.set("parameters/ground/guard/blend_amount", lerpf(float(_tree.get("parameters/ground/guard/blend_amount")), held, 1.0 - exp(-14.0 * delta)))
+	if fighter.dead or fighter.stun > 0.0: drawing = -1.0; return
+	if not _target_ok(): target = null
+	if drawing >= 0.0:
+		drawing += delta; _face_aim()
+		if fighter.blocking: drawing = -1.0
+	if not W.melee: _face_aim()   # a shooter keeps facing where the crosshair is
+
+## where an attack goes: the locked target if it is in reach, else the enemy under the crosshair, else straight ahead
+func aim_target() -> Node3D:
+	if _target_ok() and target.global_position.distance_to(player.global_position) <= W.range + 0.5: return target
+	var vp := player.get_viewport(); var cam := vp.get_camera_3d()
+	if cam:
+		var e := _pick(vp.get_visible_rect().size / 2.0, 1.6)
+		if e and e.global_position.distance_to(player.global_position) <= W.range + 0.5: return e
+	return null
+
+func _aim_dir() -> Vector3:
+	if not W.melee:
+		var d0 := crosshair_point() - player.global_position; d0.y = 0.0
+		if d0.length() > 0.5: return d0.normalized()
+	var t := aim_target()
+	if t: var d := t.global_position - player.global_position; d.y = 0.0; return d.normalized()
+	var rig: Node3D = player.camera_rig
+	var f: Vector3 = -rig.global_transform.basis.z if rig else _fwd(); f.y = 0.0
+	return f.normalized()
+
+func _face_aim() -> void:
+	var d := _aim_dir()
+	player.get_node("Model").rotation.y = atan2(d.x, d.z)
+
+## one attack on a click: melee cuts what is in front, guns and foci shoot at the aim; the bow is drawn and loosed instead
+func attack() -> void:
+	if fighter.dead or fighter.stun > 0.0 or fighter.blocking or _act > 0.0 or _aa > 0.0 or player.control_lock > 0.0: return
 	if W.family == "gun" and ammo <= 0:
 		if reloading <= 0.0: reloading = W.reload; _play("ual/Pistol_Reload"); _act = W.reload; changed.emit()
 		return
-	if W.family == "bow":   # the draw: held as long as the bow allows, then loosed; a longer draw hits harder
-		if drawing < 0.0: drawing = 0.0; _play("ual/Pistol_Aim_Neutral", 0.6)
-		drawing += delta
-		if drawing >= W.draw: _auto_attack(1.0 + 1.2 * clampf(drawing / W.draw, 0.0, 1.0)); drawing = -1.0
-		return
-	if _aa <= 0.0: _auto_attack(1.0)
+	_face_aim(); _auto_attack(1.0)
+
+func loose() -> void:
+	var mult := 1.0 + 1.2 * clampf(drawing / W.draw, 0.0, 1.0)
+	drawing = -1.0
+	if fighter.dead or fighter.stun > 0.0 or _act > 0.0 or _aa > 0.0: return
+	_face_aim(); _auto_attack(mult)
 
 func _auto_attack(mult: float) -> void:
 	_aa = W.interval; _act = minf(W.interval, 0.6)
 	var clips: Array = W.clips; _play(clips[randi() % clips.size()], 1.3 if W.melee else 1.0)
-	var t := target
-	_pending.append([W.hit_at, func(): _land(t, W.dmg * mult)])
+	var t := aim_target(); var dir := _aim_dir(); var from := player.global_position
+	if W.melee:   # a cut lands on whatever is in front when it falls, aimed or not
+		_pending.append([W.hit_at, func():
+			var shape := {"type": "cone", "len": W.range, "angle": 1.7}
+			for e in player.get_tree().get_nodes_in_group("enemies"):
+				if Telegraph.contains(shape, player.global_position, dir, (e as Node3D).global_position, 0.3): _land(e, W.dmg * mult)])
+	else:
+		_pending.append([W.hit_at, func(): _shoot(W.dmg * mult)])
 	if W.family == "gun": ammo -= 1; changed.emit()
+
+## where the crosshair points: the first thing the camera's centre ray meets (an enemy, the ground, a wall), out to 80 m
+func crosshair_point() -> Vector3:
+	var cam := player.get_viewport().get_camera_3d()
+	if cam == null: return player.global_position + _fwd() * 20.0
+	var c := player.get_viewport().get_visible_rect().size / 2.0
+	var from := cam.project_ray_origin(c); var dir := cam.project_ray_normal(c)
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 80.0, 1 | 2, [player.get_rid()])
+	var hit := player.get_world_3d().direct_space_state.intersect_ray(q)
+	return hit.position if hit else from + dir * 80.0
+
+## a shot from the hand toward the crosshair, thrown off at random anywhere inside it; then the crosshair blooms
+func _shoot(dmg: float) -> void:
+	var from := player.global_position + Vector3(0, 1.4, 0) + _fwd() * 0.4
+	var aim := crosshair_point() - from
+	var r := deg_to_rad(spread) * sqrt(randf()); var a := randf() * TAU
+	var side := aim.cross(Vector3.UP).normalized(); var up := side.cross(aim).normalized()
+	var dir := aim.normalized().rotated(up, r * cos(a)).rotated(side, r * sin(a))
+	var p := FogProjectile.new(); player.get_parent().add_child(p)
+	p.launch(from, from + dir * maxf(W.range * 1.4, aim.length()), {"dmg": dmg, "speed": 34.0, "kind": "strike"}, player, "enemies")
+	var sp: Array = W.get("spread", [3.0, 3.0, 0.0]); _bloom += float(sp[2])
 
 func _land(t: Node3D, dmg: float, kind := "strike") -> void:
 	if t == null or not is_instance_valid(t) or not t.is_in_group("enemies"): return
 	if W.melee:
-		if t.global_position.distance_to(player.global_position) > W.range + 0.8: return
 		if W.family == "heavy": dmg *= 1.0 + momentum; momentum = minf(Weapons.MOMENTUM_MAX, momentum + Weapons.MOMENTUM_STEP); momentum_keep = Weapons.MOMENTUM_KEEP; changed.emit()
 		(t.get_node("Fighter") as Fighter).receive({"dmg": dmg, "kind": kind})
-	else:
-		var p := FogProjectile.new(); player.get_parent().add_child(p)
-		p.launch(player.global_position + Vector3(0, 1.4, 0) + _fwd() * 0.4, t.global_position + Vector3(0, 1.1, 0), {"dmg": dmg, "speed": 30.0, "kind": kind}, player, "enemies")
+
 
 func _fwd() -> Vector3:
 	var r: float = player.get_node("Model").rotation.y
@@ -174,15 +239,14 @@ func _fwd() -> Vector3:
 func cast(id: String) -> void:
 	if id == "" or fighter.dead or fighter.stun > 0.0 or _act > 0.0 or cds.get(id, 0.0) > 0.0: return
 	var M: Dictionary = Weapons.MOVES[id]
-	if M.kind == "target" and not _target_ok(): target = _nearest()
-	if M.kind == "target" and not _target_ok(): return
+	var aimed := aim_target()
 	if M.has("ammo") and ammo < int(M.ammo): return
 	if M.has("shards") and shards < int(M.shards): return
 	if not fighter.spend_energy(M.energy): return
 	cds[id] = M.cd; _act = 0.6
 	if M.has("ammo"): ammo -= int(M.ammo)
 	if M.has("shards"): shards -= int(M.shards); fog_pressure += int(M.shards)
-	if _target_ok(): _face_target()
+	_face_aim()
 	_play(M.clip)
 	var origin := player.global_position; var fwd := _fwd()
 	match M.kind:
@@ -194,11 +258,8 @@ func cast(id: String) -> void:
 					if Telegraph.contains(shape, origin, fwd, (e as Node3D).global_position, 0.4):
 						(e.get_node("Fighter") as Fighter).receive({"dmg": dmg, "kind": "strike"})])
 		"target":
-			var t := target
 			for i in int(M.get("count", 1)):
-				_pending.append([0.25 + i * 0.14, func():
-					var p := FogProjectile.new(); player.get_parent().add_child(p)
-					p.launch(player.global_position + Vector3(0, 1.4, 0) + _fwd() * 0.4, t.global_position + Vector3(0, 1.1, 0) if is_instance_valid(t) else player.global_position + _fwd() * 10.0, {"dmg": M.dmg, "speed": 26.0, "kind": "strike"}, player, "enemies")])
+				_pending.append([0.25 + i * 0.14, func(): _shoot(M.dmg)])
 	changed.emit()
 
 ## the defensive move: a roll by default; the "dash" perk makes it a dash (farther and faster); "dash_reload" reloads a gun

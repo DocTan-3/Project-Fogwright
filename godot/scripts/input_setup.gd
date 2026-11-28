@@ -1,6 +1,7 @@
 ## Fogwright's controls, defined in code so they are easy to read and change: WASD or the arrows to move, Space to jump,
-## Shift to sprint, Ctrl to toggle walking, Q and E to turn the camera, F2 to switch real-time shadows; the mouse wheel zooms; the right mouse button (held) turns the camera.
-## Combat: Tab targets the nearest enemy, R attacks, 1-6 cast, X swaps the skill page, F blocks (a tap just before a hit parries), C dodges.
+## Shift to sprint, Ctrl to toggle walking, F2 to switch real-time shadows; the mouse turns the camera (Esc frees the cursor), the wheel zooms.
+## Combat: left click attacks, right click (or F) held blocks - a block raised just before a hit parries - Alt dodges, Tab locks a target,
+## 1-6 and Q E R T Z V cast the twelve skills.
 extends Node
 
 const ACTIONS := {
@@ -11,16 +12,17 @@ const ACTIONS := {
 	"jump": [KEY_SPACE],
 	"sprint": [KEY_SHIFT],
 	"walk_toggle": [KEY_CTRL],
-	"turn_left": [KEY_Q],
-	"turn_right": [KEY_E],
+	"turn_left": [],          # the mouse turns the camera now; Q and E cast skills
+	"turn_right": [],
 	"shadows_toggle": [KEY_F2],
-	# combat (docs/design.md, Combat): placeholders for PC; touch controls come later
+	# combat (docs/design.md, Combat), PC: the mouse attacks (left) and blocks (right, held; a well-timed block parries);
+	# both skill pages show at once on PC, on 1-6 and Q E R T Z V
 	"target_nearest": [KEY_TAB],
-	"attack": [KEY_R],
+	"attack": [MOUSE_BUTTON_LEFT],
+	"block": [MOUSE_BUTTON_RIGHT, KEY_F],
 	"skill_1": [KEY_1], "skill_2": [KEY_2], "skill_3": [KEY_3], "skill_4": [KEY_4], "skill_5": [KEY_5], "skill_6": [KEY_6],
-	"page_swap": [KEY_X],
-	"block": [KEY_F],
-	"dodge": [KEY_C],
+	"skill_7": [KEY_Q], "skill_8": [KEY_E], "skill_9": [KEY_R], "skill_10": [KEY_T], "skill_11": [KEY_Z], "skill_12": [KEY_V],
+	"dodge": [KEY_ALT],
 	"weapon_next": [KEY_G],       # testing
 	"spawn_enemies": [KEY_F9],    # testing
 }
@@ -31,6 +33,9 @@ func _enter_tree() -> void:
 			continue
 		InputMap.add_action(action)
 		for key in ACTIONS[action]:
+			if action in ["attack"] or (action == "block" and key == MOUSE_BUTTON_RIGHT):
+				var mb := InputEventMouseButton.new(); mb.button_index = key; InputMap.action_add_event(action, mb)
+				continue
 			var ev := InputEventKey.new()
 			ev.physical_keycode = key
 			InputMap.action_add_event(action, ev)
