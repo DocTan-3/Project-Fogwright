@@ -220,6 +220,21 @@ def presets(people, sex):
     return PRESETS.get((people, sex), [dict(name='Default')])
 
 def tone(c, f): return tuple(max(0, min(255, int(v * f))) for v in c)
+# hair colour is chosen in the creator: hair, beards and brows are written in these key colours and the game paints the
+# chosen colour and its tones over them (Vox.character's hair). Keep the tones in step with Vox.HAIR_KEYS.
+HAIR_KEYS = {'hair': ((255, 0, 255), 1.0), 'hair_d': ((191, 0, 191), 0.72), 'hair_l': ((255, 96, 255), 1.25),
+             'brow': ((128, 0, 128), 0.7), 'brow_d': ((96, 0, 96), 0.48)}
+# each people's hair colours (characters.md), the creator's swatches; the Wayfolk borrow from all
+HAIR_COLOURS = {
+ 'hrimfolk': [(206, 168, 100), (214, 176, 112), (170, 164, 150), (132, 126, 116), (170, 120, 64), (92, 58, 34)],
+ 'ruadhan':  [(176, 72, 36), (196, 98, 44), (150, 62, 30), (120, 56, 30), (206, 120, 60), (170, 150, 140)],
+ 'aurelan':  [(70, 44, 30), (96, 62, 38), (110, 70, 44), (52, 34, 24), (88, 56, 36), (130, 126, 120)],
+ 'zarhim':   [(30, 24, 22), (28, 30, 40), (34, 26, 24), (52, 36, 28), (120, 116, 112), (150, 146, 140)],
+ 'ilvari':   [(186, 192, 204), (160, 166, 178), (120, 126, 140), (58, 60, 72), (40, 42, 54), (36, 38, 48)],
+ 'ferrin':   [(52, 34, 24), (36, 26, 20), (60, 40, 28), (74, 50, 34), (120, 112, 104), (124, 116, 108)],
+ 'penitent': [(60, 56, 52), (66, 60, 56), (96, 86, 76), (140, 138, 134), (150, 146, 140), (40, 38, 38)],
+ 'wayfolk':  [(100, 70, 46), (110, 76, 50), (176, 72, 36), (206, 168, 100), (30, 24, 22), (150, 146, 140)],
+}
 def build(people, sex, dressed=True, face=0):
     """the character dressed in its starting clothes, or (dressed=False) the base body in its underwear; face: a preset's
     number (presets()) or a dict of FACE options"""
@@ -237,6 +252,7 @@ def build(people, sex, dressed=True, face=0):
            'trousers': p['trousers'], 'trousers_d': tone(p['trousers'], 0.78), 'boots': (84, 52, 32), 'boots_d': (60, 36, 22),
            'iron': (128, 132, 136), 'iron_d': (90, 92, 96), 'bead': (176, 150, 96),
            'ink': (56, 116, 210), 'tattoo': (40, 58, 56), 'vein': tone(p['skin'], 0.7), 'soot': tone(p['skin'], 0.55), 'freckle': tone(p['skin'], 0.78), 'stub': tone(p['skin'], 0.88), 'linen': (122, 106, 88), 'linen_d': (94, 80, 64), 'cheek': (min(255, p['skin'][0] + 12), int(p['skin'][1] * 0.86), int(p['skin'][2] * 0.86))}
+    PAL.update({k: key for k, (key, _) in HAIR_KEYS.items()})     # hair, beards and brows take the creator's colour
     P = {}
     def put(part, x, y, z, c): P.setdefault(part, {})[(x, y, z)] = c
     def rbox(part, x0, x1, y0, y1, z0, z1, c, bev=1, top_bev=False):
@@ -346,7 +362,10 @@ def build(people, sex, dressed=True, face=0):
     HP = 'head#2'
     def X(c): return X0 + W - 1 - c
     def Z(v): return Z0 + H - 1 - v
-    def hput(part, c, d, v, col): put(part, X(c), Y0 + d, Z(v), col)
+    HEADSET = set()                                     # where the head itself is, so hair and beards sit outside it
+    def hput(part, c, d, v, col):
+        if part == HP: HEADSET.add((c, d, v))
+        put(part, X(c), Y0 + d, Z(v), col)
     mid = W // 2; gap = 2 * (W // 8) + 2 + F['set']
     FR.update(top=top, cx=cx, SH=SH, head=(X0, Y0, Z0, W, D, H), mid=mid, hair=hs, beard=beard)
     EYES = (mid - gap // 2 - 6, mid + gap // 2)          # first column of each eye
@@ -438,10 +457,6 @@ def build(people, sex, dressed=True, face=0):
     if F['scar'] == 'lip':     # a split lip, from under the nose to the chin
         for v in range(NT + 1, 29):
             if not 23 <= v <= 25: marks[(mid + 2 + (v > 25), v)] = 'scar'     # broken by the lips, so it reads as a cut, not a tooth
-    if beard == 'stubble':
-        for c in range(W):
-            for v in range(21, H):
-                if (c, v) not in marks and (c < mid - MW - 1 or c > mid + MW or v >= 26) and inset(v) <= c < W - inset(v): marks[(c, v)] = 'stub'
     # the face carved, not only painted: how far in the face's surface sits at each point (0 = the front plane,
     # 1 = cut one voxel in). Eye sockets under the brow ridge, sides turning back, cheekbones, mouth corners pressed in.
     def front(c, v):
@@ -451,7 +466,7 @@ def build(people, sex, dressed=True, face=0):
             if c0 <= c < c0 + 6 and EV <= v <= EV + EH - 1: return 1
         if people == 'penitent' and 20 <= v <= 22 and 3 <= e <= 4: return 1     # gaunt: hollow cheeks
         if v >= 27 and e < 4: return 1                          # the jaw narrows to the chin
-        if v in (24, 25) and abs(c - mid + 0.5) == MW + 0.5 and not beard_at(c, 0, v): return 1   # mouth corners
+        if v in (24, 25) and abs(c - mid + 0.5) == MW + 0.5: return 1   # mouth corners
         return 0
     # the head's volume
     for v in range(H):
@@ -462,12 +477,10 @@ def build(people, sex, dressed=True, face=0):
                 ec = c - a < 2 or W - 1 - a - c < 2; ed = d < 2 or d >= D - 2
                 if ec and ed and not ((c - a in (1,) or W - 1 - a - c == 1) and (d in (1, D - 2))): continue    # rounded vertical edges
                 if v == 0 and (ec or ed): continue
-                if hair_at(c, d, v): col = 'hair_l' if v < 2 and c % 4 == 1 else ('hair_d' if (c + d) % 4 == 0 else 'hair')
-                elif beard_at(c, d, v): col = 'hair_d' if c % 3 == 0 else 'hair'
-                elif d == fr and (c, v) in marks: col = marks[(c, v)]
-                elif hs == 'shorn' and (v < 5 or (d >= D * 0.5 and v < 17)) and (c * 7 + d * 11 + v * 5) % 7 in (0, 3, 5): col = 'hair_d'     # cropped to the scalp, regrowing unevenly
-                elif hs == 'parted' and v == 0 and c == mid - 4: col = 'hair_d'     # the side part
-                elif hs == 'shaved' and people == 'hrimfolk' and (d >= 3 or v < 3) and d > fr - 1 and ((v in (5, 8) and (c + d) % 4 != 3) or (v in (6, 7) and (c + d + v) % 4 == 0) or (v == 0 and abs(c - mid + 0.5) + abs(d - D / 2) in (3, 3.5, 4.5, 6) )): col = 'tattoo'
+                # the head is always bald: hair and beards are their own pieces over it (one file per style), so any
+                # of a people's styles goes with any face. Hrimfolk scalps carry their knotwork under the hair.
+                if d == fr and (c, v) in marks: col = marks[(c, v)]
+                elif people == 'hrimfolk' and (d >= 3 or v < 3) and d > fr - 1 and ((v in (5, 8) and (c + d) % 4 != 3) or (v in (6, 7) and (c + d + v) % 4 == 0) or (v == 0 and abs(c - mid + 0.5) + abs(d - D / 2) in (3, 3.5, 4.5, 6) )): col = 'tattoo'
                 else: col = 'skin'
                 hput(HP, c, d, v, col)
     # what stands proud of the face: the nose, a moustache, the front of a full beard
@@ -478,35 +491,52 @@ def build(people, sex, dressed=True, face=0):
         for v in range(15, NT - 1): hput(HP, mid - 1, -1, v, 'skin_l'); hput(HP, mid, -1, v, 'skin_l')
     if nose == 'hooked':       # a high bridge with a hump
         for v in (17, 18, 19): hput(HP, mid - 1, -2, v, 'skin_l'); hput(HP, mid, -2, v, 'skin_l')
-    if beard in ('moustache', 'full_braid', 'big', 'short', 'droop', 'forked', 'goatee'):
-        for c in range(mid - MW - 1, mid + MW + 1): hput(HP, c, -1, 23, 'hair_d'); hput(HP, c, -1, 22, 'hair') if abs(c - mid + 0.5) < MW else None
-        if beard not in ('moustache', 'droop'):
-            for c in (mid - MW - 1, mid + MW): hput(HP, c, -1, 24, 'hair_d'); hput(HP, c, -1, 25, 'hair_d')
-    if beard == 'droop':      # the long drooping moustache: its ends hang past the chin
-        for c in (mid - MW - 1, mid + MW):
-            for k in range(10): hput('droop@head#2', c, -1, 24 + k, 'hair_d' if k % 3 == 2 else 'hair')
-    if beard in ('full_braid', 'big', 'short', 'forked', 'goatee'):
-        for v in range(26, H):
-            a = inset(v)
-            for c in range(a + 1, W - a - 1):
-                if beard != 'goatee' or abs(c - mid + 0.5) < 4: hput(HP, c, -1, v, 'hair_d' if c % 3 == 0 else 'hair')
     if sex == 'f' or F['mouth'] == 'full':      # a fuller lower lip, raised
         for c in range(mid - MW + 1, mid + MW - 1): hput(HP, c, -1, 25, 'lip')
-    elif beard in (None, 'stubble', 'moustache'):      # a jutting chin
+    elif sex == 'm':      # a jutting chin (under a beard, the beard covers it)
         for c in range(mid - 3, mid + 3):
-            for v in (27, 28): hput(HP, c, -1, v, 'stub' if beard == 'stubble' else 'skin')
+            for v in (27, 28): hput(HP, c, -1, v, 'skin')
     # ears (under long hair)
     for c, cc in ((-1, 'l'), (W, 'r')):
         for v in range(13, 20):
             for d in range(D // 2 - 3, D // 2 + 1):
-                covered = (hs in LONG or beard_at(0, d, v)) and 'pointed' not in EX
-                hput(HP, c, d, v, 'hair' if covered else ('skin_d' if (d == D // 2 - 2 and 14 < v < 19) else 'skin'))
+                hput(HP, c, d, v, 'skin_d' if (d == D // 2 - 2 and 14 < v < 19) else 'skin')
     if 'pointed' in EX:   # Ilvari ears: long points sweeping up and back through the hair
         for side, c in ((-1, -1), (1, W)):
             for k in range(7):
                 cc = c + side * (1 + k // 3)
                 for d in range(D // 2 - 2 + k // 2, D // 2 + 1 + k // 2 - (1 if k > 4 else 0)):
                     hput(HP, cc, d, 13 - k, 'skin_l' if k == 6 else 'skin')
+    # ---- hair and beard shells: the style's region of the head (hair_at, beard_at), grown one fine voxel out over it
+    DIRS = ((-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1))      # sideways, front, back, up (never under)
+    def shell(part, region, colour):
+        for (c, d, v) in list(HEADSET):
+            if not region(c, d, v): continue
+            for dc, dd, dv in DIRS:
+                n = (c + dc, d + dd, v + dv)
+                if n not in HEADSET: hput(part, *n, colour(*n))
+    hair_col3 = lambda c, d, v: 'hair_l' if v < 2 and c % 4 == 1 else ('hair_d' if (c + d) % 4 == 0 else 'hair')
+    if hs == 'shorn':        # cropped to the scalp, regrowing unevenly: a sparse stipple
+        shell('hair@head#2', lambda c, d, v: (v < 5 or (d >= D * 0.5 and v < 17)) and (c * 7 + d * 11 + v * 5) % 7 in (0, 3, 5), lambda c, d, v: 'hair_d')
+    elif hs != 'shaved':
+        shell('hair@head#2', hair_at, lambda c, d, v: 'hair_d' if (hs == 'parted' and v <= 0 and c == mid - 4) else hair_col3(c, d, v))
+    if beard == 'stubble':   # a sparse shadow over the jaw, cheeks and lip
+        shell('beard@head#2', lambda c, d, v: v >= 21 and d < D * 0.6 and (c < mid - MW - 1 or c > mid + MW or v >= 26) and (c + v) % 2 == 0, lambda c, d, v: 'stub')
+    elif beard in ('full_braid', 'big', 'short', 'forked', 'goatee'):
+        shell('beard@head#2', beard_at, lambda c, d, v: 'hair_d' if c % 3 == 0 else 'hair')
+    if beard in ('moustache', 'full_braid', 'big', 'short', 'droop', 'forked', 'goatee'):     # the moustache, over the lip
+        for c in range(mid - MW - 1, mid + MW + 1):
+            for v, col in ((23, 'hair_d'), (22, 'hair')):
+                if (c, -1, v) not in HEADSET and (v == 23 or abs(c - mid + 0.5) < MW): hput('beard@head#2', c, -1, v, col)
+        if beard not in ('moustache', 'droop'):
+            for c in (mid - MW - 1, mid + MW): hput('beard@head#2', c, -1, 24, 'hair_d'); hput('beard@head#2', c, -1, 25, 'hair_d')
+    if hs in LONG and 'pointed' not in EX:      # long hair falls over the ears
+        for c in (-2, W + 1):
+            for v in range(11, 22):
+                for d in range(D // 2 - 4, D // 2 + 2): hput('hair@head#2', c, d, v, hair_col3(c, d, v))
+    if beard == 'droop':      # the long drooping moustache: its ends hang past the chin
+        for c in (mid - MW - 1, mid + MW):
+            for k in range(10): hput('beard_droop@head#2', c, -1, 24 + k, 'hair_d' if k % 3 == 2 else 'hair')
     # brows: their own pieces, tilted by the expression, shaped by the people's signature (SIGNATURE). Each is drawn from
     # its inner end over the nose outward: per column the bottom row (low), the thickness, and how far it stands out.
     tilt = {'stern': 14, 'grim': 18, 'calm': 4, 'smile': -4}[expr]
@@ -545,46 +575,46 @@ def build(people, sex, dressed=True, face=0):
     if hs in ('long', 'braids', 'mane', 'sleek'):     # down the back
         for v in range(H, H + {'long': 16, 'braids': 8, 'mane': 14, 'sleek': 22}[hs]):
             for c in range(2, W - 2):
-                for d in (D - 4, D - 3, D - 2, D - 1): hput('hair@head#2', c, d, v, 'hair_d' if (c * 3) % 5 == 0 else 'hair')
+                for d in (D - 3, D - 2, D - 1, D): hput('hair@head#2', c, d, v, 'hair_d' if (c * 3) % 5 == 0 else 'hair')
     if hs == 'braids':   # two braids forward over the shoulders, ringed in iron
         for c0 in (0, W - 3):
             for k in range(22):
                 for c in (c0, c0 + 1, c0 + 2):
                     col = 'iron' if k in (5, 17) else ('hair_l' if (c + k) % 3 == 0 else ('hair_d' if (c + k) % 3 == 1 else 'hair'))
-                    for d in (D // 2 - 3, D // 2 - 2, D // 2 - 1): hput('braids@head#2~x-6', c, d, 22 + k, col)
+                    for d in (D // 2 - 3, D // 2 - 2, D // 2 - 1): hput('hair_braids@head#2~x-6', c, d, 22 + k, col)
     if hs == 'mane':     # a wild mane: volume standing out round the sides and back
         for v in range(2, 28):
             for d in range(2, D + 2):
                 for c in (-2, -1, W, W + 1):
                     if (c in (-2, W + 1)) and (v + d) % 3 == 0: continue
-                    if v < 24 or d > D // 2: hput('mane@head#2', c, d, v, 'hair_d' if (v + d + c) % 4 == 0 else 'hair')
+                    if v < 24 or d > D // 2: hput('hair_mane@head#2', c, d, v, 'hair_d' if (v + d + c) % 4 == 0 else 'hair')
             for c in range(-1, W + 1):
-                for d in (D, D + 1): hput('mane@head#2', c, d, v, 'hair_d' if (c + v) % 4 == 0 else 'hair')
+                for d in (D, D + 1): hput('hair_mane@head#2', c, d, v, 'hair_d' if (c + v) % 4 == 0 else 'hair')
     if hs == 'sleek':    # long and sleek, falling straight in front of the shoulders
         for c0 in (0, W - 3):
             for v in range(H - 2, H + 14):
                 for c in (c0, c0 + 1, c0 + 2):
-                    for d in range(D // 2 - 4, D // 2 + 1): hput('locks@head#2', c, d, v, 'hair_l' if (c + v) % 5 == 0 else 'hair')
+                    for d in range(D // 2 - 4, D // 2 + 1): hput('hair_locks@head#2', c, d, v, 'hair_l' if (c + v) % 5 == 0 else 'hair')
     if hs == 'tail':     # the Zarhim tie: close on top, one long tail from the crown, bound in leather
         for v in range(2, 9):      # the gathered knot at the crown, standing off the back of the head
             for c in range(mid - 3, mid + 3):
-                for d in range(D, D + 4): hput('tail@head#2', c, d, v, 'hair_l' if (c + v) % 4 == 0 else 'hair')
+                for d in range(D, D + 4): hput('hair_tail@head#2', c, d, v, 'hair_l' if (c + v) % 4 == 0 else 'hair')
         for k in range(40):        # the tail, hanging from the knot well past the nape, bound in leather
             for c in range(mid - 2, mid + 2):
                 for d in (D + 1, D + 2, D + 3):
-                    hput('tail@head#2', c, d, 9 + k, 'leather' if k in (0, 1, 14, 28) else ('hair_l' if (c + k) % 5 == 0 else ('hair_d' if (c + k) % 3 == 0 else 'hair')))
+                    hput('hair_tail@head#2', c, d, 9 + k, 'leather' if k in (0, 1, 14, 28) else ('hair_l' if (c + k) % 5 == 0 else ('hair_d' if (c + k) % 3 == 0 else 'hair')))
     if hs == 'bun':
         for c in range(mid - 5, mid + 5):
             for d in range(D - 1, D + 6):
                 for v in range(-2, 8):
-                    if abs(c - mid + 0.5) + abs(v - 3) * 0.8 + abs(d - D - 2) * 0.6 < 7: hput('bun@head#2', c, d, v, 'hair_d' if (c + v) % 4 == 0 else 'hair')
+                    if abs(c - mid + 0.5) + abs(v - 3) * 0.8 + abs(d - D - 2) * 0.6 < 7: hput('hair_bun@head#2', c, d, v, 'hair_d' if (c + v) % 4 == 0 else 'hair')
     if hs == 'crown':    # braids wound round the head
         for c in range(-1, W + 1):
             for d in (-1, D):
-                for v in (5, 6, 7): hput('crown@head#2', c, d, v, 'hair_l' if (c + v) % 3 == 0 else 'hair_d')
+                for v in (5, 6, 7): hput('hair_crown@head#2', c, d, v, 'hair_l' if (c + v) % 3 == 0 else 'hair_d')
         for d in range(0, D):
             for c in (-1, W):
-                for v in (5, 6, 7): hput('crown@head#2', c, d, v, 'hair_l' if (d + v) % 3 == 0 else 'hair_d')
+                for v in (5, 6, 7): hput('hair_crown@head#2', c, d, v, 'hair_l' if (d + v) % 3 == 0 else 'hair_d')
     # ---- beards that hang below the chin
     if beard in ('full_braid', 'big'):
         rows = 6 if beard == 'full_braid' else 14
@@ -601,7 +631,7 @@ def build(people, sex, dressed=True, face=0):
             for k in range(14):
                 for c in range(c0, c0 + 4):
                     col = 'iron' if k in (3, 9) else ('hair_l' if (c + k) % 3 == 0 else ('hair_d' if (c + k) % 3 == 1 else 'hair'))
-                    for d in (0, 1, 2, 3): hput('fork@head#2~x-8', c, d, H + 4 + k, col)
+                    for d in (0, 1, 2, 3): hput('beard_fork@head#2~x-8', c, d, H + 4 + k, col)
     if beard == 'goatee':     # a pointed tuft under the chin
         for k in range(5):
             for c in range(mid - 2 + k // 2, mid + 2 - k // 2):
@@ -610,13 +640,25 @@ def build(people, sex, dressed=True, face=0):
         for k in range(16):
             for c in (mid - 1, mid):
                 col = 'iron' if k in (1, 11) else ('bead' if k in (4, 8) else ('hair_l' if (c + k) % 2 else 'hair_d'))
-                for d in (-1, 0, 1): hput('braid@head#2~x-10z4', c, d, H + 6 + k, col)
+                for d in (-1, 0, 1): hput('beard_braid@head#2~x-10z4', c, d, H + 6 + k, col)
     build.frame = FR      # the body's measurements, for equipment fitted to it (make_equipment.py)
     return P, PAL
 
 OUT = os.path.join(HERE, '..', '..', 'godot', 'assets', 'voxel', 'characters', 'peoples')
 CLOTHED = ['torso', 'arm_upper_l', 'arm_upper_r', 'arm_lower_l', 'arm_lower_r', 'leg_upper_l', 'leg_upper_r', 'leg_lower_l', 'leg_lower_r', 'foot_l', 'foot_r']
-def is_head(name): return name.split('~')[0].split('#')[0] == 'head' or name.split('~')[0].split('#')[0].endswith('@head')
+def group(name):
+    """which creator choice a piece belongs to: the face (the head and its brows), the hair, the beard, or the body"""
+    bare = name.split('~')[0].split('#')[0].split('@')[0]
+    if bare == 'head' or bare.startswith('brow'): return 'face'
+    if bare.startswith('hair'): return 'hair'
+    if bare.startswith('beard'): return 'beard'
+    return 'body'
+def preset_look(people, sex, k):
+    """a preset's hair, beard and hair colour: the creator's starting choice for that face"""
+    p = PEOPLES[people]; pr = presets(people, sex)[k]
+    hair = pr.get('hair') or p['hair'][1 if sex == 'f' else 0]
+    beard = (pr['beard'] if 'beard' in pr else p['beard']) if sex == 'm' else None
+    return dict(hair=hair, beard=beard, hair_col=list(pr.get('hair_col') or p['hair_f' if sex == 'f' else 'hair_m']))
 FACES_JSON = os.path.join(HERE, '..', '..', 'godot', 'data', 'faces.json')
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
@@ -631,9 +673,21 @@ if __name__ == '__main__':
                 H_, HPAL = build(people, sex, dressed=False, face=k)
                 mb.COL = HPAL; mb.NAMES = list(HPAL)
                 os.makedirs(os.path.join(OUT, 'faces'), exist_ok=True)
-                mb.write(os.path.join(OUT, 'faces', '%s_%s_%d.vox' % (people, sex, k)), {n: v for n, v in H_.items() if is_head(n)})
+                mb.write(os.path.join(OUT, 'faces', '%s_%s_%d.vox' % (people, sex, k)), {n: v for n, v in H_.items() if group(n) == 'face'})
+            for kind, styles in (('hair', STYLES[people][0]), ('beard', STYLES[people][1] if sex == 'm' else ())):
+                for st in styles:     # one file per style: only that group's pieces (shaved and clean-shaven have none)
+                    S_, SPAL = build(people, sex, dressed=False, face={kind: st})
+                    parts = {n: v for n, v in S_.items() if group(n) == kind}
+                    if not parts: continue
+                    mb.COL = SPAL; mb.NAMES = list(SPAL)
+                    os.makedirs(os.path.join(OUT, kind), exist_ok=True)
+                    mb.write(os.path.join(OUT, kind, '%s_%s_%s.vox' % (people, sex, st)), parts)
             mb.COL = PAL; mb.NAMES = list(PAL)
             zs = [z / (2 if '#2' in n else 1) for n, part in P.items() for (_, _, z) in part]; xs = [x / (2 if '#2' in n else 1) for n, part in P.items() for (x, _, _) in part]
             print('%-9s %s  %d voxels tall (%.2f m), %d across (%.2f m)' % (people, sex, max(zs) - min(zs) + 1, (max(zs) - min(zs) + 1) * 0.025, max(xs) - min(xs) + 1, (max(xs) - min(xs) + 1) * 0.025))
-    import json     # the presets' names, for the creator (godot/data/faces.json): face 0 is the base body's own
-    json.dump({'%s_%s' % (pp, sx): [pr['name'] for pr in presets(pp, sx)] for pp in PEOPLES for sx in ('m', 'f')}, open(FACES_JSON, 'w'), indent=1)
+    import json     # for the creator (godot/data/faces.json): presets (face 0 is the base body's own) with their hair,
+    # beard and hair colour; each people's styles and hair colours; the key colours the game repaints
+    json.dump({'presets': {'%s_%s' % (pp, sx): [dict(name=pr['name'], **preset_look(pp, sx, k)) for k, pr in enumerate(presets(pp, sx))] for pp in PEOPLES for sx in ('m', 'f')},
+               'styles': {pp: {'hair': list(STYLES[pp][0]), 'beard': list(STYLES[pp][1])} for pp in PEOPLES},
+               'hair_colours': {pp: [list(c) for c in HAIR_COLOURS[pp]] for pp in PEOPLES},
+               'keys': {k: [list(key), f] for k, (key, f) in HAIR_KEYS.items()}}, open(FACES_JSON, 'w'), indent=1)

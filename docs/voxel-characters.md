@@ -69,6 +69,13 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
   base head and everything riding on it (`Vox.character`); `Equipment.dress(..., face)` puts it under any helm.
   `godot/tests/voxel_faces.tscn -- people=<people>` renders the presets. Sliders (height and bulk within each people's
   range, skin tone) are still to do.
+- **Hair and beards are their own choices:** heads are always bald; each hair and beard style is a separate layer,
+  `peoples/hair/<people>_<sex>_<style>.vox` and `peoples/beard/<people>_m_<style>.vox` (shaved and clean-shaven have
+  none), shells grown one fine voxel out over the head plus the hanging pieces. Hair, beards and brows are written in
+  key colours (`HAIR_KEYS`, `Vox.HAIR_KEYS`) and painted with the chosen colour when loaded. Layers replace by group
+  (`group()` / `Vox.group()`: face, hair, beard). `Equipment.dress(..., look={hair, beard, hair_col})`, defaults from
+  the face preset in `godot/data/faces.json` (which also lists each people's styles and hair colours). Hides match a
+  piece name or `name*`. `godot/tests/voxel_hair.tscn -- people=<people>` shows every style and colour.
 - **Body sliders (the user's choice: scaled in the game, not regenerated):** `Vox.shape(root, height, bulk)`, each -1
   to 1: height stretches legs, torso and arms by up to 6%, bulk thickens or slims them by up to 12%. Heights above the
   ground scale too, so the feet stay down; the head keeps its size, gear riding on a part scales with it, weapons keep

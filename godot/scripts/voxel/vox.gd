@@ -107,6 +107,7 @@ static func part_mesh(f: Dictionary, shape: Dictionary, pivot: Vector3, size: fl
 		var key := Vector3i(v[i * 4], v[i * 4 + 1], v[i * 4 + 2])
 		var c: Color = m.colors[i] if m.has("colors") else f.palette[v[i * 4 + 3] - 1]
 		if not palette.is_empty(): c = snap(c, palette)
+		if _hair.has(c.to_rgba32()): c = _hair[c.to_rgba32()]
 		col_at[key] = c
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	const DIRS := [[0, 1, 0.86], [0, -1, 0.86], [1, 1, 0.8], [1, -1, 0.92], [2, 1, 1.0], [2, -1, 0.62]]   # axis, sign, shade
@@ -177,7 +178,27 @@ static var _cmap := {}
 ## a character from a .vox: a Node3D (feet at y = 0, centred, facing +Z) with a node per part pivoting at its joint, lower
 ## limbs hanging from upper ones; parts are reachable by name (model.get_node("arm_upper_l"))
 ## layers: further .vox files in the same frame (gear riding on parts, or parts that replace the base's by name)
-static func character(path: String, size := CHAR, palette := [], layers := []) -> Node3D:
+## the creator's groups of head pieces (make_character.py group()): face (the head and brows), hair, beard; else body
+static func group(nm: String) -> String:
+	var bare := _bare(nm).get_slice("@", 0)
+	if bare == "head" or bare.begins_with("brow"): return "face"
+	if bare.begins_with("hair"): return "hair"
+	if bare.begins_with("beard"): return "beard"
+	return "body"
+
+## hair, beards and brows are written in key colours (make_character.py HAIR_KEYS) and painted with the chosen hair
+## colour in these tones
+const HAIR_KEYS := {0xff00ffff: 1.0, 0xbf00bfff: 0.72, 0xff60ffff: 1.25, 0x800080ff: 0.7, 0x600060ff: 0.48}
+const HAIR_DEFAULT := Color8(92, 58, 34)
+static var _hair := {}
+static func _hair_map(c: Color) -> void:
+	_hair.clear()
+	for k in HAIR_KEYS:   # tones as the generator makes them: each sRGB channel times the factor
+		var f: float = HAIR_KEYS[k]
+		_hair[k] = Color(minf(1.0, c.r * f), minf(1.0, c.g * f), minf(1.0, c.b * f))
+
+static func character(path: String, size := CHAR, palette := [], layers := [], hair := HAIR_DEFAULT) -> Node3D:
+	_hair_map(hair)
 	var f := read(path)
 	var root := Node3D.new(); root.name = path.get_file().get_basename()
 	if f.is_empty(): return root
@@ -190,13 +211,15 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 			var cols := []
 			for i in v.size() / 4: cols.append(g.palette[v[i * 4 + 3] - 1])
 			f.models.append({"size": m.size, "voxels": v, "colors": cols})
-		var face := false   # a face layer (it has a head): the base head's own pieces (brows, hair, beard) all go with it
-		for sh in g.shapes: face = face or _bare(sh.name) == "head"
-		var gone := {}
-		for sh in g.shapes: gone[_bare(sh.name)] = true
+		# a layer replaces the base's pieces of the same name, and every base piece of a creator group it brings (a face
+		# layer the head and brows, a hair layer all the hair, a beard layer all the beard)
+		var gone := {}; var groups := {}
+		for sh in g.shapes:
+			gone[_bare(sh.name)] = true
+			if group(sh.name) != "body": groups[group(sh.name)] = true
 		for k in range(f.shapes.size() - 1, -1, -1):
 			var bn := _bare(f.shapes[k].name)
-			if gone.has(bn) or (face and bn.ends_with("@head")): f.shapes.remove_at(k)
+			if gone.has(bn) or groups.has(group(f.shapes[k].name)): f.shapes.remove_at(k)
 		for sh in g.shapes: f.shapes.append({"name": sh.name, "model": base_n + sh.model, "offset": sh.offset})
 	if _mat == null:
 		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0   # .vox colours are sRGB
@@ -229,7 +252,7 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 	var centre := Vector3((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0, lo.z)   # the feet's centre
 	var made := {}
 	for sh in f.shapes:
-		var node := MeshInstance3D.new(); node.name = sh.name
+		var node := MeshInstance3D.new(); node.name = sh.name; node.set_meta("piece", sh.name)   # the name with its @ (node names lose it)
 		node.mesh = part_mesh(f, sh, pivots[sh.name], size, palette, fine[sh.name]); node.material_override = _mat
 		made[sh.name] = node
 	for sh in f.shapes:

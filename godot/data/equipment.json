@@ -7,10 +7,7 @@
    ],
    "order": 8,
    "hides": [
-    "hair",
-    "bun",
-    "crown",
-    "braids"
+    "hair*"
    ],
    "file": "res://assets/voxel/gear/warden_hood/%s_%s.vox"
   },
@@ -160,12 +157,8 @@
    ],
    "order": 8,
    "hides": [
-    "hair",
-    "bun",
-    "crown",
-    "braids",
-    "beard",
-    "braid"
+    "hair*",
+    "beard*"
    ],
    "file": "res://assets/voxel/gear/iron_helm/%s_%s.vox"
   },
@@ -296,8 +289,10 @@
    ],
    "order": 8,
    "hides": [
-    "bun",
-    "crown"
+    "hair",
+    "hair_bun",
+    "hair_crown",
+    "hair_mane"
    ],
    "file": "res://assets/voxel/gear/cloth_cap/%s_%s.vox"
   },

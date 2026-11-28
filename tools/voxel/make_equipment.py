@@ -853,7 +853,7 @@ TOOLS = {'hatchet': 'hip', 'spear': 'back', 'hammer': 'hip', 'blade': 'hip', 'bo
 # order: the fixed layering from the inside out (design doc): wardrobe, legs and feet, chest, coat, arms, belt,
 # shoulders, back, head; a later layer wins where two would take the same part.
 ITEMS = {
-    'warden_hood':        (hood, 'light', ['head'], 8, ['hair', 'bun', 'crown', 'braids']),
+    'warden_hood':        (hood, 'light', ['head'], 8, ['hair*']),     # every hair piece ('hair*' matches hair, hair_bun, ...)
     'warden_jerkin':      (jerkin, 'light', ['chest'], 2, []),
     'warden_bracers':     (bracers, 'light', ['wrists'], 4, []),
     'warden_boots':       (tall_boots, 'light', ['feet'], 1, []),
@@ -869,7 +869,7 @@ ITEMS = {
     'steam_boiler':       (boiler, 'heavy', ['back'], 7, []),
     'steam_greaves':      (greaves, 'heavy', ['legs'], 1, []),
     'steam_gloves':       (work_gloves, 'heavy', ['hands'], 4, []),
-    'iron_helm':          (full_helm, 'plate', ['head', 'eyes', 'mouth'], 8, ['hair', 'bun', 'crown', 'braids', 'beard', 'braid']),
+    'iron_helm':          (full_helm, 'plate', ['head', 'eyes', 'mouth'], 8, ['hair*', 'beard*']),
     'iron_breastplate':   (breastplate, 'plate', ['chest', 'coat'], 2, []),
     'iron_arms':          (plate_arms, 'plate', ['shoulder_l', 'shoulder_r', 'arms'], 4, []),
     'iron_gauntlets':     (gauntlets, 'plate', ['hands'], 4, []),
@@ -884,7 +884,7 @@ ITEMS = {
     'colossus_arms':      (colossus_arms, 'heavy', ['shoulder_l', 'shoulder_r', 'arms', 'wrists', 'hands', 'main_hand', 'off_hand'], 6, []),
 }
 ITEMS.update({
-    'cloth_cap':      (cap, 'common', ['head'], 8, ['bun', 'crown']),
+    'cloth_cap':      (cap, 'common', ['head'], 8, ['hair', 'hair_bun', 'hair_crown', 'hair_mane']),     # the hair on top; tails and locks hang out
     'spectacles':     (spectacles, 'common', ['eyes'], 9, []),
     'wool_scarf':     (scarf, 'common', ['mouth'], 9, ['beard', 'braid']),
     'shoulder_pads':  (shoulder_pads, 'common', ['shoulder_l', 'shoulder_r'], 6, []),

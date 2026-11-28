@@ -7,7 +7,6 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("out="): out = a.split("=")[1]
 		if a.begins_with("people="): people = a.split("=")[1]
-	var names: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/faces.json"))
 	var env := WorldEnvironment.new(); env.environment = Environment.new(); var e := env.environment   # as voxel_peoples.gd
 	var sky := Sky.new(); var sm := ProceduralSkyMaterial.new(); sky.sky_material = sm
 	sm.sky_top_color = Color(0.42, 0.56, 0.74); sm.sky_horizon_color = Color(0.93, 0.78, 0.6); sm.ground_horizon_color = Color(0.93, 0.78, 0.6)
@@ -19,11 +18,11 @@ func _ready() -> void:
 	sun.shadow_enabled = true; sun.shadow_bias = 0.25; sun.shadow_normal_bias = 3.0; add_child(sun)
 	var row := 0
 	for s in ["m", "f"]:
-		var list: Array = names["%s_%s" % [people, s]]
+		var list: Array = Equipment.faces().presets["%s_%s" % [people, s]]
 		for k in list.size():
 			var m := Equipment.dress(people, s, [], true, false, k); add_child(m)
 			m.position = Vector3(k * 0.8 + row * 20.0, 0, 0)
-			var l := Label3D.new(); l.text = "%d %s" % [k, list[k]]; l.font_size = 40; l.pixel_size = 0.0018; l.outline_size = 8
+			var l := Label3D.new(); l.text = "%d %s" % [k, list[k].name]; l.font_size = 40; l.pixel_size = 0.0018; l.outline_size = 8
 			l.position = Vector3(m.position.x, 0.62, 0.3); add_child(l)
 		row += 1
 	var cam := Camera3D.new(); add_child(cam)

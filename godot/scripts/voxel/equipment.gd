@@ -11,6 +11,12 @@ class_name Equipment
 const DATA := "res://data/equipment.json"
 const BODY := "res://assets/voxel/characters/peoples/%s_%s%s.vox"
 const FACE := "res://assets/voxel/characters/peoples/faces/%s_%s_%d.vox"
+const STYLE := "res://assets/voxel/characters/peoples/%s/%s_%s_%s.vox"
+const FACES := "res://data/faces.json"
+static var _faces := {}
+static func faces() -> Dictionary:
+	if _faces.is_empty(): _faces = JSON.parse_string(FileAccess.get_file_as_string(FACES))
+	return _faces
 static var _db := {}
 ## the drawn stances, by weapon class: degrees added to Vox.REST (game axes; negative x swings a limb forward)
 const STANCES := {
@@ -59,7 +65,9 @@ static func db() -> Dictionary:
 ## the items of a set, by its tier name (light, medium, heavy, plate, rig)
 static func set_items(tier: String) -> Array: return db().sets[tier].items
 
-static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true, face := 0, height := 0.0, bulk := 0.0) -> Node3D:
+## look: the creator's hair, beard and hair_col ([r, g, b] 0-255); anything left out comes from the face preset
+## (data/faces.json). Hair "shaved" and beard null (clean-shaven) leave none.
+static func dress(people: String, sex: String, worn: Array, wardrobe := true, drawn := true, face := 0, height := 0.0, bulk := 0.0, look := {}) -> Node3D:
 	var items: Dictionary = db().items
 	var taken := {}
 	for n in worn:
@@ -71,13 +79,21 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 	order.sort_custom(func(a, b): return items[a].order < items[b].order)
 	var layers := []
 	if face > 0: layers.append(FACE % [people, sex, face])   # a face preset (data/faces.json), before any helm
+	var lk: Dictionary = faces().presets["%s_%s" % [people, sex]][face].duplicate(); lk.merge(look, true)
+	if lk.hair != "shaved": layers.append(STYLE % ["hair", people, sex, lk.hair])
+	if lk.beard != null: layers.append(STYLE % ["beard", people, sex, lk.beard])
 	if wardrobe: layers.append(BODY % [people, sex, "_clothes"])
 	var hides := []
 	for n in order:
 		var file: String = items[n].carried if (not drawn and items[n].has("carried")) else items[n].file
 		layers.append(file % [people, sex])
 		hides.append_array(items[n].hides)
-	var root := Vox.character(BODY % [people, sex, ""], Vox.FINE, [], layers)
+	var hc: Array = lk.hair_col
+	var root := Vox.character(BODY % [people, sex, ""], Vox.FINE, [], layers, Color8(hc[0], hc[1], hc[2]))
+	for node in root.find_children("*", "Node3D", true, false):   # shaved, clean-shaven: the base's own go
+		if not is_instance_valid(node) or not node.has_meta("piece"): continue
+		var g := Vox.group(String(node.get_meta("piece")))
+		if (g == "hair" and lk.hair == "shaved") or (g == "beard" and lk.beard == null): node.get_parent().remove_child(node); node.free()
 	if height != 0.0 or bulk != 0.0: Vox.shape(root, height, bulk)   # the creator's body sliders
 	if drawn:
 		for n in order:
@@ -88,7 +104,8 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 					node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
 			if items[n].stance == "polearm": _aim(root)
 	for node in root.find_children("*", "Node3D", true, false):
-		var bare := String(node.name).get_slice("@", 0).get_slice("_head", 0)
-		if String(node.name).validate_node_name() in hides.map(func(h): return String(h).validate_node_name()) or bare in hides:
-			node.visible = false
+		if not node.has_meta("piece"): continue
+		var bare := String(node.get_meta("piece")).get_slice("@", 0)
+		for h in hides:   # an exact piece name, or "name*" for every piece it begins
+			if bare == h or (String(h).ends_with("*") and bare.begins_with(String(h).trim_suffix("*"))): node.visible = false
 	return root
