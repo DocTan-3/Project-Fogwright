@@ -23,7 +23,7 @@ func _ready() -> void:
 	var names := kit.keys(); names.sort()
 	# rows: walls of 3 m, walls of 4.5 m, everything else
 	var rows := [[], [], []]
-	for n in names: rows[0 if n.ends_with("_30") and n.begins_with(("wall")) else (1 if n.ends_with("_45") else 2)].append(n)
+	for n in names: rows[0 if n.ends_with("_30") and n.begins_with(("wall")) else (1 if n.ends_with("_44") else 2)].append(n)
 	var at := {}; var tris := 0
 	for r in rows.size():
 		var x := 0.0

@@ -4,7 +4,7 @@
 #   python3 tools/voxel/make_building_kit.py   -> godot/assets/voxel/buildings/kit_farhallow.vox
 # MagicaVoxel axes: x along the piece, y from its outer face (0) inward, z up. Each piece is its own named model whose box
 # starts at (0, 0, 0): the game places it by that corner (Vox.pieces), so every piece fills its box from the origin.
-# Sizes (voxels, 10 cm): bay 20 wide, wall 3 thick, storey 30 (3.0 m) or 45 (4.5 m), door 14 x 22, window 8 x 10 from a
+# Sizes (voxels, 10 cm): bay 20 wide, wall 3 thick, storey 30 (3.0 m) or 44 (4.4 m: 22 even stair risers), door 14 x 22, window 8 x 10 from a
 # 9 sill, stair 2 rise x 3 tread x 14 wide, plinth 5.
 import os, importlib.util, random
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -91,7 +91,7 @@ def stone_wall(name, h, opening=None):
 def centred(w): x0 = 2 + (BAY - 2 - w) // 2; return x0, x0 + w - 1
 DOOR = (*centred(DOOR_W), 0, DOOR_H - 1)
 WIN = (*centred(WIN_W), SILL, SILL + WIN_H - 1)
-for h in (30, 45):
+for h in (30, 44):
     frame_wall('wall_frame_%d' % h, h); frame_wall('wall_frame_door_%d' % h, h, DOOR); frame_wall('wall_frame_window_%d' % h, h, WIN)
     stone_wall('wall_stone_%d' % h, h); stone_wall('wall_stone_door_%d' % h, h, DOOR); stone_wall('wall_stone_window_%d' % h, h, WIN)
     box('post_%d' % h, 0, 1, 0, WALL - 1, 0, h - 1, 'oak')   # the end post that closes a row of bays
@@ -117,7 +117,7 @@ def stair(name, rise):
     n = rise // 2
     for i in range(n):
         box(name, 0, DOOR_W - 1, i * 3, i * 3 + 2, 0, (i + 1) * 2 - 1, lambda x, y, z: 'board' if z >= (i + 1) * 2 - 1 else 'oak_d')
-stair('stair_30', 30)
+stair("stair_30", 30); stair("stair_44", 44)
 
 # ---------------------------------------------------------------- roofs
 def roof_45(name, mat, length=BAY, run=20):
