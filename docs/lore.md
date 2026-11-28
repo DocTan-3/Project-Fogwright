@@ -321,7 +321,7 @@ The moons are lore and sky only: they do not change play *(decided 2026-11-28)*.
 
 **Aldrath's outer city** *(decided 2026-11-28)*: a quarter for each people round the plaza of the twelve. The Ordinal's courts and the Censure's hall stand on the plaza itself, facing the sealed walls. Beneath the sealed core lies the **Undercroft of the Rule**, the hidden hall where Aldrath keeps his plans, which no one alive knows of except Vael.
 
-**Freeholds** *(decided 2026-11-28)*: yes, there are settlements outside any god's protection. Freeholds are cheap frontier villages, like Farhallow, that many freefolk risk because the land is free. Many are falling, and every one that falls gives the 14th more Greyed. Players can retake fallen freeholds as their group's shared bases.
+**Freeholds** *(decided 2026-11-28)*: yes, there are settlements outside any god's protection. Freeholds are cheap frontier villages, like Farhallow, that many freefolk risk because the land is free. Many are falling, and every one that falls gives the 14th more Greyed. Players do not own freeholds for now (dropped as a mechanic, 2026-11-28); they meet them as falling villages, ruins and quest places.
 
 **The Penitent's town** *(decided 2026-11-28)*: the freed Penitent have built a refuge town of their own, closely watched by the Censors. Its name and place are still open.
 

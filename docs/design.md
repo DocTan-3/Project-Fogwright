@@ -14,7 +14,7 @@ Fogwright is a lightweight, cross-platform co-op RPG where a small group of frie
 
 2.  **Find it, then make it.** Recipes for gear and machines come from ruins, trainers and experimenting, so exploring and crafting feed each other.
 
-3.  **The world pushes back.** The Fog, events and settlers generate stories without a script.
+3.  **The world pushes back.** The Fog, surges, Breaches and the gods' Grace generate stories without a script.
 
 4.  **Light enough to run anywhere.** A browser link works on PC, Mac, phone and tablet, with small downloads and modest hardware.
 
@@ -48,11 +48,11 @@ The world is the broken continent of Erde in **312 TA**, the 312th year of the T
 
 ## Core loop
 
-Each session, players head out from a city or their group's freehold, bring back resources and knowledge, and turn them into gear and inventions that let them reach farther.
+Each session, players head out from a city or their warp space, bring back resources and knowledge, and turn them into gear and inventions that let them reach farther.
 
 **Session loop (30 to 90 minutes)**
 
-1.  **Check in.** See what happened while you were away: the freehold's settlers, Fog movement, events, the gods' Grace.
+1.  **Check in.** See what happened while you were away: Fog movement, events, the market, the gods' Grace.
 
 2.  **Plan.** Decide as a group what to build or where to go.
 
@@ -60,7 +60,7 @@ Each session, players head out from a city or their group's freehold, bring back
 
 4.  **Return.** Carry loot home before night or a storm rolls in.
 
-5.  **Build and invent.** Combine parts into new machines, upgrade the freehold, and spend new skill points.
+5.  **Build and invent.** Combine parts into new machines, upgrade gear and the warp space, and spend new skill points.
 
 6.  **Defend.** Hold off Fog surges at night with walls, turrets and traps.
 
@@ -70,7 +70,7 @@ Each session, players head out from a city or their group's freehold, bring back
 
 - Push the Fog back and build outposts linked by roads, then rail carts.
 
-- Rediscover all six crafts and recruit settlers.
+- Rediscover all six crafts.
 
 - Follow the story's trail of clues toward the truth about Aldrath, and toward Aumenor.
 
@@ -95,7 +95,7 @@ Crafts are regions of the one skill tree. Each player grows into one or two, so 
 
 **Progression:** crafts level up by doing the work. New techniques are unlocked by finding schematic fragments in ruins, so exploring and crafting feed each other.
 
-**Solo or small groups:** settlers can fill missing crafts at a lower skill level, so two players are still viable.
+**Solo or small groups:** NPC services in cities, and the global market, fill missing crafts, so two players are still viable.
 
 ### Combat
 
@@ -242,7 +242,7 @@ Inventions are **normal recipes**: each machine (a crossbow turret, an automatic
 - **Quality is fixed by the recipe:** the same recipe always makes the same item. Some recipes make higher-tier items, and **some legendary items can only be crafted**.
 - **Maker's name:** a crafted item shows who made it in its tooltip.
 - **Repair and salvage:** Smiths repair durability (lost on death); unwanted gear salvages into some materials and Fog shards.
-- **Stations:** cities have public forges, benches and looms for a small fee; players build their own in their warp space or freehold.
+- **Stations:** cities have public forges, benches and looms for a small fee; players build their own in their warp space.
 - **Cybernetic implants** are not worn when found or crafted: an NPC fits them, or a player with the fitting skill node.
 - **Players can do NPCs' work:** some skill nodes let a player do what an NPC does (repairs, fitting implants and the like) out in the field, so players can run businesses for each other on trust.
 
@@ -254,7 +254,7 @@ Inventions are **normal recipes**: each machine (a crossbow turret, an automatic
 
 3.  **Steam:** boilers, steam hammers, rail carts to outposts, diving suits for flooded ruins.
 
-4.  **Arcane engine:** relic cores power the strongest machines, and every one draws the Fog toward the freehold.
+4.  **Arcane engine:** relic cores power the strongest machines, and every one draws the Fog toward where it runs.
 
 ## The Fog
 
@@ -266,7 +266,7 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 - Night and storms: surges roll in and press against walls.
 
-- Magic: each spell and running arcane engine adds to a Fog pressure value for the region and any freehold in it, which raises surge strength and frequency.
+- Magic: each spell and running arcane engine adds to a Fog pressure value for the region, which raises surge strength and frequency.
 
 **What it does**
 
@@ -416,7 +416,7 @@ The overworld stays persistent and shared. Breaches are private instances for th
 
 | Feature  | How it works                                                                                                                                                |
 |----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Spawning | Breaches open near Fog-heavy areas and stay open for a few hours of real time or until cleared. A freehold's lookout tower reveals them on the map.     |
+| Spawning | Breaches open near Fog-heavy areas and stay open for a few hours of real time or until cleared. A lookout skill or relic reveals them on the map.     |
 | Tiers    | The Fog glow shows the tier: grey, green, violet, gold. Higher tiers mean tougher Fog-touched enemies and better relics.                                    |
 | Layout   | Hand-made room templates of the old empire (archive, forge hall, flooded cistern, rune chamber, vault) stitched together by rules, ending in a boss chamber |
 | Size     | Small Breaches for 1 to 2 players, large ones for 3 to 6                                                                                                    |
@@ -447,7 +447,7 @@ The overworld stays persistent and shared. Breaches are private instances for th
 - Players trade face to face through a **trade window**. A later skill node gives a **vending stall**: one per
   player, trading districts only, keeps selling a few hours after logout.
 
-## Survival and settlers
+## Survival and homes
 
 Survival is detailed enough to create stories but simple enough to read at a glance on a phone.
 
@@ -459,27 +459,9 @@ Survival is detailed enough to create stories but simple enough to read at a gla
 
 **Inventory:** a grid of stacking slots with a weight limit, held in the warp bag; upgrades add slots and weight. **Gathering** spots (trees, ore, herbs) are shared by everyone and respawn on a timer. **Loot** is free for all: whoever picks a drop up first keeps it.
 
-**Freeholds and homes:** each player's home and storage live in their warp space, which nothing can reach. The group's shared frontier base is a **freehold**: a fallen or new frontier village they hold against the Fog, with settlers, walls, workshops and night surges. Farhallow itself stays lost.
+**Homes:** each player's home, storage, trophies and own stations live in their **warp space**, which nothing can reach. Its size and weight limit grow over time.
 
-**Settlers**
-
-- Recruited from survivor camps or rescued in ruins.
-
-- Each has 2 or 3 traits (brave, greedy, night owl, ex-cogwitch) plus needs and a mood.
-
-- They work assigned jobs such as farming, hauling or guard duty, and can fill a missing craft at a low level.
-
-- They form relationships and grudges with each other and with players, which shape their mood and loyalty.
-
-**Events** fire from a director that watches a freehold's wealth, defenses and Fog pressure:
-
-- Threats: Fog surges, raider bands, Fog-touched beasts, a sick settler starting an outbreak.
-
-- Opportunities: traders, refugees asking to join, a ruin exposed by a landslide.
-
-- Weather: storms, cold snaps, droughts that slow waterwheels.
-
-While everyone is offline, the server keeps simulating at a reduced level so there is news on return, but it never kills settlers or destroys the base without players there to respond.
+**Freeholds, settlers and the event director: dropped for now** *(decided 2026-11-28)*. There is no shared player base out in the world. Freeholds stay in the lore as the frontier villages that are falling to the Fog (and as ruins and quest places), but players do not own or build them. Settlers with traits and moods, and the event director that attacked a base, are parked with them; the Fog, surges and Breaches still challenge players out in the world. They can come back later as a guild feature.
 
 ## Art and audio
 
@@ -499,7 +481,7 @@ The look is simple low-poly 3D, built mostly in code, so buildings feel grand an
 
 - Muted natural colors. The Fog is real distance fog that thickens and turns violet farther from camp, and is the main source of atmosphere.
 
-- Day and night lighting with warm lantern and forge light, which helps sell the freehold as a safe place.
+- Day and night lighting with warm lantern and forge light, which helps sell cities and camps as safe places.
 
 ### Architecture
 
@@ -703,7 +685,7 @@ The game is a web app first, wrapped for desktop and mobile stores later, with a
 
 - Breaches run as separate short-lived instances, started when a group enters and shut down after everyone leaves.
 
-- SQLite for persistence: the world seed, chunk edits, players, settlers and invention discoveries. Breaches store nothing after they close.
+- SQLite for persistence: the world seed, chunk edits, players and invention discoveries. Breaches store nothing after they close.
 
 - Shared TypeScript code between client and server for world generation and game rules.
 
@@ -775,7 +757,7 @@ Each milestone ends with a gate the group plays, and the next one only starts on
 
 | Risk               | Why it matters                                               | Mitigation                                                                |
 |--------------------|--------------------------------------------------------------|---------------------------------------------------------------------------|
-| Scope creep        | Six crafts, settlers, the Fog and inventions add up to a lot | Ship each milestone as something playable, cut features before polish     |
+| Scope creep        | Six crafts, the Fog and inventions add up to a lot           | Ship each milestone as something playable, cut features before polish     |
 | Generated sameness | Noise-based worlds get repetitive                            | Hand-authored ruin rooms and landmarks mixed into generation              |
 | Netcode feel       | Laggy movement ruins combat                                  | Client-side prediction from M1, tested over real internet early           |
 | Touch controls     | Building and inventing UIs are hard on phones                | Design UI for touch from M2, not as a late port                           |

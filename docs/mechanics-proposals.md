@@ -8,7 +8,7 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
 
 ## Decisions so far (2026-11-28)
 
-- **Decided:** freeholds are the group's shared base and the warp space is each player's private home; Runecrafter
+- **Decided:** the warp space is each player's private home (**player freeholds dropped for now**, see below); Runecrafter
   becomes the **Relicwright**; each god has a server-wide **Grace**; warps and the warp bag have a **weight limit that
   grows over time**; **no Fog exposure meter** on players (Fog is gated by lanterns instead); **Farhallow stays lost**;
   being claimed grants a **starting node in the one skill tree**; **players do not drop items on death**.
@@ -31,6 +31,8 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
   protecting others are separate, neighbouring node groups; no healing weapon family, heals from drones, sentries, back
   arms and belt tools, soft-targeted; throw potions at allies; buffs, cleanses, shields and revives as node clusters;
   a downed state anyone can revive.
+- **Freeholds (decided):** dropped for now as a player feature, with settlers and the base event director. Homes are
+  the warp space. Freeholds remain in the lore as falling frontier villages.
 
 ## Core mechanics (decided 2026-11-28)
 
@@ -49,7 +51,7 @@ The basics, settled first:
 | **Death** | You keep everything. You wake at your seat or last waystone, and your **equipped gear loses durability**, repaired by Smiths |
 | **Crafting** | **Basics anywhere** (bandages, torches, a campfire); weapons, armour and inventions at **stations** (forge, workbench, loom) |
 | **Recipes** | Basics known; the rest from ruins, trainers and experimenting. Pick a recipe, choose materials, a short timer, a queue. One refining step. Quality fixed by recipe; some recipes make higher tiers; some legendaries are craft-only. Inventions are normal recipes (no part slots). Maker's name in the tooltip |
-| **Repair, salvage, stations** | Smiths repair; gear salvages to materials and Fog shards. Public stations in cities for a fee, own stations at home or in a freehold |
+| **Repair, salvage, stations** | Smiths repair; gear salvages to materials and Fog shards. Public stations in cities for a fee, own stations at home (warp space) |
 | **Players as NPCs** | Implants are fitted by an NPC or a player with the node. Generally, skill nodes let players do NPC services in the field, so players can trade services on trust |
 | **Skill web** | One Path of Exile-style web plus Albion-style mastery by use. One centre for all; pick one path and one craft at creation for a node or two each. Wedges: Combat, Crafting, Gathering, Utility, and a Magic wedge (gods) shut until claimed; Aldrath has none. Small, notable and keystone nodes, all always active. Mastery soft-gates gear tiers. Respec at an expensive NPC |
 
@@ -62,8 +64,8 @@ Found while reading; each needs a yes or no.
 | Overview and Setting | "an arcane empire fell 300 years ago", "using inventions instead of spells", "the players are the first generation to resettle" | Three ages, gods, chosen players who do use magic | Rewrite Setting from the lore: 312 TA, three centuries after Merrith's sacrifice; "inventions instead of spells" becomes "inventions first, grace as the rare gift" |
 | Crafts | Six crafts, one is Runecrafter (spells and enchantments) | Spells only from being claimed | Runecrafter becomes **Relicwright** (below) |
 | Skill tree | "Players start as freefolk in Aldrath's outer city" | Players start in Farhallow and land at Hollin's Cross | Change to Farhallow and Hollin's Cross |
-| Core loop and Survival | A home settlement with settlers and walls | Homes and bases live in the warp space, which events cannot reach | Both: the warp space is home, the Freehold is the shared frontier base (below) |
-| The Fog | "Each spell adds to a settlement-wide Fog pressure" | Same idea | Keep, but measure pressure per region and per Freehold, not per home |
+| Core loop and Survival | A home settlement with settlers and walls | Homes and bases live in the warp space, which events cannot reach | The warp space is home; player freeholds dropped for now (2026-11-28) |
+| The Fog | "Each spell adds to a settlement-wide Fog pressure" | Same idea | Keep, but measure pressure per region, not per home |
 | Ruins and dungeons | "Ruins of the old empire" | Ruins of three ages and of the Animari and Sennari | Ruin types by people and age (below) |
 
 ## Being claimed
@@ -129,8 +131,7 @@ Every god has a **Grace** value from 0 to 100 on the server, shared by everyone 
   to retreat as a god fades: Grace drives that).
 - **What raises it:** magic used by that god's chosen (the Return: every cast sends a little back), clearing Fog in their
   region, bringing back Greyed people of their region, finishing that god's quests, freeing captives late in the story.
-- **What lowers it:** time (a slow fade, always), surges that break through in their region, freeholds of their region
-  falling, and story events.
+- **What lowers it:** time (a slow fade, always), surges that break through in their region, and story events.
 - **Aldrath** gains a little from every other god's loss. Players will not see why until the reveal; afterward the
   Grace screen shows his true value and where it comes from.
 - **Never zero by accident:** a god can fall only in a story event, never because a quiet server did nothing.
@@ -191,11 +192,15 @@ Every adventurer carries a lantern (design.md). Proposals for the open parts:
 
 - Lanterns and pusher lamps hold Fog back for as long as they burn.
 - **Warding pylons** (an invention: pylon frame, gear train, a power source, a pusher-coil payload) hold a clear circle
-  around a Freehold or a road for as long as they are powered.
+  around a camp or a road for as long as they are powered.
 - **Clearing a ruin's heart** (the boss of a persistent dungeon) lowers a region's base density by one step for good,
   raises that region's god's Grace, and colour comes back there: the main long-term progress on a server.
 
-## Freeholds: the group's frontier home
+## Freeholds: the group's frontier home *(dropped for now, 2026-11-28)*
+
+**Decision:** player-owned freeholds are dropped for now, along with settlers and the base event director. Homes live in
+the warp space; the frontier is pushed by quests, Breaches and Grace. Freeholds stay in the lore as falling villages.
+The proposal below is kept only for reference, in case they return later (for example as a guild feature).
 
 The shared base in design.md, placed in the lore. A **freehold** is a frontier village outside any god's circle (lore
 proposals). Many are falling. Players can retake a fallen one, or found a new one on open ground, as a group.
@@ -332,7 +337,7 @@ quest.
 2. **God questlines:** the claiming trial and a chain for each god, ending with something only their chosen get.
 3. **Path starter quests** (design.md).
 4. **People quests** in each hometown, raising standing.
-5. **Freehold events:** refugees, raids, outbreaks, traders (the event director in design.md).
+5. ~~Freehold events~~ (dropped with freeholds for now).
 6. **Lore fragments:** inscriptions, books, Echoes; each found piece goes into the **Codex**, and finding sets of them
    gives skill points. Exploring is progress, as the lore wants ("learned slowly, through ruins, relics, writings").
 
@@ -353,5 +358,4 @@ What to make first so it is playable soonest:
 3. Merrith's thread on the compass and the first claiming trial (Hollin's, since Hollin's Cross is the start).
 4. One god's magic region (Hollin's) and the Writ.
 5. Grace for one god, driving colour in one region.
-6. The first freehold.
-7. Everything else, region by region.
+6. Everything else, region by region.
