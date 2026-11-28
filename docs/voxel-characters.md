@@ -133,7 +133,7 @@ Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyri
 
 ### Bow at rest and ammunition (2026-11-28)
 
-- A drawn bow at rest is held low across the body, as in Doc Tan's reference: the grip is in the lowered left hand in front of the hip, and the bow is nearly level with its upper limb rising about 20 degrees toward the right side. The string faces up and toward the body. `Equipment._rest_bow` turns the bow in the fist about its grip.
+- A drawn bow at rest uses hold E (Doc Tan's side sketch): the left arm hangs straight and the bow lies level through the fist, running front to back beside the hip, its riser centred in the fist, the string on top and tilted in toward the leg. `Equipment.BOW_REF` and `bow_pose` hold it; `tests/bow_poses.tscn` renders holds side by side. The older holds (A-D, F-H, and "" for the low-across one) stay as options.
 - **Ammunition slot** (`ammo`) on the belt, so a knapsack or anything else on the back can still be worn:
   - `quiver` (bows): a side quiver (Doc Tan's references). It hangs on two straps from the belt at the right hip, just outside the hanging arm, and slants from a wide studded mouth in front down to a narrow foot behind, with the arrows standing forward and up.
   - `bolt_case` (crossbows): a stiff iron-cornered box with its lid open and the bolts standing in a row.

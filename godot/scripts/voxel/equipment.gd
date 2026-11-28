@@ -81,12 +81,12 @@ const BOW_POSES := {
 		"D": Vector3(1, 0.12, 0.1), "S": Vector3(0, 0.4, -1)},
 }
 const BOW_REF := {
-	"E": {"arms": {"arm_upper_l": Vector3(-2, 0, 4), "arm_lower_l": Vector3(-6, 0, 0)}, "D": Vector3(0, 0.04, 1), "S": Vector3(0, 1, 0)},
+	"E": {"arms": {"arm_upper_l": Vector3(-2, 0, 4), "arm_lower_l": Vector3(-6, 0, 0)}, "D": Vector3(0, 0.04, 1), "S": Vector3(-0.55, 1, 0), "fist": true},
 	"F": {"arms": {"arm_upper_l": Vector3(-6, 0, 2), "arm_lower_l": Vector3(-24, 0, 0)}, "D": Vector3(-0.15, 0.85, -0.5), "S": Vector3(-1, 0.2, -0.3)},
 	"G": {"arms": {"arm_upper_l": Vector3(-10, 0, 0), "arm_lower_l": Vector3(-28, 0, 0)}, "D": Vector3(0.95, 0.15, -0.2), "S": Vector3(0, 1, -0.4)},
 	"H": {"arms": {"arm_upper_l": Vector3(-4, 0, 4), "arm_lower_l": Vector3(-14, 0, 0)}, "D": Vector3(0.7, 0.6, -0.35), "S": Vector3(-0.2, 0.7, -1)},
 }
-static var bow_pose := ""
+static var bow_pose := "E"     # the hold Doc Tan chose (their side sketch); "" is the older low-across hold
 static func _bp() -> Dictionary: return BOW_POSES[bow_pose] if BOW_POSES.has(bow_pose) else BOW_REF[bow_pose]
 
 static func _rest_bow(root: Node3D) -> void:
@@ -109,6 +109,9 @@ static func _rest_bow(root: Node3D) -> void:
 		var S := (S0 - D * D.dot(S0)).normalized()
 		var target := Basis(D, S, D.cross(S)) * Basis(l, sv, l.cross(sv)).inverse()   # the bow's new frame in root
 		var p: Vector3 = mi.transform * pivot
+		if bow_pose != "" and _bp().get("fist", false):    # the riser's middle in the middle of the fist
+			pivot += sv * box.size[ax[2]] * 0.5
+			p = (hand as MeshInstance3D).get_aabb().get_center() if hand is MeshInstance3D else p
 		mi.basis = (B.inverse() * target).scaled(mi.basis.get_scale())
 		mi.position = p - mi.basis * pivot
 

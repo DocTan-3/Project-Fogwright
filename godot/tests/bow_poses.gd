@@ -30,7 +30,7 @@ func _ready() -> void:
 			if r == 1: m.rotation_degrees.y = -90.0 if poses.size() == 1 else -60.0      # the bow side toward the camera
 			var l := Label3D.new(); l.text = poses[i]; l.font_size = 64; l.pixel_size = 0.0025; l.outline_size = 8
 			l.position = m.position + Vector3(0, 0.05, 0.8); add_child(l)
-	Equipment.bow_pose = ""
+	Equipment.bow_pose = "E"
 	var cam := Camera3D.new(); add_child(cam); get_viewport().size = Vector2i(2400, 1000)
 	var cx := 2.1 if poses.size() > 1 else 0.0
 	for sh in [["front", Vector3(cx + 1.2, 1.3, 5.4 if poses.size() > 1 else 3.0), Vector3(cx, 0.85, 0)], ["turned", Vector3(cx, 1.1, 30.0 + (5.4 if poses.size() > 1 else 3.0)), Vector3(cx, 0.85, 30.0)]]:
