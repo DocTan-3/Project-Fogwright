@@ -5,6 +5,7 @@
 # 2.5 cm voxels; MagicaVoxel axes: x across (0 = the character's right seen from the front), y front (small) to back, z up.
 # Skin colours stay within real skin's reflectance (pale skin reflects about 60% of light, sRGB about 200 at most): brighter
 # values flare yellow or white under the game's sun.
+# Eyes: off-white whites (pure white glares) and an iris dark enough to read against them, darker below.
 # Every character fits the standard door: at most 72 voxels (1.8 m) tall, 36 (0.9 m) across with its arms.
 import os, importlib.util
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +28,7 @@ PEOPLES = {
                   skin=(108, 72, 50), hair_m=(30, 24, 22), hair_f=(34, 26, 24), eye=(150, 100, 40), tunic=(196, 168, 120), trousers=(150, 120, 86),
                   leather=(120, 80, 50), bracers=True, hair=('crop', 'long'), beard='short', mark=None),
  'ilvari':   dict(UL=11, LL=9, TH=19, TW=16, TD=8, AW=5, AU=12, AL=11, LW=6,
-                  skin=(170, 156, 160), hair_m=(36, 38, 48), hair_f=(186, 192, 204), eye=(150, 190, 220), tunic=(40, 48, 70), trousers=(34, 36, 44),
+                  skin=(170, 156, 160), hair_m=(36, 38, 48), hair_f=(186, 192, 204), eye=(70, 136, 186), tunic=(40, 48, 70), trousers=(34, 36, 44),
                   leather=(70, 60, 60), bracers=False, hair=('long', 'long'), beard=None, mark='ink'),
  'ferrin':   dict(UL=7, LL=5, TH=18, TW=22, TD=11, AW=7, AU=10, AL=9, LW=8,
                   skin=(172, 110, 86), hair_m=(52, 34, 24), hair_f=(60, 40, 28), eye=(50, 36, 28), tunic=(110, 70, 46), trousers=(60, 52, 46),
@@ -36,7 +37,7 @@ PEOPLES = {
                   skin=(184, 142, 110), hair_m=(100, 70, 46), hair_f=(110, 76, 50), eye=(90, 70, 50), tunic=(140, 110, 80), trousers=(80, 70, 60),
                   leather=(96, 64, 40), bracers=False, hair=('crop', 'long'), beard='stubble', mark=None),
  'penitent': dict(UL=9, LL=8, TH=20, TW=16, TD=8, AW=5, AU=11, AL=10, LW=6,
-                  skin=(164, 150, 142), hair_m=(60, 56, 52), hair_f=(66, 60, 56), eye=(170, 170, 176), tunic=(100, 96, 92), trousers=(60, 58, 56),
+                  skin=(164, 150, 142), hair_m=(60, 56, 52), hair_f=(66, 60, 56), eye=(112, 116, 126), tunic=(100, 96, 92), trousers=(60, 58, 56),
                   leather=(70, 60, 50), bracers=False, hair=('crop', 'crop'), beard=None, mark='veins'),
 }
 WOMAN = dict(UL=0, LL=0, TH=-2, TW=-2, TD=-1, AW=-1, AU=-1, AL=-1, LW=-1)
@@ -49,7 +50,7 @@ def build(people, sex):
     if sex == 'f':
         for k, v in WOMAN.items(): p[k] += v
     hair_col = p['hair_f' if sex == 'f' else 'hair_m']
-    PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (240, 236, 228), 'eye': p['eye'],
+    PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': p['eye'], 'eye_d': tone(p['eye'], 0.55),
            'brow': tone(hair_col, 0.7), 'hair': hair_col, 'hair_d': tone(hair_col, 0.72), 'hair_l': tone(hair_col, 1.25),
            'lip': tone(p['skin'], 0.62) if sex == 'm' else (150, 78, 70), 'scar': tone(p['skin'], 1.12),
            'tunic': p['tunic'], 'tunic_d': tone(p['tunic'], 0.76), 'leather': p['leather'], 'leather_d': tone(p['leather'], 0.72),
@@ -171,8 +172,9 @@ def build(people, sex):
     if p['mark'] == 'veins':
         for r, i in ((3, 2), (4, 2), (4, 3), (9, 12), (10, 12), (10, 11)): F[r][i] = 'V' if F[r][i] == 'S' else F[r][i]
     if HW == 12: F = [row[:1] + row[2:12] + row[13:] for row in F]
+    F[7] = ['Q' if ch == 'P' else ch for ch in F[7]]
     KEY = {'S': 'skin', 'T': 'tattoo', 'H': 'hair', 'W': 'eye_w', 'P': 'eye', 'N': 'skin', 'n': 'skin_d', 'M': 'hair_d', 'L': 'lip',
-           'R': 'hair', 'D': 'stub' if beard == 'stubble' else 'soot', 'K': 'ink', 'F': 'freckle', 'V': 'vein', 'C': 'cheek', 'E': 'brow'}
+           'R': 'hair', 'D': 'stub' if beard == 'stubble' else 'soot', 'K': 'ink', 'F': 'freckle', 'V': 'vein', 'C': 'cheek', 'E': 'brow', 'Q': 'eye_d'}
     for row in range(HH):
         z = HZ0 + HH - 1 - row
         for i in range(HW):
