@@ -40,7 +40,9 @@ func _ready() -> void:
 		global_position = target.global_position + Vector3(0, 1.55, 0)
 
 func _apply_mode() -> void:
-	arm.collision_mask = 0 if high else 1   # from high above the arm would catch on every roof; the cutaway handles them
+	# from high above the arm would catch on every roof; the cutaway handles them. Layer 3 (4) is for the camera alone:
+	# the building kit's doorways (KitDoor), so indoors the camera stays in the room instead of backing out of the door
+	arm.collision_mask = 0 if high else 1 | 4
 	if high: Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif DisplayServer.get_name() != "headless": Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if not high: _cut(false)

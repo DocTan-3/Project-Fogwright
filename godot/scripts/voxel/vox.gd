@@ -108,6 +108,12 @@ static func part_mesh(f: Dictionary, shape: Dictionary, pivot: Vector3, size: fl
 		var c: Color = m.colors[i] if m.has("colors") else f.palette[v[i * 4 + 3] - 1]
 		if not palette.is_empty(): c = snap(c, palette)
 		col_at[key] = c
+	return mesh(col_at, off, pivot, size, fine)
+
+## greedy-meshes a set of voxels {Vector3i (file space: x, y front to back, z up): Color}, as part_mesh does: the building
+## kit (scripts/voxel/building_kit.gd) stamps whole storeys of pieces into one set and meshes it once, so the faces
+## between pieces vanish and a storey costs one draw call
+static func mesh(col_at: Dictionary, off := Vector3i.ZERO, pivot := Vector3.ZERO, size := WORLD, fine := 1) -> ArrayMesh:
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	const DIRS := [[0, 1, 0.86], [0, -1, 0.86], [1, 1, 0.8], [1, -1, 0.92], [2, 1, 1.0], [2, -1, 0.62]]   # axis, sign, shade
 	for dd in DIRS:
