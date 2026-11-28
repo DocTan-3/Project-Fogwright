@@ -1,9 +1,9 @@
 extends Node3D
-## the Wayfolk common iron set (make_equipment.py IRON): every weapon drawn, a sword and shield and a mace and buckler,
+## the Wayfolk common iron set (make_equipment.py IRON): every weapon drawn, a sword and shield and a mace and tower shield,
 ## then everything carried, on one body; prints GROUND FAIL for anything below the ground and the triangle counts
 ##   godot --path . --rendering-driver opengl3 res://tests/voxel_weapons.tscn -- out=<png prefix> [people=hrimfolk] [sex=m]
 const KINDS := ["sword", "axe", "mace", "hammer", "dagger", "greatsword", "greataxe", "warhammer", "spear", "halberd", "glaive",
-	"shortbow", "longbow", "hand_crossbow", "heavy_crossbow", "shield", "buckler", "wand", "staff"]
+	"shortbow", "longbow", "hand_crossbow", "heavy_crossbow", "shield", "tower_shield", "wand", "staff"]
 func _ready() -> void:
 	var out := "/tmp/weapons"; var people := "hrimfolk"; var sex := "m"
 	for a in OS.get_cmdline_user_args():
@@ -24,7 +24,7 @@ func _ready() -> void:
 	var gm := StandardMaterial3D.new(); gm.albedo_color = Color(0.36, 0.42, 0.26); g.material_override = gm; add_child(g)
 	var rows := [[], []]
 	for k in KINDS: rows[0].append([["iron_" + k], true])
-	rows[0].append([["iron_sword", "iron_shield"], true]); rows[0].append([["iron_mace", "iron_buckler"], true])
+	rows[0].append([["iron_sword", "iron_shield"], true]); rows[0].append([["iron_mace", "iron_tower_shield"], true])
 	for k in KINDS: rows[1].append([["iron_" + k], false])
 	for r in 2:
 		for i in rows[r].size():

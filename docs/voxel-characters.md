@@ -78,10 +78,10 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
   piece name or `name*`. `godot/tests/voxel_hair.tscn -- people=<people>` shows every style and colour.
 - **Wayfolk common iron set (weapons.md set 2):** `IRON` and `iron_shape()` in `make_equipment.py`, items `iron_<kind>`:
   sword, axe, mace, hammer, dagger, greatsword, greataxe, warhammer, spear, halberd, glaive, short and long bow, hand
-  and heavy crossbow, shield, buckler, wand, staff (a walking staff, planted upright by `_upright`). Blades thin to
+  and heavy crossbow, shield, tower shield, wand, staff (a walking staff, planted upright by `_upright`). Blades thin to
   one-voxel edges and long points. Off-hand pieces (`weapon_off@hand_l`) ride the left hand; new
   stances `shield` and `bow` (off-hand stances win for the left arm). Carried: one-handers at the left hip, long ones
-  across the back, the shield on the back, the buckler at the right hip. `godot/tests/voxel_weapons.tscn` renders them
+  across the back, the shield on the back, the tower shield on the back. `godot/tests/voxel_weapons.tscn` renders them
   drawn and carried with a ground check. Not yet: two-handers held in both hands (they use the one-hand grip), arrows
   and quivers, and sharing one weapon model across bodies (each weapon is still written per body, about 5 MB for the set).
 - **Body sliders (the user's choice: scaled in the game, not regenerated):** `Vox.shape(root, height, bulk)`, each -1
@@ -125,7 +125,7 @@ Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyri
    sliders within each people's range.
 2. The rest of the weapon list: the Wayfolk common iron set (every type), then fist weapons, harpoon and grapple guns,
    mechanical melee (epic and up).
-3. Off-hand items (shields, bucklers) so the off hand has something to hold in the drawn stance.
+3. Off-hand items (shields, tower shields) so the off hand has something to hold in the drawn stance.
 4. Rebuild the approved Hrimfolk (`make_stylized.py`) from the generator; its skin is too bright for the game's light.
 5. Later: trim triangles (the basics outfit is about 8,000; over budget, accepted for now); animate back arms (the
    importer needs pieces chained off other pieces); the design doc's slot table should say colossus pieces fill the

@@ -26,9 +26,9 @@ const STANCES := {
 	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
 	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
-	# the off hand: a shield or buckler held up on the forearm in front of the body; a bow held out level, upright
+	# the off hand: a shield or tower shield held up on the forearm in front of the body; a bow held out level, upright
 	# a walking staff planted beside the bearer, the arm a little forward
-	"staff": {"arm_upper_r": Vector3(-8, 0, -4), "arm_lower_r": Vector3(-22, 0, 0)},
+	"staff": {"arm_upper_r": Vector3(-10, 0, -4), "arm_lower_r": Vector3(-70, 0, 0)},
 	"shield": {"arm_upper_l": Vector3(-20, 0, -6), "arm_lower_l": Vector3(-70, 0, 0)},
 	"bow": {"arm_upper_l": Vector3(-82, 0, -4), "arm_lower_l": Vector3(-4, 0, 0), "arm_upper_r": Vector3(-40, 0, 8), "arm_lower_r": Vector3(-60, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
@@ -76,6 +76,12 @@ static func _upright(root: Node3D) -> void:
 		var now: Basis = arm.basis * hand.basis
 		hand.basis = arm.basis.inverse() * (Basis(Quaternion((now * Vector3.UP).normalized(), Vector3.UP)) * now)
 		hand.set_meta("rest", hand.rotation_degrees)
+		# slide the staff along its own length so its foot rests on the ground
+		var to_root: Transform3D = arm * hand.transform
+		var bb: AABB = (to_root * (node as Node3D).transform) * (node as MeshInstance3D).get_aabb()
+		var low := INF
+		for k in 8: low = minf(low, bb.get_endpoint(k).y)
+		(node as Node3D).position += to_root.basis.inverse() * Vector3(0, -low, 0)
 
 static func db() -> Dictionary:
 	if _db.is_empty(): _db = JSON.parse_string(FileAccess.get_file_as_string(DATA))

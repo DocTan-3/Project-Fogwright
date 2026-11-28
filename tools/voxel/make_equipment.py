@@ -861,7 +861,7 @@ IRON = {   # kind: (where it is carried, the hands it takes, its stance when dra
     'spear': ('back', 2, 'polearm'), 'halberd': ('back', 2, 'polearm'), 'glaive': ('back', 2, 'polearm'),
     'shortbow': ('back', 2, 'bow'), 'longbow': ('back', 2, 'bow'),
     'hand_crossbow': ('hip', 1, 'one_hand'), 'heavy_crossbow': ('back', 2, 'one_hand'),
-    'shield': ('shield', 0, 'shield'), 'buckler': ('buckler', 0, 'shield'),
+    'shield': ('shield', 0, 'shield'), 'tower_shield': ('tower', 0, 'shield'),
     'wand': ('hip', 1, 'one_hand'), 'staff': ('back', 1, 'staff'),
 }
 def iron_shape(kind, floor):
@@ -941,7 +941,7 @@ def iron_shape(kind, floor):
             b(-1, 1, -3 - bend, 1 - bend, h, h, lambda u, w, hh: 'iron_d' if w == 1 - bend else 'iron')     # the thick back
             b(0, 0, -7 - bend, -4 - bend, h, h, lambda u, w, hh: 'iron_l' if w <= -6 - bend else 'iron')       # thinning to the edge
     if kind == 'staff':                 # a walking staff, taller than its bearer: thick, knotted, an iron-shod foot
-        h0 = -min(floor, 60); h1 = h0 + 150
+        h0 = -min(floor, 90); h1 = h0 + 150
         for h in range(h0, h1 + 1):
             sway = round(math.sin(h / 23.0))                     # a gently crooked shaft
             b(-2 + sway, 2 + sway, -2, 2, h, h, lambda u, w, hh: 'leather' if -8 <= hh <= 8 else ('ash_d' if hh % 17 == 0 else 'ash'))
@@ -976,8 +976,24 @@ def iron_shape(kind, floor):
         for u in range(-pw + 1, pw): V[(u, 0, n - 12 + round(-4 * (1 - abs(u) / pw)))] = 'cord'
         if kind == 'heavy_crossbow':                         # the crank at the back
             b(-3, 3, -3, 3, -back - 3, -back - 1, 'iron_d'); b(4, 6, -1, 1, -back - 2, -back - 2, 'iron')
-    if kind in ('shield', 'buckler'):  # a disc in the u-h plane facing forward (-w): planks and iron rim, an iron boss
-        R = 26 if kind == 'shield' else 12
+    if kind == 'tower_shield':          # a tall shield of planks, curved round its bearer, rounded at the top; iron rim,
+        HW, HB, HT = 20, -50, 42        # two iron bands and a small boss. Its face is forward (-w), the grip at h 0.
+        for u in range(-HW, HW + 1):
+            bend = round(4 * (u / HW) ** 2)                  # the sides curve back round the bearer
+            for h in range(HB, HT + 1):
+                cut = HT - h < 6 and (abs(u) - (HW - 6)) ** 2 + (h - (HT - 6)) ** 2 > 36 and abs(u) > HW - 6
+                if cut: continue
+                rim = abs(u) >= HW - 1 or h <= HB + 1 or HT - h <= 1 or (HT - h < 7 and abs(u) > HW - 7 and (abs(u) - (HW - 6)) ** 2 + (h - (HT - 6)) ** 2 > 25)
+                band = h in (HB + 14, HB + 15, HT - 16, HT - 15)
+                col = 'iron_d' if rim else ('iron' if band else ('ash_d' if u % 7 in (0, 1) else 'ash'))
+                V[(u, bend, h)] = col; V[(u, bend + 1, h)] = 'ash_d'
+        for u in range(-4, 5):
+            for h in range(-4, 5):
+                d2 = u * u + h * h
+                if d2 <= 16: V[(u, -1, h)] = 'iron'
+                if d2 <= 6: V[(u, -2, h)] = 'iron_l'
+    if kind == 'shield':               # a round shield: planks, an iron rim, an iron boss, facing forward (-w)
+        R = 26
         for u in range(-R, R + 1):
             for h in range(-R, R + 1):
                 d2 = u * u + h * h
@@ -997,7 +1013,7 @@ def iron_item(kind):
     carry, hands, stance = IRON[kind]
     def fn(F, Pb, Pc):
         P = {}
-        if carry in ('shield', 'buckler') or stance == 'bow':     # the off hand: held out in front by the stance
+        if carry in ('shield', 'tower') or stance == 'bow':     # the off hand: held out in front by the stance
             x0, x1, ay0, au0, al0, h0 = F['arms']['l']; AW = F['AW']
             gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
             V = iron_shape(kind, 999)
@@ -1008,8 +1024,11 @@ def iron_item(kind):
             return P
         x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
         gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0
-        if kind == 'staff':           # upright in the fist, its foot on the ground beside the bearer
-            V = iron_shape(kind, gz - 3)
+        if kind == 'staff':           # upright in the fist held at the chest (the elbow bent), its foot on the ground in
+            # front: the foot reaches below the hanging fist by about the height the bent arm lifts it (equipment.gd
+            # _upright sets it on the ground exactly)
+            lift = round((2 * (F['arms']['r'][3] - F['arms']['r'][4]) + 6) * 0.83)
+            V = iron_shape(kind, gz - 3 + lift)
             P['weapon@hand_r#2'] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
             return P
         V = iron_shape(kind, 52 if stance == 'polearm' else gz - 2)
@@ -1033,8 +1052,9 @@ def iron_item(kind):
             P['weapon_hip@torso#2'] = {(2 * TW - 4 + u, 2 * TD + 4 + w, 2 * hip - 22 + h): c for (u, w, h), c in V.items()}
         elif where == 'shield':       # flat on the back, its face and boss outward
             P['weapon_offback@torso#2'] = {(2 * cx + u, 2 * TD + 4 - w, 2 * (top - 12) + h): c for (u, w, h), c in V.items()}
-        elif where == 'buckler':      # hung on the right hip
-            P['weapon_offhip@torso#2'] = {(-2 - w, 2 * TD // 2 + u, 2 * hip - 4 + h): c for (u, w, h), c in V.items()}
+        elif where == 'tower':        # slung on the back, its foot a hand above the ground
+            z0 = max(2 * top - 44, 6 - lo)
+            P['weapon_offback@torso#2'] = {(2 * cx + u, 2 * TD + 4 - w, z0 + h): c for (u, w, h), c in V.items()}
         else:                         # across the back, tilted; long ones lifted so they clear the ground
             z0 = max(2 * (hip + 10), 4 - lo)
             P['weapon_back@torso#2~z35'] = {(2 * cx + u, 2 * TD + 10 + w, z0 + h): c for (u, w, h), c in V.items()}
