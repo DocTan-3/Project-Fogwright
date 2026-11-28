@@ -35,3 +35,8 @@ marked on the ground while it winds up, coloured by what counters it:
   reload), shortbow, brass wand (spends Fog shards).
 - Skill-tree perks to try (toggle): **F5** block heavy blows, **F6** dodge through combos, **F7** parry projectiles,
   **F8** dash instead of roll, **F10** dodging reloads a gun, **F11** cheaper blocks.
+
+**Camera test.** The game now starts with an Albion-style camera: high above you, looking down. Move with WASD; your
+attacks and aim go toward the mouse cursor; the mouse wheel zooms (it tilts lower as you zoom in); hold the middle mouse
+button to turn the view. Walls and roofs between the camera and you are cut away. **F3** switches to the close
+third-person camera and back.
