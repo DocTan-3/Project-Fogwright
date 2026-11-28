@@ -15,6 +15,9 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
 - **Also decided:** a one-hour day; two pools (stamina and energy); dodge and block on their own buttons; the Writ and
   Censors are lore only for now; lanterns burn easy-to-craft oil; a **Skyrim-style compass** across the top of the
   screen, where Merrith's thread shows as a gold mark; design.md rewritten to match.
+- **Economy (decided):** one global market whose stock spreads between cities (local buys instant, imports take
+  time); listing fee plus sales tax; NPC merchants with weaker but always-available stock; regional prices; a direct
+  trade window; a later vending-stall skill node (one per player, trading districts, sells a few hours offline).
 
 ## Core mechanics (decided 2026-11-28)
 
@@ -230,18 +233,25 @@ Zarhim and Ruadhan start with a small bonus to taming, as the peoples known for 
 **Mounts** (design.md plans them): horses first, then larger beasts. Fogtouched beasts can never be tamed, except by
 Oriel's chosen with the Ride move, for a while.
 
-## Trade, cargo and the economy
+## Trade, cargo and the economy *(decided 2026-11-28)*
 
-- **Prices follow the lore's gradient:** food is cheap near Aldrath and dear at the edges; ores, furs, timber, spices
-  and relics are cheap where they come from and dear at the centre. Each port's trader shows a few goods "in demand".
-- **Cargo (decided):** goods have weight. Warps and the warp bag have a **weight limit that grows over time** (bag
-  upgrades and progression), so early on **bulk trade goods** (crates, barrels, bales) must go by cart, mount or ship,
-  and later players can carry more through. This makes the ships and
-  roads in design.md matter, and gives non-fighting players a real job.
-- **Trade runs** as quests and as free play: buy at one port, ship to another. Ships can be attacked at sea.
-- **One coin** (decided) everywhere.
-- **Player trade** (design.md: gear is the build, so gear is traded): a market board in each city, and stalls in the
-  Aldrath market for players later.
+- **One global market.** Every city's market board lists the same world-wide pool of player listings. Listed stock
+  slowly **spreads out** to other cities over time (list 100 potions in one city and they drift across many).
+  Buying stock that is already in your city is **instant**; buying stock that sits elsewhere is an **import** that
+  takes time to arrive.
+- **Fees:** a small **listing fee** to post, and a **sales tax** taken when it sells. Both take coin out of the game.
+- **NPC merchants** sell their **own stock**. It is weaker than player-made gear and its price follows supply and
+  demand, so it can cost more, but it is **always there to buy**. Late-game player crafts are far better.
+- **Regional prices** follow local supply and demand: food is cheap near Aldrath and dear at the edges; ores, furs,
+  timber, spices and relics are cheap where they come from and dear at the centre.
+- **Cargo (decided):** goods have weight. Warps and the warp bag have a **weight limit that grows over time**, so
+  early on bulk goods (crates, barrels, bales) go by cart, mount or ship. Carrying goods yourself beats waiting on
+  an import, which gives haulers and non-fighting players a real job.
+- **Player to player:** a **direct trade window** for face-to-face swaps.
+- **Vending stall (later, skill node):** a contraption that sets up a stall and sells for you, like a merchant.
+  **One per player**, only in **trading districts**, and it keeps selling for **a few hours after you log out**,
+  then packs up.
+- **One coin**, the mark (decided).
 
 ## Reputation
 

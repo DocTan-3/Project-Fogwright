@@ -418,6 +418,18 @@ The overworld stays persistent and shared. Breaches are private instances for th
 
 **Scope:** an entrance spawn system, a room-stitching generator, instance servers, groups and a starting set of 15 to 25 room templates. Room templates are small layouts of code-built pieces, so download size barely changes.
 
+## Economy and trade *(decided 2026-11-28)*
+
+- One coin, the mark. One **global market**: listings are world-wide and slowly spread to other cities. Local stock
+  is bought instantly; stock from elsewhere is imported and takes time.
+- Posting costs a **listing fee**; sales pay a **tax**.
+- **NPC merchants** sell their own, weaker stock at supply-and-demand prices. Always available, often dearer;
+  late-game player crafts beat them by far.
+- **Regional prices** follow local supply (food cheap near Aldrath, raw goods cheap where they come from).
+- Goods have weight and the warp limit grows over time, so early bulk goods travel by cart, mount or ship.
+- Players trade face to face through a **trade window**. A later skill node gives a **vending stall**: one per
+  player, trading districts only, keeps selling a few hours after logout.
+
 ## Survival and settlers
 
 Survival is detailed enough to create stories but simple enough to read at a glance on a phone.
