@@ -66,3 +66,35 @@ The approved look is the stylized Hrimfolk man. Every other people starts from h
 - **Animation:** none yet. Parts are rigid and pivot at joints, and animation adds to the rest pose (`get_meta("rest")`).
 - **Metrics:** a 1.6 m stylized character, against the research's 1.8 m person and 2.4 m door. The current proposal is
   doors of about 2.2 × 1.4 m for the WoW camera.
+
+## Handoff: where the character work stands
+
+**Branches:** `character-system` (this work, branched from `voxel`); design decisions are on `main` (`docs/design.md`
+Character pipeline and Equipment, `docs/weapons.md`). The paused Farhallow Skyrim-scale plan is on
+`farhallow-skyrim-scale` (its game checker not yet run).
+
+**Done**
+- Generator for all eight peoples, both sexes (`make_character.py`): builds, colours, marks, carved 1.25 cm heads,
+  women's proportions, base bodies in underwear plus a starting-clothes layer, body measurements in `build.frame`.
+- Equipment as recipes fitted to every body (`make_equipment.py`, `godot/scripts/voxel/equipment.gd`,
+  `godot/data/equipment.json`): five armour tiers, colossus arms and gauntlets (they are the weapon: they take both
+  hands), back arms (claw, saw, bulwark, twin cannons) on a pack or a spine, a basic common item in every slot.
+- Farhallow tools (hatchet, fisher's spear, smith's hammer, the old blade, boat hook, cleaver, pitchfork) in hand and
+  carried; two idle stances (weapons put away; drawn, by weapon class); polearms carried low with the haft through the
+  fist and the wrist aiming it.
+- Checks: `tests/voxel_equipment.tscn` prints `GROUND FAIL` for anything below the ground (clean now);
+  `tests/voxel_polearm.tscn` for polearm grips; `tests/voxel_peoples.tscn` for the lineup and faces.
+
+**Rendering here:** the test scenes need a display: start `Xvfb :99 -screen 0 2400x1000x24 &` and run Godot with
+`DISPLAY=:99`. Godot rewrites `godot/project.godot` when run; restore it (`git checkout godot/project.godot`).
+
+**Next, in the order discussed**
+1. The character builder: about 6 face presets per people and sex (eyes, nose, mouth, brows, expression, marks) and
+   sliders within each people's range.
+2. The rest of the weapon list: the Wayfolk common iron set (every type), then fist weapons, harpoon and grapple guns,
+   mechanical melee (epic and up).
+3. Off-hand items (shields, bucklers) so the off hand has something to hold in the drawn stance.
+4. Rebuild the approved Hrimfolk (`make_stylized.py`) from the generator; its skin is too bright for the game's light.
+5. Later: trim triangles (the basics outfit is about 8,000; over budget, accepted for now); animate back arms (the
+   importer needs pieces chained off other pieces); the design doc's slot table should say colossus pieces fill the
+   hands (weapons.md already does).
