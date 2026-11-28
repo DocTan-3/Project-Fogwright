@@ -42,7 +42,8 @@ PEOPLES = {
 }
 WOMAN = dict(UL=0, LL=0, TH=-2, TW=-2, TD=-1, AW=-1, AU=-1, AL=-1, LW=-1)
 # a woman's frame: shoulders pulled in (SH), hips at full width, a defined waist, a bust, smaller hands and feet, a softer jaw
-HEAD = {'ilvari': (12, 12)}   # narrower, shallower heads (width, depth); others 14 x 13
+HEAD = {'ilvari': (24, 22)}   # narrower, shallower heads (width, depth, in 1.25 cm voxels); men 28 x 26, women 24 x 24
+EXPR = {}   # (people, sex) -> stern, grim, calm, smile; men default stern, women calm (presets will set it)
 
 def tone(c, f): return tuple(max(0, min(255, int(v * f))) for v in c)
 def build(people, sex):
@@ -50,13 +51,13 @@ def build(people, sex):
     if sex == 'f':
         for k, v in WOMAN.items(): p[k] += v
     hair_col = p['hair_f' if sex == 'f' else 'hair_m']
-    PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': p['eye'], 'eye_d': tone(p['eye'], 0.55),
+    PAL = {'skin': p['skin'], 'skin_d': tone(p['skin'], 0.86), 'skin_l': tone(p['skin'], 1.07), 'eye_w': (206, 198, 188), 'eye': p['eye'], 'eye_d': tone(p['eye'], 0.55), 'pupil': (26, 22, 22), 'lid': tone(p['skin'], 0.7), 'nostril': tone(p['skin'], 0.5), 'lip_d': tone(p['skin'], 0.55) if sex == 'm' else (120, 58, 54),
            'brow': tone(hair_col, 0.7), 'hair': hair_col, 'hair_d': tone(hair_col, 0.72), 'hair_l': tone(hair_col, 1.25),
            'lip': tone(p['skin'], 0.62) if sex == 'm' else (150, 78, 70), 'scar': tone(p['skin'], 1.12),
            'tunic': p['tunic'], 'tunic_d': tone(p['tunic'], 0.76), 'leather': p['leather'], 'leather_d': tone(p['leather'], 0.72),
            'trousers': p['trousers'], 'trousers_d': tone(p['trousers'], 0.78), 'boots': (84, 52, 32), 'boots_d': (60, 36, 22),
            'iron': (128, 132, 136), 'iron_d': (90, 92, 96), 'bead': (176, 150, 96),
-           'ink': (56, 116, 210), 'tattoo': (40, 58, 56), 'vein': tone(p['skin'], 0.7), 'soot': tone(p['skin'], 0.55), 'freckle': tone(p['skin'], 0.78), 'stub': tone(p['skin'], 0.8), 'cheek': (min(255, p['skin'][0] + 12), int(p['skin'][1] * 0.86), int(p['skin'][2] * 0.86))}
+           'ink': (56, 116, 210), 'tattoo': (40, 58, 56), 'vein': tone(p['skin'], 0.7), 'soot': tone(p['skin'], 0.55), 'freckle': tone(p['skin'], 0.78), 'stub': tone(p['skin'], 0.88), 'cheek': (min(255, p['skin'][0] + 12), int(p['skin'][1] * 0.86), int(p['skin'][2] * 0.86))}
     P = {}
     def put(part, x, y, z, c): P.setdefault(part, {})[(x, y, z)] = c
     def rbox(part, x0, x1, y0, y1, z0, z1, c, bev=1, top_bev=False):
@@ -130,115 +131,180 @@ def build(people, sex):
                 if p['mark'] == 'soot' and k == 1: put('arm_lower_' + side, x, ay0, z, 'soot')
                 if p['mark'] == 'ink' and side == 'l' and x == x0 + AW // 2: put('arm_lower_' + side, x, ay0, z, 'ink')
                 if p['mark'] == 'freckles' and k == 2 and z % 2: put('arm_lower_' + side, x, ay0, z, 'freckle')
-    # ---- the head: 14 wide, 13 deep, 15 tall, the face drawn on its front
-    HW, HD = HEAD.get(people, (12, 12) if sex == 'f' and people != 'ferrin' else (14, 13)); HH = 15; HX0 = (TW - HW) // 2; HY0 = -2; HZ0 = top + 1   # women: narrower heads (Ferrin stay broad)
-    F = [list(row) for row in (
-        "..SSSSSSSSSS..", ".SSSSSSSSSSSS.", "SSSSSSSSSSSSSS", "SSSSSSSSSSSSSS", "SSSSSSSSSSSSSS",
-        "SnnnnSSSSnnnnS", "SSWPSSSSSSPWSS", "SSWPSSNNSSPWSS", "SSSSSSNNSSSSSS", "SSSSSnNNnSSSSS",
-        "SSSSSSSSSSSSSS", "SSSSSLLLLSSSSS", "SSSSSSSSSSSSSS", ".SSSSSSSSSSSSS."[:14], "..SSSSSSSSSS..")]
-    if sex == 'f':
-        F[9] = list("SSSSSSNNSSSSSS"); F[11] = list("SSSSSLLLLSSSSS"); F[12] = list(".SSSSSSSSSSSS."); F[13] = list("..SSSSSSSSSS.."); F[14] = list("...SSSSSSSS...")
-        F[6] = list("SEWPSSSSSSPWES")      # lashes at the outer corners
-        F[5] = list("SSnnSSSSSSnnSS")
+    # ---- the head, at half-size voxels (1.25 cm, part "head#2"): the same size as before, twice the detail. Everything here
+    # is in fine units, drawn from the face's centre line so any head width works. c: column as you face the character
+    # (0 = your left), v: row from the top, d: depth from the face. Expressions: brows and mouth corners (EXPR).
+    W, D = HEAD.get(people, (24, 24) if sex == 'f' and people != 'ferrin' else (28, 26)); H = 30
+    if people in HEAD and sex == 'f': W, D = W - 2, D - 2
+    X0 = TW - W // 2; Y0 = -4; Z0 = (top + 1) * 2
+    expr = EXPR.get((people, sex), 'stern' if sex == 'm' else 'calm')
     hair_m, hair_f = p['hair']; hs = hair_f if sex == 'f' else hair_m
-    if hs != 'shaved':
-        for r in range(0, 3):
-            for i in range(14):
-                if F[r][i] == 'S': F[r][i] = 'H'
-        if hs in ('long', 'braids', 'crown', 'bun'):
-            for r in range(3, 9): F[r][0] = 'H'; F[r][13] = 'H'
-    else:
-        F[1] = list(".SSSTTSSSTTSS."); F[2] = list("SSSSSTTTTSSSSS")
     beard = p['beard'] if sex == 'm' else None
-    if beard in ('full_braid', 'big'):
-        F[10] = list("SRRSMMMMMMSRRS"); F[11] = list("SRRRMLLLLMRRRS"); F[12] = list("RRRRRRRRRRRRRR"); F[13] = list(".RRRRRRRRRRRR."); F[14] = list("..RRRRRRRRRR..")
-    elif beard == 'short':
-        F[10] = list("SSSSMMMMMMSSSS"); F[11] = list("SRRRMLLLLMRRRS"); F[12] = list("SRRRRRRRRRRRRS"); F[13] = list(".RRRRRRRRRRRR."); F[14] = list("..RRRRRRRRRR..")
-    elif beard == 'moustache':
-        F[10] = list("SSSSMMMMMMSSSS")
-    elif beard == 'stubble':
-        for r in (11, 12, 13):
-            for i in range(14):
-                if F[r][i] == 'S' and 2 <= i <= 11: F[r][i] = 'D'
-    if people == 'hrimfolk':   # wind-burnt cheeks
-        for r, i in ((8, 2), (8, 3), (9, 2), (8, 10), (8, 11), (9, 11)): F[r][i] = 'C' if F[r][i] == 'S' else F[r][i]
-    if p['mark'] == 'ink':      # Ilvari: lines of blue ink down from the eyes and across the brow
-        for r in (8, 9, 10): F[r][3] = 'K'; F[r][10] = 'K'
-        for i in (5, 6, 7, 8): F[3][i] = 'K'
-    if p['mark'] == 'soot':
-        for r, i in ((8, 2), (9, 3), (9, 2), (8, 11), (10, 10)): F[r][i] = 'D' if F[r][i] == 'S' else F[r][i]
+    HP = 'head#2'
+    def X(c): return X0 + W - 1 - c
+    def Z(v): return Z0 + H - 1 - v
+    def hput(part, c, d, v, col): put(part, X(c), Y0 + d, Z(v), col)
+    mid = W // 2; gap = 2 * (W // 8) + 2
+    EYES = (mid - gap // 2 - 6, mid + gap // 2)          # first column of each eye
+    MW = 4 if sex == 'm' else 3                         # half the mouth's width
+    def inset(v):                                       # the jaw narrowing toward the chin
+        if sex == 'f' and people != 'ferrin': return max(0, (v - 20) // 2)
+        return max(0, (v - 25) // 2)
+    def hair_at(c, d, v):
+        side = c < 2 or c > W - 3
+        if hs == 'shaved': return False
+        if v < 4 or (v < 6 and d < 3 and (c * 5) % 4 != 0): return True          # the top and an uneven hairline
+        if d >= D * 0.5 and v < 17: return True                                 # back and upper sides
+        if d >= D - 3 and v < 21: return True                                   # the nape
+        if side and v < 11 and d >= 2: return True                              # temples
+        if hs in ('long', 'braids', 'crown', 'bun') and side and v < 25: return True    # framing the face, over the ears
+        if hs in ('long', 'braids', 'crown', 'bun') and d >= D * 0.4 and v < 26: return True
+        return False
+    def beard_at(c, d, v):
+        if beard not in ('full_braid', 'big', 'short'): return False
+        side = c < 2 or c > W - 3
+        if side and v >= 13 and d < D * 0.6: return True                        # sideburns
+        if d < D * 0.6 and v >= 26: return True                                 # the chin and jaw
+        if d < D * 0.5 and v >= 21 and not (mid - MW - 1 <= c <= mid + MW) and (c < EYES[0] + 2 or c > EYES[1] + 3 or v >= 22): return True
+        return False
+    marks = {}     # (c, v) -> colour on the face's front
+    # eyes: 6 x 4 - a lid, the iris with its pupil and a catch-light, the lower iris in shadow
+    EYE = ["LLLLLL", "WIPPIW", "WIPPIW", ".QQQQ."] if sex == 'm' else ["ELLLLE"[::-1], "WIPPIW", "WIPPIW", ".QQQQ."]
+    EV = 13
+    for k, c0 in enumerate(EYES):
+        for r, row in enumerate(EYE):
+            line = row if k == 1 else row[::-1]
+            for i, ch in enumerate(line):
+                if ch != '.': marks[(c0 + i, EV + r)] = {'L': 'lid', 'E': 'brow', 'W': 'eye_w', 'I': 'eye', 'P': 'pupil', 'Q': 'eye_d'}[ch]
+        marks[(c0 + 2, EV + 1)] = 'eye_w'          # the catch-light, on the same side in both eyes (one light)
+        if sex == 'f': marks[(c0 - 1 if k == 0 else c0 + 6, EV)] = 'brow'    # lashes flick out at the outer corner
+    # nose: a bridge, a broader tip, nostrils, the shadow under it
+    for v in range(15, 22): marks[(mid - 1, v)] = marks[(mid, v)] = 'skin_l' if v < 20 else 'skin'
+    for c in (mid - 2, mid + 1): marks[(c, 20)] = 'skin'; marks[(c, 21)] = 'nostril'
+    for c in range(mid - 2, mid + 2): marks[(c, 22)] = 'skin_d'
+    # mouth: an upper lip line, a fuller lower lip; corners set the expression
+    for c in range(mid - MW, mid + MW): marks[(c, 24)] = 'lip_d'; marks[(c, 25)] = 'lip' if (sex == 'f' or abs(c - mid + 0.5) < MW - 1) else 'skin_d'
+    if sex == 'f':
+        for c in range(mid - MW + 1, mid + MW - 1): marks[(c, 23)] = 'lip'
+    cy = {'smile': 23, 'stern': 25, 'calm': 24, 'grim': 25}[expr]
+    marks[(mid - MW - 1, cy)] = marks[(mid + MW, cy)] = 'lip_d'
+    if expr == 'smile':
+        for c in (mid - MW - 1, mid + MW): marks[(c, 20)] = 'skin_d'    # the cheeks lift
+    marks.update({(c, 28): 'skin_d' for c in range(mid - 2, mid + 2)} if sex == 'm' else {})   # a cleft under the lip
+    # people's marks
+    if people == 'hrimfolk':
+        for c in (EYES[0] - 1, EYES[0], EYES[1] + 5, EYES[1] + 6):
+            for v in (18, 19): marks[(c, v)] = 'cheek'
+    if p['mark'] == 'ink':      # lines of blue ink from under each eye, a chevron on the brow
+        for c in (EYES[0] + 2, EYES[1] + 3):
+            for v in range(17, 24): marks[(c, v)] = 'ink'
+        for i in range(4): marks[(mid - 1 - i, 6 + i)] = marks[(mid + i, 6 + i)] = 'ink'
     if p['mark'] == 'freckles':
-        for r, i in ((8, 2), (8, 4), (9, 3), (8, 10), (8, 12), (9, 11)): F[r][i] = 'F' if F[r][i] == 'S' else F[r][i]
+        for c in range(EYES[0] - 1, EYES[1] + 7):
+            for v in (17, 18, 19):
+                if (c * 7 + v * 3) % 5 == 0 and (c, v) not in marks: marks[(c, v)] = 'freckle'
+    if p['mark'] == 'soot':
+        for c, v in ((EYES[0], 18), (EYES[0] + 1, 19), (EYES[0] + 2, 18), (EYES[1] + 4, 19), (EYES[1] + 5, 18), (mid + 4, 4), (mid + 5, 5)): marks[(c, v)] = 'soot'
     if p['mark'] == 'veins':
-        for r, i in ((3, 2), (4, 2), (4, 3), (9, 12), (10, 12), (10, 11)): F[r][i] = 'V' if F[r][i] == 'S' else F[r][i]
-    if HW == 12: F = [row[:1] + row[2:12] + row[13:] for row in F]
-    F[7] = ['Q' if ch == 'P' else ch for ch in F[7]]
-    KEY = {'S': 'skin', 'T': 'tattoo', 'H': 'hair', 'W': 'eye_w', 'P': 'eye', 'N': 'skin', 'n': 'skin_d', 'M': 'hair_d', 'L': 'lip',
-           'R': 'hair', 'D': 'stub' if beard == 'stubble' else 'soot', 'K': 'ink', 'F': 'freckle', 'V': 'vein', 'C': 'cheek', 'E': 'brow', 'Q': 'eye_d'}
-    for row in range(HH):
-        z = HZ0 + HH - 1 - row
-        for i in range(HW):
-            ch = F[row][i]
-            if ch == '.': continue
-            x = HX0 + HW - 1 - i
-            for y in range(HY0, HY0 + HD):
-                if i in (0, HW - 1) and y in (HY0, HY0 + HD - 1): continue
-                deep = y - HY0
-                if deep == 0: c = KEY[ch]
-                elif ch == 'R' and deep <= 7: c = 'hair_d' if deep >= 5 else 'hair'
-                elif hs == 'shaved' and row <= 3 and (x + y) % 5 == 0 and deep >= 2: c = 'tattoo'
-                elif hs != 'shaved' and (row <= 2 or (deep >= HD - 4 and row <= (11 if hs in ('long', 'braids', 'crown', 'bun') else 8))
-                                         or (i in (0, HW - 1) and row <= (9 if hs != 'crop' else 4))): c = 'hair'
-                else: c = 'skin'
-                put('head', x, y, z, c)
-    for row in range(HH):     # the nose and moustache stand out; a full beard too
-        z = HZ0 + HH - 1 - row
-        for i in range(HW):
-            ch = F[row][i]; x = HX0 + HW - 1 - i
-            if ch == 'N' or ch == 'M' or (ch == 'R' and row >= 12): put('head', x, HY0 - 1, z, 'skin' if ch == 'N' else ('hair_d' if ch == 'M' else 'hair'))
-    for side in (HX0 - 1, HX0 + HW):     # ears (under long hair)
-        for z in (HZ0 + 6, HZ0 + 7, HZ0 + 8):
-            for y in (HY0 + 5, HY0 + 6): put('head', side, y, z, 'hair' if hs in ('long', 'braids', 'crown') else ('skin_d' if z == HZ0 + 6 else 'skin'))
-    # brows: their own tilted pieces
-    tilt = 10 if sex == 'f' else 14
-    for name, xs in (('brow_l@head~z%d' % tilt, range(HX0 + HW - 5, HX0 + HW - 1)), ('brow_r@head~z-%d' % tilt, range(HX0 + 1, HX0 + 5))):
-        for x in xs:
-            for z in ((HZ0 + 9,) if sex == 'f' else (HZ0 + 9, HZ0 + 10)):
-                for y in (HY0 - 1, HY0): put(name, x, y, z, 'brow')
+        for c, v in ((1, 8), (2, 9), (2, 10), (3, 11), (W - 2, 9), (W - 3, 10), (W - 3, 11), (W - 4, 12)): marks[(c, v)] = 'vein'
+    if people == 'hrimfolk' and sex == 'm':    # the approved man's scar, through his left brow and down the cheek
+        for v in range(10, 21):
+            if not (EV <= v <= EV + 3): marks[(EYES[1] + 4, v)] = 'scar'
+    if beard == 'stubble':
+        for c in range(W):
+            for v in range(21, H):
+                if (c, v) not in marks and (c < mid - MW - 1 or c > mid + MW or v >= 26) and inset(v) <= c < W - inset(v): marks[(c, v)] = 'stub'
+    # the face carved, not only painted: how far in the face's surface sits at each point (0 = the front plane,
+    # 1 = cut one voxel in). Eye sockets under the brow ridge, sides turning back, cheekbones, mouth corners pressed in.
+    def front(c, v):
+        e = min(c, W - 1 - c)                                   # distance from the face's side
+        if v < 3: return 1                                      # the forehead turns over into the crown
+        for c0 in EYES:                                         # the sockets: the eye sits in, under the brow
+            if c0 <= c < c0 + 6 and EV <= v <= EV + 3: return 1
+        if people == 'penitent' and 20 <= v <= 22 and 3 <= e <= 4: return 1     # gaunt: hollow cheeks
+        if v >= 27 and e < 4: return 1                          # the jaw narrows to the chin
+        if v in (24, 25) and abs(c - mid + 0.5) == MW + 0.5 and not beard_at(c, 0, v): return 1   # mouth corners
+        return 0
+    # the head's volume
+    for v in range(H):
+        a = inset(v)
+        for c in range(a, W - a):
+            fr = front(c, v)
+            for d in range(fr, D):
+                ec = c - a < 2 or W - 1 - a - c < 2; ed = d < 2 or d >= D - 2
+                if ec and ed and not ((c - a in (1,) or W - 1 - a - c == 1) and (d in (1, D - 2))): continue    # rounded vertical edges
+                if v == 0 and (ec or ed): continue
+                if hair_at(c, d, v): col = 'hair_l' if v < 2 and c % 4 == 1 else ('hair_d' if (c + d) % 4 == 0 else 'hair')
+                elif beard_at(c, d, v): col = 'hair_d' if c % 3 == 0 else 'hair'
+                elif d == fr and (c, v) in marks: col = marks[(c, v)]
+                elif hs == 'shaved' and (d >= 3 or v < 3) and d > fr - 1 and ((v in (5, 8) and (c + d) % 4 != 3) or (v in (6, 7) and (c + d + v) % 4 == 0) or (v == 0 and abs(c - mid + 0.5) + abs(d - D / 2) in (3, 3.5, 4.5, 6) )): col = 'tattoo'
+                else: col = 'skin'
+                hput(HP, c, d, v, col)
+    # what stands proud of the face: the nose, a moustache, the front of a full beard
+    for v in range(16, 22):
+        for c in ((mid - 1, mid) if v < 20 else (mid - 2, mid - 1, mid, mid + 1)): hput(HP, c, -1, v, 'skin' if v < 21 else 'skin_d')
+    hput(HP, mid - 1, -2, 20, 'skin'); hput(HP, mid, -2, 20, 'skin')
+    if beard in ('moustache', 'full_braid', 'big', 'short'):
+        for c in range(mid - MW - 1, mid + MW + 1): hput(HP, c, -1, 23, 'hair_d'); hput(HP, c, -1, 22, 'hair') if abs(c - mid + 0.5) < MW else None
+        if beard != 'moustache':
+            for c in (mid - MW - 1, mid + MW): hput(HP, c, -1, 24, 'hair_d'); hput(HP, c, -1, 25, 'hair_d')
+    if beard in ('full_braid', 'big', 'short'):
+        for v in range(26, H):
+            a = inset(v)
+            for c in range(a + 1, W - a - 1): hput(HP, c, -1, v, 'hair_d' if c % 3 == 0 else 'hair')
+    if sex == 'f':      # a fuller lower lip, raised
+        for c in range(mid - MW + 1, mid + MW - 1): hput(HP, c, -1, 25, 'lip')
+    elif beard in (None, 'stubble', 'moustache'):      # a jutting chin
+        for c in range(mid - 3, mid + 3):
+            for v in (27, 28): hput(HP, c, -1, v, 'stub' if beard == 'stubble' else 'skin')
+    # ears (under long hair)
+    for c, cc in ((-1, 'l'), (W, 'r')):
+        for v in range(13, 20):
+            for d in range(D // 2 - 3, D // 2 + 1):
+                covered = hs in ('long', 'braids', 'crown', 'bun') or beard_at(0, d, v)
+                hput(HP, c, d, v, 'hair' if covered else ('skin_d' if (d == D // 2 - 2 and 14 < v < 19) else 'skin'))
+    # brows: their own pieces, tilted by the expression (men heavier)
+    tilt = {'stern': 14, 'grim': 18, 'calm': 4, 'smile': -4}[expr]
+    for name, c0 in (('brow_r@head#2~z%d' % -tilt, EYES[1] - 1), ('brow_l@head#2~z%d' % tilt, EYES[0] - 1)):
+        for c in range(c0, c0 + 8):
+            if people == 'hrimfolk' and sex == 'm' and c == EYES[1] + 4: continue     # the scar cuts the brow
+            for v in ((10, 11) if sex == 'm' or people == 'ferrin' else (11,)):
+                for d in (-1, 0): hput(name, c, d, v, 'brow')
     # ---- hair pieces
-    if hs == 'long':     # down the back to the shoulders
-        for z in range(HZ0 - 6, HZ0 + 6):
-            for x in range(HX0 + 1, HX0 + HW - 1):
-                for y in (HY0 + HD - 1, HY0 + HD): put('hair@head', x, y, z, 'hair_d' if (x + z) % 4 == 0 else 'hair')
-    if hs == 'braids':   # two braids forward over the shoulders, with rings
-        for bx in (HX0, HX0 + HW - 2):
-            for k in range(12):
-                z = HZ0 + 3 - k
-                for x in (bx, bx + 1):
-                    c = 'iron' if k in (3, 9) else ('hair_l' if (x + k) % 2 else 'hair_d')
-                    put('braids@head~x-6', x, HY0 + 4, z, c); put('braids@head~x-6', x, HY0 + 5, z, c)
+    if hs in ('long', 'braids'):     # down the back
+        for v in range(H, H + (16 if hs == 'long' else 8)):
+            for c in range(2, W - 2):
+                for d in (D - 4, D - 3, D - 2, D - 1): hput('hair@head#2', c, d, v, 'hair_d' if (c * 3) % 5 == 0 else 'hair')
+    if hs == 'braids':   # two braids forward over the shoulders, ringed in iron
+        for c0 in (0, W - 3):
+            for k in range(22):
+                for c in (c0, c0 + 1, c0 + 2):
+                    col = 'iron' if k in (5, 17) else ('hair_l' if (c + k) % 3 == 0 else ('hair_d' if (c + k) % 3 == 1 else 'hair'))
+                    for d in (D // 2 - 3, D // 2 - 2, D // 2 - 1): hput('braids@head#2~x-6', c, d, 22 + k, col)
     if hs == 'bun':
-        rbox('bun@head', HX0 + HW // 2 - 3, HX0 + HW // 2 + 2, HY0 + HD - 1, HY0 + HD + 3, HZ0 + 9, HZ0 + 13, 'hair')
-    if hs == 'crown':    # Ferrin women: braids wound round the head
-        for x in range(HX0, HX0 + HW):
-            for y in (HY0 + 1, HY0 + HD - 2):
-                put('crown@head', x, y, HZ0 + HH - 3, 'hair_l' if x % 2 else 'hair_d')
-        for y in range(HY0 + 1, HY0 + HD - 1):
-            for x in (HX0 - 1, HX0 + HW): put('crown@head', x, y, HZ0 + HH - 3, 'hair_l' if y % 2 else 'hair_d')
-    # ---- beards that hang
+        for c in range(mid - 5, mid + 5):
+            for d in range(D - 1, D + 6):
+                for v in range(-2, 8):
+                    if abs(c - mid + 0.5) + abs(v - 3) * 0.8 + abs(d - D - 2) * 0.6 < 7: hput('bun@head#2', c, d, v, 'hair_d' if (c + v) % 4 == 0 else 'hair')
+    if hs == 'crown':    # braids wound round the head
+        for c in range(-1, W + 1):
+            for d in (-1, D):
+                for v in (5, 6, 7): hput('crown@head#2', c, d, v, 'hair_l' if (c + v) % 3 == 0 else 'hair_d')
+        for d in range(0, D):
+            for c in (-1, W):
+                for v in (5, 6, 7): hput('crown@head#2', c, d, v, 'hair_l' if (d + v) % 3 == 0 else 'hair_d')
+    # ---- beards that hang below the chin
+    if beard in ('full_braid', 'big'):
+        rows = 6 if beard == 'full_braid' else 14
+        for k in range(rows):
+            a = inset(H - 1) + 2 + k // 2
+            for c in range(a, W - a):
+                for d in range(-1, 7 - k // 4): hput('beard@head#2', c, d, H + k, 'hair_d' if c % 3 == 0 or d == 6 - k // 4 else 'hair')
     if beard == 'full_braid':
-        for k, (a, b) in enumerate(((3, 10), (4, 9))):
-            for x in range(HX0 + a, HX0 + b + 1):
-                for y in range(HY0 - 1, HY0 + 4): put('beard@head', x, y, HZ0 - 1 - k, 'hair_d' if (y == HY0 + 3 or (x + k) % 3 == 0) else 'hair')
-        for k in range(8):
-            for x in (HX0 + 6, HX0 + 7):
-                for y in (HY0 - 1, HY0):
-                    put('braid@head~x-10z4', x, y, HZ0 - 3 - k, 'iron' if k in (0, 5) else ('bead' if k == 2 else ('hair_l' if (x + k) % 2 else 'hair_d')))
-    if beard == 'big':   # Ferrin: a broad beard down the chest, braided at the sides
-        for k in range(6):
-            a, b = 2 + k // 2, 11 - k // 2
-            for x in range(HX0 + a, HX0 + b + 1):
-                for y in range(HY0 - 1, HY0 + 4): put('beard@head', x, y, HZ0 - 1 - k, 'hair_d' if (x + k) % 3 == 0 else 'hair')
+        for k in range(16):
+            for c in (mid - 1, mid):
+                col = 'iron' if k in (1, 11) else ('bead' if k in (4, 8) else ('hair_l' if (c + k) % 2 else 'hair_d'))
+                for d in (-1, 0, 1): hput('braid@head#2~x-10z4', c, d, H + 6 + k, col)
     return P, PAL
 
 OUT = os.path.join(HERE, '..', '..', 'godot', 'assets', 'voxel', 'characters', 'peoples')
@@ -249,5 +315,5 @@ if __name__ == '__main__':
             P, PAL = build(people, sex)
             mb.COL = PAL; mb.NAMES = list(PAL)
             mb.write(os.path.join(OUT, '%s_%s.vox' % (people, sex)), P)
-            zs = [z for part in P.values() for (_, _, z) in part]; xs = [x for part in P.values() for (x, _, _) in part]
+            zs = [z / (2 if '#2' in n else 1) for n, part in P.items() for (_, _, z) in part]; xs = [x / (2 if '#2' in n else 1) for n, part in P.items() for (x, _, _) in part]
             print('%-9s %s  %d voxels tall (%.2f m), %d across (%.2f m)' % (people, sex, max(zs) - min(zs) + 1, (max(zs) - min(zs) + 1) * 0.025, max(xs) - min(xs) + 1, (max(xs) - min(xs) + 1) * 0.025))
