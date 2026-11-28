@@ -4,6 +4,8 @@
 ## - A file is a scene of models; each named model becomes a part. Character parts animate as rigid pieces: parts named
 ##   head and torso pivot at their bottom centre, limbs (arm_upper_l, arm_lower_l, hand_l, leg_upper_l, leg_lower_l, foot_l
 ##   and _r) at their top centre; a lower limb hangs from its upper one, a hand from the lower arm, a foot from the lower leg.
+##   A part may be finer than the rest, named "<part>#<k>" (head#2: half-size voxels), its voxels and offset in its own
+##   units. Meshes are greedy-meshed: flat runs of one colour merge into large faces.
 ##   Modular gear is a part named "<piece>@<part>" (goggles@head, tank@torso): it rides on that part. Armour that replaces a
 ##   part (boots for the feet) is a file whose parts take the body part's name, loaded over the base.
 ## - Colours can be snapped to one palette (snap), so models from different packs match.
@@ -89,30 +91,65 @@ static func snap(c: Color, palette: Array) -> Color:
 		if dd < bd: bd = dd; best = p
 	return best
 
-## one part's mesh: every voxel face not covered by another voxel of the same part, coloured, with a little shade baked in
-## (faces lit from above, darker below); vertices relative to `pivot` (in voxels, file space), at `size` metres per voxel
-static func part_mesh(f: Dictionary, shape: Dictionary, pivot: Vector3, size: float, palette := []) -> ArrayMesh:
+## one part's mesh, greedy-meshed: for each of the six directions and each layer, the visible faces of one colour are
+## merged into the largest rectangles, so a flat run of skin or brass is two triangles, not two per voxel. Shade is baked
+## per direction (lit from above, darker below). Vertices relative to `pivot` (in base voxels, file space), `size` metres
+## per base voxel; a part made at `fine` times the base resolution (a head at 1.25 cm on a 2.5 cm body) has its voxels and
+## offset in its own finer units.
+static func part_mesh(f: Dictionary, shape: Dictionary, pivot: Vector3, size: float, palette := [], fine := 1) -> ArrayMesh:
 	var m: Dictionary = f.models[shape.model]; var v: PackedByteArray = m.voxels; var off: Vector3i = shape.offset
-	var filled := {}; _cmap = {}
+	var col_at := {}
 	for i in v.size() / 4:
-		var key := Vector3i(v[i * 4], v[i * 4 + 1], v[i * 4 + 2]); filled[key] = v[i * 4 + 3]
-		if m.has("colors"): _cmap[key] = m.colors[i]
+		var key := Vector3i(v[i * 4], v[i * 4 + 1], v[i * 4 + 2])
+		var c: Color = m.colors[i] if m.has("colors") else f.palette[v[i * 4 + 3] - 1]
+		if not palette.is_empty(): c = snap(c, palette)
+		col_at[key] = c
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	const DIRS := [[Vector3i(1, 0, 0), 0.86], [Vector3i(-1, 0, 0), 0.86], [Vector3i(0, 1, 0), 0.8], [Vector3i(0, -1, 0), 0.92], [Vector3i(0, 0, 1), 1.0], [Vector3i(0, 0, -1), 0.62]]
-	for k in filled:
-		var ci: int = filled[k]; var col: Color = f.palette[ci - 1] if not m.has("colors") else _cmap[k]
-		if not palette.is_empty(): col = snap(col, palette)
-		for dd in DIRS:
-			var n: Vector3i = dd[0]
-			if filled.has(k + n): continue
-			var shade: float = dd[1]
-			var corners := _face(k, n)
-			var gn := _g(Vector3(n))
-			st.set_color(Color(col.r * shade, col.g * shade, col.b * shade)); st.set_normal(gn)
-			var q := []
-			for cr in corners: q.append(_g(Vector3(cr) + Vector3(off) - pivot) * size)
-			for idx in [0, 2, 1, 0, 3, 2]: st.add_vertex(q[idx])   # Godot's front faces wind clockwise
+	const DIRS := [[0, 1, 0.86], [0, -1, 0.86], [1, 1, 0.8], [1, -1, 0.92], [2, 1, 1.0], [2, -1, 0.62]]   # axis, sign, shade
+	for dd in DIRS:
+		var ax: int = dd[0]; var sg: int = dd[1]; var shade: float = dd[2]
+		var ua := (ax + 1) % 3; var va := (ax + 2) % 3
+		var n := Vector3i.ZERO; n[ax] = sg
+		var layers := {}   # layer -> {Vector2i(u, v): colour} of the visible faces in it
+		for key in col_at:
+			var k: Vector3i = key
+			if col_at.has(k + n): continue
+			if not layers.has(k[ax]): layers[k[ax]] = {}
+			layers[k[ax]][Vector2i(k[ua], k[va])] = col_at[k]
+		for L in layers:
+			var mask: Dictionary = layers[L]
+			var done := {}
+			var cells := mask.keys(); cells.sort()
+			for c0 in cells:
+				var cv: Vector2i = c0
+				if done.has(cv): continue
+				var col: Color = mask[cv]
+				var w := 1
+				while mask.has(Vector2i(cv.x + w, cv.y)) and not done.has(Vector2i(cv.x + w, cv.y)) and mask[Vector2i(cv.x + w, cv.y)] == col: w += 1
+				var h := 1
+				var grow := true
+				while grow:
+					for du in w:
+						var q := Vector2i(cv.x + du, cv.y + h)
+						if not mask.has(q) or done.has(q) or mask[q] != col: grow = false; break
+					if grow: h += 1
+				for du in w:
+					for dv in h: done[Vector2i(cv.x + du, cv.y + dv)] = true
+				var corners := _rect(ax, sg, L, cv.x, cv.x + w, cv.y, cv.y + h)
+				st.set_color(Color(col.r * shade, col.g * shade, col.b * shade)); st.set_normal(_g(Vector3(n)))
+				var qv := []
+				for cr in corners: qv.append(_g((Vector3(cr) + Vector3(off)) / float(fine) - pivot) * size)
+				for idx in [0, 2, 1, 0, 3, 2]: st.add_vertex(qv[idx])   # Godot's front faces wind clockwise
 	return st.commit()
+
+## a merged face's corners: the layer L along `ax`, spanning u0..u1 and v0..v1 on the next two axes (x: y, z; y: z, x;
+## z: x, y), wound outward the same way as _face
+static func _rect(ax: int, sg: int, L: int, u0: int, u1: int, v0: int, v1: int) -> Array:
+	var d := L + 1 if sg > 0 else L
+	var P := func(u: int, vv: int) -> Vector3i:
+		var r := Vector3i.ZERO; r[ax] = d; r[(ax + 1) % 3] = u; r[(ax + 2) % 3] = vv; return r
+	if sg > 0: return [P.call(u0, v0), P.call(u1, v0), P.call(u1, v1), P.call(u0, v1)]
+	return [P.call(u0, v0), P.call(u0, v1), P.call(u1, v1), P.call(u1, v0)]
 
 ## a face's four corners (in voxel corner coordinates), wound to face outward after the axis change
 static func _face(k: Vector3i, n: Vector3i) -> Array:
@@ -151,14 +188,18 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 			f.models.append({"size": m.size, "voxels": v, "colors": cols})
 		for sh in g.shapes:
 			for k in range(f.shapes.size() - 1, -1, -1):
-				if f.shapes[k].name == sh.name: f.shapes.remove_at(k)
+				if f.shapes[k].name.get_slice("#", 0) == sh.name.get_slice("#", 0): f.shapes.remove_at(k)
 			f.shapes.append({"name": sh.name, "model": base_n + sh.model, "offset": sh.offset})
 	if _mat == null:
 		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0   # .vox colours are sRGB
-	var lo := Vector3(INF, INF, INF); var hi := -lo; var bounds := {}
-	for sh in f.shapes:
-		var m: Dictionary = f.models[sh.model]; var a := Vector3(sh.offset); var b := a + Vector3(m.size)
+	var lo := Vector3(INF, INF, INF); var hi := -lo; var bounds := {}; var fine := {}
+	var shapes := []   # names without the "#k" that marks a finer part; bounds in base voxels
+	for sh0 in f.shapes:
+		var sh: Dictionary = sh0.duplicate(); var k := int(sh.name.get_slice("#", 1)) if "#" in sh.name else 1
+		sh.name = sh.name.get_slice("#", 0); fine[sh.name] = maxi(1, k); shapes.append(sh)
+		var m: Dictionary = f.models[sh.model]; var a := Vector3(sh.offset) / float(fine[sh.name]); var b := a + Vector3(m.size) / float(fine[sh.name])
 		bounds[sh.name] = [a, b]; lo = lo.min(a); hi = hi.max(b)
+	f = f.duplicate(); f.shapes = shapes
 	var pivots := {}
 	for sh in f.shapes:
 		var a: Vector3 = bounds[sh.name][0]; var b: Vector3 = bounds[sh.name][1]
@@ -175,7 +216,7 @@ static func character(path: String, size := CHAR, palette := [], layers := []) -
 	var made := {}
 	for sh in f.shapes:
 		var node := MeshInstance3D.new(); node.name = sh.name
-		node.mesh = part_mesh(f, sh, pivots[sh.name], size, palette); node.material_override = _mat
+		node.mesh = part_mesh(f, sh, pivots[sh.name], size, palette, fine[sh.name]); node.material_override = _mat
 		made[sh.name] = node
 	for sh in f.shapes:
 		var nm: String = sh.name; var parent_name := ""
