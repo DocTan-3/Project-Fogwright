@@ -86,8 +86,11 @@ def stone_wall(name, h, opening=None):
         cut(name, x0, x1, 0, WALL - 1, z0, z1)
     return name
 
-DOOR = ((BAY - DOOR_W) // 2, (BAY - DOOR_W) // 2 + DOOR_W - 1, 0, DOOR_H - 1)
-WIN = ((BAY - WIN_W) // 2, (BAY - WIN_W) // 2 + WIN_W - 1, SILL, SILL + WIN_H - 1)
+# openings are centred between this bay's post (x 0-1) and the next bay's (x 20-21), not on the bay's own 0-19, or the
+# post and the left jamb merge into one thick timber and the door looks off-centre
+def centred(w): x0 = 2 + (BAY - 2 - w) // 2; return x0, x0 + w - 1
+DOOR = (*centred(DOOR_W), 0, DOOR_H - 1)
+WIN = (*centred(WIN_W), SILL, SILL + WIN_H - 1)
 for h in (30, 45):
     frame_wall('wall_frame_%d' % h, h); frame_wall('wall_frame_door_%d' % h, h, DOOR); frame_wall('wall_frame_window_%d' % h, h, WIN)
     stone_wall('wall_stone_%d' % h, h); stone_wall('wall_stone_door_%d' % h, h, DOOR); stone_wall('wall_stone_window_%d' % h, h, WIN)

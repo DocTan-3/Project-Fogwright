@@ -33,9 +33,12 @@ func _ready() -> void:
 			mi.position = Vector3(x, 0, -r * 8.0); at[n] = mi.position
 			var lb := Label3D.new(); lb.text = n; lb.font_size = 48; lb.pixel_size = 0.004; lb.position = mi.position + Vector3(bb.size.x * 0.5, -0.0, 0.6)
 			lb.rotation_degrees = Vector3(-90, 0, 0); lb.modulate = Color(1, 1, 1); add_child(lb)
+			if n.begins_with("wall_frame"):   # the next bay's post, which closes a timber bay on its right
+				var post := MeshInstance3D.new(); post.mesh = kit["post_" + n.get_slice("_", n.get_slice_count("_") - 1)]
+				post.material_override = Vox.material(); post.position = mi.position + Vector3(bb.size.x, 0, 0); add_child(post)
 			var t: int = mi.mesh.get_faces().size() / 3; tris += t
 			print("PIECE %-22s %.2f x %.2f x %.2f m  %d tris" % [n, bb.size.x, bb.size.y, bb.size.z, t])
-			x += bb.size.x + 1.0
+			x += bb.size.x + 1.2
 	print("KIT %d pieces, %d triangles" % [names.size(), tris])
 	# the Hrimfolk at the 3 m door, the window and the stair
 	for spot in [["wall_frame_door_30", Vector3(1.0, 0, 0.6)], ["wall_frame_window_30", Vector3(1.0, 0, 0.6)], ["stair_30", Vector3(-0.5, 0, -1.0)]]:
