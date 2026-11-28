@@ -133,6 +133,7 @@ Magic is a mysterious driving force, in the spirit of Lord of the Rings, not a m
 - **Ordinary machines are separate.** Turrets, sentries and everyday contraptions run without any god's power.
 - **Forbidden to most.** Outside the chosen, magic is outlawed among the "good" races.
 - **What claiming gives** *(decided 2026-11-28)*: each god grants a quiet magic of their own (drafted in mechanics-proposals.md). Being claimed also gives a **seat** in that god's city, a warp bind and favour with its people, but not a new home: homes stay in the warp space. Aldrath claims no one.
+- **The quarter shrines** *(decided 2026-11-28)*: each people's quarter in Aldrath's outer city keeps a **shrine to its god**, tended by that people's priests. A god's thread reaches its shrine, so a chosen can be claimed there, far from home. At launch, claiming trials end at these shrines; a god's real city opens with its homeland in a later update, and then the seat moves there.
 
 ## The peoples
 
@@ -336,7 +337,7 @@ The moons are lore and sky only: they do not change play *(decided 2026-11-28)*.
 
 - [ ] The Penitent's town: its name and where it stands.
 
-- [x] What is playable: **the main continent at launch**; the other homelands open later by ship. Three godless frontier regions fill it: the Greying Coast, the Old Front and Ostrevan *(decided 2026-11-28)*. A Sennari warp-hall valley (the Doorless Vale) waits for a later update.
+- [x] What is playable: **the main continent at launch**; the other homelands open later by ship. Three godless frontier regions fill it: the Greying Coast, the Old Front and Ostrevan *(decided 2026-11-28)*. Gods whose homelands are not yet playable are reached through **shrines in their people's quarters of Aldrath**. A Sennari warp-hall valley (the Doorless Vale) waits for a later update.
 
 - [x] Final names for the gods and peoples: keep the working names for now *(decided 2026-11-28)*; a naming pass comes later.
 - [x] The Hrimfolk name for the Shard: **the Godscar**. (Moon names among the Ruadhan, Ferrin and others are drafted in lore-proposals.md.)
