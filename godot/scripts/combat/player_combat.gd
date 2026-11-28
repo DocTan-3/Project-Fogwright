@@ -29,6 +29,7 @@ var _bloom := 0.0
 var shards := 12
 var fog_pressure := 0
 var _aa := 0.0
+var _dodge_yaw := 0.0           # the roll faces the way it goes (the clip only rolls forward), held for the whole roll
 var _act := 0.0                 # busy with an attack or a skill
 var _pending := []              # [seconds, callable]: hits that land partway through a clip
 var _held: Array = []
@@ -129,6 +130,7 @@ func _physics_process(delta: float) -> void:
 		reloading -= delta
 		if reloading <= 0.0: ammo = int(W.ammo); changed.emit()
 	if fighter.dodging >= 0.0 and player.control_lock <= 0.0: fighter.dodging = -1.0
+	if fighter.dodging >= 0.0: player.get_node("Model").rotation.y = _dodge_yaw   # nothing turns the body mid-roll
 	var can_block: bool = W.get("block", true)
 	var right: bool = Input.is_action_pressed("block") and fighter.dodging < 0.0 and fighter.stun <= 0.0 and not fighter.dead
 	fighter.blocking = right and can_block
@@ -141,7 +143,7 @@ func _physics_process(delta: float) -> void:
 	spread = lerpf(spread, want, 1.0 - exp(-10.0 * delta))
 	if player.camera_rig: player.camera_rig.aiming = aiming; player.camera_rig.shoulder = 0.0 if W.melee else 0.55
 	if _tree:   # the upper body: the guard while blocking; a shooter's or caster's weapon always held ready, raised to aim
-		var pose := "ual2/Idle_Shield"; var held := 1.0 if fighter.blocking else 0.0
+		var pose := "ual2/Idle_Shield" if fighter.blocking else "ual/Sword_Idle"; var held := 1.0   # melee: carried at the ready (a hanging arm turns a blade sideways)
 		if W.family == "gun" or W.family == "bow": pose = "ual/Pistol_Aim_Neutral" if aiming or drawing >= 0.0 else "ual/Pistol_Idle"; held = 1.0
 		elif W.family == "focus": pose = "ual2/Idle_Shield" if fighter.blocking else "ual/Spell_Simple_Idle"; held = 1.0
 		if _guard_node and _guard_node.animation != pose: _guard_node.animation = pose
@@ -151,7 +153,7 @@ func _physics_process(delta: float) -> void:
 	if drawing >= 0.0:
 		drawing += delta; _face_aim()
 		if fighter.blocking: drawing = -1.0
-	if not W.melee: _face_aim()   # a shooter keeps facing where the crosshair is
+	if not W.melee and fighter.dodging < 0.0 and player.control_lock <= 0.0: _face_aim()   # a shooter keeps facing the crosshair, except mid-roll
 
 ## where an attack goes: the locked target if it is in reach, else the enemy under the crosshair, else straight ahead
 func aim_target() -> Node3D:
@@ -275,7 +277,7 @@ func dodge() -> void:
 	var dash: bool = fighter.perks.has("dash")
 	player.control_lock = 0.38 if dash else 0.62
 	player.forced = dir * (13.0 if dash else 6.4)
-	player.get_node("Model").rotation.y = atan2(dir.x, dir.z)
+	_dodge_yaw = atan2(dir.x, dir.z); player.get_node("Model").rotation.y = _dodge_yaw
 	fighter.dodging = 0.0; _act = 0.0; drawing = -1.0
 	_play("ual2/Sword_Dash" if dash else "ual/Roll", 1.4 if dash else 1.15)
 	if fighter.perks.has("dash_reload") and W.family == "gun": ammo = int(W.ammo); reloading = 0.0

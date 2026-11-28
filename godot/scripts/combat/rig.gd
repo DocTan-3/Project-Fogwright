@@ -45,8 +45,12 @@ static func hold_weapon(model: Node3D, W: Dictionary, grip := {}) -> Array:
 			n.position = g.get("off", Vector3.ZERO); held.append(n)
 			if g.has("basis"):   # a grip given as where the model's axes go in the hand (x, y, z), when no rotation reads clearly
 				var b: Array = g.basis; n.basis = Basis(b[0], b[1], b[2]).scaled(Vector3.ONE * float(W.get("model_scale", 1.0)))
+			if g.has("slide"):   # the model moved along its own axes, for models whose origin is not at the grip (the bronze axe: its middle)
+				n.position += n.basis * (g.slide as Vector3)
 	if W.has("offhand"):
 		var og: Dictionary = W.get("offgrip", {})
 		var n2 := hold(model, "hand_l", W.offhand, float(W.get("offhand_scale", 1.0)), og.get("rot", Vector3.ZERO))
-		if n2: n2.position = og.get("off", Vector3.ZERO); held.append(n2)
+		if n2:
+			n2.position = og.get("off", Vector3.ZERO); held.append(n2)
+			if og.has("slide"): n2.position += n2.basis * (og.slide as Vector3)
 	return held

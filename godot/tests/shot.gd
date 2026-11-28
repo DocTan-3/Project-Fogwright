@@ -12,6 +12,9 @@ func _ready() -> void:
 	var main: Node3D = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	var rig = main.get_node("CameraRig")
+	if args.has("weapon"):   # combat: show the player holding a weapon
+		for k in 3: await get_tree().process_frame
+		main.get_node("Player/Combat").equip(args.weapon)
 	var steps: PackedStringArray = args.get("steps", "1::0:-12:3.6").split(",")
 	var i := 0
 	for st in steps:

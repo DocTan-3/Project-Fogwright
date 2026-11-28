@@ -58,8 +58,7 @@ func _ready() -> void:
 	for mi in _model.find_children("*", "MeshInstance3D", true, false): (mi as MeshInstance3D).material_override = m
 	_ap = CombatRig.animate(_model)
 	if D.get("shield", false):
-		CombatRig.hold_weapon(_model, {"model": "res://assets/props/quaternius/Axe_Bronze.gltf", "model_scale": 1.4, "grip": {"rot": Vector3(0, 0, -90)},
-			"offhand": "res://assets/props/quaternius/Shield_Wooden.gltf", "offgrip": {"rot": Vector3(0, 90, 0), "off": Vector3(0.06, 0.1, 0)}})
+		CombatRig.hold_weapon(_model, Weapons.ENEMY_ARMS.fog_axe)   # grips checked in its own clips (tests/hold_sheet.tscn weapons=fog_axe)
 	fighter = Fighter.new(); fighter.name = "Fighter"; fighter.max_hp = D.hp; fighter.melee = false; add_child(fighter)
 	fighter.died.connect(_on_died); fighter.hit_taken.connect(_on_hit)
 	_play(D.idle)

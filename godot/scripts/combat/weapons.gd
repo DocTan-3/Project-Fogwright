@@ -28,6 +28,14 @@ const DEFS := {
 		 "idle": "ual/Spell_Simple_Idle", "moves": ["fog_bolt"]},
 }
 
+## the Fog brute's arms (not a player weapon): an axe and a round shield; their grips checked in the brute's own clips
+const ENEMY_ARMS := {
+	"fog_axe": {"name": "Fog brute's axe", "clips": ["ual2/Sword_Heavy_Combo"], "hit_at": 0.5, "model": "res://assets/props/quaternius/Axe_Bronze.gltf", "model_scale": 1.4,
+		"grip": {"rot": Vector3(0, 0, 180), "slide": Vector3(0, 0.36, 0)},   # the bronze axe's origin is mid-haft: slid so the fist holds its end, head up
+		"offhand": "res://assets/props/quaternius/Shield_Wooden.gltf", "offgrip": {"rot": Vector3(0, -90, 0)},   # the boss outward, the forearm behind it
+		"check_poses": [["ual2/Idle_Shield", 0.3], ["ual/Walk", 0.3], ["ual2/Shield_OneShot", 0.3], ["ual2/Sword_Heavy_Combo", 0.6]]},
+}
+
 ## skills: energy, cooldown, what it does; "shards": Fog shards spent (caster foci), raising Fog pressure
 const MOVES := {
 	"arc_slash": {"name": "Arc slash", "energy": 25.0, "cd": 10.0, "clip": "ual2/Sword_Regular_C", "kind": "line", "len": 9.0, "dmg": 32.0,
