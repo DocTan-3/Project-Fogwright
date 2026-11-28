@@ -4,7 +4,7 @@ config_version=5
 [application]
 config/name="Fogwright"
 config/description="A co-op MMO of crafts, inventions and the Fog."
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/farhallow_voxel.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]
