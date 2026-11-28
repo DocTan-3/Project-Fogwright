@@ -128,7 +128,7 @@ Aldrath's faith is **the Ordinal**, the official church of the Rule. It runs the
 
 Magic is a mysterious driving force, in the spirit of Lord of the Rings, not a mage throwing fireballs and lightning bolts.
 
-- **Everyone chosen can use it.** All players can use magic once claimed by a god; the god decides which magic they can take. Every character can fight and craft without it, so magic is a mysterious bonus, not a tool for everyday use. Reverse-engineered relics of old are the exception that everyday adventurers use, such as the warp bag every adventurer carries their belongings in, and the rarer warp bracelet that opens a personal warp space to call home.
+- **Everyone chosen can use it.** All players can use magic once claimed by a god; the god decides which magic they can take. Every character can fight and craft without it, so magic is a mysterious bonus, not a tool for everyday use. Reverse-engineered relics of old are the exception that everyday adventurers use, such as the warp bag every adventurer carries their belongings in, and the rarer warp bracelet that opens a personal warp space to call home. Another everyday relic is the **rendering still** *(working name, decided 2026-11-28)*, a reverse-engineered device that turns organic matter (fish, fat, meat, hide) into lamp oil, so no traveller need go without light.
 - **It powers the greatest machines.** Even the greatest technomancers rely on the mysterious force of one of the Gods to power their contraptions.
 - **Ordinary machines are separate.** Turrets, sentries and everyday contraptions run without any god's power.
 - **Forbidden to most.** Outside the chosen, magic is outlawed among the "good" races.

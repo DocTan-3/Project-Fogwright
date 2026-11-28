@@ -259,7 +259,9 @@ The Fog is the world's pressure system: it grows with distance, time and magic u
 
 - Clearing a ruin's heart removes Fog from that region permanently, which is the main milestone of territory progress.
 
-**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Open: lantern fuel, and lantern upgrades (see mechanics-proposals.md).
+**Night and lanterns.** At night the Fog strengthens and monsters grow stronger, by an amount that depends on the region: mild near the gods' cities, brutal near the Sundering. Players need lanterns to feel safe. Every adventurer carries one; its light pushes the Fog back a little and weakens monsters inside it. Lanternbearers' lanterns light the whole group and reach farther. Lanterns burn lamp oil, which is easy to craft: a relic-made **rendering still** turns organic materials (fish, fat, meat, hide) into oil, so a hunt can refuel you in the wilds *(decided 2026-11-28)*. Open: lantern upgrades (see mechanics-proposals.md).
+
+**The compass** *(decided 2026-11-28)*: a Skyrim-style compass strip across the top of the screen shows directions, quest and place markers, and Merrith's thread as a gold mark toward the next claiming site.
 
 **The choice it creates:** magic is a shortcut with a cost. A group can rush with runes and arcane engines, but its home will face much harder nights.
 

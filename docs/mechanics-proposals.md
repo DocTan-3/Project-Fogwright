@@ -12,8 +12,9 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
   becomes the **Relicwright**; each god has a server-wide **Grace**; warps and the warp bag have a **weight limit that
   grows over time**; **no Fog exposure meter** on players (Fog is gated by lanterns instead); **Farhallow stays lost**;
   being claimed grants a **starting node in the one skill tree**; **players do not drop items on death**.
-- **Still open:** lanterns, day length, skill points, the Writ and Censors, stamina, and the UI cards; design.md's
-  rewrite.
+- **Also decided:** a one-hour day; two pools (stamina and energy); dodge and block on their own buttons; the Writ and
+  Censors are lore only for now; lanterns burn easy-to-craft oil; a **Skyrim-style compass** across the top of the
+  screen, where Merrith's thread shows as a gold mark; design.md rewritten to match.
 
 ## Core mechanics (decided 2026-11-28)
 
@@ -49,7 +50,8 @@ Found while reading; each needs a yes or no.
 
 How a player gets a god, and what it gives.
 
-1. **Merrith's thread.** From the prologue on, every player feels the pull: a faint golden glint on the compass and a
+1. **Merrith's thread.** From the prologue on, every player feels the pull: a gold mark on the top compass (decided: a
+   Skyrim-style compass strip that also shows quest and place markers) and a
    hum near shrines. It points at the nearest **claiming site** they have not visited.
 2. **Seek a god.** Every god has a claiming site: their seat in their hometown (Verdane:
    any of the great groves; Oriel: an Animari ruin; Vael: none that anyone knows, see below; Galeth: the Last Bastion,
@@ -158,9 +160,10 @@ Every adventurer carries a lantern (design.md). Proposals for the open parts:
 
 - **Slot:** the lantern hangs from the belt (its own slot, always lit at night unless doused). A Lanternbearer can carry
   it in the off hand for a much larger light.
-- **Fuel:** **lamp oil** (fish oil or tallow, cheap, from any trader or a Herbalist), burns for about one in-game night.
-  **Vigil wicks** (bought from chapter houses) burn longer and push harder. A **Fog-shard cell** (Relicwright) burns
-  longest but adds a little Fog pressure, the usual trade-off.
+- **Fuel (decided):** lanterns burn **lamp oil**, and oil is easy to craft. A **rendering still** (working name), a
+  relic-made device, turns organic materials into oil: fish, fat, meat, hide, seeds, wood resin. So if you run out in
+  the wilds, hunt an animal and render its meat and hide into oil. Oil is also sold cheaply everywhere. (Proposals still:
+  Vigil wicks that burn longer, Fog-shard cells from Relicwrights.)
 - **Upgrades:** lens (wider light), cowl (no light seen by enemies: stealth), coil (pushes Fog harder), cage (survives
   falls and swimming). Made by Tinkerers and Smiths.
 - **Tiers:** the lantern's tier sets the deepest Fog density you can enter (see Gating).
