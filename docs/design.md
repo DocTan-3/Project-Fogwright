@@ -24,11 +24,11 @@ Fogwright is a lightweight, cross-platform co-op RPG where a small group of frie
 |-----------------|---------------------------------------------------------------------|
 | Valheim         | Co-op survival, biomes that get harder with distance, base building |
 | RimWorld        | Settlers with needs and moods, events that create stories           |
-| Albion Online   | Tab-target combat, the build is the gear, randomized dungeons      |
+| Albion Online   | The build is the gear, skill mastery, randomized dungeons          |
 | Ragnarok Online | A persistent shared world, social progression                       |
 | Skyrim          | Open exploration, a landmark on the horizon to aim for              |
 
-**Players:** 2 to 16 friends on one persistent server, which keeps running between sessions. Built for groups that play a few evenings a week, not for thousands of strangers. Co-op only for now; PvP is planned for later, and the server already decides all game state, so it can be added without a rewrite.
+**Players:** 2 to 16 friends on one persistent server, which keeps running between sessions. Built for groups that play a few evenings a week, not for thousands of strangers. Co-op first; PvP is opt-in only (duels and arenas), and the server already decides all game state, so it can be added without a rewrite.
 
 ## Setting
 
@@ -99,13 +99,19 @@ Crafts are regions of the one skill tree. Each player grows into one or two, so 
 
 ### Combat
 
-Combat is tab-target, like Albion Online and World of Warcraft, with mobile controls like Albion mobile, Wild Rift and Mobile Legends.
+Combat is **action aim** everywhere *(decided 2026-11-28)*: swings, shots and spells go where you aim, and hits are physical. There is no tab-target mode. Mobile controls follow Wild Rift and Mobile Legends.
 
-- **Targeting:** tap an enemy or press Attack to select the nearest. The character walks into range and auto-attacks while standing still; moving with the joystick pauses attacks but keeps the target.
+- **Aiming:** on PC, WASD moves and the mouse aims a crosshair; left click attacks. On phones and tablets, the basic attack has a light auto-aim toward the enemy in front, and skills aim by press and drag with a ground indicator, released to cast (a quick tap casts straight ahead).
 
-- **Skills:** skill buttons arc around a large Attack button. In Classic, skills are skillshots: on touch screens press and drag to aim with a ground indicator and release to cast (a quick tap casts at the current target); on PC the keys cast toward the mouse cursor. In Action, skills cast at the crosshair. Skills cost energy and have cooldowns shown on the buttons. Where skills come from is set out under *Moves, the bar and defence* below; the five in the prototype are placeholders for testing the controls, not designed skills.
+- **Skills:** each skill has a **cooldown** and costs from a pool (energy for skills, stamina for defence). Where skills come from is set out under *Moves, the bar and defence* below; the five in the prototype are placeholders for testing the controls, not designed skills.
 
 - **Enemies:** levels rise with distance from camp, more spawn at night, and elites use telegraphed attacks marked on the ground.
+
+- **Roles and threat:** tank, support and damage are soft roles that come from gear. Enemies keep a **threat** table, so a tank can hold them off the group *(decided)*.
+
+- **No friendly fire:** attacks pass through party members and other players *(decided)*.
+
+- **PvP is opt-in only:** duel requests and arena events. The open world stays safe *(decided)*.
 
 - **Loot:** creatures drop Fog shards and gear by rarity (common, uncommon, rare, epic, and the one-of-a-kind legendaries in weapons.md), with item power and stats. Gear can be equipped or salvaged into shards.
 
@@ -113,17 +119,15 @@ Combat is tab-target, like Albion Online and World of Warcraft, with mobile cont
 
 - **Layout:** landscape only on phones and tablets. Building has its own mode with its own controls.
 
-- **Two control styles on PC:** Classic (tab-target, auto-attack, skills on the target) or Action (WASD, mouse aim with a crosshair, left click attacks, right click blocks, 1 to 6 cast at the crosshair, Space jumps). Both use the same skills and balance; phones and tablets use Classic.
-
 #### Moves, the bar and defence
 
 Decided with the user; items marked *(proposal)* are still open.
 
-- **Weapons give the special moves.** A weapon's moves depend on its rarity (weapons.md): a common weapon only attacks, and rarer ones add traits and active moves that suit their type, such as a gun with a dash-reload or a sword with a magic slash. Later, trinkets, relics and magic rings add more special moves. Armour gives none: it gives protection, stats and passives. Because the build is the gear, gear is what players trade (the player economy, later).
+- **Gear gives the skills** *(decided 2026-11-28)*: weapons, cybernetic implants and the tools on the belt each give active skills, for damage, support and tank builds alike. A weapon's moves depend on its rarity (weapons.md): a common weapon only attacks, and rarer ones add traits and active moves that suit their type, such as a gun with a dash-reload or a sword with a magic slash. Later, trinkets, relics and magic rings add more special moves. Armour gives none: it gives protection, stats and passives. Because the build is the gear, gear is what players trade (the player economy, later).
 
-- **The skill tree gives movement and changes how moves work.** Movement modifiers and the moves that come with them (dashing instead of a dodge roll, a leap, a slide) are skill-tree nodes. Most other nodes are modifiers rather than new buttons: reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
+- **The skill tree gives movement and changes how moves work.** It does **both** *(decided)*: nodes unlock extra choices in each gear item's skill pool, and modify how those skills behave. Movement modifiers and the moves that come with them (dashing instead of a dodge roll, a leap, a slide) are skill-tree nodes. Most other nodes are modifiers rather than new buttons: reload while dashing, a wider slash, a second charge. Gear and the tree shape the same move, so two players with the same sword can fight differently. The tree also gives stats, armour proficiencies and the path moves.
 
-- **Every character has the basic verbs:** move, auto-attack, a dodge, a block and a parry. The dodge is a roll by default; skill-tree nodes can turn it into a dash or a blink.
+- **Every character has the basic verbs:** move, a basic attack, a dodge, a block and a parry. The dodge is a roll by default; skill-tree nodes can turn it into a dash or a blink.
 
 - **Block and parry share one button.** Held, it blocks: damage is reduced (35% gets through). Pressed just before a hit lands (a fifth of a second), it parries: only 5% gets through and the attacker reels, but a parry drains three times the stamina of a block. Only melee weapons can parry; with any other weapon a timed press is a block. Blocking without the stamina for it breaks the guard and staggers. *(Numbers from the first playable, to tune.)*
 
@@ -131,7 +135,7 @@ Decided with the user; items marked *(proposal)* are still open.
 
 - **Paths and gods' magic** add their own moves: a path's utility (Lanternbearers push back the Fog, Ironclads become cover) and, once claimed, the god's magic.
 
-- **The bar:** six skills, and a button that swaps to a second page of six. The second page is free: the same gear, six more slots for any moves the character has. Buttons arc around the Attack button on phones; on PC the keys are 1 to 6 and a swap key. Dodge and block/parry have their own buttons beside Attack, outside the pages *(decided 2026-11-28)*.
+- **The bar** *(decided 2026-11-28)*: on PC a large bar (10 to 12 slots), with extra rows that can be added. On phones and tablets about six buttons arced around Attack, plus the page switcher to a second page of six. Dodge and block/parry have their own buttons beside Attack, outside the pages.
 
 - **Energy:** one energy pool for everyone and a cooldown on each skill, plus one quirk per weapon family:
   - **Guns** hold one shot or a few and must reload (and the tree can make a reload part of a dash).
@@ -153,7 +157,7 @@ Decided with the user; items marked *(proposal)* are still open.
 
 - **Perks that change the rules** (first set): iron guard (heavy blows and charges can be blocked), slip (a dodge also slips through combos and bashes), deflect (a melee parry also turns projectiles), steady guard (blocks cost less stamina), dash (the dodge becomes a dash), dash reload (a dodge reloads a gun).
 
-- **PC keys in the first playable** *(placeholders; touch controls later)*: Tab targets, R attacks, 1 to 6 cast, X swaps the page, F blocks (a tap parries), C dodges.
+- **PC keys in the first playable** *(placeholders; touch controls later)*: WASD moves, mouse aims, left click attacks, 1 to 0 cast, X swaps the page, F blocks (a tap parries), C dodges, Space jumps.
 
 - **Open:** the numbers; how many moves each rarity gives; clips still missing (a bow draw, two-handed weapons, a parry of its own).
 
@@ -414,7 +418,7 @@ The overworld stays persistent and shared. Breaches are private instances for th
 
 - Clearing a gold Breach pushes the Fog back in that region for a while, so dungeons feed overworld progress.
 
-- Co-op at launch. PvP comes later; rival groups invading a Breach is a natural first mode, and rival scavenger NPCs can fill that role until then.
+- Co-op at launch. PvP is opt-in only (duels and arenas); rival scavenger NPCs give Breaches their rivals.
 
 **Scope:** an entrance spawn system, a room-stitching generator, instance servers, groups and a starting set of 15 to 25 room templates. Room templates are small layouts of code-built pieces, so download size barely changes.
 
@@ -745,7 +749,6 @@ Each milestone ends with a gate the group plays, and the next one only starts on
 
 - Write the world lore: regions, cities, factions and history, which the authored places are built from.
 
-- Which PvP comes first once co-op is solid: rival groups in a Breach, or raiding other freeholds?
 
 - When do firearms arrive: with steam, or only with arcane engines?
 

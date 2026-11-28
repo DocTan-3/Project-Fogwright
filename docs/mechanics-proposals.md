@@ -3,7 +3,7 @@
 2026-11-28 · drafted for Doc Tan
 
 Game mechanics built from the lore in [lore.md](lore.md) and [lore-proposals.md](lore-proposals.md), and fitted to what
-[design.md](design.md) already decided (tab-target combat, weapons give moves, one skill tree, paths, relics, the warp
+[design.md](design.md) already decided (action-aim combat, gear gives skills, one skill tree, paths, relics, the warp
 space). Everything here is a **proposal**. Numbers are first guesses, to tune in play.
 
 ## Decisions so far (2026-11-28)
@@ -18,6 +18,10 @@ space). Everything here is a **proposal**. Numbers are first guesses, to tune in
 - **Economy (decided):** one global market whose stock spreads between cities (local buys instant, imports take
   time); listing fee plus sales tax; NPC merchants with weaker but always-available stock; regional prices; a direct
   trade window; a later vending-stall skill node (one per player, trading districts, sells a few hours offline).
+- **Combat (decided):** action aim everywhere (no tab-target); weapons, cybernetics and belt tools give skills for
+  every role; the skill web unlocks extra skill choices and modifies them; soft roles with threat; no friendly fire;
+  PvP opt-in only (duels, arenas); cooldowns plus pool costs; large bar with extra rows on PC, six plus the page
+  switcher on mobile.
 
 ## Core mechanics (decided 2026-11-28)
 
