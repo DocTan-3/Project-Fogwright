@@ -20,7 +20,7 @@ const COLS := {"grass": Color("5f7a3a"), "grass_d": Color("4e6a30"), "dirt": Col
 const MAX_PUSH := 8
 const GRASS_CHUNK := 16.0
 const GRASS_RANGE := 45.0   # grass is drawn this far from the camera (the Albion view's height reaches about this)
-const SUB := 4            # where kinds meet, a cell is drawn in 4 x 4 squares (25 cm)
+const KMAP := 0.25         # the kind map's texel: what the ground is (path, sand, turf), every 25 cm
 
 ## kind_fn(Vector2 xz, slope_deg) -> "grass" | "dirt" | "path" | "sand" (what the ground is there); grass grows on "grass"
 static func build(height_fn: Callable, rect: Rect2, kind_fn: Callable, grass_per_m2 := 9.0, seed := 1) -> Node3D:
@@ -34,80 +34,61 @@ static func build(height_fn: Callable, rect: Rect2, kind_fn: Callable, grass_per
 	var rock := SurfaceTool.new(); rock.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var grass_tris := []   # [a, b, c] world points of grassy triangles, where the tufts grow
 	var counts := {}
-	# first pass: which cells are cliffs, and which are drawn in 25 cm squares (where the ground's kind changes inside the
-	# cell: a path's edge, the beach), so edges run in fine voxel-like steps rather than a 1 m saw-tooth
-	var cliff := PackedByteArray(); cliff.resize(nx * nz)
-	var mixed := PackedByteArray(); mixed.resize(nx * nz)
-	for j in nz:
-		for i in nx:
-			var p0 := rect.position + Vector2(i, j) * CELL
-			var h := [H[j * (nx + 1) + i], H[j * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i]]
-			if h.max() - h.min() > STEEP * STEP + 0.001: cliff[j * nx + i] = 1; continue
-			var k0: String = kind_fn.call(p0 + Vector2(0.5, 0.5) * CELL, 0.0)
-			for q in [Vector2(0.1, 0.1), Vector2(0.9, 0.1), Vector2(0.9, 0.9), Vector2(0.1, 0.9)]:
-				if kind_fn.call(p0 + q * CELL, 0.0) != k0: mixed[j * nx + i] = 1; break
-	var fine := func(i: int, j: int) -> bool: return i >= 0 and j >= 0 and i < nx and j < nz and mixed[j * nx + i] == 1
+	# what the ground is, every 25 cm, baked into a texture the surface shader reads: paths and beaches are painted over
+	# the turf with a soft, ragged edge (as Valheim's are), not cut into the mesh in squares, which looked jagged
+	var kinds := _kind_map(rect, kind_fn)
 	for j in nz:
 		for i in nx:
 			var p0 := rect.position + Vector2(i, j) * CELL
 			var h := [H[j * (nx + 1) + i], H[j * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i + 1], H[(j + 1) * (nx + 1) + i]]
 			var mn: float = h.min()
 			var c := [Vector3(p0.x, h[0], p0.y), Vector3(p0.x + CELL, h[1], p0.y), Vector3(p0.x + CELL, h[2], p0.y + CELL), Vector3(p0.x, h[3], p0.y + CELL)]
-			if cliff[j * nx + i] == 0:
+			if h.max() - h.min() <= STEEP * STEP + 0.001:
 				var piece := _piece_name(h); counts[piece] = counts.get(piece, 0) + 1
 				# the diagonal that keeps the piece's fold along its steps: across the pair of corners that differ least
 				var d02 := absf(h[0] - h[2]) <= absf(h[1] - h[3])
-				var q := func(u: float, v: float) -> Vector3: return Vector3(p0.x + u * CELL, _surf(h, d02, u, v), p0.y + v * CELL)
-				var tris: Array = []
-				if mixed[j * nx + i] == 1:
-					for a in SUB:
-						for b in SUB:
-							var u0 := float(a) / SUB; var u1 := float(a + 1) / SUB; var v0 := float(b) / SUB; var v1 := float(b + 1) / SUB
-							var Q := [q.call(u0, v0), q.call(u1, v0), q.call(u1, v1), q.call(u0, v1)]
-							tris += [[Q[0], Q[1], Q[2]], [Q[0], Q[2], Q[3]]] if d02 else [[Q[0], Q[1], Q[3]], [Q[1], Q[2], Q[3]]]
-				else:
-					# a plain cell beside fine ones shares their 25 cm points along that edge, or the edge would be a T-junction
-					# and crack open into a dark seam. It is fanned from its centre, which lies on the fold, so every
-					# triangle stays on one of the cell's two planes.
-					var edges := [[Vector2(0, 0), Vector2(1, 0), fine.call(i, j - 1)], [Vector2(1, 0), Vector2(1, 1), fine.call(i + 1, j)],
-						[Vector2(1, 1), Vector2(0, 1), fine.call(i, j + 1)], [Vector2(0, 1), Vector2(0, 0), fine.call(i - 1, j)]]
-					var any := false
-					for e in edges: any = any or e[2]
-					if not any:
-						var Q := [q.call(0, 0), q.call(1, 0), q.call(1, 1), q.call(0, 1)]
-						tris = [[Q[0], Q[1], Q[2]], [Q[0], Q[2], Q[3]]] if d02 else [[Q[0], Q[1], Q[3]], [Q[1], Q[2], Q[3]]]
-					else:
-						var ctr: Vector3 = q.call(0.5, 0.5)
-						for e in edges:
-							var n_seg: int = SUB if e[2] else 1
-							for s in n_seg:
-								var A: Vector2 = e[0].lerp(e[1], float(s) / n_seg); var B: Vector2 = e[0].lerp(e[1], float(s + 1) / n_seg)
-								tris.append([q.call(A.x, A.y), q.call(B.x, B.y), ctr])
+				var tris: Array = [[c[0], c[1], c[2]], [c[0], c[2], c[3]]] if d02 else [[c[0], c[1], c[3]], [c[1], c[2], c[3]]]
 				for t in tris:
 					var n: Vector3 = (t[2] - t[0]).cross(t[1] - t[0]).normalized()
 					if n.y < 0: n = -n
 					var slope := rad_to_deg(acos(clampf(n.y, -1.0, 1.0)))
 					var mid: Vector3 = (t[0] + t[1] + t[2]) / 3.0
-					var kind: String = kind_fn.call(Vector2(mid.x, mid.z), slope)
-					if slope > BARE: kind = "rock"   # a steep face: too steep for turf to hold
-					var col: Color = COLS[kind]
-					if kind == "grass":   # a darker turf on steep banks, patchy tones on the level
-						col = col.lerp(COLS.grass_d, 0.35 * _hash2(floori(mid.x * 0.5), floori(mid.z * 0.5), seed) + clampf((slope - 20.0) / 40.0, 0.0, 0.65))
+					var col: Color
+					if slope > BARE:   # a steep face: too steep for turf to hold, and nothing is painted on it (alpha 0)
+						col = COLS.rock.lerp(COLS.rock_d, _hash2(floori(mid.x), floori(mid.z), seed)); col.a = 0.0
+					else:              # turf, a darker green on steep banks and patchy on the level; paths are painted over it
+						col = COLS.grass.lerp(COLS.grass_d, 0.35 * _hash2(floori(mid.x * 0.5), floori(mid.z * 0.5), seed) + clampf((slope - 20.0) / 40.0, 0.0, 0.65))
+						grass_tris.append(t)
 					_tri(st, t, n, col)
-					if kind == "grass": grass_tris.append(t)
 			else:
 				counts["cliff"] = counts.get("cliff", 0) + 1
 				_cliff(rock, c, h, mn, seed)
-	var ground := MeshInstance3D.new(); ground.name = "Surface"; ground.mesh = st.commit(); ground.material_override = _surface_mat()
-	var rocks := MeshInstance3D.new(); rocks.name = "Rock"; rocks.mesh = rock.commit(); rocks.material_override = _surface_mat()
+	var mat: ShaderMaterial = _surface_mat().duplicate()
+	mat.set_shader_parameter("kinds", kinds); mat.set_shader_parameter("kind_rect", Vector4(rect.position.x, rect.position.y, rect.size.x, rect.size.y))
+	for k in ["path", "sand", "dirt"]: mat.set_shader_parameter(k + "_col", COLS[k])
+	var ground := MeshInstance3D.new(); ground.name = "Surface"; ground.mesh = st.commit(); ground.material_override = mat
+	var rocks := MeshInstance3D.new(); rocks.name = "Rock"; rocks.mesh = rock.commit(); rocks.material_override = mat
 	root.add_child(ground); root.add_child(rocks)
 	var body := StaticBody3D.new(); body.name = "GroundBody"; root.add_child(body)
 	for m in [ground, rocks]:
 		if (m.mesh as ArrayMesh).get_surface_count() == 0: continue
 		var cs := CollisionShape3D.new(); cs.shape = m.mesh.create_trimesh_shape(); body.add_child(cs)
-	root.add_child(_grass(grass_tris, grass_per_m2, seed))
+	root.add_child(_grass(grass_tris, grass_per_m2, seed, kind_fn))
 	root.set_meta("pieces", counts)
 	return root
+
+## the ground's kind every KMAP metres as a texture: red = path, green = sand, blue = dirt, none = turf. Read with
+## linear filtering, so the shader finds a smooth edge between texels and roughens it with noise
+static func _kind_map(rect: Rect2, kind_fn: Callable) -> ImageTexture:
+	var w := int(rect.size.x / KMAP); var d := int(rect.size.y / KMAP)
+	var img := Image.create(w, d, false, Image.FORMAT_RGBA8)
+	var code := {"path": Color(1, 0, 0, 1), "sand": Color(0, 1, 0, 1), "dirt": Color(0, 0, 1, 1)}
+	for y in d:
+		for x in w:
+			var k: String = kind_fn.call(rect.position + Vector2(x + 0.5, y + 0.5) * KMAP, 0.0)
+			img.set_pixel(x, y, code.get(k, Color(0, 0, 0, 1)))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
 
 ## the height inside a cell (u, v from 0 to 1 across it) on its two planes: the diagonal from corner 0 to 2, or 1 to 3
 static func _surf(h: Array, d02: bool, u: float, v: float) -> float:
@@ -153,6 +134,7 @@ static func _cliff(st: SurfaceTool, c: Array, h: Array, mn: float, seed: int) ->
 			var tone := _hash2(floori(x0 * 4.0) + 11, floori(z0 * 4.0) - 7, seed)
 			var side: Color = COLS.rock.lerp(COLS.rock_d, tone)
 			var cap: Color = COLS.moss if tone < 0.45 else side.lightened(0.08)
+			side.a = 0.0; cap.a = 0.0   # rock takes no path paint
 			_box(st, Vector3(x0, bot, z0), Vector3(x0 + ROCK, top, z0 + ROCK), side, cap)
 
 static func _box(st: SurfaceTool, lo: Vector3, hi: Vector3, side: Color, cap: Color) -> void:
@@ -177,16 +159,43 @@ static func _surface_mat() -> ShaderMaterial:
 	var sh := Shader.new()
 	sh.code = """
 shader_type spatial;
+uniform sampler2D kinds : filter_linear_mipmap, repeat_disable;
+uniform vec4 kind_rect;     // the kind map's corner and size in world metres
+uniform vec4 path_col : source_color;
+uniform vec4 sand_col : source_color;
+uniform vec4 dirt_col : source_color;
 varying vec3 wp;
 varying vec3 wn;
 void vertex() { wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; wn = (MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz; }
 float h3(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+float vn(vec2 p) {   // smooth value noise, for the ragged edges of paths
+	vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+	float a = h3(vec3(i, 0.0)), b = h3(vec3(i + vec2(1, 0), 0.0)), c = h3(vec3(i + vec2(0, 1), 0.0)), d = h3(vec3(i + vec2(1, 1), 0.0));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+// how much of a kind covers this point: its share in the map, with an edge roughened by noise and kept a pixel soft
+float cover(float w, float n) {
+	float x = w + (n - 0.5) * 0.45;
+	float e = max(fwidth(x), 0.04);
+	return smoothstep(0.5 - e, 0.5 + e, x);
+}
 void fragment() {
-	// the voxel grain: a 10 cm speckle, laid from above on the ground and on the face's own plane on cliffs
+	vec3 c = COLOR.rgb;
+	if (COLOR.a > 0.5) {   // turf: paint the paths, the beach and bare earth over it
+		vec4 k = texture(kinds, (wp.xz - kind_rect.xy) / kind_rect.zw);
+		float n = vn(wp.xz * 2.2) * 0.65 + vn(wp.xz * 7.0) * 0.35;
+		c = mix(c, dirt_col.rgb, cover(k.b, n));
+		c = mix(c, sand_col.rgb, cover(k.g, n));
+		c = mix(c, path_col.rgb, cover(k.r, n));
+	}
+	// the voxel grain: a 10 cm speckle, laid from above on the ground and on the face's own plane on cliffs. It fades out
+	// where a 10 cm square shrinks below about a pixel, so the far ground does not crawl
 	vec3 cell = abs(wn.y) > 0.6 ? vec3(floor(wp.x * 10.0), 0.0, floor(wp.z * 10.0)) : floor(wp * 10.0 + wn * 0.5);
 	float k = h3(cell);
 	float g = k < 0.18 ? 0.94 : (k > 0.86 ? 1.05 : 1.0);
-	vec3 c = COLOR.rgb * g;
+	float px = length(fwidth(wp * 10.0));
+	g = mix(g, 1.0, smoothstep(0.35, 1.0, px));
+	c *= g;
 	ALBEDO = c * c * 1.0;   // the palette's colours are sRGB
 	ROUGHNESS = 1.0;
 }
@@ -199,7 +208,7 @@ void fragment() {
 ## the tip, each a little different in height and lean. The shader sways them in the wind and bends them away from
 ## whoever is near (push()), springing back as they leave.
 static var _clump := FastNoiseLite.new()
-static func _grass(tris: Array, per_m2: float, seed: int) -> Node3D:
+static func _grass(tris: Array, per_m2: float, seed: int, kind_fn: Callable) -> Node3D:
 	_clump.seed = seed; _clump.frequency = 0.09
 	var rng := RandomNumberGenerator.new(); rng.seed = seed * 7919 + 13
 	var chunks := {}   # Vector2i -> [Transform3D]: grass is drawn in 16 m chunks, each only near the camera
@@ -214,6 +223,7 @@ static func _grass(tris: Array, per_m2: float, seed: int) -> Node3D:
 			var r1 := rng.randf(); var r2 := rng.randf()
 			if r1 + r2 > 1.0: r1 = 1.0 - r1; r2 = 1.0 - r2
 			var p := a + (b - a) * r1 + (c - a) * r2
+			if kind_fn.call(Vector2(p.x, p.z), 0.0) != "grass": continue   # no tufts on paths or sand
 			var s := rng.randf_range(0.55, 1.1) * lerpf(0.7, 1.15, _clump.get_noise_2d(p.x * 2.0, p.z * 2.0) * 0.5 + 0.5)
 			var key := Vector2i(floori(p.x / GRASS_CHUNK), floori(p.z / GRASS_CHUNK))
 			if not chunks.has(key): chunks[key] = []
