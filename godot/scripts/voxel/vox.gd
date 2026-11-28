@@ -1,9 +1,11 @@
 ## Fogwright's voxel art (docs/design.md, Voxel art): reading MagicaVoxel .vox files into the game.
-## - One size for everything seen together: CHAR (5 cm) for characters, weapons, armour and props; WORLD (10 cm, exactly two
-##   of the small ones) for buildings, walls, terrain features and trees.
+## - Voxel sizes, each a whole number of the smallest: FINE (2.5 cm) for characters, gear and weapons - steampunk needs its
+##   tubes, hoses and buckles; CHAR (5 cm) for props; WORLD (10 cm) for buildings, walls, terrain features and trees.
 ## - A file is a scene of models; each named model becomes a part. Character parts animate as rigid pieces: parts named
-##   head and torso pivot at their bottom centre, limbs (arm_upper_l, arm_lower_l, leg_upper_l, leg_lower_l and _r) at their
-##   top centre, and a lower limb hangs from its upper one.
+##   head and torso pivot at their bottom centre, limbs (arm_upper_l, arm_lower_l, hand_l, leg_upper_l, leg_lower_l, foot_l
+##   and _r) at their top centre; a lower limb hangs from its upper one, a hand from the lower arm, a foot from the lower leg.
+##   Modular gear is a part named "<piece>@<part>" (goggles@head, tank@torso): it rides on that part. Armour that replaces a
+##   part (boots for the feet) is a file whose parts take the body part's name, loaded over the base.
 ## - Colours can be snapped to one palette (snap), so models from different packs match.
 ## - check(): the scale rule, as the city-planning checker does for buildings: a model's height against the real size of
 ##   what it is (a person 1.4 to 2.1 m by people, a door 2 m ...).
@@ -11,6 +13,7 @@
 class_name Vox
 extends RefCounted
 
+const FINE := 0.025
 const CHAR := 0.05
 const WORLD := 0.10
 
@@ -90,12 +93,14 @@ static func snap(c: Color, palette: Array) -> Color:
 ## (faces lit from above, darker below); vertices relative to `pivot` (in voxels, file space), at `size` metres per voxel
 static func part_mesh(f: Dictionary, shape: Dictionary, pivot: Vector3, size: float, palette := []) -> ArrayMesh:
 	var m: Dictionary = f.models[shape.model]; var v: PackedByteArray = m.voxels; var off: Vector3i = shape.offset
-	var filled := {}
-	for i in v.size() / 4: filled[Vector3i(v[i * 4], v[i * 4 + 1], v[i * 4 + 2])] = v[i * 4 + 3]
+	var filled := {}; _cmap = {}
+	for i in v.size() / 4:
+		var key := Vector3i(v[i * 4], v[i * 4 + 1], v[i * 4 + 2]); filled[key] = v[i * 4 + 3]
+		if m.has("colors"): _cmap[key] = m.colors[i]
 	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	const DIRS := [[Vector3i(1, 0, 0), 0.86], [Vector3i(-1, 0, 0), 0.86], [Vector3i(0, 1, 0), 0.8], [Vector3i(0, -1, 0), 0.92], [Vector3i(0, 0, 1), 1.0], [Vector3i(0, 0, -1), 0.62]]
 	for k in filled:
-		var ci: int = filled[k]; var col: Color = f.palette[ci - 1]
+		var ci: int = filled[k]; var col: Color = f.palette[ci - 1] if not m.has("colors") else _cmap[k]
 		if not palette.is_empty(): col = snap(col, palette)
 		for dd in DIRS:
 			var n: Vector3i = dd[0]
@@ -106,7 +111,7 @@ static func part_mesh(f: Dictionary, shape: Dictionary, pivot: Vector3, size: fl
 			st.set_color(Color(col.r * shade, col.g * shade, col.b * shade)); st.set_normal(gn)
 			var q := []
 			for cr in corners: q.append(_g(Vector3(cr) + Vector3(off) - pivot) * size)
-			for idx in [0, 1, 2, 0, 2, 3]: st.add_vertex(q[idx])
+			for idx in [0, 2, 1, 0, 3, 2]: st.add_vertex(q[idx])   # Godot's front faces wind clockwise
 	return st.commit()
 
 ## a face's four corners (in voxel corner coordinates), wound to face outward after the axis change
@@ -123,35 +128,61 @@ static func _face(k: Vector3i, n: Vector3i) -> Array:
 
 ## MagicaVoxel (x, y front-to-back, z up) -> Godot (y up, the front toward +Z): a rotation, so faces keep their winding
 static func _g(p: Vector3) -> Vector3:
-	return Vector3(-p.x, p.z, p.y)
+	return Vector3(p.x, p.z, -p.y)
 
 static var _mat: StandardMaterial3D
+static var _cmap := {}
 
 ## a character from a .vox: a Node3D (feet at y = 0, centred, facing +Z) with a node per part pivoting at its joint, lower
 ## limbs hanging from upper ones; parts are reachable by name (model.get_node("arm_upper_l"))
-static func character(path: String, size := CHAR, palette := []) -> Node3D:
+## layers: further .vox files in the same frame (gear riding on parts, or parts that replace the base's by name)
+static func character(path: String, size := CHAR, palette := [], layers := []) -> Node3D:
 	var f := read(path)
 	var root := Node3D.new(); root.name = path.get_file().get_basename()
 	if f.is_empty(): return root
+	for lp in layers:   # merge: one model list, one palette per model's colours baked in, shapes by name (replacing same names)
+		var g := read(lp)
+		if g.is_empty(): continue
+		var base_n: int = f.models.size()
+		for m in g.models:
+			var v: PackedByteArray = m.voxels.duplicate()
+			var cols := []
+			for i in v.size() / 4: cols.append(g.palette[v[i * 4 + 3] - 1])
+			f.models.append({"size": m.size, "voxels": v, "colors": cols})
+		for sh in g.shapes:
+			for k in range(f.shapes.size() - 1, -1, -1):
+				if f.shapes[k].name == sh.name: f.shapes.remove_at(k)
+			f.shapes.append({"name": sh.name, "model": base_n + sh.model, "offset": sh.offset})
 	if _mat == null:
 		_mat = StandardMaterial3D.new(); _mat.vertex_color_use_as_albedo = true; _mat.vertex_color_is_srgb = true; _mat.roughness = 1.0   # .vox colours are sRGB
 	var lo := Vector3(INF, INF, INF); var hi := -lo; var bounds := {}
 	for sh in f.shapes:
 		var m: Dictionary = f.models[sh.model]; var a := Vector3(sh.offset); var b := a + Vector3(m.size)
 		bounds[sh.name] = [a, b]; lo = lo.min(a); hi = hi.max(b)
-	var centre := Vector3((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0, lo.z)   # the feet's centre
 	var pivots := {}
 	for sh in f.shapes:
 		var a: Vector3 = bounds[sh.name][0]; var b: Vector3 = bounds[sh.name][1]
-		var top: bool = sh.name.begins_with("arm_") or sh.name.begins_with("leg_")
+		var top: bool = sh.name.begins_with("arm_") or sh.name.begins_with("leg_") or sh.name.begins_with("hand_") or sh.name.begins_with("foot_")
 		pivots[sh.name] = Vector3((a.x + b.x) / 2.0, (a.y + b.y) / 2.0, b.z if top else a.z)
+	for sh in f.shapes:   # gear rides on its part: the same pivot, so it moves exactly with it
+		if "@" in sh.name and pivots.has(sh.name.get_slice("@", 1)): pivots[sh.name] = pivots[sh.name.get_slice("@", 1)]
+	var outer := {}   # bounds from body parts only, so a tank on the back does not move the feet's centre
+	lo = Vector3(INF, INF, INF); hi = -lo
+	for sh in f.shapes:
+		if "@" in sh.name: continue
+		lo = lo.min(bounds[sh.name][0]); hi = hi.max(bounds[sh.name][1])
+	var centre := Vector3((lo.x + hi.x) / 2.0, (lo.y + hi.y) / 2.0, lo.z)   # the feet's centre
 	var made := {}
 	for sh in f.shapes:
 		var node := MeshInstance3D.new(); node.name = sh.name
 		node.mesh = part_mesh(f, sh, pivots[sh.name], size, palette); node.material_override = _mat
 		made[sh.name] = node
 	for sh in f.shapes:
-		var nm: String = sh.name; var parent_name := nm.replace("_lower_", "_upper_") if "_lower_" in nm else ""
+		var nm: String = sh.name; var parent_name := ""
+		if "@" in nm: parent_name = nm.get_slice("@", 1)
+		elif "_lower_" in nm: parent_name = nm.replace("_lower_", "_upper_")
+		elif nm.begins_with("hand_"): parent_name = "arm_lower_" + nm.substr(5)
+		elif nm.begins_with("foot_"): parent_name = "leg_lower_" + nm.substr(5)
 		var parent: Node3D = made.get(parent_name, root)
 		parent.add_child(made[nm])
 		var base: Vector3 = pivots[parent_name] if parent != root else centre

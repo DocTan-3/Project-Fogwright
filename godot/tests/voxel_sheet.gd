@@ -9,9 +9,10 @@ func _ready() -> void:
 	var args := {}
 	for a in OS.get_cmdline_user_args(): args[a.split("=")[0]] = a.split("=")[1] if "=" in a else ""
 	var out: String = args.get("out", "/tmp/voxel")
-	for f in ["base_m", "base_f"]:
-		var why := Vox.check("res://assets/voxel/characters/%s.vox" % f, "person")
-		print("VOXEL-CHECK %s: %s" % [f, "ok" if why == "" else why])
+	const D := "res://assets/voxel/characters/"
+	for f in [["base_m", Vox.CHAR], ["base_f", Vox.CHAR], ["base_m_hd", Vox.FINE], ["base_f_hd", Vox.FINE]]:
+		var why := Vox.check(D + f[0] + ".vox", "person", f[1])
+		print("VOXEL-CHECK %s: %s" % [f[0], "ok" if why == "" else why])
 	var env := WorldEnvironment.new(); env.environment = Environment.new()
 	var sky := Sky.new(); sky.sky_material = ProceduralSkyMaterial.new(); env.environment.background_mode = Environment.BG_SKY; env.environment.sky = sky
 	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY; env.environment.ambient_light_energy = 0.75
@@ -19,16 +20,24 @@ func _ready() -> void:
 	var sun := DirectionalLight3D.new(); sun.rotation_degrees = Vector3(-48, -35, 0); sun.light_energy = 1.25; sun.shadow_enabled = true; add_child(sun)
 	var g := MeshInstance3D.new(); var pm := PlaneMesh.new(); pm.size = Vector2(40, 40); g.mesh = pm
 	var gm := StandardMaterial3D.new(); gm.albedo_color = Color("5f7a3a"); g.material_override = gm; add_child(g)
-	var xs := [-1.2, 0.0, 1.2]
-	for i in 2:
-		var m := Vox.character("res://assets/voxel/characters/%s.vox" % ["base_m", "base_f"][i])
+	# left to right: the 5 cm man, the 2.5 cm man, the 2.5 cm man with steampunk gear, the 2.5 cm woman, the current body
+	var row := [["base_m.vox", Vox.CHAR, []], ["base_m_hd.vox", Vox.FINE, []], ["base_m_hd.vox", Vox.FINE, [D + "gear_test_hd.vox"]], ["base_f_hd.vox", Vox.FINE, []]]
+	var xs := [-2.4, -1.2, 0.0, 1.2, 2.4]
+	for i in row.size():
+		var m := Vox.character(D + row[i][0], row[i][1], [], row[i][2])
 		add_child(m); m.position = Vector3(xs[i], 0, 0); models.append(m)
+		var tris := 0
+		for mi in m.find_children("*", "MeshInstance3D", true, false): tris += (mi as MeshInstance3D).mesh.get_faces().size() / 3
+		print("VOXEL-TRIS %s%s: %d triangles" % [row[i][0], " + gear" if not row[i][2].is_empty() else "", tris])
 	var q: Node3D = (load("res://assets/characters/quaternius/Superhero_Male_FullBody.gltf") as PackedScene).instantiate()
-	add_child(q); q.position = Vector3(xs[2], 0, 0)
+	add_child(q); q.position = Vector3(xs[4], 0, 0)
+	var qt := 0
+	for mi in q.find_children("*", "MeshInstance3D", true, false): qt += (mi as MeshInstance3D).mesh.get_faces().size() / 3
+	print("VOXEL-TRIS current Quaternius body: %d triangles" % qt)
 	var ap := CombatRig.animate(q); ap.play("ual/Idle")
-	var l := Label3D.new(); l.text = "voxel man   voxel woman   current"; l.font_size = 40; l.pixel_size = 0.005; l.position = Vector3(0, 2.3, 0); add_child(l)
+	var l := Label3D.new(); l.text = "5 cm     2.5 cm     2.5 cm + gear     2.5 cm     current"; l.font_size = 40; l.pixel_size = 0.005; l.position = Vector3(0, 2.3, 0); add_child(l)
 	var cam := Camera3D.new(); add_child(cam)
-	var shots := [["albion", Vector3(0, 10.0, 8.4), Vector3(0, 0.9, 0), 45.0, false], ["front", Vector3(0, 1.4, 4.6), Vector3(0, 0.95, 0), 40.0, false],
+	var shots := [["albion", Vector3(0, 13.0, 15.0), Vector3(0, 0.9, 0), 45.0, false], ["front", Vector3(0, 1.3, 6.0), Vector3(0, 0.95, 0), 45.0, false], ["close", Vector3(0.0, 1.55, 1.6), Vector3(0.0, 1.35, 0), 40.0, false], ["gearback", Vector3(-0.9, 1.9, -1.9), Vector3(0.0, 1.25, 0), 40.0, false],
 		["back", Vector3(0, 1.6, -4.6), Vector3(0, 0.95, 0), 40.0, false], ["walk", Vector3(-3.6, 1.6, 3.2), Vector3(-0.6, 0.9, 0), 40.0, true]]
 	for sh in shots:
 		cam.position = sh[1]; cam.look_at(sh[2]); cam.fov = sh[3]
