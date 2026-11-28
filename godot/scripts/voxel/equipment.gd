@@ -15,9 +15,41 @@ static var _db := {}
 const STANCES := {
 	"one_hand": {"arm_upper_r": Vector3(-6, 0, 0), "arm_lower_r": Vector3(-40, 0, 0), "arm_lower_l": Vector3(-25, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
-	"polearm": {"arm_upper_r": Vector3(-10, 0, 0), "arm_lower_r": Vector3(-65, 0, 0), "arm_lower_l": Vector3(-20, 0, 0),
+	# a spear carried low (the user's reference): the arm hangs nearly straight, a little forward, the fist at the hip;
+	# the spear lies in the grip, slanting down and forward across the body (aimed in _aim)
+	"polearm": {"arm_upper_r": Vector3(-10, 0, 4), "arm_lower_r": Vector3(-18, 0, 0), "arm_lower_l": Vector3(-30, 0, 0),
 		"leg_upper_l": Vector3(0, 0, 4), "leg_upper_r": Vector3(0, 0, -4)},
 }
+
+## a drawn polearm, carried low: its point slants down and forward, turned this far across the body toward the off side,
+## at most POLE_DOWN below level; the slant eases if the point would come within POLE_CLEAR of the ground (short bodies)
+const POLE_ACROSS := 25.0      # toward the off (left) side: +X is the character's left (checked from above)
+const POLE_DOWN := 22.0
+const POLE_CLEAR := 0.12
+
+static func _to_root(node: Node, root: Node) -> Transform3D:
+	var t := Transform3D()
+	while node != root and node != null:
+		t = (node as Node3D).transform * t; node = node.get_parent()
+	return t
+
+static func _aim(root: Node3D) -> void:
+	# the haft runs through the fist along the hand's own +Z (forward when the hand hangs); the wrist turns the hand the
+	# least it must so the haft lies along the carry direction
+	for node in root.find_children("weapon*", "Node3D", true, false):
+		var hand := node.get_parent() as Node3D
+		var arm := _to_root(hand.get_parent(), root)
+		var rest := hand.basis
+		for down in range(int(POLE_DOWN), -30, -2):
+			# the character faces +Z and its left is +X
+			var d := Vector3(sin(deg_to_rad(POLE_ACROSS)) * cos(deg_to_rad(down)), -sin(deg_to_rad(down)), cos(deg_to_rad(POLE_ACROSS)) * cos(deg_to_rad(down))).normalized()
+			var now: Basis = arm.basis * rest
+			hand.basis = arm.basis.inverse() * (Basis(Quaternion((now * Vector3.BACK).normalized(), d)) * now)
+			var bb: AABB = (arm * hand.transform * (node as Node3D).transform) * (node as MeshInstance3D).get_aabb()
+			var low := INF
+			for k in 8: low = minf(low, bb.get_endpoint(k).y)
+			if low >= POLE_CLEAR: break
+		hand.set_meta("rest", hand.rotation_degrees)
 
 static func db() -> Dictionary:
 	if _db.is_empty(): _db = JSON.parse_string(FileAccess.get_file_as_string(DATA))
@@ -51,6 +83,7 @@ static func dress(people: String, sex: String, worn: Array, wardrobe := true, dr
 			for node in root.find_children("*", "Node3D", true, false):
 				if st.has(String(node.name)):
 					node.rotation_degrees += st[String(node.name)]; node.set_meta("rest", node.rotation_degrees)
+			if items[n].stance == "polearm": _aim(root)
 	for node in root.find_children("*", "Node3D", true, false):
 		var bare := String(node.name).get_slice("@", 0).get_slice("_head", 0)
 		if String(node.name).validate_node_name() in hides.map(func(h): return String(h).validate_node_name()) or bare in hides:

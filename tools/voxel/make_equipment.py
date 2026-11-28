@@ -819,10 +819,10 @@ def tool_item(kind, carry):
     def fn(F, Pb, Pc):
         P = {}; x0, x1, ay0, au0, al0, h0 = F['arms']['r']; AW = F['AW']
         gx, gy, gz = x0 + x1 + 1, 2 * ay0 + AW, h0 + al0        # the fist's centre, in fine voxels
-        if carry == 'back':     # polearm stance: the forearm forward, the haft upright in the fist (the tilt undoes the
-            # arm's bend), the butt clear of the ground; the fist sits near elbow height
-            V = tool_shape(kind, 30)         # gripped well up the haft: about 40 cm of it behind the fist
-            P['weapon@hand_r#2~x%d' % POLE_TILT] = {(gx + u, gy + w, gz + h): c for (u, w, h), c in V.items()}
+        if carry == 'back':     # polearm stance: the forearm forward, the haft drawn through the fist front to back as fingers
+            # wrap a haft; equipment.gd turns the wrist to aim it
+            V = tool_shape(kind, 52)         # gripped a third of the way up from the butt, as a spear is carried
+            P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}   # through the fist, front to back; the wrist aims it (equipment.gd)
         else:                   # one-handers point forward from the fist, the edge or face down (raised by the stance)
             V = tool_shape(kind, gz - 2)
             P['weapon@hand_r#2'] = {(gx + u, gy - h, gz + w): c for (u, w, h), c in V.items()}
@@ -847,7 +847,6 @@ def tool_item(kind, carry):
             P['weapon@torso#2~z35'] = {(2 * cx + u, 2 * TD + 8 + w, 2 * (hip + 10) + h): c for (u, w, h), c in V.items()}
         return P
     return fn, fn_carried
-POLE_TILT = 20      # the polearm stance bends the arm about 85 degrees forward (equipment.gd, STANCES); the haft keeps 20 of it back: pointing forward, about 25 degrees up
 TOOLS = {'hatchet': 'hip', 'spear': 'back', 'hammer': 'hip', 'blade': 'hip', 'boathook': 'back', 'cleaver': 'hip', 'pitchfork': 'back'}
 
 # ---------------------------------------------------------------- the catalogue
