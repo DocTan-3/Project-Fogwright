@@ -250,7 +250,7 @@ The Fog does not only breed monsters: it weakens life itself. The farther a plac
 
 - [ ] Final names for the gods and peoples (all are working names).
 - [ ] The Hrimfolk name for the Shard, and moon names among the other peoples.
-- [ ] Names for each people, and which god each belongs to (so far only the commonfolk's God of travels is known).
+- [x] Which god each people belongs to: answered by the table of the twelve. (Naming styles per people are in characters.md.)
 - [x] Where the Forsaken came from: the Greyed, remade by the 14th. (Where they live and where the freed go is still open.)
 - [ ] Desert and forest people are both tamers: how their taming differs.
 - [ ] What the outer city of Aldrath is like: its districts, peoples and the walls around the sealed core.
